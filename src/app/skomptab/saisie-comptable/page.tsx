@@ -42,6 +42,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 
 // --- DATA TYPES & MOCK DATA ---
 
@@ -94,6 +102,13 @@ const initialModeles: ModeleSaisie[] = [
   },
 ];
 // End of copied data
+
+const MOCK_JOURNALS = [
+    { code: 'AC', intitule: 'Journal des achats' },
+    { code: 'VE', intitule: 'Journal des ventes' },
+    { code: 'BNP', intitule: 'Journal de banque BNP' },
+    { code: 'OD', intitule: 'Opérations diverses' },
+];
 
 type LigneEcriture = {
   id: string;
@@ -173,7 +188,12 @@ export default function SaisieComptablePage() {
 
   const handleOpenCreateModal = () => {
     setEditingId(null);
-    setFormData(defaultEcritureData);
+    setFormData({
+      ...defaultEcritureData,
+      dateSaisie: new Date().toISOString().split('T')[0],
+      dateOperation: new Date().toISOString().split('T')[0],
+      lignes: [],
+    });
     setIsModalOpen(true);
   };
   
@@ -396,26 +416,44 @@ export default function SaisieComptablePage() {
               </DialogDescription>
             </DialogHeader>
              <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
-                <Card>
-                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="journal">Code Journal</Label>
-                            <Input id="journal" value={formData.journal} onChange={handleFormChange} required/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="dateOperation">Date de l'opération</Label>
-                            <Input id="dateOperation" type="date" value={formData.dateOperation} onChange={handleFormChange} required/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="numeroPiece">N° de Pièce</Label>
-                            <Input id="numeroPiece" value={formData.numeroPiece} onChange={handleFormChange} required/>
-                        </div>
-                        <div className="space-y-2 md:col-span-2 lg:col-span-1">
-                            <Label htmlFor="libelleOperation">Libellé de l'opération</Label>
-                            <Input id="libelleOperation" value={formData.libelleOperation} onChange={handleFormChange} required/>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="dateSaisie">Date de saisie</Label>
+                      <Input id="dateSaisie" type="date" value={formData.dateSaisie} disabled />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="journal">Journal *</Label>
+                      <Select 
+                        onValueChange={(value) => setFormData(prev => ({...prev, journal: value}))} 
+                        value={formData.journal}
+                        required
+                      >
+                          <SelectTrigger id="journal">
+                              <SelectValue placeholder="Sélectionnez un journal" />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {MOCK_JOURNALS.map(j => (
+                                  <SelectItem key={j.code} value={j.code}>{`${j.code} - ${j.intitule}`}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="dateOperation">Date de l'opération *</Label>
+                      <Input id="dateOperation" type="date" value={formData.dateOperation} onChange={handleFormChange} required/>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="numeroPiece">N° Pièce *</Label>
+                        <Input id="numeroPiece" value={formData.numeroPiece} onChange={handleFormChange} required/>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="libelleOperation">Libellé de l'opération *</Label>
+                        <Input id="libelleOperation" value={formData.libelleOperation} onChange={handleFormChange} required/>
+                    </div>
+                </div>
 
                 <div className="space-y-4">
                   <Label className="flex items-center gap-2"><List className="h-4 w-4"/>Lignes d'écriture</Label>
@@ -423,12 +461,12 @@ export default function SaisieComptablePage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[120px]">Compte</TableHead>
-                          <TableHead className="w-[120px]">Tiers</TableHead>
-                          <TableHead>Libellé</TableHead>
-                          <TableHead className="w-[150px]">Débit</TableHead>
-                          <TableHead className="w-[150px]">Crédit</TableHead>
-                          <TableHead className="w-[50px]">Action</TableHead>
+                          <TableHead className="w-[120px]">COMPTE</TableHead>
+                          <TableHead className="w-[120px]">TIERS</TableHead>
+                          <TableHead>LIBELLÉ</TableHead>
+                          <TableHead className="w-[150px]">DÉBIT</TableHead>
+                          <TableHead className="w-[150px]">CRÉDIT</TableHead>
+                          <TableHead className="w-[50px]">ACTION</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -445,19 +483,17 @@ export default function SaisieComptablePage() {
                       </TableBody>
                     </Table>
                   </div>
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start pt-2">
                     <Button type="button" variant="default" size="sm" onClick={addLigne}><PlusCircle className="mr-2 h-4 w-4" />Ajouter une ligne</Button>
-                    <Card className="w-full max-w-sm">
-                      <CardContent className="p-3 space-y-2 text-sm">
-                        <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)} €</span></div>
-                        <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)} €</span></div>
+                    <div className="w-full max-w-sm space-y-2 text-sm p-4 border rounded-lg bg-muted/50">
+                        <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
+                        <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
                         <Separator/>
                         <div className={`flex justify-between font-bold ${solde !== 0 ? 'text-destructive' : 'text-green-600'}`}>
                            <span>Solde:</span>
-                           <span className="font-mono">{solde.toFixed(2)} €</span>
+                           <span className="font-mono">{solde.toFixed(2)} FCFA</span>
                         </div>
-                      </CardContent>
-                    </Card>
+                    </div>
                   </div>
                 </div>
             </div>
