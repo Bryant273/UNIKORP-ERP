@@ -1,13 +1,13 @@
+
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,14 +15,43 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, PlusCircle, Printer } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Trash2, PlusCircle, Printer, Eye, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Data types
+// --- DATA TYPES & MOCK DATA ---
+
 type LineItem = {
   id: string;
   description: string;
@@ -31,6 +60,7 @@ type LineItem = {
 };
 
 type InvoiceData = {
+  id: string;
   clientName: string;
   clientAddress: string;
   invoiceNumber: string;
@@ -42,16 +72,54 @@ type InvoiceData = {
   notes: string;
 };
 
-// Default state
-const getDefaultInvoiceData = (): InvoiceData => {
+const calculateTotals = (invoice: Omit<InvoiceData, 'id'>) => {
+    const subTotal = invoice.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
+    const vatAmount = invoice.isVatEnabled ? subTotal * (invoice.vatRate / 100) : 0;
+    const total = subTotal + vatAmount;
+    return { subTotal, vatAmount, total };
+};
+
+const initialInvoices: InvoiceData[] = [
+  {
+    id: 'inv_1',
+    clientName: 'Client Alpha SARL',
+    clientAddress: '10 Rue du Commerce, 33000 Bordeaux',
+    invoiceNumber: 'FACT-2024-00123',
+    invoiceDate: '2024-07-15',
+    dueDate: '2024-08-14',
+    lineItems: [
+      { id: 'l1', description: 'Développement de site web', quantity: 1, unitPrice: 2500 },
+      { id: 'l2', description: 'Hébergement annuel', quantity: 1, unitPrice: 300 },
+    ],
+    isVatEnabled: true,
+    vatRate: 20,
+    notes: 'Merci de votre confiance.',
+  },
+  {
+    id: 'inv_2',
+    clientName: 'Tech Innovante Inc.',
+    clientAddress: '456 Avenue du Futur, Lyon',
+    invoiceNumber: 'FACT-2024-00124',
+    invoiceDate: '2024-07-18',
+    dueDate: '2024-08-17',
+    lineItems: [{ id: 'l3', description: 'Consulting SEO', quantity: 10, unitPrice: 150 }],
+    isVatEnabled: true,
+    vatRate: 20,
+    notes: 'Paiement à réception.',
+  },
+];
+
+const getDefaultInvoiceData = (): Omit<InvoiceData, 'id'> => {
     const today = new Date();
     const dueDate = new Date();
     dueDate.setDate(today.getDate() + 30);
 
+    const nextInvoiceNumber = `FACT-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-001`;
+
     return {
         clientName: '',
         clientAddress: '',
-        invoiceNumber: `FACT-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-001`,
+        invoiceNumber: nextInvoiceNumber,
         invoiceDate: today.toISOString().split('T')[0],
         dueDate: dueDate.toISOString().split('T')[0],
         lineItems: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
@@ -61,11 +129,14 @@ const getDefaultInvoiceData = (): InvoiceData => {
     };
 };
 
-// Live Preview Component
-const LiveInvoicePreview = React.forwardRef<HTMLDivElement, { invoice: InvoiceData, subTotal: number, vatAmount: number, total: number }>(
-  ({ invoice, subTotal, vatAmount, total }, ref) => {
+
+// --- INVOICE PREVIEW COMPONENT ---
+
+const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) => {
+    const { subTotal, vatAmount, total } = calculateTotals(invoice);
+
     return (
-        <div ref={ref} id="invoice-preview" className="bg-white rounded-lg shadow-lg p-8 w-full mx-auto text-black font-sans text-sm border">
+        <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
             <div className="flex justify-between items-start mb-8">
                 <div>
                     <Logo className="h-12 w-12 text-primary" />
@@ -142,20 +213,47 @@ const LiveInvoicePreview = React.forwardRef<HTMLDivElement, { invoice: InvoiceDa
             </div>
         </div>
     );
-});
+};
 LiveInvoicePreview.displayName = 'LiveInvoicePreview';
 
-// Main Page Component
+// --- MAIN PAGE COMPONENT ---
 export default function ElaborationFacturesPage() {
-  const [invoice, setInvoice] = useState<InvoiceData>(getDefaultInvoiceData());
+  const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<InvoiceData | null>(null);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<InvoiceData | null>(null);
+  
+  const [formData, setFormData] = useState<Omit<InvoiceData, 'id'>>(getDefaultInvoiceData());
   const { toast } = useToast();
 
-  const handleInputChange = (field: keyof InvoiceData, value: any) => {
-    setInvoice(prev => ({ ...prev, [field]: value }));
+  const handleOpenCreateSheet = () => {
+    setEditingInvoice(null);
+    setIsViewMode(false);
+    setFormData(getDefaultInvoiceData());
+    setIsSheetOpen(true);
+  };
+  
+  const handleOpenEditSheet = (invoice: InvoiceData) => {
+    setEditingInvoice(invoice);
+    setIsViewMode(false);
+    setFormData(JSON.parse(JSON.stringify(invoice)));
+    setIsSheetOpen(true);
   };
 
+  const handleOpenViewSheet = (invoice: InvoiceData) => {
+    setEditingInvoice(invoice);
+    setIsViewMode(true);
+    setFormData(JSON.parse(JSON.stringify(invoice)));
+    setIsSheetOpen(true);
+  };
+
+  const handleFormChange = (field: keyof Omit<InvoiceData, 'id'>, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
   const handleLineItemChange = (id: string, field: keyof Omit<LineItem, 'id'>, value: string | number) => {
-    setInvoice(prev => ({
+    setFormData(prev => ({
       ...prev,
       lineItems: prev.lineItems.map(item =>
         item.id === id ? { ...item, [field]: value } : item
@@ -164,28 +262,42 @@ export default function ElaborationFacturesPage() {
   };
 
   const addLineItem = () => {
-    setInvoice(prev => ({
+    setFormData(prev => ({
       ...prev,
       lineItems: [...prev.lineItems, { id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
     }));
   };
 
   const removeLineItem = (id: string) => {
-    setInvoice(prev => ({
+    setFormData(prev => ({
       ...prev,
       lineItems: prev.lineItems.filter(item => item.id !== id),
     }));
   };
 
-  const { subTotal, vatAmount, total } = useMemo(() => {
-    const subTotal = invoice.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
-    const vatAmount = invoice.isVatEnabled ? subTotal * (invoice.vatRate / 100) : 0;
-    const total = subTotal + vatAmount;
-    return { subTotal, vatAmount, total };
-  }, [invoice.lineItems, invoice.isVatEnabled, invoice.vatRate]);
-  
-  const handlePrint = () => {
+  const handleSave = () => {
+    if (editingInvoice) {
+      setInvoices(invoices.map(inv => inv.id === editingInvoice.id ? { id: inv.id, ...formData } : inv));
+      toast({ title: "Facture mise à jour." });
+    } else {
+      const newInvoice = { id: `inv_${Date.now()}`, ...formData };
+      setInvoices(prev => [newInvoice, ...prev]);
+      toast({ title: "Facture créée avec succès." });
+    }
+    setIsSheetOpen(false);
+  };
+
+  const handleDelete = () => {
+      if (invoiceToDelete) {
+          setInvoices(invoices.filter(inv => inv.id !== invoiceToDelete.id));
+          setInvoiceToDelete(null);
+          toast({ title: "Facture supprimée." });
+      }
+  };
+
+  const generatePDF = (invoice: InvoiceData) => {
     const doc = new jsPDF();
+    const { subTotal, vatAmount, total } = calculateTotals(invoice);
     
     // Header
     doc.setFontSize(20);
@@ -270,125 +382,142 @@ export default function ElaborationFacturesPage() {
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-4 md:p-6 lg:p-8">
-      {/* Form Column */}
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations sur la facture</CardTitle>
-          </CardHeader>
-          <CardContent className="grid md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="invoiceNumber">N° de facture</Label>
-                <Input id="invoiceNumber" value={invoice.invoiceNumber} onChange={(e) => handleInputChange('invoiceNumber', e.target.value)} />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="invoiceDate">Date de facturation</Label>
-                <Input id="invoiceDate" type="date" value={invoice.invoiceDate} onChange={(e) => handleInputChange('invoiceDate', e.target.value)} />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="dueDate">Date d'échéance</Label>
-                <Input id="dueDate" type="date" value={invoice.dueDate} onChange={(e) => handleInputChange('dueDate', e.target.value)} />
-              </div>
-          </CardContent>
-        </Card>
-        
+    <>
         <Card>
             <CardHeader>
-                <CardTitle>Informations sur le client</CardTitle>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="clientName">Nom du client</Label>
-                    <Input id="clientName" value={invoice.clientName} onChange={(e) => handleInputChange('clientName', e.target.value)} placeholder="Nom ou raison sociale" />
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-2xl">Gestion des Factures</CardTitle>
+                        <CardDescription>
+                            Créez, consultez et gérez toutes vos factures de vente.
+                        </CardDescription>
+                    </div>
+                    <Button onClick={handleOpenCreateSheet}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Créer une facture
+                    </Button>
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="clientAddress">Adresse du client</Label>
-                    <Textarea id="clientAddress" value={invoice.clientAddress} onChange={(e) => handleInputChange('clientAddress', e.target.value)} placeholder="Adresse complète" />
-                </div>
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Lignes de la facture</CardTitle>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="w-[100px]">Quantité</TableHead>
-                            <TableHead className="w-[150px]">Prix U. (HT)</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
+                            <TableHead>N° Facture</TableHead>
+                            <TableHead>Date d'émission</TableHead>
+                            <TableHead>Tiers</TableHead>
+                            <TableHead className="text-right">Montant TTC</TableHead>
+                            <TableHead className="text-center">Statut</TableHead>
+                            <TableHead className="text-right w-[200px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {invoice.lineItems.map(item => (
-                            <TableRow key={item.id} className="odd:bg-muted/50">
-                                <TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation de service" /></TableCell>
-                                <TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} /></TableCell>
-                                <TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} /></TableCell>
-                                <TableCell>
-                                    <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {invoices.map((invoice) => {
+                            const { total } = calculateTotals(invoice);
+                            const isPaid = new Date(invoice.dueDate) > new Date();
+                            return (
+                                <TableRow key={invoice.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-mono">{invoice.invoiceNumber}</TableCell>
+                                    <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
+                                    <TableCell className="font-medium">{invoice.clientName}</TableCell>
+                                    <TableCell className="text-right font-mono">{total.toFixed(2)} XOF</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant={isPaid ? 'default' : 'destructive'}>{isPaid ? 'Payée' : 'En retard'}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(invoice)}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><Printer className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setInvoiceToDelete(invoice)}><Trash2 className="h-4 w-4" /></Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
                     </TableBody>
                 </Table>
-                 <Button onClick={addLineItem} variant="outline" className="mt-4">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter une ligne
-                </Button>
             </CardContent>
-        </Card>
-        
-        <Card>
-            <CardHeader>
-                <CardTitle>TVA et Notes</CardTitle>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-                 <div className="flex items-center space-x-2 rounded-lg border p-4">
-                    <div className="flex-1 space-y-1">
-                        <Label htmlFor="isVatEnabled">Activer la TVA</Label>
-                        <p className="text-xs text-muted-foreground">Appliquer la TVA sur le total HT.</p>
-                    </div>
-                    <Switch id="isVatEnabled" checked={invoice.isVatEnabled} onCheckedChange={(checked) => handleInputChange('isVatEnabled', checked)} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="vatRate">Taux de TVA (%)</Label>
-                    <Input id="vatRate" type="number" value={invoice.vatRate} onChange={(e) => handleInputChange('vatRate', Number(e.target.value))} disabled={!invoice.isVatEnabled} />
-                </div>
-                 <div className="md:col-span-2 space-y-2">
-                    <Label htmlFor="notes">Notes / Pied de page</Label>
-                    <Textarea id="notes" value={invoice.notes} onChange={(e) => handleInputChange('notes', e.target.value)} />
-                </div>
-            </CardContent>
-            <CardFooter>
-                 <Button onClick={handlePrint} className="w-full md:w-auto ml-auto">
-                    <Printer className="mr-2 h-4 w-4" />
-                    Imprimer / Générer PDF
-                </Button>
-            </CardFooter>
         </Card>
 
-      </div>
-      
-      {/* Preview Column */}
-      <div className="hidden lg:block">
-        <div className="sticky top-24">
-           <Card>
-            <CardHeader>
-              <CardTitle>Aperçu en direct</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <LiveInvoicePreview invoice={invoice} subTotal={subTotal} vatAmount={vatAmount} total={total} />
-            </CardContent>
-           </Card>
-        </div>
-      </div>
-    </div>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetContent className="w-full sm:max-w-full md:w-[90vw] lg:w-[80vw] xl:w-[70vw] p-0 flex flex-col">
+                <SheetHeader className="p-6 border-b">
+                    <SheetTitle>{editingInvoice ? (isViewMode ? 'Détails de la facture' : 'Modifier la facture') : 'Créer une nouvelle facture'}</SheetTitle>
+                    <SheetDescription>
+                        {isViewMode ? 'Consultez les informations de la facture.' : 'Remplissez les informations ci-dessous. Les modifications sont visibles en direct.'}
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+                    {/* Form Panel */}
+                    <ScrollArea className="md:col-span-1 h-full">
+                        <div className="p-6 space-y-6">
+                            <Card>
+                                <CardHeader><CardTitle>Informations sur la facture</CardTitle></CardHeader>
+                                <CardContent className="grid sm:grid-cols-3 gap-4">
+                                    <div className="space-y-2"><Label htmlFor="invoiceNumber">N° de facture</Label><Input id="invoiceNumber" value={formData.invoiceNumber} onChange={(e) => handleFormChange('invoiceNumber', e.target.value)} disabled={isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="invoiceDate">Date de facturation</Label><Input id="invoiceDate" type="date" value={formData.invoiceDate} onChange={(e) => handleFormChange('invoiceDate', e.target.value)} disabled={isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="dueDate">Date d'échéance</Label><Input id="dueDate" type="date" value={formData.dueDate} onChange={(e) => handleFormChange('dueDate', e.target.value)} disabled={isViewMode} /></div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle>Informations sur le client</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2"><Label htmlFor="clientName">Nom du client</Label><Input id="clientName" value={formData.clientName} onChange={(e) => handleFormChange('clientName', e.target.value)} placeholder="Nom ou raison sociale" disabled={isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="clientAddress">Adresse du client</Label><Textarea id="clientAddress" value={formData.clientAddress} onChange={(e) => handleFormChange('clientAddress', e.target.value)} placeholder="Adresse complète" disabled={isViewMode} /></div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle>Lignes de la facture</CardTitle></CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="w-[100px]">Qté</TableHead><TableHead className="w-[150px]">Prix U. (HT)</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
+                                        <TableBody>
+                                            {formData.lineItems.map(item => (
+                                                <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell>{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    {!isViewMode && <Button onClick={addLineItem} variant="outline" className="mt-4"><PlusCircle className="mr-2 h-4 w-4" />Ajouter une ligne</Button>}
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle>TVA et Notes</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center space-x-2 rounded-lg border p-4"><div className="flex-1 space-y-1"><Label htmlFor="isVatEnabled">Activer la TVA</Label><p className="text-xs text-muted-foreground">Appliquer la TVA sur le total HT.</p></div><Switch id="isVatEnabled" checked={formData.isVatEnabled} onCheckedChange={(checked) => handleFormChange('isVatEnabled', checked)} disabled={isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="vatRate">Taux de TVA (%)</Label><Input id="vatRate" type="number" value={formData.vatRate} onChange={(e) => handleFormChange('vatRate', Number(e.target.value))} disabled={!formData.isVatEnabled || isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="notes">Notes / Pied de page</Label><Textarea id="notes" value={formData.notes} onChange={(e) => handleFormChange('notes', e.target.value)} disabled={isViewMode} /></div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </ScrollArea>
+                    {/* Preview Panel */}
+                    <ScrollArea className="md:col-span-1 h-full bg-muted">
+                       <div className="p-8">
+                            <LiveInvoicePreview invoice={formData} />
+                       </div>
+                    </ScrollArea>
+                </div>
+                <SheetFooter className="p-6 border-t">
+                    <SheetClose asChild><Button variant="outline">Annuler</Button></SheetClose>
+                    {!isViewMode && <Button onClick={handleSave}>Enregistrer</Button>}
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
+        
+        <AlertDialog open={!!invoiceToDelete} onOpenChange={() => setInvoiceToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Cette action est irréversible. La facture sera définitivement supprimée.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setInvoiceToDelete(null)}>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    </>
   );
 }
