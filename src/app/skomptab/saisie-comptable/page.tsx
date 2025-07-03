@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -198,7 +198,7 @@ type AutocompleteItem = {
 
 type AutocompleteInputProps = {
   items: AutocompleteItem[];
-  value: string; // The controlled value from the parent (e.g., the account code)
+  value: string;
   onValueChange: (value: string, itemData?: any) => void;
   getDisplayValue: (value: string) => string;
   placeholder?: string;
@@ -209,22 +209,23 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(() => getDisplayValue(value));
 
-  React.useEffect(() => {
+  useEffect(() => {
     setInputValue(getDisplayValue(value));
   }, [value, getDisplayValue]);
 
   const filteredItems = useMemo(() => {
-    if (!inputValue || getDisplayValue(value) === inputValue) {
+    if (!inputValue) {
       return items.slice(0, 10);
     }
+    const lowercasedInput = inputValue.toLowerCase();
     return items
       .filter(item =>
-          item.value.toLowerCase().includes(inputValue.toLowerCase()) ||
-          item.label.toLowerCase().includes(inputValue.toLowerCase())
+        item.value.toLowerCase().includes(lowercasedInput) ||
+        item.label.toLowerCase().includes(lowercasedInput)
       )
       .slice(0, 10);
-  }, [inputValue, items, value, getDisplayValue]);
-  
+  }, [inputValue, items]);
+
   const handleSelect = (item: AutocompleteItem) => {
     onValueChange(item.value, item.data);
     setInputValue(getDisplayValue(item.value));
@@ -239,13 +240,12 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
     }
     if (!isOpen) setIsOpen(true);
   };
-  
+
   const handleBlur = () => {
-    setIsOpen(false);
-    // If the input text does not correspond to a valid selected value, reset it
-    if (getDisplayValue(value) !== inputValue) {
-        setInputValue(getDisplayValue(value));
-    }
+    // We use a small timeout to allow the popover's onMouseDown to fire before closing.
+    setTimeout(() => {
+        if(isOpen) setIsOpen(false);
+    }, 150);
   };
 
   return (
@@ -262,6 +262,7 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
       </PopoverTrigger>
       <PopoverContent
         className="w-[--radix-popover-trigger-width] p-0"
+        align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <ScrollArea className="h-auto max-h-64">
@@ -271,12 +272,11 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
                 key={item.value}
                 type="button"
                 className="w-full text-left rounded-sm p-2 text-sm hover:bg-accent"
-                onClick={() => handleSelect(item)}
+                onMouseDown={() => handleSelect(item)}
               >
                 {item.label}
               </button>
             ))}
-             {filteredItems.length === 0 && <p className="p-2 text-center text-sm text-muted-foreground">Aucun résultat</p>}
           </div>
         </ScrollArea>
       </PopoverContent>
@@ -623,8 +623,8 @@ export default function SaisieComptablePage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[150px]">COMPTE</TableHead>
-                          <TableHead className="w-[150px]">TIERS</TableHead>
+                          <TableHead className="w-[200px]">COMPTE</TableHead>
+                          <TableHead className="w-[200px]">TIERS</TableHead>
                           <TableHead>LIBELLÉ</TableHead>
                           <TableHead className="w-[150px]">DÉBIT</TableHead>
                           <TableHead className="w-[150px]">CRÉDIT</TableHead>
