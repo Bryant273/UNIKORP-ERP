@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -40,7 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Trash2, PlusCircle, Upload, FileUp } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Upload, FileUp, Download } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -258,6 +257,10 @@ export default function ComptesTiersPage() {
               <CardDescription>Gestion des comptes clients et fournisseurs.</CardDescription>
             </div>
              <div className="flex gap-2">
+               <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Exporter
+              </Button>
               <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
                 <Upload className="mr-2 h-4 w-4" />
                 Importer
