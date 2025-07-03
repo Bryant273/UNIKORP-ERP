@@ -118,7 +118,7 @@ const getNavForPath = (pathname: string) => {
       items: skomptabNav,
     };
   }
-  if (pathname.startsWith('/logson') || pathname.startsWith('/markos') || pathname.startsWith('/socix')) {
+  if (pathname.startsWith('/logson') || pathname.startsWith('/markos') || pathname.startsWith('/socix') || pathname.startsWith('/chat')) {
      return {
       dashboardLink: pathname,
       items: [],

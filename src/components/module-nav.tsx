@@ -8,6 +8,7 @@ import {
   Megaphone,
   Truck,
   UsersRound,
+  MessageSquare,
 } from 'lucide-react';
 
 const navLinks = [
@@ -35,6 +36,11 @@ const navLinks = [
     href: '/socix',
     label: 'SOCIX',
     icon: UsersRound,
+  },
+  {
+    href: '/chat',
+    label: 'CHAT',
+    icon: MessageSquare,
   },
 ];
 
