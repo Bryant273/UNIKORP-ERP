@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -72,6 +73,7 @@ const defaultFormData: Omit<CompteTiers, 'id'> = {
 
 export default function ComptesTiersPage() {
   const [comptes, setComptes] = useState<CompteTiers[]>(initialComptes);
+  const [activeTab, setActiveTab] = useState('clients');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCompte, setEditingCompte] = useState<CompteTiers | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
@@ -213,6 +215,29 @@ export default function ComptesTiersPage() {
     setIsDragging(false);
   };
   
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableData = activeTab === 'clients' ? clients : fournisseurs;
+    const tableTitle = activeTab === 'clients' ? 'Clients' : 'Fournisseurs';
+
+    const svgString = '<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 4H14C19.5228 4 24 8.47715 24 14V28" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const logoDataUri = 'data:image/svg+xml;base64,' + btoa(svgString);
+
+    doc.addImage(logoDataUri, 'SVG', 15, 12, 10, 10);
+    doc.setFontSize(18);
+    doc.text(`Liste des ${tableTitle}`, 105, 20, { align: 'center' });
+    
+    autoTable(doc, {
+        startY: 30,
+        head: [['Numéro', 'Intitulé', 'Téléphone']],
+        body: tableData.map(c => [c.numero, c.intitule, c.telephone]),
+        theme: 'striped',
+        headStyles: { fillColor: [28, 32, 57] }, // #1C2039 from your header
+    });
+
+    doc.save(`export_${activeTab}.pdf`);
+  };
+  
   const renderTable = (data: CompteTiers[]) => (
     <Table>
       <TableHeader>
@@ -257,7 +282,7 @@ export default function ComptesTiersPage() {
               <CardDescription>Gestion des comptes clients et fournisseurs.</CardDescription>
             </div>
              <div className="flex gap-2">
-               <Button variant="outline">
+               <Button variant="outline" onClick={handleExportPDF}>
                 <Download className="mr-2 h-4 w-4" />
                 Exporter
               </Button>
@@ -273,7 +298,7 @@ export default function ComptesTiersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="clients" className="w-full">
+          <Tabs defaultValue="clients" className="w-full" onValueChange={(value) => setActiveTab(value as 'clients' | 'fournisseurs')}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="fournisseurs">Fournisseurs</TabsTrigger>
