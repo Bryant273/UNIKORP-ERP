@@ -121,6 +121,7 @@ export default function ControleTresoreriePage() {
   
   const [editingTransaction, setEditingTransaction] = useState<TreasuryTransaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<TreasuryTransaction | null>(null);
+  const [viewingTransaction, setViewingTransaction] = useState<TreasuryTransaction | null>(null);
   const { toast } = useToast();
 
   const selectedAccount = accounts.find(acc => acc.id === selectedAccountId)!;
@@ -330,6 +331,10 @@ export default function ControleTresoreriePage() {
                             <TableCell className="text-right font-mono">{tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</TableCell>
                             <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
+                                    <Button variant="ghost" size="icon" onClick={() => setViewingTransaction(tx)}>
+                                        <Eye className="h-4 w-4" />
+                                        <span className="sr-only">Voir</span>
+                                    </Button>
                                     <Button variant="ghost" size="icon" onClick={() => handleOpenEditTransactionModal(tx)}>
                                       <Pencil className="h-4 w-4" />
                                       <span className="sr-only">Modifier</span>
@@ -447,6 +452,46 @@ export default function ControleTresoreriePage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <Dialog open={!!viewingTransaction} onOpenChange={() => setViewingTransaction(null)}>
+        <DialogContent>
+            <DialogHeader>
+            <DialogTitle>Détails du Mouvement</DialogTitle>
+            <DialogDescription>
+                Consultez les informations détaillées de la transaction.
+            </DialogDescription>
+            </DialogHeader>
+            {viewingTransaction && (
+            <div className="grid gap-3 py-4 text-sm">
+                <div className="flex justify-between items-center border-b pb-2">
+                    <span className="text-muted-foreground">Date</span>
+                    <span className="font-medium">{new Date(viewingTransaction.date).toLocaleDateString('fr-FR')}</span>
+                </div>
+                <div className="flex justify-between items-center border-b pb-2">
+                    <span className="text-muted-foreground">Libellé</span>
+                    <span className="font-medium text-right">{viewingTransaction.label}</span>
+                </div>
+                <div className="flex justify-between items-center border-b pb-2">
+                    <span className="text-muted-foreground">Compte</span>
+                    <span className="font-medium">{viewingTransaction.accountName}</span>
+                </div>
+                <div className="flex justify-between items-center border-b pb-2">
+                    <span className="text-muted-foreground">Type</span>
+                    <Badge variant={viewingTransaction.type === 'Débit' ? 'destructive' : 'default'} className="flex items-center gap-1 w-fit">
+                        {viewingTransaction.type === 'Débit' ? <ArrowDownCircle className="h-3 w-3"/> : <ArrowUpCircle className="h-3 w-3"/>}
+                        {viewingTransaction.type}
+                    </Badge>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                    <span className="text-muted-foreground">Montant</span>
+                    <span className="font-bold text-lg">{viewingTransaction.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</span>
+                </div>
+            </div>
+            )}
+            <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setViewingTransaction(null)}>Fermer</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
     </div>
   );
 }
