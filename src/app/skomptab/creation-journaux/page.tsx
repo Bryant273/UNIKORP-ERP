@@ -62,7 +62,7 @@ type Journal = {
 const initialJournals: Journal[] = [
   {
     id: 1,
-    code: 'AC',
+    code: 'AC 1',
     intitule: 'Journal des achats',
     type: 'Achats',
     compteRattache: '',
@@ -70,7 +70,7 @@ const initialJournals: Journal[] = [
   },
   {
     id: 2,
-    code: 'VE',
+    code: 'VE 1',
     intitule: 'Journal des ventes',
     type: 'Ventes',
     compteRattache: '',
@@ -78,8 +78,8 @@ const initialJournals: Journal[] = [
   },
   {
     id: 3,
-    code: 'BQ',
-    intitule: 'Journal de banque',
+    code: 'BNP 01',
+    intitule: 'Journal de banque BNP',
     type: 'Trésorerie',
     compteRattache: '512000',
     statut: 'Actif',
@@ -231,8 +231,8 @@ export default function CreationJournauxPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>{editingJournal ? 'Modifier le journal' : 'Nouveau journal'}</DialogTitle>
