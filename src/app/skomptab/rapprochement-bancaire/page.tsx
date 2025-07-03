@@ -150,12 +150,11 @@ export default function RapprochementBancairePage() {
     setLignesJournal(rapprochement.lignesJournal.length > 0 ? rapprochement.lignesJournal : MOCK_LIGNES_JOURNAL); // Load saved lines or mock
     const [month, year] = rapprochement.periode.split(' ');
     
-    // Correct way to get month index from French month name
     const frenchMonths = [
       'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
       'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
     ];
-    const monthIndex = frenchMonths.indexOf(month.toLowerCase());
+    const monthIndex = frenchMonths.findIndex(m => m === month.toLowerCase());
 
     if (monthIndex !== -1) {
         const fromDate = new Date(parseInt(year), monthIndex, 1);
@@ -165,7 +164,6 @@ export default function RapprochementBancairePage() {
         });
     } else {
         console.error(`Invalid month: ${month}`);
-         // Fallback for safety, although it shouldn't happen with current implementation
         const now = new Date();
         toast({
             title: "Erreur de date",
@@ -331,6 +329,60 @@ export default function RapprochementBancairePage() {
     doc.text(`Écart: ${ecart.toFixed(2)}`, 15, finalY + 43);
 
     doc.save(`rapprochement_${journalCode}_${periodString.replace(/\s/g, '')}.pdf`);
+  };
+
+  const handleExportPDFFromList = (rapprochement: Rapprochement) => {
+    const { journal, periode, soldeInitial, lignesReleve, lignesJournal, journalCode } = rapprochement;
+    
+    const totalDebitReleve = lignesReleve.filter(l => l.lettre).reduce((acc, l) => acc + l.debit, 0);
+    const totalCreditReleve = lignesReleve.filter(l => l.lettre).reduce((acc, l) => acc + l.credit, 0);
+    const totalReleve = totalCreditReleve - totalDebitReleve;
+    const soldeFinalReleve = (soldeInitial + totalReleve);
+
+    const totalDebitJournal = lignesJournal.filter(l => l.lettre).reduce((acc, l) => acc + l.debit, 0);
+    const totalCreditJournal = lignesJournal.filter(l => l.lettre).reduce((acc, l) => acc + l.credit, 0);
+    const totalJournal = totalCreditJournal - totalDebitJournal;
+    const soldeFinalJournal = (soldeInitial + totalJournal);
+    const ecart = soldeFinalReleve - soldeFinalJournal;
+
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('Rapprochement Bancaire', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Journal: ${journal}`, 15, 30);
+    doc.text(`Période: ${periode}`, 15, 36);
+
+    doc.setFontSize(14);
+    doc.text('Relevé Bancaire', 15, 50);
+    autoTable(doc, {
+      startY: 55,
+      head: [['Lettré', 'Date', 'Libellé', 'Débit', 'Crédit']],
+      body: lignesReleve.map(l => [l.lettre ? 'X' : '', l.date, l.libelle, l.debit.toFixed(2), l.credit.toFixed(2)]),
+    });
+
+    let finalY = (doc as any).lastAutoTable.finalY;
+
+    doc.setFontSize(14);
+    doc.text('Journal de Trésorerie', 15, finalY + 15);
+    autoTable(doc, {
+      startY: finalY + 20,
+      head: [['Lettré', 'Date', 'Libellé', 'Débit', 'Crédit']],
+      body: lignesJournal.map(l => [l.lettre ? 'X' : '', format(new Date(l.date), 'dd/MM/yyyy'), l.libelle, l.debit.toFixed(2), l.credit.toFixed(2)]),
+    });
+    
+    finalY = (doc as any).lastAutoTable.finalY;
+    
+    doc.setFontSize(14);
+    doc.text('Synthèse', 15, finalY + 15);
+    doc.setFontSize(10);
+    doc.text(`Solde initial: ${soldeInitial.toFixed(2)}`, 15, finalY + 22);
+    doc.text(`Solde final relevé (lettré): ${soldeFinalReleve.toFixed(2)}`, 15, finalY + 29);
+    doc.text(`Solde final comptable (lettré): ${soldeFinalJournal.toFixed(2)}`, 15, finalY + 36);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Écart: ${ecart.toFixed(2)}`, 15, finalY + 43);
+
+    doc.save(`rapprochement_${journalCode}_${periode.replace(/\s/g, '')}.pdf`);
   };
 
 
@@ -554,6 +606,10 @@ export default function RapprochementBancairePage() {
                 <TableCell><Badge variant="outline">{r.journal}</Badge></TableCell>
                 <TableCell className="text-right">
                    <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleExportPDFFromList(r)}>
+                          <Download className="h-4 w-4" />
+                          <span className="sr-only">Télécharger</span>
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => loadRapprochement(r, true)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Voir</span>
