@@ -300,11 +300,15 @@ export default function SaisieComptablePage() {
   const handleOpenCreateModal = () => {
     setEditingId(null);
     setIsViewMode(false);
+    const time = Date.now();
     setFormData({
       ...defaultEcritureData,
       dateSaisie: new Date().toISOString().split('T')[0],
       dateOperation: new Date().toISOString().split('T')[0],
-      lignes: [],
+      lignes: [
+        { id: `new-${time}-1`, compte: '', libelle: '', tiers: '', debit: 0, credit: 0 },
+        { id: `new-${time}-2`, compte: '', libelle: '', tiers: '', debit: 0, credit: 0 },
+      ],
     });
     setIsModalOpen(true);
   };
@@ -606,7 +610,7 @@ export default function SaisieComptablePage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {formData.lignes.map((ligne) => (
+                        {formData.lignes.map((ligne, index) => (
                           <TableRow key={ligne.id}>
                             <TableCell>
                               <AutocompleteInput
@@ -639,7 +643,7 @@ export default function SaisieComptablePage() {
                             <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
                             <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
                             <TableCell>
-                              {!isViewMode && (
+                              {!isViewMode && index >= 2 && (
                                 <Button variant="ghost" size="icon" type="button" onClick={() => removeLigne(ligne.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                               )}
                             </TableCell>
@@ -670,7 +674,7 @@ export default function SaisieComptablePage() {
               ) : (
                 <>
                   <Button type="button" variant="outline" onClick={resetModalState}>Annuler</Button>
-                  <Button type="submit">Enregistrer</Button>
+                  <Button type="submit" disabled={Math.abs(solde) > 0.001}>Enregistrer</Button>
                 </>
               )}
             </DialogFooter>
