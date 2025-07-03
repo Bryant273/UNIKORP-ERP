@@ -429,13 +429,21 @@ export default function RapprochementBancairePage() {
         </Card>
 
         {/* Reconciliation Workspace */}
-        <div className="grid lg:grid-cols-5 gap-6 items-start">
-            <Card className="lg:col-span-2">
-                 <CardHeader>
-                    <CardTitle>2. Relevé Bancaire</CardTitle>
-                    <CardDescription>Saisissez les lignes du relevé.</CardDescription>
-                </CardHeader>
-                 <CardContent>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>2. Espace de Rapprochement</CardTitle>
+                    <CardDescription>Saisissez le relevé, consultez le journal et lancez le rapprochement intelligent.</CardDescription>
+                </div>
+                <Button size="lg" className="flex-shrink-0" onClick={handleAiMatching} disabled={isProcessing || isViewMode}>
+                    {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5 text-yellow-300" />}
+                    <span className="ml-2">{isProcessing ? 'Analyse en cours...' : 'Rapprochement IA'}</span>
+                </Button>
+            </CardHeader>
+            <CardContent className="space-y-8">
+                {/* Relevé Bancaire */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Relevé Bancaire</h3>
                     <div className="border rounded-md">
                         <Table>
                             <TableHeader>
@@ -460,23 +468,14 @@ export default function RapprochementBancairePage() {
                             </TableBody>
                         </Table>
                     </div>
-                    {!isViewMode && <Button variant="outline" size="sm" className="mt-4" onClick={addLigneReleve}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button>}
-                </CardContent>
-            </Card>
+                    {!isViewMode && <Button variant="outline" size="sm" onClick={addLigneReleve}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button>}
+                </div>
 
-            <div className="lg:col-span-1 flex items-center justify-center pt-16">
-                 <Button size="lg" className="w-full h-24 flex-col gap-2" onClick={handleAiMatching} disabled={isProcessing || isViewMode}>
-                    {isProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Sparkles className="h-8 w-8 text-yellow-300" />}
-                    <span>{isProcessing ? 'Analyse...' : 'Rapprochement IA'}</span>
-                </Button>
-            </div>
-
-             <Card className="lg:col-span-2">
-                 <CardHeader>
-                    <CardTitle>3. Journal de Trésorerie</CardTitle>
-                    <CardDescription>Mouvements enregistrés dans Unikorp.</CardDescription>
-                </CardHeader>
-                 <CardContent>
+                <Separator />
+                
+                {/* Journal de Trésorerie */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Journal de Trésorerie</h3>
                     <div className="border rounded-md max-h-[420px] overflow-y-auto">
                         <Table>
                             <TableHeader className="sticky top-0 bg-secondary">
@@ -501,12 +500,12 @@ export default function RapprochementBancairePage() {
                             </TableBody>
                         </Table>
                     </div>
-                </CardContent>
-            </Card>
-        </div>
+                </div>
+            </CardContent>
+        </Card>
 
         <Card>
-            <CardHeader><CardTitle>4. Synthèse et Validation</CardTitle></CardHeader>
+            <CardHeader><CardTitle>3. Synthèse et Validation</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-3 gap-6">
                 <div className="space-y-2 rounded-lg border p-4">
                     <h3 className="font-semibold">Relevé Bancaire</h3>
@@ -595,7 +594,7 @@ export default function RapprochementBancairePage() {
               <TableHead>Date de rapprochement</TableHead>
               <TableHead>Période</TableHead>
               <TableHead>Journal</TableHead>
-              <TableHead className="text-right w-[120px]">Actions</TableHead>
+              <TableHead className="text-right w-[180px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -606,10 +605,6 @@ export default function RapprochementBancairePage() {
                 <TableCell><Badge variant="outline">{r.journal}</Badge></TableCell>
                 <TableCell className="text-right">
                    <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleExportPDFFromList(r)}>
-                          <Download className="h-4 w-4" />
-                          <span className="sr-only">Télécharger</span>
-                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => loadRapprochement(r, true)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Voir</span>
@@ -617,6 +612,10 @@ export default function RapprochementBancairePage() {
                         <Button variant="ghost" size="icon" onClick={() => loadRapprochement(r, false)}>
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleExportPDFFromList(r)}>
+                          <Download className="h-4 w-4" />
+                          <span className="sr-only">Télécharger</span>
                         </Button>
                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setRapprochementToDelete(r)}>
                           <Trash2 className="h-4 w-4" />
