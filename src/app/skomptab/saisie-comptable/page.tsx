@@ -214,20 +214,24 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
   }, [value, getDisplayValue]);
 
   const filteredItems = useMemo(() => {
-    if (!inputValue) {
-      return isOpen ? items.slice(0, 10) : [];
+    if (isOpen && !inputValue) {
+      return items.slice(0, 10);
     }
-    const lowercasedInput = inputValue.toLowerCase();
-    return items
-      .filter(item =>
-        item.value.toLowerCase().includes(lowercasedInput) ||
-        item.label.toLowerCase().includes(lowercasedInput)
-      )
-      .slice(0, 10);
+    if (isOpen && inputValue) {
+        const lowercasedInput = inputValue.toLowerCase();
+        return items
+          .filter(item =>
+            item.value.toLowerCase().includes(lowercasedInput) ||
+            item.label.toLowerCase().includes(lowercasedInput)
+          )
+          .slice(0, 10);
+    }
+    return [];
   }, [inputValue, items, isOpen]);
 
   const handleSelect = (item: AutocompleteItem) => {
     onValueChange(item.value, item.data);
+    setInputValue(getDisplayValue(item.value));
     setIsOpen(false);
   };
 
@@ -242,9 +246,12 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
 
   const handleBlur = () => {
     setTimeout(() => {
-      setIsOpen(false);
-      setInputValue(getDisplayValue(value));
-    }, 200);
+      if (isOpen) {
+        setIsOpen(false);
+        // Reset to last valid selection on blur if no selection was made
+        setInputValue(getDisplayValue(value));
+      }
+    }, 150);
   };
 
   return (
@@ -376,6 +383,8 @@ export default function SaisieComptablePage() {
     }));
     setFormData({
       ...defaultEcritureData,
+      dateSaisie: new Date().toISOString().split('T')[0],
+      dateOperation: new Date().toISOString().split('T')[0],
       libelleOperation: template.libelle,
       lignes: newLignes
     });
@@ -467,11 +476,14 @@ export default function SaisieComptablePage() {
   const compteItems = useMemo(() => MOCK_COMPTES_GENERAUX.map(c => ({ value: c.numero, label: `${c.numero} - ${c.intitule}`, data: c })), []);
   const tiersItems = useMemo(() => MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: c.intitule, data: c })), []);
 
-  const getCompteDisplayValue = useCallback((val: string) => val || '', []);
+  const getCompteDisplayValue = useCallback((val: string) => {
+    const compte = MOCK_COMPTES_GENERAUX.find(c => c.numero === val);
+    return compte ? `${compte.numero} - ${compte.intitule}` : val;
+  }, []);
 
   const getTiersDisplayValue = useCallback((val: string) => {
       const tiers = MOCK_COMPTES_TIERS.find(t => t.numero === val);
-      return tiers ? tiers.intitule : (val || '');
+      return tiers ? tiers.intitule : val;
   }, []);
 
   const handleLigneCompteChange = useCallback((id: string, newValue: string, itemData?: any) => {
