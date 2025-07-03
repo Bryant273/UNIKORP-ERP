@@ -149,12 +149,35 @@ export default function RapprochementBancairePage() {
     setLignesReleve(rapprochement.lignesReleve.length > 0 ? rapprochement.lignesReleve : []); // Load saved lines or empty
     setLignesJournal(rapprochement.lignesJournal.length > 0 ? rapprochement.lignesJournal : MOCK_LIGNES_JOURNAL); // Load saved lines or mock
     const [month, year] = rapprochement.periode.split(' ');
-    const monthIndex = fr.localize?.month(fr.months.indexOf(month as any), {width: 'long'});
-    const fromDate = new Date(parseInt(year), fr.months.indexOf(month as any), 1);
-    setPeriod({
-      from: fromDate,
-      to: new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 0),
-    });
+    
+    // Correct way to get month index from French month name
+    const frenchMonths = [
+      'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
+      'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+    ];
+    const monthIndex = frenchMonths.indexOf(month.toLowerCase());
+
+    if (monthIndex !== -1) {
+        const fromDate = new Date(parseInt(year), monthIndex, 1);
+        setPeriod({
+          from: fromDate,
+          to: new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 0),
+        });
+    } else {
+        console.error(`Invalid month: ${month}`);
+         // Fallback for safety, although it shouldn't happen with current implementation
+        const now = new Date();
+        toast({
+            title: "Erreur de date",
+            description: `Le mois "${month}" n'a pas pu être reconnu. La période a été réinitialisée.`,
+            variant: "destructive",
+        });
+        setPeriod({
+            from: new Date(now.getFullYear(), now.getMonth(), 1),
+            to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
+        });
+    }
+
     setView('reconciliation');
   };
 
