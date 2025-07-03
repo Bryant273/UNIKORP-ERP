@@ -47,7 +47,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, PlusCircle } from 'lucide-react';
 
-type JournalType = 'Ventes' | 'Achats' | 'Trésorerie' | 'Opérations diverses';
+type JournalType = 'Ventes' | 'Achats' | 'Trésorerie' | 'Opérations diverses' | 'Report à nouveau';
 type JournalStatut = 'Actif' | 'Inactif';
 
 type Journal = {
@@ -260,6 +260,7 @@ export default function CreationJournauxPage() {
                     <SelectItem value="Achats">Achats</SelectItem>
                     <SelectItem value="Trésorerie">Trésorerie</SelectItem>
                     <SelectItem value="Opérations diverses">Opérations diverses</SelectItem>
+                    <SelectItem value="Report à nouveau">Report à nouveau</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
