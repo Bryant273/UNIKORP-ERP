@@ -406,23 +406,18 @@ export default function ElaborationFacturesPage() {
                             <TableHead>Date d'émission</TableHead>
                             <TableHead>Tiers</TableHead>
                             <TableHead className="text-right">Montant TTC</TableHead>
-                            <TableHead className="text-center">Statut</TableHead>
                             <TableHead className="text-right w-[200px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {invoices.map((invoice) => {
                             const { total } = calculateTotals(invoice);
-                            const isPaid = new Date(invoice.dueDate) > new Date();
                             return (
                                 <TableRow key={invoice.id} className="odd:bg-muted/50">
                                     <TableCell className="font-mono">{invoice.invoiceNumber}</TableCell>
                                     <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
                                     <TableCell className="font-medium">{invoice.clientName}</TableCell>
                                     <TableCell className="text-right font-mono">{total.toFixed(2)} XOF</TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant={isPaid ? 'default' : 'destructive'}>{isPaid ? 'Payée' : 'En retard'}</Badge>
-                                    </TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-end gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
