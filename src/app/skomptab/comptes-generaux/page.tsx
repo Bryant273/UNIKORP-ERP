@@ -50,6 +50,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { handleParseAccountingPlan } from '@/app/actions';
 
 type NatureCompte = 'Bilan - Actif' | 'Bilan - Passif' | 'Compte de résultat - Charge' | 'Compte de résultat - Produit' | 'Autre';
 
@@ -77,15 +78,6 @@ const initialComptes: Compte[] = [
   { id: 13, numero: '607000', intitule: 'Achats de marchandises', nature: 'Compte de résultat - Charge' },
   { id: 14, numero: '613000', intitule: 'Locations', nature: 'Compte de résultat - Charge' },
   { id: 15, numero: '622000', intitule: 'Rémunérations d\'intermédiaires et honoraires', nature: 'Compte de résultat - Charge' },
-];
-
-
-const mockImportData: Compte[] = [
-    { id: 100, numero: '641000', intitule: 'Rémunérations du personnel', nature: 'Compte de résultat - Charge' },
-    { id: 101, numero: '645000', intitule: 'Charges de sécurité sociale et de prévoyance', nature: 'Compte de résultat - Charge' },
-    { id: 102, numero: '707000', intitule: 'Ventes de marchandises', nature: 'Compte de résultat - Produit' },
-    { id: 103, numero: '758000', intitule: 'Produits divers de gestion courante', nature: 'Compte de résultat - Produit' },
-    { id: 104, numero: '601000', intitule: 'Achats stockés - Matières premières', nature: 'Compte de résultat - Charge' },
 ];
 
 const defaultFormData: Omit<Compte, 'id'> = {
@@ -212,7 +204,7 @@ export default function ComptesGenerauxPage() {
     }
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!fileToUpload) {
       toast({
         title: "Erreur",
@@ -225,36 +217,67 @@ export default function ComptesGenerauxPage() {
     setIsImporting(true);
     setImportProgress(0);
 
-    const steps = 5;
-    for (let i = 1; i <= steps; i++) {
+    const reader = new FileReader();
+    reader.readAsDataURL(fileToUpload);
+    reader.onload = async () => {
+      const fileDataUri = reader.result as string;
+
+      const progressInterval = setInterval(() => {
+        setImportProgress(prev => (prev < 90 ? prev + 10 : 90));
+      }, 200);
+
+      try {
+        const parsedComptes = await handleParseAccountingPlan({
+          fileDataUri,
+          fileType: fileToUpload.type,
+        });
+
+        clearInterval(progressInterval);
+        setImportProgress(100);
+
+        const newComptesWithId = parsedComptes.map(c => ({...c, id: Math.random() }));
+
+        if (importOption === 'replace') {
+          setComptes(newComptesWithId as Compte[]);
+        } else {
+          const existingNumeros = new Set(comptes.map(c => c.numero));
+          const newUniqueComptes = newComptesWithId.filter(mc => !existingNumeros.has(mc.numero));
+          setComptes([...comptes, ...newUniqueComptes as Compte[]]);
+        }
+        setCurrentPage(1);
+        
+        toast({
+          title: "Importation réussie",
+          description: `Le plan comptable a été mis à jour avec succès.`,
+        });
+
+      } catch (error) {
+        clearInterval(progressInterval);
+        console.error(error);
+        toast({
+          title: "Erreur d'importation",
+          description: "Une erreur est survenue lors de l'analyse du fichier.",
+          variant: "destructive",
+        });
+      } finally {
         setTimeout(() => {
-            setImportProgress((i / steps) * 100);
-
-            if (i === steps) {
-                if (importOption === 'replace') {
-                    setComptes(mockImportData);
-                } else {
-                    const existingNumeros = new Set(comptes.map(c => c.numero));
-                    const newUniqueComptes = mockImportData.filter(mc => !existingNumeros.has(mc.numero));
-                    setComptes([...comptes, ...newUniqueComptes]);
-                }
-                setCurrentPage(1);
-
-                toast({
-                    title: "Importation réussie",
-                    description: `Le plan comptable a été mis à jour avec succès.`,
-                });
-
-                setTimeout(() => {
-                  setIsImporting(false);
-                  setIsImportModalOpen(false);
-                  setFileToUpload(null);
-                  setImportOption('merge');
-                  setImportProgress(0);
-                }, 500);
-            }
-        }, i * 500);
-    }
+          setIsImporting(false);
+          setIsImportModalOpen(false);
+          setFileToUpload(null);
+          setImportOption('merge');
+          setImportProgress(0);
+        }, 1000);
+      }
+    };
+    reader.onerror = (error) => {
+        console.error("Error reading file:", error);
+        toast({
+            title: "Erreur",
+            description: "Impossible de lire le fichier.",
+            variant: "destructive",
+        });
+        setIsImporting(false);
+    };
   };
 
   const resetImportModal = () => {
