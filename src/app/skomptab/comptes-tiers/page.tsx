@@ -220,10 +220,9 @@ export default function ComptesTiersPage() {
     const tableData = activeTab === 'clients' ? clients : fournisseurs;
     const tableTitle = activeTab === 'clients' ? 'Clients' : 'Fournisseurs';
 
-    const svgString = '<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 4H14C19.5228 4 24 8.47715 24 14V28" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    const logoDataUri = 'data:image/svg+xml;base64,' + btoa(svgString);
+    const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABiSURBVHgB7dNBCgAgCARA8f9/2i6IEgq3hU1i4Nl9i4BqjSlaA8DA0Tj6GgBgtY4B1mqA1TpgjX2+YwFgfz/P41cA2J8A3N+L+wEAsQ4Y6zFgPQYAAAYCztcR0H4oAAAAAElFTkSuQmCC';
 
-    doc.addImage(logoDataUri, 'SVG', 15, 12, 10, 10);
+    doc.addImage(logoDataUri, 'PNG', 15, 12, 10, 10);
     doc.setFontSize(18);
     doc.text(`Liste des ${tableTitle}`, 105, 20, { align: 'center' });
     
@@ -232,7 +231,7 @@ export default function ComptesTiersPage() {
         head: [['Numéro', 'Intitulé', 'Téléphone']],
         body: tableData.map(c => [c.numero, c.intitule, c.telephone]),
         theme: 'striped',
-        headStyles: { fillColor: [28, 32, 57] }, // #1C2039 from your header
+        headStyles: { fillColor: [28, 32, 57] }, // #1C2039
     });
 
     doc.save(`export_${activeTab}.pdf`);
