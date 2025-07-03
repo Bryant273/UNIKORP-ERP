@@ -248,7 +248,7 @@ export default function ChatPage() {
 
               {/* Messages */}
               <ScrollArea className="flex-1 bg-muted/30" ref={scrollAreaRef}>
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-4">
                   {activeConversation.messages.map((message) => {
                     const sender = users[message.senderId] || currentUser;
                     return (
@@ -268,7 +268,7 @@ export default function ChatPage() {
                                     ? "bg-primary text-primary-foreground rounded-br-none"
                                     : "bg-card rounded-bl-none"
                             )}>
-                            <p className="text-sm">{message.text}</p>
+                            <p className="text-sm break-words">{message.text}</p>
                             <p className="text-xs text-right mt-1 opacity-70">{message.timestamp}</p>
                             </div>
                         </div>
