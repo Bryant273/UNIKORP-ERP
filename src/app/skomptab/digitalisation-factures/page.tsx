@@ -40,7 +40,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, FileUp, Eye, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { PlusCircle, FileUp, Eye, Pencil, Trash2, Loader2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -228,6 +228,21 @@ export default function DigitalisationFacturesPage() {
     setFormData(prev => ({ ...prev, [id]: id === 'montant' ? parseFloat(value) : value }));
   };
 
+  const handleDownload = (invoice: DigitizedInvoice | null) => {
+    if (!invoice?.fileUrl) return;
+    const link = document.createElement('a');
+    link.href = invoice.fileUrl;
+    link.target = "_blank";
+    link.download = `facture-${invoice.numeroPiece}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({
+      title: "Téléchargement initié",
+      description: "Le fichier de la facture va s'ouvrir ou se télécharger.",
+    });
+  };
+
   return (
     <>
       <Card>
@@ -371,20 +386,65 @@ export default function DigitalisationFacturesPage() {
       </Dialog>
       
       {/* View modal */}
-       <Dialog open={!!viewingInvoice} onOpenChange={() => setViewingInvoice(null)}>
-        <DialogContent className="max-w-4xl p-0 border-0">
-          {viewingInvoice?.fileUrl && (
-             <Image
-                data-ai-hint="invoice document"
-                src={viewingInvoice.fileUrl}
-                alt={`Facture ${viewingInvoice.numeroPiece}`}
-                width={800}
-                height={1131}
-                className="w-full h-auto rounded-lg"
-              />
+      <Dialog open={!!viewingInvoice} onOpenChange={() => setViewingInvoice(null)}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Détails de la facture</DialogTitle>
+            <DialogDescription>
+              Aperçu des informations et du document pour la facture N° {viewingInvoice?.numeroPiece}.
+            </DialogDescription>
+          </DialogHeader>
+          {viewingInvoice && (
+            <div className="grid md:grid-cols-2 gap-6 py-4">
+              <div className="space-y-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label className="text-sm text-muted-foreground">N° Pièce</Label>
+                  <p className="font-semibold">{viewingInvoice.numeroPiece}</p>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label className="text-sm text-muted-foreground">Tiers</Label>
+                  <p className="font-semibold">{viewingInvoice.tiers}</p>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label className="text-sm text-muted-foreground">Date de l'opération</Label>
+                  <p className="font-semibold">{new Date(viewingInvoice.dateOperation).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label className="text-sm text-muted-foreground">Type</Label>
+                  <p className="font-semibold"><Badge variant={viewingInvoice.type === 'Vente' ? 'default' : 'secondary'}>{viewingInvoice.type}</Badge></p>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label className="text-sm text-muted-foreground">Montant Total</Label>
+                  <p className="font-bold text-lg">{viewingInvoice.montant.toFixed(2)} FCFA</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Aperçu du document</Label>
+                <div className="border rounded-lg overflow-hidden aspect-[1/1.414] bg-muted">
+                  {viewingInvoice.fileUrl && (
+                      <Image
+                        data-ai-hint="invoice document"
+                        src={viewingInvoice.fileUrl}
+                        alt={`Facture ${viewingInvoice.numeroPiece}`}
+                        width={400}
+                        height={565}
+                        className="w-full h-full object-cover"
+                      />
+                  )}
+                </div>
+              </div>
+            </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingInvoice(null)}>Fermer</Button>
+            <Button onClick={() => handleDownload(viewingInvoice)}>
+              <Download className="mr-2 h-4 w-4" />
+              Télécharger
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!invoiceToDelete} onOpenChange={(open) => !open && setInvoiceToDelete(null)}>
