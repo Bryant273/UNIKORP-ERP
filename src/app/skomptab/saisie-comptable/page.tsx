@@ -272,7 +272,7 @@ export default function SaisieComptablePage() {
               <DialogTitle>Utiliser un modèle de saisie</DialogTitle>
               <DialogDescription>
                 Sélectionnez un modèle pour pré-remplir l'écriture.
-              </DailogDescription>
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4">
                 <p>La liste des modèles est en cours de construction.</p>
