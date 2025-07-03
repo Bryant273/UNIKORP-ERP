@@ -45,9 +45,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, PlusCircle, Upload } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Upload, FileUp } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 type NatureCompte = 'Bilan - Actif' | 'Bilan - Passif' | 'Compte de résultat - Charge' | 'Compte de résultat - Produit' | 'Autre';
 
@@ -75,22 +77,15 @@ const initialComptes: Compte[] = [
   { id: 13, numero: '607000', intitule: 'Achats de marchandises', nature: 'Compte de résultat - Charge' },
   { id: 14, numero: '613000', intitule: 'Locations', nature: 'Compte de résultat - Charge' },
   { id: 15, numero: '622000', intitule: 'Rémunérations d\'intermédiaires et honoraires', nature: 'Compte de résultat - Charge' },
-  { id: 16, numero: '641000', intitule: 'Rémunérations du personnel', nature: 'Compte de résultat - Charge' },
-  { id: 17, numero: '645000', intitule: 'Charges de sécurité sociale et de prévoyance', nature: 'Compte de résultat - Charge' },
-  { id: 18, numero: '707000', intitule: 'Ventes de marchandises', nature: 'Compte de résultat - Produit' },
-  { id: 19, numero: '758000', intitule: 'Produits divers de gestion courante', nature: 'Compte de résultat - Produit' },
-  { id: 20, numero: '601000', intitule: 'Achats stockés - Matières premières', nature: 'Compte de résultat - Charge' },
-  { id: 21, numero: '604000', intitule: 'Achats d\'études et de prestations de services', nature: 'Compte de résultat - Charge' },
-  { id: 22, numero: '611000', intitule: 'Sous-traitance générale', nature: 'Compte de résultat - Charge' },
-  { id: 23, numero: '615000', intitule: 'Entretien et réparations', nature: 'Compte de résultat - Charge' },
-  { id: 24, numero: '623000', intitule: 'Publicité, publications, relations publiques', nature: 'Compte de résultat - Charge' },
-  { id: 25, numero: '625000', intitule: 'Déplacements, missions et réceptions', nature: 'Compte de résultat - Charge' },
-  { id: 26, numero: '626000', intitule: 'Frais postaux et de télécommunications', nature: 'Compte de résultat - Charge' },
-  { id: 27, numero: '631000', intitule: 'Impôts, taxes et versements assimilés sur rémunérations', nature: 'Compte de résultat - Charge' },
-  { id: 28, numero: '701000', intitule: 'Ventes de produits finis', nature: 'Compte de résultat - Produit' },
-  { id: 29, numero: '706000', intitule: 'Prestations de services', nature: 'Compte de résultat - Produit' },
-  { id: 30, numero: '708000', intitule: 'Produits des activités annexes', nature: 'Compte de résultat - Produit' },
-  { id: 31, numero: '404000', intitule: 'Fournisseurs d\'immobilisations', nature: 'Bilan - Passif' },
+];
+
+
+const mockImportData: Compte[] = [
+    { id: 100, numero: '641000', intitule: 'Rémunérations du personnel', nature: 'Compte de résultat - Charge' },
+    { id: 101, numero: '645000', intitule: 'Charges de sécurité sociale et de prévoyance', nature: 'Compte de résultat - Charge' },
+    { id: 102, numero: '707000', intitule: 'Ventes de marchandises', nature: 'Compte de résultat - Produit' },
+    { id: 103, numero: '758000', intitule: 'Produits divers de gestion courante', nature: 'Compte de résultat - Produit' },
+    { id: 104, numero: '601000', intitule: 'Achats stockés - Matières premières', nature: 'Compte de résultat - Charge' },
 ];
 
 const defaultFormData: Omit<Compte, 'id'> = {
@@ -112,6 +107,10 @@ export default function ComptesGenerauxPage() {
   const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const { toast } = useToast();
+  
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   
   const totalPages = Math.ceil(comptes.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -184,8 +183,32 @@ export default function ComptesGenerauxPage() {
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files[0]) {
       setFileToUpload(e.target.files[0]);
+    }
+  };
+  
+  const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    handleDragEvents(e);
+    if (!isImporting) setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    handleDragEvents(e);
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    handleDragEvents(e);
+    setIsDragging(false);
+    if (isImporting) return;
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        setFileToUpload(e.dataTransfer.files[0]);
     }
   };
 
@@ -199,17 +222,47 @@ export default function ComptesGenerauxPage() {
       return;
     }
 
-    // This is a placeholder for the actual file parsing logic.
-    console.log(`Importing ${fileToUpload.name} with option: ${importOption}`);
+    setIsImporting(true);
+    setImportProgress(0);
 
-    toast({
-      title: "Importation en cours...",
-      description: `Le traitement du fichier ${fileToUpload.name} a commencé.`,
-    });
+    const steps = 5;
+    for (let i = 1; i <= steps; i++) {
+        setTimeout(() => {
+            setImportProgress((i / steps) * 100);
 
+            if (i === steps) {
+                if (importOption === 'replace') {
+                    setComptes(mockImportData);
+                } else {
+                    const existingNumeros = new Set(comptes.map(c => c.numero));
+                    const newUniqueComptes = mockImportData.filter(mc => !existingNumeros.has(mc.numero));
+                    setComptes([...comptes, ...newUniqueComptes]);
+                }
+                setCurrentPage(1);
+
+                toast({
+                    title: "Importation réussie",
+                    description: `Le plan comptable a été mis à jour avec succès.`,
+                });
+
+                setTimeout(() => {
+                  setIsImporting(false);
+                  setIsImportModalOpen(false);
+                  setFileToUpload(null);
+                  setImportOption('merge');
+                  setImportProgress(0);
+                }, 500);
+            }
+        }, i * 500);
+    }
+  };
+
+  const resetImportModal = () => {
+    if (isImporting) return;
     setIsImportModalOpen(false);
     setFileToUpload(null);
     setImportOption('merge');
+    setIsDragging(false);
   };
 
 
@@ -351,40 +404,81 @@ export default function ComptesGenerauxPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+      <Dialog open={isImportModalOpen} onOpenChange={resetImportModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Importer un plan comptable</DialogTitle>
             <DialogDescription>
-              Chargez un fichier (PDF, Excel, CSV) pour remplacer ou fusionner avec le plan comptable existant.
+              Chargez un fichier pour remplacer ou fusionner avec le plan comptable existant.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="file-upload">Fichier</Label>
-              <Input id="file-upload" type="file" onChange={handleFileChange} accept=".pdf,.xls,.xlsx,.csv" />
-            </div>
-            <div className="space-y-2">
-              <Label>Option d'importation</Label>
-              <RadioGroup
-                value={importOption}
-                onValueChange={(value: 'merge' | 'replace') => setImportOption(value)}
-                className="flex gap-4 pt-2"
+             <div 
+                className={cn(
+                    "relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 hover:bg-muted/50",
+                    isDragging && "border-primary bg-primary/10",
+                    isImporting && "cursor-not-allowed opacity-50"
+                )}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragEvents}
+                onDrop={handleDrop}
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="merge" id="merge" />
-                  <Label htmlFor="merge" className="font-normal">Fusionner</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="replace" id="replace" />
-                  <Label htmlFor="replace" className="font-normal">Remplacer</Label>
-                </div>
-              </RadioGroup>
+                  <Label htmlFor="file-upload" className={cn("flex flex-col items-center justify-center w-full h-full", isImporting ? "cursor-not-allowed" : "cursor-pointer")}>
+                    <FileUp className="w-10 h-10 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-center text-muted-foreground">
+                      <span className="font-semibold">Glissez-déposez un fichier</span> ou cliquez pour sélectionner
+                    </p>
+                    {fileToUpload && !isImporting && (
+                      <p className="mt-2 text-sm font-medium text-foreground">{fileToUpload.name}</p>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      PDF, MAE, XLSX, XLAM, XLS, CSV
+                    </p>
+                  </Label>
+                  <Input 
+                      id="file-upload" 
+                      type="file" 
+                      className="sr-only" 
+                      onChange={handleFileChange} 
+                      accept=".pdf,.mae,.xlsx,.xlam,.xls,.csv" 
+                      disabled={isImporting}
+                  />
             </div>
+
+            {isImporting && (
+                <div className="space-y-2">
+                    <Progress value={importProgress} />
+                    <p className="text-sm text-center text-muted-foreground">Importation en cours... {Math.round(importProgress)}%</p>
+                </div>
+            )}
+            
+            {!isImporting && fileToUpload && (
+                <div className="space-y-3">
+                    <Label>Option d'importation</Label>
+                    <RadioGroup
+                        value={importOption}
+                        onValueChange={(value: 'merge' | 'replace') => setImportOption(value)}
+                        className="flex gap-4 pt-1"
+                        disabled={isImporting}
+                    >
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="merge" id="merge" />
+                        <Label htmlFor="merge" className="font-normal">Fusionner</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="replace" id="replace" />
+                        <Label htmlFor="replace" className="font-normal">Remplacer</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>Annuler</Button>
-            <Button onClick={handleImport} disabled={!fileToUpload}>Importer</Button>
+            <Button variant="outline" onClick={resetImportModal} disabled={isImporting}>Annuler</Button>
+            <Button onClick={handleImport} disabled={!fileToUpload || isImporting}>
+                {isImporting ? 'Importation...' : 'Importer'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
