@@ -32,27 +32,26 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Pencil, Trash2, PlusCircle, ArrowLeft, Calendar as CalendarIcon, Sparkles, Loader2, Link2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, PlusCircle, ArrowLeft, Calendar as CalendarIcon, Sparkles, Loader2, Link2, Download } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 
 // --- DATA TYPES & MOCK DATA ---
-
-type Rapprochement = {
-  id: number;
-  date: string;
-  periode: string;
-  journal: string;
-  journalCode: string;
-};
-
-const initialRapprochements: Rapprochement[] = [
-  { id: 1, date: '2024-07-05', periode: 'Juin 2024', journal: 'BNP Paribas', journalCode: 'BNP' },
-  { id: 2, date: '2024-06-04', periode: 'Mai 2024', journal: 'BNP Paribas', journalCode: 'BNP' },
-  { id: 3, date: '2024-05-06', periode: 'Avril 2024', journal: 'Société Générale', journalCode: 'SG' },
-];
 
 type LigneReleve = {
   id: number;
@@ -72,6 +71,17 @@ type LigneJournal = {
   lettre: boolean;
 };
 
+type Rapprochement = {
+  id: number;
+  date: string;
+  periode: string;
+  journal: string;
+  journalCode: string;
+  soldeInitial: number;
+  lignesReleve: LigneReleve[];
+  lignesJournal: LigneJournal[];
+};
+
 const MOCK_JOURNALS_TRESORERIE = [
     { code: 'BNP', intitule: 'BNP Paribas', soldeInitial: 15230.50 },
     { code: 'SG', intitule: 'Société Générale', soldeInitial: 8750.20 },
@@ -87,13 +97,23 @@ const MOCK_LIGNES_JOURNAL: LigneJournal[] = [
     { id: 106, date: '2024-07-25', libelle: 'Encaissement Client Global Sol.', debit: 0, credit: 4800, lettre: false },
 ];
 
+const initialRapprochements: Rapprochement[] = [
+  { id: 1, date: '2024-07-05', periode: 'Juin 2024', journal: 'BNP Paribas', journalCode: 'BNP', soldeInitial: 15230.50, lignesReleve: [], lignesJournal: [] },
+  { id: 2, date: '2024-06-04', periode: 'Mai 2024', journal: 'BNP Paribas', journalCode: 'BNP', soldeInitial: 15230.50, lignesReleve: [], lignesJournal: [] },
+  { id: 3, date: '2024-05-06', periode: 'Avril 2024', journal: 'Société Générale', journalCode: 'SG', soldeInitial: 8750.20, lignesReleve: [], lignesJournal: [] },
+];
 
 export default function RapprochementBancairePage() {
+  const [rapprochements, setRapprochements] = useState<Rapprochement[]>(initialRapprochements);
   const [view, setView] = useState<'list' | 'reconciliation'>('list');
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   
   // State for reconciliation view
+  const [editingRapprochementId, setEditingRapprochementId] = useState<number | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [rapprochementToDelete, setRapprochementToDelete] = useState<Rapprochement | null>(null);
+
   const [journalCode, setJournalCode] = useState<string>('');
   const [period, setPeriod] = useState<DateRange | undefined>({
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -105,13 +125,75 @@ export default function RapprochementBancairePage() {
   const selectedJournal = MOCK_JOURNALS_TRESORERIE.find(j => j.code === journalCode);
   const soldeInitialJournal = selectedJournal?.soldeInitial || 0;
 
-  const handleStartNew = () => {
+  const resetReconciliationState = () => {
+    setEditingRapprochementId(null);
+    setIsViewMode(false);
     setJournalCode('');
+    setLignesReleve([]);
+    setLignesJournal([]);
+  };
+
+  const handleStartNew = () => {
+    resetReconciliationState();
     setLignesReleve([
         { id: 1, date: format(new Date(), 'yyyy-MM-dd'), libelle: '', debit: 0, credit: 0, lettre: false },
     ]);
-    setLignesJournal(MOCK_LIGNES_JOURNAL);
+    setLignesJournal(MOCK_LIGNES_JOURNAL.map(l => ({...l, lettre: false})));
     setView('reconciliation');
+  };
+
+  const loadRapprochement = (rapprochement: Rapprochement, viewMode: boolean) => {
+    setEditingRapprochementId(rapprochement.id);
+    setIsViewMode(viewMode);
+    setJournalCode(rapprochement.journalCode);
+    setLignesReleve(rapprochement.lignesReleve.length > 0 ? rapprochement.lignesReleve : []); // Load saved lines or empty
+    setLignesJournal(rapprochement.lignesJournal.length > 0 ? rapprochement.lignesJournal : MOCK_LIGNES_JOURNAL); // Load saved lines or mock
+    const [month, year] = rapprochement.periode.split(' ');
+    const monthIndex = fr.localize?.month(fr.months.indexOf(month as any), {width: 'long'});
+    const fromDate = new Date(parseInt(year), fr.months.indexOf(month as any), 1);
+    setPeriod({
+      from: fromDate,
+      to: new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 0),
+    });
+    setView('reconciliation');
+  };
+
+  const handleSaveRapprochement = () => {
+    const periodString = period?.from ? format(period.from, 'MMMM yyyy', { locale: fr }) : 'Période inconnue';
+    const journalInfo = MOCK_JOURNALS_TRESORERIE.find(j => j.code === journalCode);
+    if (!journalInfo) {
+      toast({ title: "Erreur", description: "Veuillez sélectionner un journal.", variant: "destructive" });
+      return;
+    }
+
+    const rapprochementData = {
+      date: new Date().toISOString().split('T')[0],
+      periode: periodString.charAt(0).toUpperCase() + periodString.slice(1),
+      journal: journalInfo.intitule,
+      journalCode: journalInfo.code,
+      soldeInitial: journalInfo.soldeInitial,
+      lignesReleve,
+      lignesJournal,
+    };
+
+    if (editingRapprochementId) {
+      setRapprochements(prev => prev.map(r => r.id === editingRapprochementId ? { ...r, ...rapprochementData } : r));
+      toast({ title: 'Rapprochement modifié', description: 'Vos modifications ont été enregistrées.' });
+    } else {
+      const newId = Math.max(0, ...rapprochements.map(r => r.id)) + 1;
+      setRapprochements(prev => [...prev, { id: newId, ...rapprochementData }]);
+      toast({ title: 'Rapprochement enregistré', description: 'Le nouveau rapprochement a été ajouté à l\'historique.' });
+    }
+    setView('list');
+    resetReconciliationState();
+  };
+
+  const handleDeleteRapprochement = () => {
+    if (rapprochementToDelete) {
+        setRapprochements(prev => prev.filter(r => r.id !== rapprochementToDelete.id));
+        setRapprochementToDelete(null);
+        toast({ title: 'Rapprochement supprimé' });
+    }
   };
 
   const handleLigneReleveChange = (id: number, field: keyof Omit<LigneReleve, 'id' | 'lettre'>, value: string) => {
@@ -185,6 +267,49 @@ export default function RapprochementBancairePage() {
       return { totalReleve, soldeFinalReleve, totalJournal, soldeFinalJournal, ecart };
   }, [lignesReleve, lignesJournal, soldeInitialJournal]);
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const journalInfo = MOCK_JOURNALS_TRESORERIE.find(j => j.code === journalCode);
+    const periodString = period?.from ? (period.to ? `${format(period.from, 'dd/MM/yy')} - ${format(period.to, 'dd/MM/yy')}` : format(period.from, 'dd/MM/yy')) : 'N/A';
+
+    doc.setFontSize(18);
+    doc.text('Rapprochement Bancaire', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Journal: ${journalInfo?.intitule || 'N/A'}`, 15, 30);
+    doc.text(`Période: ${periodString}`, 15, 36);
+
+    doc.setFontSize(14);
+    doc.text('Relevé Bancaire', 15, 50);
+    autoTable(doc, {
+      startY: 55,
+      head: [['Lettré', 'Date', 'Libellé', 'Débit', 'Crédit']],
+      body: lignesReleve.map(l => [l.lettre ? 'X' : '', l.date, l.libelle, l.debit.toFixed(2), l.credit.toFixed(2)]),
+    });
+
+    let finalY = (doc as any).lastAutoTable.finalY;
+
+    doc.setFontSize(14);
+    doc.text('Journal de Trésorerie', 15, finalY + 15);
+    autoTable(doc, {
+      startY: finalY + 20,
+      head: [['Lettré', 'Date', 'Libellé', 'Débit', 'Crédit']],
+      body: lignesJournal.map(l => [l.lettre ? 'X' : '', format(new Date(l.date), 'dd/MM/yyyy'), l.libelle, l.debit.toFixed(2), l.credit.toFixed(2)]),
+    });
+    
+    finalY = (doc as any).lastAutoTable.finalY;
+    
+    doc.setFontSize(14);
+    doc.text('Synthèse', 15, finalY + 15);
+    doc.setFontSize(10);
+    doc.text(`Solde initial: ${soldeInitialJournal.toFixed(2)}`, 15, finalY + 22);
+    doc.text(`Solde final relevé (lettré): ${soldeFinalReleve.toFixed(2)}`, 15, finalY + 29);
+    doc.text(`Solde final comptable (lettré): ${soldeFinalJournal.toFixed(2)}`, 15, finalY + 36);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Écart: ${ecart.toFixed(2)}`, 15, finalY + 43);
+
+    doc.save(`rapprochement_${journalCode}_${periodString.replace(/\s/g, '')}.pdf`);
+  };
+
 
   if (view === 'reconciliation') {
     return (
@@ -192,8 +317,8 @@ export default function RapprochementBancairePage() {
         {/* Header */}
         <div className="flex items-center justify-between">
             <Button variant="outline" onClick={() => setView('list')}><ArrowLeft className="mr-2 h-4 w-4" /> Retour à la liste</Button>
-            <h1 className="text-2xl font-bold tracking-tight">Nouveau Rapprochement Bancaire</h1>
-            <div />
+            <h1 className="text-2xl font-bold tracking-tight">{isViewMode ? 'Détails du Rapprochement' : 'Nouveau Rapprochement'}</h1>
+            <Button variant="outline" onClick={handleExportPDF}><Download className="mr-2 h-4 w-4" /> Exporter PDF</Button>
         </div>
 
         {/* Settings */}
@@ -202,7 +327,7 @@ export default function RapprochementBancairePage() {
             <CardContent className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label>Journal de trésorerie</Label>
-                     <Select value={journalCode} onValueChange={setJournalCode}>
+                     <Select value={journalCode} onValueChange={setJournalCode} disabled={isViewMode}>
                         <SelectTrigger><SelectValue placeholder="Sélectionnez un journal..." /></SelectTrigger>
                         <SelectContent>
                             {MOCK_JOURNALS_TRESORERIE.map(j => <SelectItem key={j.code} value={j.code}>{j.intitule}</SelectItem>)}
@@ -213,7 +338,7 @@ export default function RapprochementBancairePage() {
                     <Label>Période de rapprochement</Label>
                     <Popover>
                         <PopoverTrigger asChild>
-                             <Button variant="outline" className="w-full justify-start text-left font-normal">
+                             <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={isViewMode}>
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {period?.from ? (
                                     period.to ? `${format(period.from, 'dd/MM/yy', { locale: fr })} - ${format(period.to, 'dd/MM/yy', { locale: fr })}` : format(period.from, 'dd/MM/yyyy')
@@ -230,7 +355,6 @@ export default function RapprochementBancairePage() {
 
         {/* Reconciliation Workspace */}
         <div className="grid lg:grid-cols-5 gap-6 items-start">
-            {/* Bank Statement */}
             <Card className="lg:col-span-2">
                  <CardHeader>
                     <CardTitle>2. Relevé Bancaire</CardTitle>
@@ -251,29 +375,27 @@ export default function RapprochementBancairePage() {
                             <TableBody>
                                 {lignesReleve.map(ligne => (
                                     <TableRow key={ligne.id}>
-                                        <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('releve', ligne.id)}/></TableCell>
-                                        <TableCell><Input type="date" value={ligne.date} className="min-w-[120px] h-8" onChange={e => handleLigneReleveChange(ligne.id, 'date', e.target.value)} /></TableCell>
-                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} className="h-8" onChange={e => handleLigneReleveChange(ligne.id, 'libelle', e.target.value)} /></TableCell>
-                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} className="text-right h-8" onChange={e => handleLigneReleveChange(ligne.id, 'debit', e.target.value)} /></TableCell>
-                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} className="text-right h-8" onChange={e => handleLigneReleveChange(ligne.id, 'credit', e.target.value)} /></TableCell>
+                                        <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('releve', ligne.id)} disabled={isViewMode}/></TableCell>
+                                        <TableCell><Input type="date" value={ligne.date} className="min-w-[120px] h-8" onChange={e => handleLigneReleveChange(ligne.id, 'date', e.target.value)} disabled={isViewMode}/></TableCell>
+                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} className="h-8" onChange={e => handleLigneReleveChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} className="text-right h-8" onChange={e => handleLigneReleveChange(ligne.id, 'debit', e.target.value)} disabled={isViewMode}/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} className="text-right h-8" onChange={e => handleLigneReleveChange(ligne.id, 'credit', e.target.value)} disabled={isViewMode}/></TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </div>
-                    <Button variant="outline" size="sm" className="mt-4" onClick={addLigneReleve}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button>
+                    {!isViewMode && <Button variant="outline" size="sm" className="mt-4" onClick={addLigneReleve}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button>}
                 </CardContent>
             </Card>
 
-            {/* AI Action */}
             <div className="lg:col-span-1 flex items-center justify-center pt-16">
-                 <Button size="lg" className="w-full h-24 flex-col gap-2" onClick={handleAiMatching} disabled={isProcessing}>
+                 <Button size="lg" className="w-full h-24 flex-col gap-2" onClick={handleAiMatching} disabled={isProcessing || isViewMode}>
                     {isProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Sparkles className="h-8 w-8 text-yellow-300" />}
                     <span>{isProcessing ? 'Analyse...' : 'Rapprochement IA'}</span>
                 </Button>
             </div>
 
-            {/* Journal */}
              <Card className="lg:col-span-2">
                  <CardHeader>
                     <CardTitle>3. Journal de Trésorerie</CardTitle>
@@ -294,7 +416,7 @@ export default function RapprochementBancairePage() {
                             <TableBody>
                                  {lignesJournal.map(ligne => (
                                     <TableRow key={ligne.id}>
-                                        <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('journal', ligne.id)}/></TableCell>
+                                        <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('journal', ligne.id)} disabled={isViewMode}/></TableCell>
                                         <TableCell>{format(new Date(ligne.date), 'dd/MM/yyyy')}</TableCell>
                                         <TableCell>{ligne.libelle}</TableCell>
                                         <TableCell className="text-right font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
@@ -308,7 +430,6 @@ export default function RapprochementBancairePage() {
             </Card>
         </div>
 
-        {/* Summary */}
         <Card>
             <CardHeader><CardTitle>4. Synthèse et Validation</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-3 gap-6">
@@ -364,18 +485,21 @@ export default function RapprochementBancairePage() {
                     {ecart === 0 && <Badge>Rapprochement équilibré</Badge>}
                 </div>
             </CardContent>
-            <CardFooter>
-                <Button size="lg" className="ml-auto" disabled={ecart !== 0}>
-                    <Link2 className="mr-2 h-4 w-4"/>
-                    Valider et enregistrer le rapprochement
-                </Button>
-            </CardFooter>
+            {!isViewMode &&
+                <CardFooter>
+                    <Button size="lg" className="ml-auto" disabled={ecart !== 0} onClick={handleSaveRapprochement}>
+                        <Link2 className="mr-2 h-4 w-4"/>
+                        Valider et enregistrer le rapprochement
+                    </Button>
+                </CardFooter>
+            }
         </Card>
       </div>
     )
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -400,22 +524,22 @@ export default function RapprochementBancairePage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialRapprochements.map((r) => (
+            {rapprochements.map((r) => (
               <TableRow key={r.id}>
                 <TableCell>{format(new Date(r.date), 'dd/MM/yyyy')}</TableCell>
                 <TableCell className="font-medium">{r.periode}</TableCell>
                 <TableCell><Badge variant="outline">{r.journal}</Badge></TableCell>
                 <TableCell className="text-right">
                    <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => loadRapprochement(r, true)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Voir</span>
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => loadRapprochement(r, false)}>
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Modifier</span>
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setRapprochementToDelete(r)}>
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Supprimer</span>
                         </Button>
@@ -427,5 +551,20 @@ export default function RapprochementBancairePage() {
         </Table>
       </CardContent>
     </Card>
+    <AlertDialog open={!!rapprochementToDelete} onOpenChange={() => setRapprochementToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
+            <AlertDialogDescription>
+                Cette action est irréversible et supprimera définitivement ce rapprochement de l'historique.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteRapprochement} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
