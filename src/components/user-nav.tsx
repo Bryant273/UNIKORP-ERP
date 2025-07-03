@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { User, Settings, LifeBuoy, LogOut } from 'lucide-react';
+import { User, Settings, LifeBuoy, LogOut, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 export function UserNav() {
@@ -40,6 +40,10 @@ export function UserNav() {
               <User className="mr-2 h-4 w-4" />
               <span>Profil</span>
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Zap className="mr-2 h-4 w-4" />
+            <span>Actions</span>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/settings?tab=preferences">

@@ -125,7 +125,7 @@ const getNavForPath = (pathname: string) => {
       placeholder: `Sections pour ${pathname.split('/')[1].toUpperCase()}`
     };
   }
-  // Default for main dashboard
+  // Default for main dashboard and special pages
   return {
     dashboardLink: '/',
     items: [],
@@ -135,7 +135,8 @@ const getNavForPath = (pathname: string) => {
 export function AppSidebar() {
   const pathname = usePathname();
 
-  if (pathname === '/' || pathname.startsWith('/chat')) {
+  const specialPages = ['/', '/chat', '/notifications', '/settings', '/help'];
+  if (specialPages.some(p => pathname.startsWith(p))) {
     return null;
   }
 

@@ -37,7 +37,7 @@ export default function RootLayout({
               <AppSidebar />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <ModuleNav />
-                <main className="flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6 lg:p-8">
+                <main className="flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6 lg:p-8 flex">
                   {children}
                 </main>
               </div>
