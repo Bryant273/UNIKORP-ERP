@@ -36,6 +36,7 @@ import { Eye, Pencil, Trash2, PlusCircle, ArrowLeft, Calendar as CalendarIcon, S
 import { DateRange } from 'react-day-picker';
 import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Label } from '@/components/ui/label';
 
 // --- DATA TYPES & MOCK DATA ---
 
