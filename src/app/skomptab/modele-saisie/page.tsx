@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -39,7 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Pencil, Trash2, PlusCircle, Scale, List } from 'lucide-react';
+import { Eye, Pencil, Trash2, PlusCircle, List } from 'lucide-react';
 
 type EcritureModele = {
   id: string;
@@ -102,16 +102,6 @@ export default function ModeleSaisiePage() {
   const [formData, setFormData] = useState(defaultFormData);
   const [modeleToDelete, setModeleToDelete] = useState<ModeleSaisie | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
-
-  const { totalDebit, totalCredit, solde } = useMemo(() => {
-    const tDebit = formData.ecritures.reduce((acc, curr) => acc + (Number(curr.debit) || 0), 0);
-    const tCredit = formData.ecritures.reduce((acc, curr) => acc + (Number(curr.credit) || 0), 0);
-    return {
-        totalDebit: tDebit,
-        totalCredit: tCredit,
-        solde: tDebit - tCredit,
-    };
-  }, [formData.ecritures]);
 
   const handleOpenCreateModal = () => {
     setIsViewMode(false);
@@ -207,10 +197,6 @@ export default function ModeleSaisiePage() {
       setModeles(modeles.filter((m) => m.id !== modeleToDelete.id));
       setModeleToDelete(null);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
   };
 
   return (
@@ -345,28 +331,11 @@ export default function ModeleSaisiePage() {
                   </Table>
                 </div>
                  {!isViewMode && (
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-start">
                     <Button type="button" variant="default" size="sm" onClick={addEcritureRow}>
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Ajouter une ligne
                     </Button>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Total:</p>
-                        <p className="text-sm text-muted-foreground">Solde:</p>
-                      </div>
-                       <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(totalDebit)}</p>
-                        <p className="font-semibold">{formatCurrency(solde)}</p>
-                       </div>
-                        <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(totalCredit)}</p>
-                       </div>
-                      <Button type="button" variant="outline" size="sm">
-                        <Scale className="mr-2 h-4 w-4" />
-                        Équilibrer l'écriture
-                      </Button>
-                    </div>
                   </div>
                  )}
               </div>
