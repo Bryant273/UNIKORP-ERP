@@ -625,8 +625,8 @@ export default function SaisieComptablePage() {
                             </TableCell>
                             <TableCell>
                               <AutocompleteInput
-                                items={MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: `${c.numero} - ${c.intitule}`, data: c }))}
-                                value={ligne.tiers}
+                                items={MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: `${c.intitule} (${c.numero})`, data: c }))}
+                                value={MOCK_COMPTES_TIERS.find(t => t.numero === ligne.tiers)?.intitule || ligne.tiers}
                                 onChange={(value) => handleLigneChange(ligne.id, 'tiers', value)}
                                 onSelect={(item) => {
                                   handleLigneChange(ligne.id, 'tiers', item.value);
