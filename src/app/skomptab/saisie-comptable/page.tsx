@@ -106,7 +106,7 @@ const initialModeles: ModeleSaisie[] = [
     ecritures: [
       { id: 'e1', numeroCompte: '607000', tiers: '', libelle: 'Achats de marchandises', debit: '', credit: '' },
       { id: 'e2', numeroCompte: '445660', tiers: '', libelle: 'TVA déductible', debit: '', credit: '' },
-      { id: 'e3', numeroCompte: '401000', tiers: 'FOURNISSEUR', libelle: 'Dette fournisseur', debit: '', credit: '' },
+      { id: 'e3', numeroCompte: '401000', tiers: '401FOURN1', libelle: 'Dette fournisseur', debit: '', credit: '' },
     ],
   },
   {
@@ -114,7 +114,7 @@ const initialModeles: ModeleSaisie[] = [
     libelle: 'Vente de services',
     description: 'Modèle pour une vente de prestation de services avec TVA.',
     ecritures: [
-        { id: 'e4', numeroCompte: '411000', tiers: 'CLIENT', libelle: 'Créance client', debit: '', credit: '' },
+        { id: 'e4', numeroCompte: '411000', tiers: '411CLIENT1', libelle: 'Créance client', debit: '', credit: '' },
         { id: 'e5', numeroCompte: '706000', tiers: '', libelle: 'Prestations de services', debit: '', credit: '' },
         { id: 'e6', numeroCompte: '445710', tiers: '', libelle: 'TVA collectée', debit: '', credit: '' },
     ],
@@ -193,40 +193,59 @@ const ITEMS_PER_PAGE = 10;
 type AutocompleteItem = {
   value: string;
   label: string;
-  data: any;
+  data?: any;
 };
 
 type AutocompleteInputProps = {
   items: AutocompleteItem[];
-  value: string;
-  onChange: (value: string) => void;
-  onSelect: (item: AutocompleteItem) => void;
+  value: string; // The controlled value from the parent (e.g., the account code)
+  onValueChange: (value: string, itemData?: any) => void;
+  getDisplayValue: (value: string) => string;
   placeholder?: string;
   disabled?: boolean;
 };
 
-function AutocompleteInput({ items, value, onChange, onSelect, placeholder, disabled }: AutocompleteInputProps) {
+function AutocompleteInput({ items, value, onValueChange, getDisplayValue, placeholder, disabled }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(() => getDisplayValue(value));
+
+  React.useEffect(() => {
+    setInputValue(getDisplayValue(value));
+  }, [value, getDisplayValue]);
 
   const filteredItems = useMemo(() => {
-    if (!value) return items.slice(0, 10);
+    if (!inputValue || getDisplayValue(value) === inputValue) {
+      return items.slice(0, 10);
+    }
     return items
-      .filter(
-        item =>
-          item.value.toLowerCase().includes(value.toLowerCase()) ||
-          item.label.toLowerCase().includes(value.toLowerCase())
+      .filter(item =>
+          item.value.toLowerCase().includes(inputValue.toLowerCase()) ||
+          item.label.toLowerCase().includes(inputValue.toLowerCase())
       )
       .slice(0, 10);
-  }, [value, items]);
+  }, [inputValue, items, value, getDisplayValue]);
   
   const handleSelect = (item: AutocompleteItem) => {
-    onSelect(item);
+    onValueChange(item.value, item.data);
+    setInputValue(getDisplayValue(item.value));
     setIsOpen(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
+    const newInputValue = e.target.value;
+    setInputValue(newInputValue);
+    if (newInputValue === '') {
+      onValueChange('');
+    }
     if (!isOpen) setIsOpen(true);
+  };
+  
+  const handleBlur = () => {
+    setIsOpen(false);
+    // If the input text does not correspond to a valid selected value, reset it
+    if (getDisplayValue(value) !== inputValue) {
+        setInputValue(getDisplayValue(value));
+    }
   };
 
   return (
@@ -234,9 +253,9 @@ function AutocompleteInput({ items, value, onChange, onSelect, placeholder, disa
       <PopoverTrigger asChild>
         <Input
           placeholder={placeholder}
-          value={value}
+          value={inputValue}
           onChange={handleInputChange}
-          onClick={() => setIsOpen(true)}
+          onBlur={handleBlur}
           disabled={disabled}
           autoComplete="off"
         />
@@ -442,6 +461,9 @@ export default function SaisieComptablePage() {
     return 'Nouvelle écriture comptable';
   }
 
+  const compteItems = useMemo(() => MOCK_COMPTES_GENERAUX.map(c => ({ value: c.numero, label: `${c.numero} - ${c.intitule}`, data: c })), []);
+  const tiersItems = useMemo(() => MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: `${c.intitule} (${c.numero})`, data: c })), []);
+
   return (
     <>
       <Card>
@@ -614,13 +636,13 @@ export default function SaisieComptablePage() {
                           <TableRow key={ligne.id}>
                             <TableCell>
                               <AutocompleteInput
-                                items={MOCK_COMPTES_GENERAUX.map(c => ({ value: c.numero, label: `${c.numero} - ${c.intitule}`, data: c }))}
+                                items={compteItems}
                                 value={ligne.compte}
-                                onChange={(value) => handleLigneChange(ligne.id, 'compte', value)}
-                                onSelect={(item) => {
-                                  handleLigneChange(ligne.id, 'compte', item.value);
-                                  if (!ligne.libelle) {
-                                    handleLigneChange(ligne.id, 'libelle', item.data.intitule);
+                                getDisplayValue={(val) => val}
+                                onValueChange={(newValue, itemData) => {
+                                  handleLigneChange(ligne.id, 'compte', newValue);
+                                  if (itemData && !ligne.libelle) {
+                                    handleLigneChange(ligne.id, 'libelle', itemData.intitule);
                                   }
                                 }}
                                 placeholder="Compte"
@@ -629,11 +651,11 @@ export default function SaisieComptablePage() {
                             </TableCell>
                             <TableCell>
                               <AutocompleteInput
-                                items={MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: `${c.intitule} (${c.numero})`, data: c }))}
-                                value={MOCK_COMPTES_TIERS.find(t => t.numero === ligne.tiers)?.intitule || ligne.tiers}
-                                onChange={(value) => handleLigneChange(ligne.id, 'tiers', value)}
-                                onSelect={(item) => {
-                                  handleLigneChange(ligne.id, 'tiers', item.value);
+                                items={tiersItems}
+                                value={ligne.tiers}
+                                getDisplayValue={(val) => MOCK_COMPTES_TIERS.find(t => t.numero === val)?.intitule || val }
+                                onValueChange={(newValue) => {
+                                  handleLigneChange(ligne.id, 'tiers', newValue);
                                 }}
                                 placeholder="Tiers"
                                 disabled={isViewMode}
