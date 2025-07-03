@@ -169,6 +169,7 @@ export default function SaisieComptablePage() {
   
   const [formData, setFormData] = useState<Omit<EcritureComptable, 'id' | 'numeroCompta'>>(defaultEcritureData);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
 
   const [ecritureToDelete, setEcritureToDelete] = useState<EcritureComptable | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -186,8 +187,15 @@ export default function SaisieComptablePage() {
     return { totalDebit, totalCredit, solde };
   }, [formData.lignes]);
 
+  const resetModalState = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    setIsViewMode(false);
+  };
+  
   const handleOpenCreateModal = () => {
     setEditingId(null);
+    setIsViewMode(false);
     setFormData({
       ...defaultEcritureData,
       dateSaisie: new Date().toISOString().split('T')[0],
@@ -199,6 +207,21 @@ export default function SaisieComptablePage() {
   
   const handleOpenEditModal = (ecriture: EcritureComptable) => {
     setEditingId(ecriture.id);
+    setIsViewMode(false);
+    setFormData({
+      dateSaisie: ecriture.dateSaisie,
+      journal: ecriture.journal,
+      dateOperation: ecriture.dateOperation,
+      numeroPiece: ecriture.numeroPiece,
+      libelleOperation: ecriture.libelleOperation,
+      lignes: JSON.parse(JSON.stringify(ecriture.lignes)),
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenViewModal = (ecriture: EcritureComptable) => {
+    setEditingId(ecriture.id);
+    setIsViewMode(true);
     setFormData({
       dateSaisie: ecriture.dateSaisie,
       journal: ecriture.journal,
@@ -212,6 +235,7 @@ export default function SaisieComptablePage() {
 
   const handleSelectTemplate = (template: ModeleSaisie) => {
     setEditingId(null);
+    setIsViewMode(false);
     const newLignes: LigneEcriture[] = template.ecritures.map(e => ({
       id: `new-${Date.now()}-${Math.random()}`,
       compte: e.numeroCompte,
@@ -265,6 +289,8 @@ export default function SaisieComptablePage() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isViewMode) return;
+
     if (Math.abs(solde) > 0.001) {
       toast({ title: "Déséquilibre", description: "L'écriture n'est pas équilibrée.", variant: "destructive" });
       return;
@@ -282,8 +308,7 @@ export default function SaisieComptablePage() {
       toast({ title: 'Écriture enregistrée', description: 'Nouvelle écriture ajoutée avec succès.' });
     }
 
-    setIsModalOpen(false);
-    setEditingId(null);
+    resetModalState();
   };
   
   const handleDeleteEcriture = () => {
@@ -302,6 +327,12 @@ export default function SaisieComptablePage() {
       setCurrentPage(newPage);
     }
   };
+
+  const getDialogTitle = () => {
+    if (isViewMode) return "Détails de l'écriture";
+    if (editingId) return "Modifier l'écriture";
+    return 'Nouvelle écriture comptable';
+  }
 
   return (
     <>
@@ -352,9 +383,9 @@ export default function SaisieComptablePage() {
                   <TableCell>{ecriture.numeroPiece}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(ecriture)}>
+                       <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(ecriture)}>
                           <Eye className="h-4 w-4" />
-                          <span className="sr-only">Voir / Modifier</span>
+                          <span className="sr-only">Voir</span>
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(ecriture)}>
                           <Pencil className="h-4 w-4" />
@@ -406,11 +437,11 @@ export default function SaisieComptablePage() {
         </CardFooter>
       </Card>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-6xl" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      <Dialog open={isModalOpen} onOpenChange={resetModalState}>
+        <DialogContent className="max-w-6xl" onInteractOutside={(e) => {if (!isViewMode) e.preventDefault()}} onEscapeKeyDown={(e) => {if (!isViewMode) e.preventDefault()}}>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>{editingId ? "Modifier l'écriture" : 'Nouvelle écriture comptable'}</DialogTitle>
+              <DialogTitle>{getDialogTitle()}</DialogTitle>
               <DialogDescription>
                 Remplissez les détails de l'écriture ci-dessous.
               </DialogDescription>
@@ -427,6 +458,7 @@ export default function SaisieComptablePage() {
                         onValueChange={(value) => setFormData(prev => ({...prev, journal: value}))} 
                         value={formData.journal}
                         required
+                        disabled={isViewMode}
                       >
                           <SelectTrigger id="journal">
                               <SelectValue placeholder="Sélectionnez un journal" />
@@ -440,18 +472,18 @@ export default function SaisieComptablePage() {
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="dateOperation">Date de l'opération *</Label>
-                      <Input id="dateOperation" type="date" value={formData.dateOperation} onChange={handleFormChange} required/>
+                      <Input id="dateOperation" type="date" value={formData.dateOperation} onChange={handleFormChange} required disabled={isViewMode}/>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="numeroPiece">N° Pièce *</Label>
-                        <Input id="numeroPiece" value={formData.numeroPiece} onChange={handleFormChange} required/>
+                        <Input id="numeroPiece" value={formData.numeroPiece} onChange={handleFormChange} required disabled={isViewMode}/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="libelleOperation">Libellé de l'opération *</Label>
-                        <Input id="libelleOperation" value={formData.libelleOperation} onChange={handleFormChange} required/>
+                        <Input id="libelleOperation" value={formData.libelleOperation} onChange={handleFormChange} required disabled={isViewMode}/>
                     </div>
                 </div>
 
@@ -472,20 +504,26 @@ export default function SaisieComptablePage() {
                       <TableBody>
                         {formData.lignes.map((ligne) => (
                           <TableRow key={ligne.id}>
-                            <TableCell><Input placeholder="Compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)}/></TableCell>
-                            <TableCell><Input placeholder="Tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)}/></TableCell>
-                            <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)}/></TableCell>
-                            <TableCell><Input type="number" placeholder="0.00" value={ligne.debit} onChange={(e) => handleLigneChange(ligne.id, 'debit', Number(e.target.value))}/></TableCell>
-                            <TableCell><Input type="number" placeholder="0.00" value={ligne.credit} onChange={(e) => handleLigneChange(ligne.id, 'credit', Number(e.target.value))}/></TableCell>
-                            <TableCell><Button variant="ghost" size="icon" type="button" onClick={() => removeLigne(ligne.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                            <TableCell><Input placeholder="Compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input placeholder="Tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input type="number" placeholder="0.00" value={ligne.debit} onChange={(e) => handleLigneChange(ligne.id, 'debit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input type="number" placeholder="0.00" value={ligne.credit} onChange={(e) => handleLigneChange(ligne.id, 'credit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
+                            <TableCell>
+                              {!isViewMode && (
+                                <Button variant="ghost" size="icon" type="button" onClick={() => removeLigne(ligne.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </div>
                   <div className="flex justify-between items-start pt-2">
-                    <Button type="button" variant="default" size="sm" onClick={addLigne}><PlusCircle className="mr-2 h-4 w-4" />Ajouter une ligne</Button>
-                    <div className="w-full max-w-sm space-y-2 text-sm p-4 border rounded-lg bg-muted/50">
+                    {!isViewMode && (
+                      <Button type="button" variant="default" size="sm" onClick={addLigne}><PlusCircle className="mr-2 h-4 w-4" />Ajouter une ligne</Button>
+                    )}
+                    <div className="w-full max-w-sm space-y-2 text-sm p-4 border rounded-lg bg-muted/50 ml-auto">
                         <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
                         <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
                         <Separator/>
@@ -498,8 +536,14 @@ export default function SaisieComptablePage() {
                 </div>
             </div>
             <DialogFooter className="pt-4 border-t mt-4">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Annuler</Button>
-              <Button type="submit">Enregistrer</Button>
+              {isViewMode ? (
+                <Button type="button" variant="outline" onClick={resetModalState}>Fermer</Button>
+              ) : (
+                <>
+                  <Button type="button" variant="outline" onClick={resetModalState}>Annuler</Button>
+                  <Button type="submit">Enregistrer</Button>
+                </>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>
