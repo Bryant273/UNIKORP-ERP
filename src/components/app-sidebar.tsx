@@ -135,8 +135,8 @@ const getNavForPath = (pathname: string) => {
 export function AppSidebar() {
   const pathname = usePathname();
 
-  const specialPages = ['/', '/chat', '/notifications', '/settings', '/help'];
-  if (specialPages.some(p => pathname.startsWith(p))) {
+  const specialPages = ['/chat', '/notifications', '/settings', '/help'];
+  if (pathname === '/' || specialPages.some(p => pathname.startsWith(p))) {
     return null;
   }
 
