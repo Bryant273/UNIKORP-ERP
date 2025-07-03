@@ -265,6 +265,7 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
           onFocus={handleFocus}
           disabled={disabled}
           autoComplete="off"
+          className="text-center"
         />
       </PopoverTrigger>
       <PopoverContent
@@ -549,16 +550,16 @@ export default function SaisieComptablePage() {
             <TableBody>
               {currentEcritures.map((ecriture, index) => (
                 <TableRow key={ecriture.id} className="odd:bg-muted/50">
-                  <TableCell className="text-muted-foreground">{startIndex + index + 1}</TableCell>
-                  <TableCell>{new Date(ecriture.dateSaisie).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell className="font-mono">{ecriture.numeroCompta}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-muted-foreground text-center">{startIndex + index + 1}</TableCell>
+                  <TableCell className="text-center">{new Date(ecriture.dateSaisie).toLocaleDateString('fr-FR')}</TableCell>
+                  <TableCell className="font-mono text-center">{ecriture.numeroCompta}</TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="secondary">{ecriture.journal}</Badge>
                   </TableCell>
-                  <TableCell>{new Date(ecriture.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell>{ecriture.numeroPiece}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <TableCell className="text-center">{new Date(ecriture.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
+                  <TableCell className="text-center">{ecriture.numeroPiece}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
                        <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(ecriture)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Voir</span>
@@ -700,10 +701,10 @@ export default function SaisieComptablePage() {
                                 disabled={isViewMode}
                               />
                             </TableCell>
-                            <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
-                            <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
-                            <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
-                            <TableCell>
+                            <TableCell><Input className="text-center" placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input className="text-center" type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input className="text-center" type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
+                            <TableCell className="text-center">
                               {!isViewMode && index >= 2 && (
                                 <Button variant="ghost" size="icon" type="button" onClick={() => removeLigne(ligne.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                               )}

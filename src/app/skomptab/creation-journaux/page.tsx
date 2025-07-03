@@ -203,17 +203,17 @@ export default function CreationJournauxPage() {
             <TableBody>
               {journals.map((journal) => (
                 <TableRow key={journal.id} className="odd:bg-muted/50">
-                  <TableCell className="font-medium">{journal.code}</TableCell>
-                  <TableCell>{journal.intitule}</TableCell>
-                  <TableCell>{journal.type}</TableCell>
-                  <TableCell>{journal.compteRattache || 'N/A'}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium text-center">{journal.code}</TableCell>
+                  <TableCell className="text-center">{journal.intitule}</TableCell>
+                  <TableCell className="text-center">{journal.type}</TableCell>
+                  <TableCell className="text-center">{journal.compteRattache || 'N/A'}</TableCell>
+                  <TableCell className="flex justify-center">
                     <Badge variant={journal.statut === 'Actif' ? 'default' : 'secondary'}>
                       {journal.statut}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(journal)}>
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Modifier</span>

@@ -230,13 +230,13 @@ export default function ModeleSaisiePage() {
               <TableBody>
                 {modeles.map((modele) => (
                   <TableRow key={modele.id} className="odd:bg-muted/50">
-                    <TableCell className="font-medium">{modele.libelle}</TableCell>
-                    <TableCell className="text-muted-foreground">{modele.description}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium text-center">{modele.libelle}</TableCell>
+                    <TableCell className="text-muted-foreground text-center">{modele.description}</TableCell>
+                    <TableCell className="text-center">
                       <Badge variant="secondary">{modele.ecritures.length} écritures</Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(modele)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Voir</span>
@@ -302,23 +302,23 @@ export default function ModeleSaisiePage() {
                     <TableBody>
                       {formData.ecritures.map((ecriture, index) => (
                         <TableRow key={ecriture.id} className="odd:bg-muted/50">
-                          <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                          <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
                           <TableCell>
-                            <Input placeholder="Saisir un compte" value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} disabled={isViewMode}/>
+                            <Input placeholder="Saisir un compte" value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} disabled={isViewMode} className="text-center"/>
                           </TableCell>
                           <TableCell>
-                            <Input placeholder="Saisir un tiers" value={ecriture.tiers} onChange={(e) => handleEcritureChange(index, 'tiers', e.target.value)} disabled={isViewMode}/>
+                            <Input placeholder="Saisir un tiers" value={ecriture.tiers} onChange={(e) => handleEcritureChange(index, 'tiers', e.target.value)} disabled={isViewMode} className="text-center"/>
                           </TableCell>
                           <TableCell>
-                            <Input placeholder="Libellé" value={ecriture.libelle} onChange={(e) => handleEcritureChange(index, 'libelle', e.target.value)} disabled={isViewMode}/>
+                            <Input placeholder="Libellé" value={ecriture.libelle} onChange={(e) => handleEcritureChange(index, 'libelle', e.target.value)} disabled={isViewMode} className="text-center"/>
                           </TableCell>
                           <TableCell>
-                            <Input type="number" placeholder="0.00" value={ecriture.debit} onChange={(e) => handleEcritureChange(index, 'debit', e.target.value)} disabled={isViewMode}/>
+                            <Input type="number" placeholder="0.00" value={ecriture.debit} onChange={(e) => handleEcritureChange(index, 'debit', e.target.value)} disabled={isViewMode} className="text-center"/>
                           </TableCell>
                           <TableCell>
-                            <Input type="number" placeholder="0.00" value={ecriture.credit} onChange={(e) => handleEcritureChange(index, 'credit', e.target.value)} disabled={isViewMode}/>
+                            <Input type="number" placeholder="0.00" value={ecriture.credit} onChange={(e) => handleEcritureChange(index, 'credit', e.target.value)} disabled={isViewMode} className="text-center"/>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {!isViewMode && (
                               <Button variant="ghost" size="icon" type="button" onClick={() => removeEcritureRow(ecriture.id)}>
                                 <Trash2 className="h-4 w-4 text-destructive"/>

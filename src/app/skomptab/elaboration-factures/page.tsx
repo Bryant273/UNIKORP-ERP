@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -42,7 +41,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2, PlusCircle, Printer, Eye, Pencil } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Trash2, PlusCircle, Printer, Eye, Pencil, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
 import jsPDF from 'jspdf';
@@ -58,6 +64,41 @@ type LineItem = {
   unitPrice: number;
 };
 
+type InvoiceTemplate = {
+  id: string;
+  name: string;
+  primaryColor: string;
+  companyName: string;
+  companyAddress: string;
+  companyLogoUrl: string;
+  showTax: boolean;
+  footerText: string;
+};
+
+const initialTemplates: InvoiceTemplate[] = [
+  {
+    id: 'tpl_classic',
+    name: 'Classique',
+    primaryColor: '#3b82f6', // blue-500
+    companyName: 'Votre Société S.A.',
+    companyAddress: '123 Rue de la Facture, 75001 Paris',
+    companyLogoUrl: '',
+    showTax: true,
+    footerText: 'Merci de votre confiance.\nPaiement à 30 jours net.',
+  },
+  {
+    id: 'tpl_modern',
+    name: 'Moderne',
+    primaryColor: '#10b981', // emerald-500
+    companyName: 'Tech Innovante Inc.',
+    companyAddress: '456 Avenue du Futur, Lyon',
+    companyLogoUrl: '',
+    showTax: false,
+    footerText: 'Coordonnées bancaires : FR76 ...',
+  },
+];
+
+
 type InvoiceData = {
   id: string;
   invoiceTitle: string;
@@ -70,6 +111,11 @@ type InvoiceData = {
   isVatEnabled: boolean;
   vatRate: number;
   notes: string;
+  // From template
+  companyName: string;
+  companyAddress: string;
+  companyLogoUrl: string;
+  primaryColor: string;
 };
 
 const calculateTotals = (invoice: Omit<InvoiceData, 'id'>) => {
@@ -95,6 +141,10 @@ const initialInvoices: InvoiceData[] = [
     isVatEnabled: true,
     vatRate: 20,
     notes: 'Merci de votre confiance.',
+    companyName: 'Votre Société S.A.',
+    companyAddress: '123 Rue de la Facture, 75001 Paris',
+    companyLogoUrl: '',
+    primaryColor: '#3b82f6',
   },
   {
     id: 'inv_2',
@@ -108,10 +158,14 @@ const initialInvoices: InvoiceData[] = [
     isVatEnabled: true,
     vatRate: 20,
     notes: 'Paiement à réception.',
+    companyName: 'Tech Innovante Inc.',
+    companyAddress: '456 Avenue du Futur, Lyon',
+    companyLogoUrl: '',
+    primaryColor: '#10b981',
   },
 ];
 
-const getDefaultInvoiceData = (): Omit<InvoiceData, 'id'> => {
+const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id'> => {
     const today = new Date();
     const dueDate = new Date();
     dueDate.setDate(today.getDate() + 30);
@@ -126,9 +180,14 @@ const getDefaultInvoiceData = (): Omit<InvoiceData, 'id'> => {
         invoiceDate: today.toISOString().split('T')[0],
         dueDate: dueDate.toISOString().split('T')[0],
         lineItems: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
-        isVatEnabled: true,
         vatRate: 18,
-        notes: 'Nous vous remercions de votre confiance.',
+        // From template
+        isVatEnabled: template.showTax,
+        notes: template.footerText,
+        companyName: template.companyName,
+        companyAddress: template.companyAddress,
+        companyLogoUrl: template.companyLogoUrl,
+        primaryColor: template.primaryColor
     };
 };
 
@@ -142,12 +201,12 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
         <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    <Logo className="h-12 w-12 text-primary" />
-                    <h1 className="font-bold text-lg mt-2">Votre Entreprise</h1>
-                    <p className="text-xs">123 Rue de l'Exemple, Ville, Pays</p>
+                     {invoice.companyLogoUrl ? <img src={invoice.companyLogoUrl} alt="Logo" className="h-12" data-ai-hint="company logo" /> : <Logo className="h-12 w-12" style={{ color: invoice.primaryColor }} />}
+                    <h1 className="font-bold text-lg mt-2">{invoice.companyName}</h1>
+                    <p className="text-xs whitespace-pre-line">{invoice.companyAddress}</p>
                 </div>
                 <div className="text-right">
-                    <h2 className="text-2xl font-bold uppercase text-primary">FACTURE</h2>
+                    <h2 className="text-2xl font-bold uppercase" style={{ color: invoice.primaryColor }}>FACTURE</h2>
                     <p className="font-mono text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
                     <p className="text-sm text-muted-foreground mt-1">{invoice.invoiceTitle}</p>
                 </div>
@@ -170,21 +229,21 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                 </div>
             </div>
             <table className="w-full text-left mb-8 text-xs">
-                <thead className="bg-primary text-white">
+                <thead style={{ backgroundColor: invoice.primaryColor }} className="text-white">
                     <tr>
-                        <th className="p-2 rounded-l-md">Description</th>
+                        <th className="p-2 rounded-l-md text-center">Description</th>
                         <th className="p-2 text-center">Qté</th>
-                        <th className="p-2 text-right">Prix U. HT</th>
-                        <th className="p-2 text-right rounded-r-md">Total HT</th>
+                        <th className="p-2 text-center">Prix U. HT</th>
+                        <th className="p-2 text-center rounded-r-md">Total HT</th>
                     </tr>
                 </thead>
                 <tbody>
                     {invoice.lineItems.map((item) => (
                          <tr key={item.id} className="border-b odd:bg-muted/50">
-                            <td className="p-2 font-medium">{item.description || 'Service ou produit'}</td>
+                            <td className="p-2 font-medium text-center">{item.description || 'Service ou produit'}</td>
                             <td className="p-2 text-center">{item.quantity}</td>
-                            <td className="p-2 text-right">{item.unitPrice.toFixed(2)} XOF</td>
-                            <td className="p-2 text-right">{(item.quantity * item.unitPrice).toFixed(2)} XOF</td>
+                            <td className="p-2 text-center">{item.unitPrice.toFixed(2)} XOF</td>
+                            <td className="p-2 text-center">{(item.quantity * item.unitPrice).toFixed(2)} XOF</td>
                         </tr>
                     ))}
                     {invoice.lineItems.length === 0 && (
@@ -205,7 +264,7 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                         </div>
                     )}
                      <Separator />
-                    <div className="flex justify-between font-bold text-base text-primary">
+                    <div className="flex justify-between font-bold text-base" style={{ color: invoice.primaryColor }}>
                         <p>TOTAL TTC :</p>
                         <p>{total.toFixed(2)} XOF</p>
                     </div>
@@ -227,14 +286,15 @@ export default function ElaborationFacturesPage() {
   const [isViewMode, setIsViewMode] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<InvoiceData | null>(null);
   const [invoiceToDelete, setInvoiceToDelete] = useState<InvoiceData | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   
-  const [formData, setFormData] = useState<Omit<InvoiceData, 'id'>>(getDefaultInvoiceData());
+  const [formData, setFormData] = useState<Omit<InvoiceData, 'id'>>(getDefaultInvoiceData(initialTemplates[0]));
   const { toast } = useToast();
 
-  const handleOpenCreateSheet = () => {
+  const handleOpenCreateSheet = (template: InvoiceTemplate) => {
     setEditingInvoice(null);
     setIsViewMode(false);
-    setFormData(getDefaultInvoiceData());
+    setFormData(getDefaultInvoiceData(template));
     setIsSheetOpen(true);
   };
   
@@ -252,7 +312,7 @@ export default function ElaborationFacturesPage() {
     setIsSheetOpen(true);
   };
 
-  const handleFormChange = (field: keyof Omit<InvoiceData, 'id'>, value: any) => {
+  const handleFormChange = (field: keyof Omit<InvoiceData, 'id' | 'lineItems'>, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -299,6 +359,11 @@ export default function ElaborationFacturesPage() {
       }
   };
 
+  const handleSelectTemplate = (template: InvoiceTemplate) => {
+    setIsTemplateModalOpen(false);
+    handleOpenCreateSheet(template);
+  };
+
   const generatePDF = (invoice: InvoiceData) => {
     const doc = new jsPDF();
     const { subTotal, vatAmount, total } = calculateTotals(invoice);
@@ -316,10 +381,10 @@ export default function ElaborationFacturesPage() {
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text("Votre Entreprise", 20, 20);
+    doc.text(invoice.companyName, 20, 20);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text("123 Rue de l'Exemple\nVille, Pays", 20, 26);
+    doc.text(invoice.companyAddress.replace(/\n/g, '\n'), 20, 26);
     
     // Client Info & Dates
     doc.setFontSize(10);
@@ -327,7 +392,7 @@ export default function ElaborationFacturesPage() {
     doc.text("FACTURÉ À:", 20, 50);
     doc.setFont('helvetica', 'normal');
     doc.text(invoice.clientName, 20, 56);
-    doc.text(invoice.clientAddress, 20, 62);
+    doc.text(invoice.clientAddress.replace(/\n/g, '\n'), 20, 62);
     
     doc.text(`Date de facture: ${new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}`, 150, 50);
     doc.text(`Date d'échéance: ${new Date(invoice.dueDate).toLocaleDateString('fr-FR')}`, 150, 56);
@@ -345,13 +410,8 @@ export default function ElaborationFacturesPage() {
         head: [tableColumn],
         body: tableRows,
         startY: 75,
-        headStyles: { fillColor: [67, 58, 183] }, // primary color
-        styles: { halign: 'left' },
-        columnStyles: {
-            1: { halign: 'center' },
-            2: { halign: 'right' },
-            3: { halign: 'right' },
-        }
+        headStyles: { fillColor: invoice.primaryColor }, 
+        styles: { halign: 'center' },
     });
 
     // Totals
@@ -378,7 +438,7 @@ export default function ElaborationFacturesPage() {
     currentY += 20;
     doc.setFontSize(9);
     doc.setTextColor(150);
-    doc.text(invoice.notes, 20, currentY, { maxWidth: 170 });
+    doc.text(invoice.notes.replace(/\n/g, '\n'), 20, currentY, { maxWidth: 170 });
 
     doc.save(`facture-${invoice.invoiceNumber}.pdf`);
 
@@ -400,10 +460,16 @@ export default function ElaborationFacturesPage() {
                             Créez, consultez et gérez toutes vos factures de vente.
                         </CardDescription>
                     </div>
-                    <Button onClick={handleOpenCreateSheet}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Créer une facture
-                    </Button>
+                     <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setIsTemplateModalOpen(true)}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Utiliser un modèle
+                        </Button>
+                        <Button onClick={() => handleOpenCreateSheet(initialTemplates[0])}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Créer une facture
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -422,12 +488,12 @@ export default function ElaborationFacturesPage() {
                             const { total } = calculateTotals(invoice);
                             return (
                                 <TableRow key={invoice.id} className="odd:bg-muted/50">
-                                    <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
-                                    <TableCell className="font-medium">{invoice.clientName}</TableCell>
-                                    <TableCell>{invoice.invoiceTitle}</TableCell>
-                                    <TableCell className="text-right font-mono">{total.toFixed(2)} XOF</TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center justify-end gap-2">
+                                    <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
+                                    <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
+                                    <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
+                                    <TableCell className="font-mono text-center">{total.toFixed(2)} XOF</TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(invoice)}><Pencil className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><Printer className="h-4 w-4" /></Button>
@@ -482,7 +548,7 @@ export default function ElaborationFacturesPage() {
                                         <TableHeader><TableRow><TableHead className="text-center">Description</TableHead><TableHead className="w-[100px] text-center">Qté</TableHead><TableHead className="w-[150px] text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] text-center"></TableHead></TableRow></TableHeader>
                                         <TableBody>
                                             {formData.lineItems.map(item => (
-                                                <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell>{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
+                                                <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell className="text-center">{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
                                             ))}
                                         </TableBody>
                                     </Table>
@@ -527,6 +593,35 @@ export default function ElaborationFacturesPage() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+            <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Utiliser un modèle de facture</DialogTitle>
+                  <DialogDescription>
+                    Sélectionnez un modèle pour pré-remplir la facture.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                    {initialTemplates.map(template => (
+                      <Card key={template.id} className="hover:bg-accent transition-colors">
+                        <CardHeader className="flex flex-row justify-between items-center p-4">
+                            <div>
+                               <CardTitle className="text-base">{template.name}</CardTitle>
+                               <CardDescription className="flex items-center gap-2">
+                                   <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: template.primaryColor }} />
+                                   {template.companyName}
+                               </CardDescription>
+                            </div>
+                            <Button size="sm" onClick={() => handleSelectTemplate(template)}>
+                               Sélectionner
+                            </Button>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                </div>
+            </DialogContent>
+        </Dialog>
     </>
   );
 }

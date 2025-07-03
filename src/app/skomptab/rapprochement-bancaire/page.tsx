@@ -154,7 +154,7 @@ export default function RapprochementBancairePage() {
       'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
       'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
     ];
-    const monthIndex = frenchMonths.findIndex(m => month.toLowerCase().startsWith(m));
+    const monthIndex = frenchMonths.findIndex(m => month.toLowerCase().startsWith(m.substring(0,4)));
 
     if (monthIndex !== -1) {
         const fromDate = new Date(parseInt(year), monthIndex, 1);
@@ -458,11 +458,11 @@ export default function RapprochementBancairePage() {
                             <TableBody>
                                 {lignesReleve.map(ligne => (
                                     <TableRow key={ligne.id} className="odd:bg-muted/50">
-                                        <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('releve', ligne.id)} disabled={isViewMode}/></TableCell>
-                                        <TableCell><Input type="date" value={ligne.date} className="min-w-[120px] h-8" onChange={e => handleLigneReleveChange(ligne.id, 'date', e.target.value)} disabled={isViewMode}/></TableCell>
-                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} className="h-8" onChange={e => handleLigneReleveChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
-                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} className="text-right h-8" onChange={e => handleLigneReleveChange(ligne.id, 'debit', e.target.value)} disabled={isViewMode}/></TableCell>
-                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} className="text-right h-8" onChange={e => handleLigneReleveChange(ligne.id, 'credit', e.target.value)} disabled={isViewMode}/></TableCell>
+                                        <TableCell className="text-center"><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('releve', ligne.id)} disabled={isViewMode}/></TableCell>
+                                        <TableCell className="text-center"><Input type="date" value={ligne.date} className="min-w-[120px] h-8 text-center" onChange={e => handleLigneReleveChange(ligne.id, 'date', e.target.value)} disabled={isViewMode}/></TableCell>
+                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} className="h-8 text-center" onChange={e => handleLigneReleveChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} className="text-center h-8" onChange={e => handleLigneReleveChange(ligne.id, 'debit', e.target.value)} disabled={isViewMode}/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} className="text-center h-8" onChange={e => handleLigneReleveChange(ligne.id, 'credit', e.target.value)} disabled={isViewMode}/></TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -490,11 +490,11 @@ export default function RapprochementBancairePage() {
                             <TableBody>
                                  {lignesJournal.map(ligne => (
                                     <TableRow key={ligne.id} className="odd:bg-muted/50">
-                                        <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('journal', ligne.id)} disabled={isViewMode}/></TableCell>
-                                        <TableCell>{format(new Date(ligne.date), 'dd/MM/yyyy')}</TableCell>
-                                        <TableCell>{ligne.libelle}</TableCell>
-                                        <TableCell className="text-right font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
-                                        <TableCell className="text-right font-mono">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
+                                        <TableCell className="text-center"><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('journal', ligne.id)} disabled={isViewMode}/></TableCell>
+                                        <TableCell className="text-center">{format(new Date(ligne.date), 'dd/MM/yyyy')}</TableCell>
+                                        <TableCell className="text-center">{ligne.libelle}</TableCell>
+                                        <TableCell className="text-center font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
+                                        <TableCell className="text-center font-mono">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -600,11 +600,11 @@ export default function RapprochementBancairePage() {
           <TableBody>
             {rapprochements.map((r) => (
               <TableRow key={r.id} className="odd:bg-muted/50">
-                <TableCell>{format(new Date(r.date), 'dd/MM/yyyy')}</TableCell>
-                <TableCell className="font-medium">{r.periode}</TableCell>
-                <TableCell><Badge variant="outline">{r.journal}</Badge></TableCell>
-                <TableCell className="text-right">
-                   <div className="flex items-center justify-end gap-2">
+                <TableCell className="text-center">{format(new Date(r.date), 'dd/MM/yyyy')}</TableCell>
+                <TableCell className="font-medium text-center">{r.periode}</TableCell>
+                <TableCell className="flex justify-center"><Badge variant="outline">{r.journal}</Badge></TableCell>
+                <TableCell className="text-center">
+                   <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => loadRapprochement(r, true)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Voir</span>
@@ -638,7 +638,7 @@ export default function RapprochementBancairePage() {
             </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setRapprochementToDelete(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteRapprochement} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>

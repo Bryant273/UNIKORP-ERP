@@ -275,15 +275,15 @@ export default function DigitalisationFacturesPage() {
             <TableBody>
               {invoices.map((invoice) => (
                 <TableRow key={invoice.id} className="odd:bg-muted/50">
-                  <TableCell>{new Date(invoice.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell className="font-mono">{invoice.numeroPiece}</TableCell>
-                  <TableCell className="font-medium">{invoice.tiers}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">{new Date(invoice.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
+                  <TableCell className="font-mono text-center">{invoice.numeroPiece}</TableCell>
+                  <TableCell className="font-medium text-center">{invoice.tiers}</TableCell>
+                  <TableCell className="flex justify-center">
                     <Badge variant={invoice.type === 'Vente' ? 'default' : 'secondary'}>{invoice.type}</Badge>
                   </TableCell>
-                  <TableCell className="text-right font-mono">{invoice.montant.toFixed(2)} FCFA</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <TableCell className="text-center font-mono">{invoice.montant.toFixed(2)} FCFA</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => setViewingInvoice(invoice)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Voir</span>

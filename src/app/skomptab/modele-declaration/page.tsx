@@ -390,13 +390,13 @@ export default function ModeleDeclarationPage() {
             <TableBody>
               {modeles.map((modele) => (
                 <TableRow key={modele.id} className="odd:bg-muted/50">
-                  <TableCell className="font-medium">{modele.libelle}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium text-center">{modele.libelle}</TableCell>
+                  <TableCell className="flex justify-center">
                     <Badge variant="outline">{modele.type}</Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{modele.description}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <TableCell className="text-muted-foreground text-center">{modele.description}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(modele)}>
                         <Eye className="h-4 w-4" />
                         <span className="sr-only">Voir</span>

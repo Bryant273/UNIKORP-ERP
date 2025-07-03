@@ -250,11 +250,11 @@ export default function ComptesTiersPage() {
       <TableBody>
         {data.map((compte) => (
           <TableRow key={compte.id} className="odd:bg-muted/50">
-            <TableCell className="font-mono">{compte.numero}</TableCell>
-            <TableCell className="font-medium">{compte.intitule}</TableCell>
-            <TableCell>{compte.telephone}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex items-center justify-end gap-2">
+            <TableCell className="font-mono text-center">{compte.numero}</TableCell>
+            <TableCell className="font-medium text-center">{compte.intitule}</TableCell>
+            <TableCell className="text-center">{compte.telephone}</TableCell>
+            <TableCell className="text-center">
+              <div className="flex items-center justify-center gap-2">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(compte)}>
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">Modifier</span>

@@ -319,18 +319,18 @@ export default function ControleTresoreriePage() {
                 <TableBody>
                     {transactions.map(tx => (
                         <TableRow key={tx.id} className="odd:bg-muted/50">
-                            <TableCell>{new Date(tx.date).toLocaleDateString('fr-FR')}</TableCell>
-                            <TableCell className="font-medium">{tx.label}</TableCell>
-                            <TableCell className="text-muted-foreground">{tx.accountName}</TableCell>
-                            <TableCell>
+                            <TableCell className="text-center">{new Date(tx.date).toLocaleDateString('fr-FR')}</TableCell>
+                            <TableCell className="font-medium text-center">{tx.label}</TableCell>
+                            <TableCell className="text-muted-foreground text-center">{tx.accountName}</TableCell>
+                            <TableCell className="flex justify-center">
                                 <Badge variant={tx.type === 'Débit' ? 'destructive' : 'default'} className="flex items-center gap-1 w-fit">
                                     {tx.type === 'Débit' ? <ArrowDownCircle className="h-3 w-3"/> : <ArrowUpCircle className="h-3 w-3"/>}
                                     {tx.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="text-right font-mono">{tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</TableCell>
-                            <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-2">
+                            <TableCell className="text-center font-mono">{tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</TableCell>
+                            <TableCell className="text-center">
+                                <div className="flex items-center justify-center gap-2">
                                     <Button variant="ghost" size="icon" onClick={() => setViewingTransaction(tx)}>
                                         <Eye className="h-4 w-4" />
                                         <span className="sr-only">Voir</span>
