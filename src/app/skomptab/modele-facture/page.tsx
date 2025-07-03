@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,13 +18,34 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, Eye, Pencil, Palette, Building, Milestone } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { PlusCircle, Eye, Pencil, Palette, Building, Milestone, Trash2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
 type InvoiceTemplate = {
@@ -196,6 +216,8 @@ export default function ModeleFacturePage() {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | null>(null);
     const [formData, setFormData] = useState<InvoiceTemplate | null>(null);
+    const [viewingTemplate, setViewingTemplate] = useState<InvoiceTemplate | null>(null);
+    const [templateToDelete, setTemplateToDelete] = useState<InvoiceTemplate | null>(null);
 
     const handleOpenSheet = (template: InvoiceTemplate | null) => {
         if (template) {
@@ -244,6 +266,13 @@ export default function ModeleFacturePage() {
         setEditingTemplate(null);
         setFormData(null);
     }
+
+    const handleDelete = () => {
+        if (templateToDelete) {
+            setTemplates(templates.filter(t => t.id !== templateToDelete.id));
+            setTemplateToDelete(null);
+        }
+    };
     
   return (
     <>
@@ -260,23 +289,45 @@ export default function ModeleFacturePage() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map(template => (
-                <Card key={template.id} className="flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="text-lg">{template.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow flex items-center justify-center bg-muted/50 p-4">
-                        <div className="transform scale-50 -translate-y-1/4 w-[200%] h-[200%] origin-top-left">
-                           <InvoicePreview template={template} />
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-end gap-2 p-4">
-                        <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" /> Aperçu</Button>
-                        <Button size="sm" onClick={() => handleOpenSheet(template)}><Pencil className="mr-2 h-4 w-4"/> Modifier</Button>
-                    </CardFooter>
-                </Card>
-            ))}
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom du modèle</TableHead>
+                <TableHead>Couleur principale</TableHead>
+                <TableHead className="text-right w-[150px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates.map(template => (
+                <TableRow key={template.id}>
+                  <TableCell className="font-medium">{template.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: template.primaryColor }} />
+                        <span>{template.primaryColor}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => setViewingTemplate(template)}>
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">Aperçu</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenSheet(template)}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setTemplateToDelete(template)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Supprimer</span>
+                        </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
       
@@ -357,6 +408,27 @@ export default function ModeleFacturePage() {
               </SheetFooter>
           </SheetContent>
       </Sheet>
+
+      <Dialog open={!!viewingTemplate} onOpenChange={() => setViewingTemplate(null)}>
+        <DialogContent className="max-w-4xl p-0 border-0 bg-transparent shadow-none">
+          {viewingTemplate && <div className="bg-muted p-8"><InvoicePreview template={viewingTemplate} /></div>}
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={!!templateToDelete} onOpenChange={() => setTemplateToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Cette action est irréversible. Le modèle de facture sera définitivement supprimé.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setTemplateToDelete(null)}>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
