@@ -324,7 +324,7 @@ export default function ComptesGenerauxPage() {
             </TableHeader>
             <TableBody>
               {currentComptes.map((compte) => (
-                <TableRow key={compte.id}>
+                <TableRow key={compte.id} className="odd:bg-muted/50">
                   <TableCell className="font-mono">{compte.numero}</TableCell>
                   <TableCell className="font-medium">{compte.intitule}</TableCell>
                   <TableCell>{compte.nature}</TableCell>

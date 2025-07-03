@@ -105,7 +105,7 @@ const LiveInvoicePreview = React.forwardRef<HTMLDivElement, { invoice: InvoiceDa
                 </thead>
                 <tbody>
                     {invoice.lineItems.map((item) => (
-                         <tr key={item.id} className="border-b">
+                         <tr key={item.id} className="border-b odd:bg-muted/50">
                             <td className="p-2 font-medium">{item.description || 'Service ou produit'}</td>
                             <td className="p-2 text-center">{item.quantity}</td>
                             <td className="p-2 text-right">{item.unitPrice.toFixed(2)} XOF</td>
@@ -325,7 +325,7 @@ export default function ElaborationFacturesPage() {
                     </TableHeader>
                     <TableBody>
                         {invoice.lineItems.map(item => (
-                            <TableRow key={item.id}>
+                            <TableRow key={item.id} className="odd:bg-muted/50">
                                 <TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation de service" /></TableCell>
                                 <TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} /></TableCell>
                                 <TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} /></TableCell>

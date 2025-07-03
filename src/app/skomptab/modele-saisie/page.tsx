@@ -229,7 +229,7 @@ export default function ModeleSaisiePage() {
               </TableHeader>
               <TableBody>
                 {modeles.map((modele) => (
-                  <TableRow key={modele.id}>
+                  <TableRow key={modele.id} className="odd:bg-muted/50">
                     <TableCell className="font-medium">{modele.libelle}</TableCell>
                     <TableCell className="text-muted-foreground">{modele.description}</TableCell>
                     <TableCell>
@@ -301,7 +301,7 @@ export default function ModeleSaisiePage() {
                     </TableHeader>
                     <TableBody>
                       {formData.ecritures.map((ecriture, index) => (
-                        <TableRow key={ecriture.id}>
+                        <TableRow key={ecriture.id} className="odd:bg-muted/50">
                           <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                           <TableCell>
                             <Input placeholder="Saisir un compte" value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} disabled={isViewMode}/>

@@ -170,7 +170,7 @@ const InvoicePreview = React.forwardRef<HTMLDivElement, { template: InvoiceTempl
                 </thead>
                 <tbody>
                     {items.map((item, i) => (
-                         <tr key={i} className="border-b">
+                         <tr key={i} className="border-b odd:bg-muted/50">
                             <td className="p-2 font-medium">{item.description}</td>
                              {showQuantity && <td className="p-2 text-center">{item.quantity}</td>}
                              {showUnitPrice && <td className="p-2 text-right">{item.unitPrice.toFixed(2)} €</td>}
@@ -300,7 +300,7 @@ export default function ModeleFacturePage() {
             </TableHeader>
             <TableBody>
               {templates.map(template => (
-                <TableRow key={template.id}>
+                <TableRow key={template.id} className="odd:bg-muted/50">
                   <TableCell className="font-medium">{template.name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

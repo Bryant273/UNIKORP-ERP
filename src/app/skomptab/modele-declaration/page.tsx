@@ -389,7 +389,7 @@ export default function ModeleDeclarationPage() {
             </TableHeader>
             <TableBody>
               {modeles.map((modele) => (
-                <TableRow key={modele.id}>
+                <TableRow key={modele.id} className="odd:bg-muted/50">
                   <TableCell className="font-medium">{modele.libelle}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{modele.type}</Badge>

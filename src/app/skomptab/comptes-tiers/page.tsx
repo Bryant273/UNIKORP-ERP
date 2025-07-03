@@ -249,7 +249,7 @@ export default function ComptesTiersPage() {
       </TableHeader>
       <TableBody>
         {data.map((compte) => (
-          <TableRow key={compte.id}>
+          <TableRow key={compte.id} className="odd:bg-muted/50">
             <TableCell className="font-mono">{compte.numero}</TableCell>
             <TableCell className="font-medium">{compte.intitule}</TableCell>
             <TableCell>{compte.telephone}</TableCell>

@@ -154,7 +154,7 @@ export default function RapprochementBancairePage() {
       'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
       'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
     ];
-    const monthIndex = frenchMonths.findIndex(m => m === month.toLowerCase());
+    const monthIndex = frenchMonths.findIndex(m => month.toLowerCase().startsWith(m));
 
     if (monthIndex !== -1) {
         const fromDate = new Date(parseInt(year), monthIndex, 1);
@@ -457,7 +457,7 @@ export default function RapprochementBancairePage() {
                             </TableHeader>
                             <TableBody>
                                 {lignesReleve.map(ligne => (
-                                    <TableRow key={ligne.id}>
+                                    <TableRow key={ligne.id} className="odd:bg-muted/50">
                                         <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('releve', ligne.id)} disabled={isViewMode}/></TableCell>
                                         <TableCell><Input type="date" value={ligne.date} className="min-w-[120px] h-8" onChange={e => handleLigneReleveChange(ligne.id, 'date', e.target.value)} disabled={isViewMode}/></TableCell>
                                         <TableCell><Input placeholder="Libellé" value={ligne.libelle} className="h-8" onChange={e => handleLigneReleveChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
@@ -489,7 +489,7 @@ export default function RapprochementBancairePage() {
                             </TableHeader>
                             <TableBody>
                                  {lignesJournal.map(ligne => (
-                                    <TableRow key={ligne.id}>
+                                    <TableRow key={ligne.id} className="odd:bg-muted/50">
                                         <TableCell><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('journal', ligne.id)} disabled={isViewMode}/></TableCell>
                                         <TableCell>{format(new Date(ligne.date), 'dd/MM/yyyy')}</TableCell>
                                         <TableCell>{ligne.libelle}</TableCell>
@@ -599,7 +599,7 @@ export default function RapprochementBancairePage() {
           </TableHeader>
           <TableBody>
             {rapprochements.map((r) => (
-              <TableRow key={r.id}>
+              <TableRow key={r.id} className="odd:bg-muted/50">
                 <TableCell>{format(new Date(r.date), 'dd/MM/yyyy')}</TableCell>
                 <TableCell className="font-medium">{r.periode}</TableCell>
                 <TableCell><Badge variant="outline">{r.journal}</Badge></TableCell>

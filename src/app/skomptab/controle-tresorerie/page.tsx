@@ -62,7 +62,7 @@ type TreasuryAccount = {
   accountNumber?: string;
   balance: number;
 };
-type TransactionType = 'Débit' | 'Crédit';
+type TransactionType = 'Crédit' | 'Débit';
 type TreasuryTransaction = {
   id: number;
   date: string;
@@ -318,7 +318,7 @@ export default function ControleTresoreriePage() {
                 </TableHeader>
                 <TableBody>
                     {transactions.map(tx => (
-                        <TableRow key={tx.id}>
+                        <TableRow key={tx.id} className="odd:bg-muted/50">
                             <TableCell>{new Date(tx.date).toLocaleDateString('fr-FR')}</TableCell>
                             <TableCell className="font-medium">{tx.label}</TableCell>
                             <TableCell className="text-muted-foreground">{tx.accountName}</TableCell>
