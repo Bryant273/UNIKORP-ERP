@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppHeader } from '@/components/app-header';
+import { ModuleNav } from '@/components/module-nav';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 
@@ -24,15 +24,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-body antialiased`}>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <AppHeader />
-            <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8">
-              {children}
-            </main>
-          </SidebarInset>
-        </SidebarProvider>
+        <div className="flex h-screen w-full flex-col">
+          <AppHeader />
+          <div className="flex flex-1 overflow-hidden">
+            <AppSidebar />
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <ModuleNav />
+              <main className="flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6 lg:p-8">
+                {children}
+              </main>
+            </div>
+          </div>
+        </div>
         <Toaster />
       </body>
     </html>
