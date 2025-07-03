@@ -45,7 +45,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, PlusCircle } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Upload } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
 
 type NatureCompte = 'Bilan - Actif' | 'Bilan - Passif' | 'Compte de résultat - Charge' | 'Compte de résultat - Produit' | 'Autre';
 
@@ -106,6 +108,10 @@ export default function ComptesGenerauxPage() {
   const [formData, setFormData] = useState(defaultFormData);
   const [compteToDelete, setCompteToDelete] = useState<Compte | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const { toast } = useToast();
   
   const totalPages = Math.ceil(comptes.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -176,6 +182,36 @@ export default function ComptesGenerauxPage() {
       setCurrentPage(newPage);
     }
   };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFileToUpload(e.target.files[0]);
+    }
+  };
+
+  const handleImport = () => {
+    if (!fileToUpload) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un fichier à importer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // This is a placeholder for the actual file parsing logic.
+    console.log(`Importing ${fileToUpload.name} with option: ${importOption}`);
+
+    toast({
+      title: "Importation en cours...",
+      description: `Le traitement du fichier ${fileToUpload.name} a commencé.`,
+    });
+
+    setIsImportModalOpen(false);
+    setFileToUpload(null);
+    setImportOption('merge');
+  };
+
 
   return (
     <>
@@ -188,10 +224,16 @@ export default function ComptesGenerauxPage() {
                 Consultez et personnalisez le plan comptable de votre organisation.
               </CardDescription>
             </div>
-            <Button onClick={handleOpenCreateModal}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nouveau compte
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Importer
+              </Button>
+              <Button onClick={handleOpenCreateModal}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Nouveau compte
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -308,6 +350,44 @@ export default function ComptesGenerauxPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Importer un plan comptable</DialogTitle>
+            <DialogDescription>
+              Chargez un fichier (PDF, Excel, CSV) pour remplacer ou fusionner avec le plan comptable existant.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="file-upload">Fichier</Label>
+              <Input id="file-upload" type="file" onChange={handleFileChange} accept=".pdf,.xls,.xlsx,.csv" />
+            </div>
+            <div className="space-y-2">
+              <Label>Option d'importation</Label>
+              <RadioGroup
+                value={importOption}
+                onValueChange={(value: 'merge' | 'replace') => setImportOption(value)}
+                className="flex gap-4 pt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="merge" id="merge" />
+                  <Label htmlFor="merge" className="font-normal">Fusionner</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="replace" id="replace" />
+                  <Label htmlFor="replace" className="font-normal">Remplacer</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>Annuler</Button>
+            <Button onClick={handleImport} disabled={!fileToUpload}>Importer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
