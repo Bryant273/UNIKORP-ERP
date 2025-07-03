@@ -220,7 +220,7 @@ export default function ComptesTiersPage() {
     const tableData = activeTab === 'clients' ? clients : fournisseurs;
     const tableTitle = activeTab === 'clients' ? 'Clients' : 'Fournisseurs';
 
-    const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABiSURBVHgB7dNBCgAgCARA8f9/2i6IEgq3hU1i4Nl9i4BqjSlaA8DA0Tj6GgBgtY4B1mqA1TpgjX2+YwFgfz/P41cA2J8A3N+L+wEAsQ4Y6zFgPQYAAAYCztcR0H4oAAAAAElFTkSuQmCC';
+    const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
 
     doc.addImage(logoDataUri, 'PNG', 15, 12, 10, 10);
     doc.setFontSize(18);
