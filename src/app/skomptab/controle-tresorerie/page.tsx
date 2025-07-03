@@ -219,7 +219,7 @@ export default function ControleTresoreriePage() {
             )}
             <div>
               <p className="text-sm opacity-80">Solde actuel</p>
-              <p className="text-3xl font-bold tracking-tight">{selectedAccount.balance.toLocaleString('fr-FR', { style: 'currency', currency: 'FCFA' })}</p>
+              <p className="text-3xl font-bold tracking-tight">{selectedAccount.balance.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</p>
             </div>
           </div>
         </CardContent>
@@ -285,7 +285,7 @@ export default function ControleTresoreriePage() {
                                     {tx.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="text-right font-mono">{tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'FCFA' })}</TableCell>
+                            <TableCell className="text-right font-mono">{tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</TableCell>
                             <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
                                     <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(tx)}>
