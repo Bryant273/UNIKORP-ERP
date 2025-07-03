@@ -1,6 +1,6 @@
 'use client';
 import { Button } from './ui/button';
-import { Bell, ChevronDown, Cog, HelpCircle } from 'lucide-react';
+import { Bell, ChevronDown, HelpCircle } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { SmartSearch } from './smart-search';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -60,17 +60,12 @@ export function AppHeader() {
           </PopoverContent>
         </Popover>
         
-        <Link href="/settings">
+        <Link href="/help">
           <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 hover:text-primary-foreground">
-            <Cog className="h-5 w-5" />
-            <span className="sr-only">Settings</span>
+            <HelpCircle className="h-5 w-5" />
+            <span className="sr-only">Help</span>
           </Button>
         </Link>
-        
-        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 hover:text-primary-foreground">
-          <HelpCircle className="h-5 w-5" />
-          <span className="sr-only">Help</span>
-        </Button>
 
         <UserNav />
       </div>

@@ -11,6 +11,7 @@ import {
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { User, Settings, LifeBuoy, LogOut } from 'lucide-react';
+import Link from 'next/link';
 
 export function UserNav() {
   return (
@@ -34,13 +35,17 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>Profil</span>
+          <DropdownMenuItem asChild>
+            <Link href="/settings">
+              <User className="mr-2 h-4 w-4" />
+              <span>Profil</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Paramètres</span>
+          <DropdownMenuItem asChild>
+            <Link href="/settings">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Paramètres</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <LifeBuoy className="mr-2 h-4 w-4" />

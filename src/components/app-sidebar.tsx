@@ -94,6 +94,11 @@ const getNavForPath = (pathname: string) => {
 
 export function AppSidebar() {
   const pathname = usePathname();
+
+  if (pathname === '/') {
+    return null;
+  }
+
   const { dashboardLink, items, placeholder } = getNavForPath(pathname);
 
   return (
@@ -111,7 +116,7 @@ export function AppSidebar() {
           </Link>
         </div>
         {items.length > 0 && (
-          <Accordion type="multiple" className="w-full px-4">
+          <Accordion type="multiple" className="w-full px-4" defaultValue={items.map(item => item.title)}>
             {items.map((item) => (
               <AccordionItem value={item.title} key={item.title} className="border-b-0">
                 <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
@@ -121,16 +126,15 @@ export function AppSidebar() {
                   <ul className="space-y-1">
                     {item.subItems.map((subItem) => (
                       <li key={subItem.href}>
-                        <Link href={subItem.href}>
-                          <span
-                            className={cn(
-                              'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                              pathname === subItem.href && 'bg-accent text-accent-foreground'
-                            )}
-                          >
-                           <subItem.icon className="h-4 w-4" />
-                            {subItem.title}
-                          </span>
+                        <Link
+                          href={subItem.href}
+                          className={cn(
+                            'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                            pathname === subItem.href && 'bg-accent text-accent-foreground'
+                          )}
+                        >
+                         <subItem.icon className="h-4 w-4" />
+                          {subItem.title}
                         </Link>
                       </li>
                     ))}
