@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,7 +36,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Landmark, Wallet, CreditCard, Pencil, Trash2, PlusCircle, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Landmark, Wallet, CreditCard, Pencil, Trash2, PlusCircle, ArrowUpCircle, ArrowDownCircle, Eye, EyeOff } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -72,8 +74,8 @@ type TreasuryTransaction = {
 };
 
 const initialAccounts: TreasuryAccount[] = [
-  { id: 'bnpparibas', name: 'BNP Paribas', type: 'bank', accountNumber: '**** **** **** 1234', balance: 76850.25 },
-  { id: 'societegenerale', name: 'Société Générale', type: 'bank', accountNumber: '**** **** **** 5678', balance: 14230.10 },
+  { id: 'bnpparibas', name: 'BNP Paribas', type: 'bank', accountNumber: 'FR763000400005000012345678', balance: 76850.25 },
+  { id: 'societegenerale', name: 'Société Générale', type: 'bank', accountNumber: 'FR7630002005500000157890Z42', balance: 14230.10 },
   { id: 'caisseprincipale', name: 'Caisse principale', type: 'cash', balance: 1573.50 },
 ];
 
@@ -91,6 +93,17 @@ const defaultTransactionData: Omit<TreasuryTransaction, 'id' | 'accountId' | 'ac
     type: 'Débit',
     amount: 0,
 }
+const defaultNewAccountData: Omit<TreasuryAccount, 'id'> = {
+    name: '',
+    type: 'bank',
+    accountNumber: '',
+    balance: 0,
+}
+
+const maskAccountNumber = (number?: string) => {
+    if (!number) return '';
+    return `**** **** **** ${number.slice(-4)}`;
+}
 
 // --- MAIN COMPONENT ---
 
@@ -98,83 +111,84 @@ export default function ControleTresoreriePage() {
   const [accounts, setAccounts] = useState<TreasuryAccount[]>(initialAccounts);
   const [transactions, setTransactions] = useState<TreasuryTransaction[]>(initialTransactions);
   const [selectedAccountId, setSelectedAccountId] = useState<string>(initialAccounts[0].id);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState(defaultTransactionData);
+
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isAccountNumberVisible, setIsAccountNumberVisible] = useState(false);
+  
+  const [transactionFormData, setTransactionFormData] = useState(defaultTransactionData);
+  const [newAccountFormData, setNewAccountFormData] = useState(defaultNewAccountData);
+  
   const [editingTransaction, setEditingTransaction] = useState<TreasuryTransaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<TreasuryTransaction | null>(null);
   const { toast } = useToast();
 
   const selectedAccount = accounts.find(acc => acc.id === selectedAccountId)!;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTransactionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: id === 'amount' ? parseFloat(value) : value }));
+    setTransactionFormData(prev => ({ ...prev, [id]: id === 'amount' ? parseFloat(value) : value }));
   };
 
-  const handleSelectChange = (value: TransactionType) => {
-    setFormData(prev => ({ ...prev, type: value }));
+  const handleTransactionSelectChange = (value: TransactionType) => {
+    setTransactionFormData(prev => ({ ...prev, type: value }));
   };
 
-  const resetModal = () => {
-    setIsModalOpen(false);
+  const resetTransactionModal = () => {
+    setIsTransactionModalOpen(false);
     setEditingTransaction(null);
-    setFormData(defaultTransactionData);
+    setTransactionFormData(defaultTransactionData);
   };
   
-  const handleOpenCreateModal = () => {
+  const handleOpenCreateTransactionModal = () => {
     setEditingTransaction(null);
-    setFormData(defaultTransactionData);
-    setIsModalOpen(true);
+    setTransactionFormData(defaultTransactionData);
+    setIsTransactionModalOpen(true);
   };
   
-  const handleOpenEditModal = (transaction: TreasuryTransaction) => {
+  const handleOpenEditTransactionModal = (transaction: TreasuryTransaction) => {
     setEditingTransaction(transaction);
-    setFormData({
+    setTransactionFormData({
         date: transaction.date,
         label: transaction.label,
         type: transaction.type,
         amount: transaction.amount,
     });
-    setIsModalOpen(true);
+    setIsTransactionModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleTransactionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (editingTransaction) {
-        // Edit logic
-        setTransactions(transactions.map(t => t.id === editingTransaction.id ? { ...editingTransaction, ...formData } : t));
+        setTransactions(transactions.map(t => t.id === editingTransaction.id ? { ...editingTransaction, ...transactionFormData } : t));
         toast({ title: "Mouvement modifié", description: "Le mouvement de trésorerie a été mis à jour." });
 
     } else {
-        // Create logic
         const newTransaction: TreasuryTransaction = {
             id: Date.now(),
             accountId: selectedAccount.id,
             accountName: selectedAccount.name,
-            ...formData,
+            ...transactionFormData,
         };
         setTransactions([newTransaction, ...transactions]);
         toast({ title: "Mouvement enregistré", description: "Le nouveau mouvement de trésorerie a été ajouté." });
     }
 
-    // Update account balance (simplified logic)
-    // A more robust solution would re-calculate balance from all transactions
-    const amountChange = formData.type === 'Crédit' ? formData.amount : -formData.amount;
+    const amountChange = transactionFormData.type === 'Crédit' ? transactionFormData.amount : -transactionFormData.amount;
     const oldAmount = editingTransaction ? (editingTransaction.type === 'Crédit' ? editingTransaction.amount : -editingTransaction.amount) : 0;
     const balanceDiff = amountChange - oldAmount;
 
     setAccounts(accounts.map(acc => 
-        acc.id === selectedAccount.id ? { ...acc, balance: acc.balance + balanceDiff } : acc
+        acc.id === (editingTransaction?.accountId || selectedAccount.id) ? { ...acc, balance: acc.balance + balanceDiff } : acc
     ));
     
-    resetModal();
+    resetTransactionModal();
   };
   
   const handleDeleteTransaction = () => {
     if (!transactionToDelete) return;
     
-    // Reverse transaction effect on balance
     const amountChange = transactionToDelete.type === 'Crédit' ? -transactionToDelete.amount : transactionToDelete.amount;
     setAccounts(accounts.map(acc => 
         acc.id === transactionToDelete.accountId ? { ...acc, balance: acc.balance + amountChange } : acc
@@ -184,11 +198,27 @@ export default function ControleTresoreriePage() {
     setTransactionToDelete(null);
     toast({ title: "Mouvement supprimé", description: "Le mouvement de trésorerie a été supprimé." });
   };
+  
+  const handleCreateAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newAccount: TreasuryAccount = {
+        id: newAccountFormData.name.toLowerCase().replace(/\s/g, '') + Date.now(),
+        ...newAccountFormData
+    };
+    setAccounts(prev => [...prev, newAccount]);
+    setIsAccountModalOpen(false);
+    setNewAccountFormData(defaultNewAccountData); 
+    toast({ title: 'Compte créé', description: `Le compte ${newAccount.name} a été ajouté.` });
+  };
+  
+  const handleNewAccountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setNewAccountFormData(prev => ({...prev, [id]: id === 'balance' ? parseFloat(value) : value }));
+  };
 
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Account Display Card */}
       <Card 
         className={cn(
             "text-white overflow-hidden relative transition-all duration-300", 
@@ -210,11 +240,17 @@ export default function ControleTresoreriePage() {
           </div>
           <div className="space-y-2">
             {selectedAccount.type === 'bank' && (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                     <div className="w-10 h-8 bg-yellow-400 rounded-md grid place-content-center">
                         <div className="w-6 h-4 bg-yellow-600 rounded-sm"></div>
                     </div>
-                    <p className="font-mono text-lg tracking-widest">{selectedAccount.accountNumber}</p>
+                    <p className="font-mono text-lg tracking-widest flex-1">
+                        {isAccountNumberVisible ? selectedAccount.accountNumber : maskAccountNumber(selectedAccount.accountNumber)}
+                    </p>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10" onClick={() => setIsAccountNumberVisible(!isAccountNumberVisible)}>
+                        {isAccountNumberVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        <span className="sr-only">Toggle visibility</span>
+                    </Button>
                 </div>
             )}
             <div>
@@ -225,37 +261,43 @@ export default function ControleTresoreriePage() {
         </CardContent>
       </Card>
       
-      {/* Account Selector and Actions */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
-                <CardTitle className="text-xl">Comptes de Trésorerie</CardTitle>
-                <CardDescription>Sélectionnez un compte et enregistrez un mouvement.</CardDescription>
+                <CardTitle className="text-xl">Opérations de Trésorerie</CardTitle>
+                <CardDescription>Sélectionnez un compte et gérez les mouvements.</CardDescription>
             </div>
-             <Button onClick={handleOpenCreateModal}>
+             <Button onClick={handleOpenCreateTransactionModal}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nouveau mouvement
             </Button>
         </CardHeader>
-        <CardContent className="flex gap-2">
-           {accounts.map(account => (
-               <Button 
-                key={account.id} 
-                variant={selectedAccount.id === account.id ? 'default' : 'outline'}
-                onClick={() => setSelectedAccountId(account.id)}
-                className="flex-1 h-16 flex-col items-start p-3"
-               >
-                   <div className="flex items-center gap-2">
-                        {account.type === 'bank' ? <Landmark className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
-                        <span className="font-semibold">{account.name}</span>
-                   </div>
-                   <span className="text-xs opacity-80">{account.type === 'bank' ? account.accountNumber : 'Espèces'}</span>
-               </Button>
-           ))}
+        <CardContent className="flex items-end gap-4">
+            <div className="flex-1 space-y-2">
+                <Label htmlFor="account-selector">Compte sélectionné</Label>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                    <SelectTrigger id="account-selector">
+                        <SelectValue placeholder="Sélectionnez un compte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {accounts.map(account => (
+                            <SelectItem key={account.id} value={account.id}>
+                                <div className="flex items-center gap-2">
+                                    {account.type === 'bank' ? <Landmark className="h-4 w-4 text-muted-foreground" /> : <Wallet className="h-4 w-4 text-muted-foreground" />}
+                                    <span>{account.name}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <Button variant="outline" onClick={() => setIsAccountModalOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Ajouter un compte
+            </Button>
         </CardContent>
       </Card>
 
-      {/* Transactions Table */}
       <Card>
         <CardHeader>
             <CardTitle>Derniers Mouvements</CardTitle>
@@ -288,7 +330,7 @@ export default function ControleTresoreriePage() {
                             <TableCell className="text-right font-mono">{tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</TableCell>
                             <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(tx)}>
+                                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditTransactionModal(tx)}>
                                       <Pencil className="h-4 w-4" />
                                       <span className="sr-only">Modifier</span>
                                     </Button>
@@ -305,10 +347,9 @@ export default function ControleTresoreriePage() {
         </CardContent>
       </Card>
 
-      {/* New/Edit Transaction Modal */}
-      <Dialog open={isModalOpen} onOpenChange={resetModal}>
+      <Dialog open={isTransactionModalOpen} onOpenChange={resetTransactionModal}>
           <DialogContent>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleTransactionSubmit}>
                 <DialogHeader>
                   <DialogTitle>{editingTransaction ? 'Modifier le mouvement' : 'Nouveau mouvement de trésorerie'}</DialogTitle>
                   <DialogDescription>
@@ -318,16 +359,16 @@ export default function ControleTresoreriePage() {
                 <div className="grid gap-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="date">Date</Label>
-                        <Input id="date" type="date" value={formData.date} onChange={handleInputChange} required />
+                        <Input id="date" type="date" value={transactionFormData.date} onChange={handleTransactionInputChange} required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="label">Libellé</Label>
-                        <Input id="label" value={formData.label} onChange={handleInputChange} required />
+                        <Input id="label" value={transactionFormData.label} onChange={handleTransactionInputChange} required />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="type">Type de mouvement</Label>
-                            <Select onValueChange={handleSelectChange} value={formData.type}>
+                            <Select onValueChange={handleTransactionSelectChange} value={transactionFormData.type}>
                                 <SelectTrigger id="type">
                                     <SelectValue placeholder="Sélectionnez un type"/>
                                 </SelectTrigger>
@@ -338,20 +379,59 @@ export default function ControleTresoreriePage() {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="amount">Montant</Label>
-                            <Input id="amount" type="number" step="0.01" min="0" value={formData.amount} onChange={handleInputChange} required />
+                            <Label htmlFor="amount">Montant (XOF)</Label>
+                            <Input id="amount" type="number" step="0.01" min="0" value={transactionFormData.amount} onChange={handleTransactionInputChange} required />
                         </div>
                     </div>
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={resetModal}>Annuler</Button>
+                  <Button type="button" variant="outline" onClick={resetTransactionModal}>Annuler</Button>
                   <Button type="submit">Enregistrer</Button>
                 </DialogFooter>
               </form>
           </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation */}
+      <Dialog open={isAccountModalOpen} onOpenChange={setIsAccountModalOpen}>
+        <DialogContent>
+            <form onSubmit={handleCreateAccount}>
+                <DialogHeader>
+                    <DialogTitle>Ajouter un compte de trésorerie</DialogTitle>
+                    <DialogDescription>
+                        Créez un nouveau compte bancaire ou une nouvelle caisse.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="type">Type de compte</Label>
+                        <RadioGroup defaultValue="bank" value={newAccountFormData.type} onValueChange={(value: TreasuryAccountType) => setNewAccountFormData(p => ({...p, type: value}))}>
+                            <div className="flex items-center space-x-2"><RadioGroupItem value="bank" id="r-bank" /><Label htmlFor="r-bank" className="font-normal">Compte Bancaire</Label></div>
+                            <div className="flex items-center space-x-2"><RadioGroupItem value="cash" id="r-cash" /><Label htmlFor="r-cash" className="font-normal">Caisse</Label></div>
+                        </RadioGroup>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="name">Nom du compte / de la caisse</Label>
+                        <Input id="name" value={newAccountFormData.name} onChange={handleNewAccountInputChange} required/>
+                    </div>
+                    {newAccountFormData.type === 'bank' && (
+                        <div className="space-y-2">
+                            <Label htmlFor="accountNumber">Numéro de compte (IBAN)</Label>
+                            <Input id="accountNumber" value={newAccountFormData.accountNumber} onChange={handleNewAccountInputChange}/>
+                        </div>
+                    )}
+                    <div className="space-y-2">
+                        <Label htmlFor="balance">Solde initial (XOF)</Label>
+                        <Input id="balance" type="number" value={newAccountFormData.balance} onChange={handleNewAccountInputChange} required/>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsAccountModalOpen(false)}>Annuler</Button>
+                    <Button type="submit">Créer le compte</Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+      </Dialog>
+      
       <AlertDialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>
