@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppHeader } from '@/components/app-header';
 import { ModuleNav } from '@/components/module-nav';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 
@@ -24,19 +25,26 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-body antialiased`}>
-        <div className="flex h-screen w-full flex-col">
-          <AppHeader />
-          <div className="flex flex-1 overflow-hidden">
-            <AppSidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <ModuleNav />
-              <main className="flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6 lg:p-8">
-                {children}
-              </main>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <div className="flex h-screen w-full flex-col">
+            <AppHeader />
+            <div className="flex flex-1 overflow-hidden">
+              <AppSidebar />
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <ModuleNav />
+                <main className="flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6 lg:p-8">
+                  {children}
+                </main>
+              </div>
             </div>
           </div>
-        </div>
-        <Toaster />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

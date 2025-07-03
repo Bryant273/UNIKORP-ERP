@@ -36,13 +36,13 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/settings">
+            <Link href="/settings?tab=profile">
               <User className="mr-2 h-4 w-4" />
               <span>Profil</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/settings">
+            <Link href="/settings?tab=preferences">
               <Settings className="mr-2 h-4 w-4" />
               <span>Paramètres</span>
             </Link>

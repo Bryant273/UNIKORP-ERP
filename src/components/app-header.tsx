@@ -8,8 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Logo } from './logo';
 import Link from 'next/link';
 import { Switch } from './ui/switch';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export function AppHeader() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-[#1C2039] px-4 text-primary-foreground sm:px-6">
       <div className="flex items-center gap-2">
@@ -27,7 +36,18 @@ export function AppHeader() {
           <SmartSearch />
         </div>
         
-        <Switch id="dark-mode-toggle" className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-white/20"/>
+        {mounted ? (
+          <Switch
+            id="dark-mode-toggle"
+            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-white/20"
+            checked={theme === 'dark'}
+            onCheckedChange={(checked) => {
+              setTheme(checked ? 'dark' : 'light');
+            }}
+          />
+        ) : (
+          <div className="h-6 w-11" />
+        )}
 
         <Popover>
           <PopoverTrigger asChild>
