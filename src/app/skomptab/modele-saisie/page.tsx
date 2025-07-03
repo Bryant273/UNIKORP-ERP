@@ -221,10 +221,10 @@ export default function ModeleSaisiePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Libellé</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-[150px]">Nb. Écritures</TableHead>
-                  <TableHead className="text-right w-[150px]">Actions</TableHead>
+                  <TableHead className="text-center">Libellé</TableHead>
+                  <TableHead className="text-center">Description</TableHead>
+                  <TableHead className="w-[150px] text-center">Nb. Écritures</TableHead>
+                  <TableHead className="w-[150px] text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -290,13 +290,13 @@ export default function ModeleSaisiePage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[50px]">N°</TableHead>
-                        <TableHead>Compte général</TableHead>
-                        <TableHead>Tiers</TableHead>
-                        <TableHead>Libellé</TableHead>
-                        <TableHead className="w-[150px]">Débit</TableHead>
-                        <TableHead className="w-[150px]">Crédit</TableHead>
-                        <TableHead className="w-[50px]">Action</TableHead>
+                        <TableHead className="w-[50px] text-center">N°</TableHead>
+                        <TableHead className="text-center">Compte général</TableHead>
+                        <TableHead className="text-center">Tiers</TableHead>
+                        <TableHead className="text-center">Libellé</TableHead>
+                        <TableHead className="w-[150px] text-center">Débit</TableHead>
+                        <TableHead className="w-[150px] text-center">Crédit</TableHead>
+                        <TableHead className="w-[50px] text-center">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

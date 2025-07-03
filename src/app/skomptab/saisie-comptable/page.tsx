@@ -537,13 +537,13 @@ export default function SaisieComptablePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">#</TableHead>
-                <TableHead>Date de saisie</TableHead>
-                <TableHead>N° Compta</TableHead>
-                <TableHead>Journal</TableHead>
-                <TableHead>Date de l'opération</TableHead>
-                <TableHead>N° Pièce</TableHead>
-                <TableHead className="text-right w-[120px]">Actions</TableHead>
+                <TableHead className="w-[50px] text-center">#</TableHead>
+                <TableHead className="text-center">Date de saisie</TableHead>
+                <TableHead className="text-center">N° Compta</TableHead>
+                <TableHead className="text-center">Journal</TableHead>
+                <TableHead className="text-center">Date de l'opération</TableHead>
+                <TableHead className="text-center">N° Pièce</TableHead>
+                <TableHead className="w-[120px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -669,12 +669,12 @@ export default function SaisieComptablePage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[200px]">COMPTE</TableHead>
-                          <TableHead className="w-[200px]">TIERS</TableHead>
-                          <TableHead>LIBELLÉ</TableHead>
-                          <TableHead className="w-[150px]">DÉBIT</TableHead>
-                          <TableHead className="w-[150px]">CRÉDIT</TableHead>
-                          <TableHead className="w-[50px]">ACTION</TableHead>
+                          <TableHead className="w-[200px] text-center">COMPTE</TableHead>
+                          <TableHead className="w-[200px] text-center">TIERS</TableHead>
+                          <TableHead className="text-center">LIBELLÉ</TableHead>
+                          <TableHead className="w-[150px] text-center">DÉBIT</TableHead>
+                          <TableHead className="w-[150px] text-center">CRÉDIT</TableHead>
+                          <TableHead className="w-[50px] text-center">ACTION</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

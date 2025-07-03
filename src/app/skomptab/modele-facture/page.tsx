@@ -161,11 +161,11 @@ const InvoicePreview = React.forwardRef<HTMLDivElement, { template: InvoiceTempl
             <table className="w-full text-left mb-8 text-xs">
                 <thead style={{ backgroundColor: primaryColor }} className="text-white">
                     <tr>
-                        <th className="p-2 rounded-l-md">Description</th>
+                        <th className="p-2 text-center rounded-l-md">Description</th>
                         {showQuantity && <th className="p-2 text-center">Quantité</th>}
-                        {showUnitPrice && <th className="p-2 text-right">Prix Unitaire</th>}
-                        {showTax && <th className="p-2 text-right">TVA (%)</th>}
-                        <th className="p-2 text-right rounded-r-md">Total HT</th>
+                        {showUnitPrice && <th className="p-2 text-center">Prix Unitaire</th>}
+                        {showTax && <th className="p-2 text-center">TVA (%)</th>}
+                        <th className="p-2 text-center rounded-r-md">Total HT</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -293,9 +293,9 @@ export default function ModeleFacturePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nom du modèle</TableHead>
-                <TableHead>Couleur principale</TableHead>
-                <TableHead className="text-right w-[150px]">Actions</TableHead>
+                <TableHead className="text-center">Nom du modèle</TableHead>
+                <TableHead className="text-center">Couleur principale</TableHead>
+                <TableHead className="w-[150px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

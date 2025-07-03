@@ -308,12 +308,12 @@ export default function ControleTresoreriePage() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Libellé</TableHead>
-                        <TableHead>Compte</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Montant</TableHead>
-                        <TableHead className="text-right w-[100px]">Actions</TableHead>
+                        <TableHead className="text-center">Date</TableHead>
+                        <TableHead className="text-center">Libellé</TableHead>
+                        <TableHead className="text-center">Compte</TableHead>
+                        <TableHead className="text-center">Type</TableHead>
+                        <TableHead className="text-center">Montant</TableHead>
+                        <TableHead className="w-[100px] text-center">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>

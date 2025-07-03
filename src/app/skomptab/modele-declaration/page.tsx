@@ -381,10 +381,10 @@ export default function ModeleDeclarationPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Libellé</TableHead>
-                <TableHead className="w-[180px]">Type de déclaration</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right w-[150px]">Actions</TableHead>
+                <TableHead className="text-center">Libellé</TableHead>
+                <TableHead className="w-[180px] text-center">Type de déclaration</TableHead>
+                <TableHead className="text-center">Description</TableHead>
+                <TableHead className="w-[150px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

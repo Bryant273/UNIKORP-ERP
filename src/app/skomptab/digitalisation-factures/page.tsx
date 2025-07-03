@@ -264,12 +264,12 @@ export default function DigitalisationFacturesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date Opération</TableHead>
-                <TableHead>N° Pièce</TableHead>
-                <TableHead>Tiers</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
-                <TableHead className="text-right w-[120px]">Actions</TableHead>
+                <TableHead className="text-center">Date Opération</TableHead>
+                <TableHead className="text-center">N° Pièce</TableHead>
+                <TableHead className="text-center">Tiers</TableHead>
+                <TableHead className="text-center">Type</TableHead>
+                <TableHead className="text-center">Montant</TableHead>
+                <TableHead className="w-[120px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

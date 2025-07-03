@@ -241,10 +241,10 @@ export default function ComptesTiersPage() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[150px]">Numéro</TableHead>
-          <TableHead>Intitulé</TableHead>
-          <TableHead>Téléphone</TableHead>
-          <TableHead className="text-right w-[100px]">Actions</TableHead>
+          <TableHead className="w-[150px] text-center">Numéro</TableHead>
+          <TableHead className="text-center">Intitulé</TableHead>
+          <TableHead className="text-center">Téléphone</TableHead>
+          <TableHead className="w-[100px] text-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

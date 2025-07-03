@@ -448,11 +448,11 @@ export default function RapprochementBancairePage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-10"></TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Libellé</TableHead>
-                                    <TableHead className="text-right">Débit</TableHead>
-                                    <TableHead className="text-right">Crédit</TableHead>
+                                    <TableHead className="w-10 text-center"></TableHead>
+                                    <TableHead className="text-center">Date</TableHead>
+                                    <TableHead className="text-center">Libellé</TableHead>
+                                    <TableHead className="text-center">Débit</TableHead>
+                                    <TableHead className="text-center">Crédit</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -480,11 +480,11 @@ export default function RapprochementBancairePage() {
                         <Table>
                             <TableHeader className="sticky top-0 bg-secondary">
                                 <TableRow>
-                                    <TableHead className="w-10"></TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Libellé</TableHead>
-                                    <TableHead className="text-right">Débit</TableHead>
-                                    <TableHead className="text-right">Crédit</TableHead>
+                                    <TableHead className="w-10 text-center"></TableHead>
+                                    <TableHead className="text-center">Date</TableHead>
+                                    <TableHead className="text-center">Libellé</TableHead>
+                                    <TableHead className="text-center">Débit</TableHead>
+                                    <TableHead className="text-center">Crédit</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -591,10 +591,10 @@ export default function RapprochementBancairePage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date de rapprochement</TableHead>
-              <TableHead>Période</TableHead>
-              <TableHead>Journal</TableHead>
-              <TableHead className="text-right w-[180px]">Actions</TableHead>
+              <TableHead className="text-center">Date de rapprochement</TableHead>
+              <TableHead className="text-center">Période</TableHead>
+              <TableHead className="text-center">Journal</TableHead>
+              <TableHead className="w-[180px] text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

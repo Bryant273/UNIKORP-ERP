@@ -316,10 +316,10 @@ export default function ComptesGenerauxPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">Numéro</TableHead>
-                <TableHead>Intitulé</TableHead>
-                <TableHead>Nature</TableHead>
-                <TableHead className="text-right w-[100px]">Actions</TableHead>
+                <TableHead className="w-[120px] text-center">Numéro</TableHead>
+                <TableHead className="text-center">Intitulé</TableHead>
+                <TableHead className="text-center">Nature</TableHead>
+                <TableHead className="w-[100px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

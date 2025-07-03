@@ -410,11 +410,11 @@ export default function ElaborationFacturesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px]">Date d'émission</TableHead>
-                            <TableHead>Tiers</TableHead>
-                            <TableHead>Libellé</TableHead>
-                            <TableHead className="text-right w-[150px]">Montant TTC</TableHead>
-                            <TableHead className="text-right w-[200px]">Actions</TableHead>
+                            <TableHead className="w-[120px] text-center">Date d'émission</TableHead>
+                            <TableHead className="text-center">Tiers</TableHead>
+                            <TableHead className="text-center">Libellé</TableHead>
+                            <TableHead className="w-[150px] text-center">Montant TTC</TableHead>
+                            <TableHead className="w-[200px] text-center">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -479,7 +479,7 @@ export default function ElaborationFacturesPage() {
                                 <CardHeader><CardTitle>Lignes de la facture</CardTitle></CardHeader>
                                 <CardContent>
                                     <Table>
-                                        <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="w-[100px]">Qté</TableHead><TableHead className="w-[150px]">Prix U. (HT)</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
+                                        <TableHeader><TableRow><TableHead className="text-center">Description</TableHead><TableHead className="w-[100px] text-center">Qté</TableHead><TableHead className="w-[150px] text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] text-center"></TableHead></TableRow></TableHeader>
                                         <TableBody>
                                             {formData.lineItems.map(item => (
                                                 <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell>{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
