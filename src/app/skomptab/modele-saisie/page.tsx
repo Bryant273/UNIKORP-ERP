@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,7 +46,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, PlusCircle } from 'lucide-react';
+import { Eye, Pencil, Trash2, PlusCircle } from 'lucide-react';
 
 type EcritureModele = {
   id: string;
@@ -107,14 +106,28 @@ export default function ModeleSaisiePage() {
   const [editingModele, setEditingModele] = useState<ModeleSaisie | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
   const [modeleToDelete, setModeleToDelete] = useState<ModeleSaisie | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
 
   const handleOpenCreateModal = () => {
+    setIsViewMode(false);
     setEditingModele(null);
     setFormData(defaultFormData);
     setIsModalOpen(true);
   };
   
   const handleOpenEditModal = (modele: ModeleSaisie) => {
+    setIsViewMode(false);
+    setEditingModele(modele);
+    setFormData({
+      libelle: modele.libelle,
+      description: modele.description,
+      ecritures: [...modele.ecritures],
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenViewModal = (modele: ModeleSaisie) => {
+    setIsViewMode(true);
     setEditingModele(modele);
     setFormData({
       libelle: modele.libelle,
@@ -127,6 +140,7 @@ export default function ModeleSaisiePage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingModele(null);
+    setIsViewMode(false);
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -202,29 +216,43 @@ export default function ModeleSaisiePage() {
         </CardHeader>
         <CardContent>
           {modeles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {modeles.map((modele) => (
-                <Card key={modele.id} className="flex flex-col">
-                  <CardHeader>
-                    <CardTitle>{modele.libelle}</CardTitle>
-                    <CardDescription>{modele.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <Badge variant="secondary">{modele.ecritures.length} écritures</Badge>
-                  </CardContent>
-                  <CardFooter className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(modele)}>
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Modifier</span>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setModeleToDelete(modele)} className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Supprimer</span>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Libellé</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="w-[150px]">Nb. Écritures</TableHead>
+                  <TableHead className="text-right w-[150px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {modeles.map((modele) => (
+                  <TableRow key={modele.id}>
+                    <TableCell className="font-medium">{modele.libelle}</TableCell>
+                    <TableCell className="text-muted-foreground">{modele.description}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{modele.ecritures.length} écritures</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(modele)}>
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">Voir</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(modele)}>
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setModeleToDelete(modele)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Supprimer</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
               <p className="text-muted-foreground">Aucun modèle de saisie pour le moment.</p>
@@ -234,23 +262,25 @@ export default function ModeleSaisiePage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
+        <DialogContent className="max-w-3xl" onInteractOutside={(e) => { if (!isViewMode) e.preventDefault()}} onEscapeKeyDown={(e) => { if (!isViewMode) e.preventDefault()}}>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>{editingModele ? 'Modifier le modèle' : 'Nouveau modèle de saisie'}</DialogTitle>
+              <DialogTitle>
+                {isViewMode ? 'Détails du modèle' : editingModele ? 'Modifier le modèle' : 'Nouveau modèle de saisie'}
+              </DialogTitle>
               <DialogDescription>
-                Définissez les informations et les écritures de votre modèle.
+                {isViewMode ? 'Consultez les détails de ce modèle.' : 'Définissez les informations et les écritures de votre modèle.'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
               <div className="space-y-2">
                 <Label htmlFor="libelle">Libellé du modèle</Label>
-                <Input id="libelle" value={formData.libelle} onChange={handleInputChange} required />
+                <Input id="libelle" value={formData.libelle} onChange={handleInputChange} required disabled={isViewMode} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" value={formData.description} onChange={handleInputChange} />
+                <Textarea id="description" value={formData.description} onChange={handleInputChange} disabled={isViewMode}/>
               </div>
               <div className="space-y-2">
                 <Label>Écritures comptables</Label>
@@ -268,13 +298,13 @@ export default function ModeleSaisiePage() {
                       {formData.ecritures.map((ecriture, index) => (
                         <TableRow key={ecriture.id}>
                           <TableCell>
-                            <Input value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} />
+                            <Input value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} disabled={isViewMode}/>
                           </TableCell>
                           <TableCell>
-                            <Input value={ecriture.libelle} onChange={(e) => handleEcritureChange(index, 'libelle', e.target.value)} />
+                            <Input value={ecriture.libelle} onChange={(e) => handleEcritureChange(index, 'libelle', e.target.value)} disabled={isViewMode}/>
                           </TableCell>
                           <TableCell>
-                            <Select value={ecriture.sens} onValueChange={(value) => handleEcritureChange(index, 'sens', value)}>
+                            <Select value={ecriture.sens} onValueChange={(value) => handleEcritureChange(index, 'sens', value)} disabled={isViewMode}>
                               <SelectTrigger><SelectValue/></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="Debit">Débit</SelectItem>
@@ -283,24 +313,34 @@ export default function ModeleSaisiePage() {
                             </Select>
                           </TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="icon" type="button" onClick={() => removeEcritureRow(ecriture.id)}>
-                              <Trash2 className="h-4 w-4 text-destructive"/>
-                            </Button>
+                            {!isViewMode && (
+                              <Button variant="ghost" size="icon" type="button" onClick={() => removeEcritureRow(ecriture.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive"/>
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addEcritureRow}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Ajouter une ligne
-                </Button>
+                {!isViewMode && (
+                  <Button type="button" variant="outline" size="sm" onClick={addEcritureRow}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter une ligne
+                  </Button>
+                )}
               </div>
             </div>
             <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={handleCloseModal}>Annuler</Button>
-              <Button type="submit">Enregistrer</Button>
+              {isViewMode ? (
+                 <Button type="button" onClick={handleCloseModal}>Fermer</Button>
+              ) : (
+                <>
+                  <Button type="button" variant="outline" onClick={handleCloseModal}>Annuler</Button>
+                  <Button type="submit">Enregistrer</Button>
+                </>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>
