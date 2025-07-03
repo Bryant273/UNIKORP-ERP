@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -42,12 +43,6 @@ const navLinks = [
     href: '/chat',
     label: 'CHAT',
     icon: MessageSquare,
-  },
-  {
-    href: '/notifications',
-    label: 'NOTIFICATIONS',
-    icon: Bell,
-    hiddenOnMobile: true,
   },
 ];
 

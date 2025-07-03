@@ -169,7 +169,7 @@ export default function ChatPage() {
   const activeContact = activeConversation ? getConversationDetails(activeConversation) : null;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+    <div className="flex flex-1 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="flex flex-1 overflow-hidden">
         {/* Conversations List */}
         <div className="w-[350px] flex-shrink-0 border-r flex flex-col">
