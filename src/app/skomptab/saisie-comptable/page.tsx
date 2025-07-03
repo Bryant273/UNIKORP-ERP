@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -49,11 +49,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- DATA TYPES & MOCK DATA ---
 
-// Copied from modele-saisie/page.tsx for demonstration
+const MOCK_COMPTES_GENERAUX = [
+  { id: 1, numero: '101000', intitule: 'Capital social' },
+  { id: 2, numero: '211000', intitule: 'Terrains' },
+  { id: 3, numero: '213000', intitule: 'Constructions' },
+  { id: 4, numero: '215400', intitule: 'Matériel industriel' },
+  { id: 5, numero: '218300', intitule: 'Matériel de bureau et informatique' },
+  { id: 6, numero: '370000', intitule: 'Stocks de marchandises' },
+  { id: 7, numero: '401000', intitule: 'Fournisseurs' },
+  { id: 8, numero: '411000', intitule: 'Clients' },
+  { id: 9, numero: '445710', intitule: 'TVA collectée' },
+  { id: 10, numero: '445660', intitule: 'TVA déductible sur autres biens et services' },
+  { id: 11, numero: '512000', intitule: 'Banques' },
+  { id: 12, numero: '530000', intitule: 'Caisse' },
+  { id: 13, numero: '607000', intitule: 'Achats de marchandises' },
+  { id: 14, numero: '613000', intitule: 'Locations' },
+  { id: 15, numero: '622000', intitule: 'Rémunérations d\'intermédiaires et honoraires' },
+  { id: 16, numero: '706000', intitule: 'Prestations de services' },
+  { id: 17, numero: '421000', intitule: 'Personnel - Rémunérations dues' },
+];
+
+const MOCK_COMPTES_TIERS = [
+  { id: 1, numero: '411CLIENT1', intitule: 'Client Alpha' },
+  { id: 2, numero: '401FOURN1', intitule: 'Fournisseur Omega' },
+  { id: 3, numero: '411CLIENT2', intitule: 'Client Beta' },
+  { id: 4, numero: '401FOURN2', intitule: 'Fournisseur Gamma' },
+  { id: 5, numero: '411CLIENT3', intitule: 'Client Gamma' },
+];
+
 type EcritureModele = {
   id: string;
   numeroCompte: string;
@@ -101,7 +129,6 @@ const initialModeles: ModeleSaisie[] = [
     ],
   },
 ];
-// End of copied data
 
 const MOCK_JOURNALS = [
     { code: 'AC', intitule: 'Journal des achats' },
@@ -134,9 +161,9 @@ const initialEcritures: EcritureComptable[] = [
   {
     id: 1, dateSaisie: '2024-07-20', numeroCompta: 'AC-202407-0001', journal: 'AC', dateOperation: '2024-07-19', numeroPiece: 'F2024-150', libelleOperation: 'Achat marchandises Fournisseur Omega',
     lignes: [
-      { id: 'l1', compte: '607000', libelle: 'Achats', debit: 1200, credit: 0, tiers: '' },
-      { id: 'l2', compte: '445660', libelle: 'TVA déductible', debit: 240, credit: 0, tiers: '' },
-      { id: 'l3', compte: '401000', libelle: 'Fournisseur Omega', debit: 0, credit: 1440, tiers: 'F_OMEGA' },
+      { id: 'l1', compte: '607000', libelle: 'Achats de marchandises', debit: 1200, credit: 0, tiers: '' },
+      { id: 'l2', compte: '445660', libelle: 'TVA déductible sur autres biens et services', debit: 240, credit: 0, tiers: '' },
+      { id: 'l3', compte: '401000', libelle: 'Fournisseurs', debit: 0, credit: 1440, tiers: '401FOURN1' },
     ]
   },
   {
@@ -161,6 +188,83 @@ const defaultEcritureData: Omit<EcritureComptable, 'id' | 'numeroCompta'> = {
 };
 
 const ITEMS_PER_PAGE = 10;
+
+// --- AUTOCOMPLETE COMPONENT ---
+type AutocompleteItem = {
+  value: string;
+  label: string;
+  data: any;
+};
+
+type AutocompleteInputProps = {
+  items: AutocompleteItem[];
+  value: string;
+  onChange: (value: string) => void;
+  onSelect: (item: AutocompleteItem) => void;
+  placeholder?: string;
+  disabled?: boolean;
+};
+
+function AutocompleteInput({ items, value, onChange, onSelect, placeholder, disabled }: AutocompleteInputProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const filteredItems = useMemo(() => {
+    if (!value) return items.slice(0, 10);
+    return items
+      .filter(
+        item =>
+          item.value.toLowerCase().includes(value.toLowerCase()) ||
+          item.label.toLowerCase().includes(value.toLowerCase())
+      )
+      .slice(0, 10);
+  }, [value, items]);
+  
+  const handleSelect = (item: AutocompleteItem) => {
+    onSelect(item);
+    setIsOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+    if (!isOpen) setIsOpen(true);
+  };
+
+  return (
+    <Popover open={isOpen && !disabled && filteredItems.length > 0} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Input
+          placeholder={placeholder}
+          value={value}
+          onChange={handleInputChange}
+          onClick={() => setIsOpen(true)}
+          disabled={disabled}
+          autoComplete="off"
+        />
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <ScrollArea className="h-auto max-h-64">
+          <div className="flex flex-col gap-px p-1">
+            {filteredItems.map(item => (
+              <button
+                key={item.value}
+                type="button"
+                className="w-full text-left rounded-sm p-2 text-sm hover:bg-accent"
+                onClick={() => handleSelect(item)}
+              >
+                {item.label}
+              </button>
+            ))}
+             {filteredItems.length === 0 && <p className="p-2 text-center text-sm text-muted-foreground">Aucun résultat</p>}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 
 export default function SaisieComptablePage() {
   const [ecritures, setEcritures] = useState<EcritureComptable[]>(initialEcritures);
@@ -472,7 +576,7 @@ export default function SaisieComptablePage() {
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="dateOperation">Date de l'opération *</Label>
-                      <Input id="dateOperation" type="date" value={formData.dateOperation} onChange={handleFormChange} required disabled={isViewMode}/>
+                      <Input id="dateOperation" type="date" value={formData.dateOperation} onChange={handleFormChange} required disabled={isViewMode || !!editingId}/>
                   </div>
                 </div>
 
@@ -493,8 +597,8 @@ export default function SaisieComptablePage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[120px]">COMPTE</TableHead>
-                          <TableHead className="w-[120px]">TIERS</TableHead>
+                          <TableHead className="w-[150px]">COMPTE</TableHead>
+                          <TableHead className="w-[150px]">TIERS</TableHead>
                           <TableHead>LIBELLÉ</TableHead>
                           <TableHead className="w-[150px]">DÉBIT</TableHead>
                           <TableHead className="w-[150px]">CRÉDIT</TableHead>
@@ -504,11 +608,36 @@ export default function SaisieComptablePage() {
                       <TableBody>
                         {formData.lignes.map((ligne) => (
                           <TableRow key={ligne.id}>
-                            <TableCell><Input placeholder="Compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode}/></TableCell>
-                            <TableCell><Input placeholder="Tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode}/></TableCell>
+                            <TableCell>
+                              <AutocompleteInput
+                                items={MOCK_COMPTES_GENERAUX.map(c => ({ value: c.numero, label: `${c.numero} - ${c.intitule}`, data: c }))}
+                                value={ligne.compte}
+                                onChange={(value) => handleLigneChange(ligne.id, 'compte', value)}
+                                onSelect={(item) => {
+                                  handleLigneChange(ligne.id, 'compte', item.value);
+                                  if (!ligne.libelle) {
+                                    handleLigneChange(ligne.id, 'libelle', item.data.intitule);
+                                  }
+                                }}
+                                placeholder="Compte"
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <AutocompleteInput
+                                items={MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: `${c.numero} - ${c.intitule}`, data: c }))}
+                                value={ligne.tiers}
+                                onChange={(value) => handleLigneChange(ligne.id, 'tiers', value)}
+                                onSelect={(item) => {
+                                  handleLigneChange(ligne.id, 'tiers', item.value);
+                                }}
+                                placeholder="Tiers"
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
                             <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
-                            <TableCell><Input type="number" placeholder="0.00" value={ligne.debit} onChange={(e) => handleLigneChange(ligne.id, 'debit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
-                            <TableCell><Input type="number" placeholder="0.00" value={ligne.credit} onChange={(e) => handleLigneChange(ligne.id, 'credit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
+                            <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', Number(e.target.value))} disabled={isViewMode}/></TableCell>
                             <TableCell>
                               {!isViewMode && (
                                 <Button variant="ghost" size="icon" type="button" onClick={() => removeLigne(ligne.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
