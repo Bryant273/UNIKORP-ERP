@@ -10,63 +10,101 @@ import {
 } from '@/components/ui/accordion';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import { 
-  FileText, 
-  FilePlus, 
-  Settings, 
-  Users, 
-  Briefcase, 
-  Receipt, 
-  Building,
+import {
+  FileText,
+  FilePlus,
+  Settings,
+  Users,
+  Receipt,
   Landmark,
   FileBarChart,
   BookUser,
   Percent,
   Calculator,
   LayoutDashboard,
-  Cog
+  Cog,
+  FileScan,
+  FileSearch,
+  BookCopy,
+  Scale,
+  BarChartHorizontal,
+  Table,
+  ArrowLeftRight,
+  ClipboardList,
+  Columns,
+  Spline,
+  FilePieChart,
+  Target,
+  Calendar,
 } from 'lucide-react';
 
 
 const skomptabNav = [
-  { 
-    title: 'CRÉATION', 
+  {
+    title: 'CRÉATION',
     icon: FilePlus,
     subItems: [
-      { title: 'Journaux', href: '/skomptab/journaux', icon: BookUser },
-      { title: 'Factures', href: '/skomptab/factures', icon: Receipt },
-      { title: 'Immobilisations', href: '/skomptab/immobilisations', icon: Building }
+      { title: 'Journaux', href: '/skomptab/creation-journaux', icon: BookUser },
+      { title: 'Comptes généraux', href: '/skomptab/comptes-generaux', icon: FileBarChart },
+      { title: 'Comptes tiers', href: '/skomptab/comptes-tiers', icon: Users },
+      { title: 'Modèle de saisie', href: '/skomptab/modele-saisie', icon: FileText },
+      { title: 'Modèle de déclaration', href: '/skomptab/modele-declaration', icon: FileText },
+      { title: 'Modèle de facture', href: '/skomptab/modele-facture', icon: Receipt },
     ]
   },
-  { 
-    title: 'GESTION', 
+  {
+    title: 'GESTION',
     icon: Settings,
     subItems: [
-      { title: 'Clients', href: '/skomptab/clients', icon: Users },
-      { title: 'Fournisseurs', href: '/skomptab/fournisseurs', icon: Briefcase },
+      { title: 'Saisie comptable', href: '/skomptab/saisie-comptable', icon: Calculator },
+      { title: 'Digitalisation des factures', href: '/skomptab/digitalisation-factures', icon: FileScan },
+      { title: 'Contrôle de trésorerie', href: '/skomptab/controle-tresorerie', icon: Landmark },
+      { title: 'Elaboration des factures', href: '/skomptab/elaboration-factures', icon: FilePlus },
     ]
   },
-  { 
-    title: 'FINANCE',
-    icon: Landmark,
-    subItems: [
-      { title: 'Trésorerie', href: '/skomptab/tresorerie', icon: Calculator },
-      { title: 'Rapprochement', href: '/skomptab/rapprochement', icon: FileBarChart },
-    ]
-  },
-  { 
+  {
     title: 'ÉTATS COMPTABLES',
     icon: FileText,
     subItems: [
-      { title: 'Bilan', href: '/skomptab/bilan', icon: FileBarChart },
-      { title: 'Compte de résultat', href: '/skomptab/resultat', icon: FileBarChart },
+      { title: 'Journaux', href: '/skomptab/etats-comptables-journaux', icon: BookUser },
+      { title: 'Brouillards', href: '/skomptab/brouillards', icon: FileSearch },
+      { title: 'Grand livre général', href: '/skomptab/grand-livre-general', icon: BookCopy },
+      { title: 'Grand livre tiers', href: '/skomptab/grand-livre-tiers', icon: BookCopy },
+      { title: 'Balance générale', href: '/skomptab/balance-generale', icon: Scale },
+      { title: 'Balance âgée', href: '/skomptab/balance-agee', icon: Scale },
     ]
   },
-  { 
+  {
+    title: 'ÉTATS FINANCIERS',
+    icon: BarChartHorizontal,
+    subItems: [
+      { title: 'Bilan', href: '/skomptab/bilan', icon: BarChartHorizontal },
+      { title: 'Compte de résultat', href: '/skomptab/compte-de-resultat', icon: BarChartHorizontal },
+      { title: 'Tableau des SIG', href: '/skomptab/tableau-sig', icon: Table },
+      { title: 'Tableau des flux de trésorerie', href: '/skomptab/tableau-flux-tresorerie', icon: ArrowLeftRight },
+    ]
+  },
+  {
+    title: 'ANALYTIQUE',
+    icon: ClipboardList,
+    subItems: [
+      { title: 'Plan analytiques', href: '/skomptab/plan-analytiques', icon: ClipboardList },
+      { title: 'Sections analytiques', href: '/skomptab/sections-analytiques', icon: Columns },
+      { title: 'Ventilations', href: '/skomptab/ventilations', icon: Spline },
+      { title: 'Reporting analytique', href: '/skomptab/reporting-analytique', icon: FilePieChart },
+      { title: 'Budgétisation', href: '/skomptab/budgetisation', icon: Target },
+    ]
+  },
+  {
     title: 'FISCALITÉ',
     icon: Percent,
     subItems: [
-      { title: 'TVA', href: '/skomptab/tva', icon: FileText },
+      { title: 'TVA', href: '/skomptab/tva', icon: Percent },
+      { title: 'Déclarations fiscales', href: '/skomptab/declarations-fiscales', icon: FileText },
+      { title: 'Déclarations sociales', href: '/skomptab/declarations-sociales', icon: FileText },
+      { title: 'Autres impôts', href: '/skomptab/autres-impots', icon: FileText },
+      { title: 'Calendrier fiscal', href: '/skomptab/calendrier-fiscal', icon: Calendar },
+      { title: 'Simulations fiscales', href: '/skomptab/simulations-fiscales', icon: Calculator },
     ]
   }
 ];
@@ -116,7 +154,7 @@ export function AppSidebar() {
           </Link>
         </div>
         {items.length > 0 && (
-          <Accordion type="multiple" className="w-full px-4" defaultValue={items.map(item => item.title)}>
+          <Accordion type="multiple" className="w-full px-4">
             {items.map((item) => (
               <AccordionItem value={item.title} key={item.title} className="border-b-0">
                 <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
