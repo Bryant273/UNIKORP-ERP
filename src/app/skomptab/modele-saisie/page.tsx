@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -38,21 +38,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Pencil, Trash2, PlusCircle } from 'lucide-react';
+import { Eye, Pencil, Trash2, PlusCircle, Scale, List } from 'lucide-react';
 
 type EcritureModele = {
   id: string;
   numeroCompte: string;
+  tiers: string;
   libelle: string;
-  sens: 'Debit' | 'Credit';
+  debit: string;
+  credit: string;
 };
 
 type ModeleSaisie = {
@@ -68,9 +63,9 @@ const initialModeles: ModeleSaisie[] = [
     libelle: 'Achat de marchandises',
     description: 'Modèle pour enregistrer un achat simple de marchandises avec TVA.',
     ecritures: [
-      { id: 'e1', numeroCompte: '607000', libelle: 'Achats de marchandises', sens: 'Debit' },
-      { id: 'e2', numeroCompte: '445660', libelle: 'TVA déductible', sens: 'Debit' },
-      { id: 'e3', numeroCompte: '401000', libelle: 'Fournisseurs', sens: 'Credit' },
+      { id: 'e1', numeroCompte: '607000', tiers: '', libelle: 'Achats de marchandises', debit: '', credit: '' },
+      { id: 'e2', numeroCompte: '445660', tiers: '', libelle: 'TVA déductible', debit: '', credit: '' },
+      { id: 'e3', numeroCompte: '401000', tiers: 'FOURNISSEUR', libelle: 'Dette fournisseur', debit: '', credit: '' },
     ],
   },
   {
@@ -78,9 +73,9 @@ const initialModeles: ModeleSaisie[] = [
     libelle: 'Vente de services',
     description: 'Modèle pour une vente de prestation de services avec TVA.',
     ecritures: [
-        { id: 'e4', numeroCompte: '411000', libelle: 'Clients', sens: 'Debit' },
-        { id: 'e5', numeroCompte: '706000', libelle: 'Prestations de services', sens: 'Credit' },
-        { id: 'e6', numeroCompte: '445710', libelle: 'TVA collectée', sens: 'Credit' },
+        { id: 'e4', numeroCompte: '411000', tiers: 'CLIENT', libelle: 'Créance client', debit: '', credit: '' },
+        { id: 'e5', numeroCompte: '706000', tiers: '', libelle: 'Prestations de services', debit: '', credit: '' },
+        { id: 'e6', numeroCompte: '445710', tiers: '', libelle: 'TVA collectée', debit: '', credit: '' },
     ],
   },
   {
@@ -88,8 +83,8 @@ const initialModeles: ModeleSaisie[] = [
     libelle: 'Paiement des salaires',
     description: 'Enregistrement du paiement des salaires nets.',
     ecritures: [
-        { id: 'e7', numeroCompte: '421000', libelle: 'Personnel - Rémunérations dues', sens: 'Debit' },
-        { id: 'e8', numeroCompte: '512000', libelle: 'Banque', sens: 'Credit' },
+        { id: 'e7', numeroCompte: '421000', tiers: '', libelle: 'Personnel - Rémunérations dues', debit: '', credit: '' },
+        { id: 'e8', numeroCompte: '512000', tiers: '', libelle: 'Banque', debit: '', credit: '' },
     ],
   },
 ];
@@ -108,6 +103,16 @@ export default function ModeleSaisiePage() {
   const [modeleToDelete, setModeleToDelete] = useState<ModeleSaisie | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
 
+  const { totalDebit, totalCredit, solde } = useMemo(() => {
+    const tDebit = formData.ecritures.reduce((acc, curr) => acc + (Number(curr.debit) || 0), 0);
+    const tCredit = formData.ecritures.reduce((acc, curr) => acc + (Number(curr.credit) || 0), 0);
+    return {
+        totalDebit: tDebit,
+        totalCredit: tCredit,
+        solde: tDebit - tCredit,
+    };
+  }, [formData.ecritures]);
+
   const handleOpenCreateModal = () => {
     setIsViewMode(false);
     setEditingModele(null);
@@ -121,7 +126,7 @@ export default function ModeleSaisiePage() {
     setFormData({
       libelle: modele.libelle,
       description: modele.description,
-      ecritures: [...modele.ecritures],
+      ecritures: JSON.parse(JSON.stringify(modele.ecritures)),
     });
     setIsModalOpen(true);
   };
@@ -132,7 +137,7 @@ export default function ModeleSaisiePage() {
     setFormData({
       libelle: modele.libelle,
       description: modele.description,
-      ecritures: [...modele.ecritures],
+      ecritures: JSON.parse(JSON.stringify(modele.ecritures)),
     });
     setIsModalOpen(true);
   };
@@ -147,11 +152,19 @@ export default function ModeleSaisiePage() {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
-
+  
   const handleEcritureChange = (index: number, field: keyof Omit<EcritureModele, 'id'>, value: string) => {
-    const updatedEcritures = [...formData.ecritures];
-    updatedEcritures[index] = { ...updatedEcritures[index], [field]: value };
-    setFormData(prev => ({ ...prev, ecritures: updatedEcritures }));
+    const newEcritures = [...formData.ecritures];
+    const ecriture = { ...newEcritures[index], [field]: value };
+
+    if (field === 'debit' && value) {
+        ecriture.credit = '';
+    } else if (field === 'credit' && value) {
+        ecriture.debit = '';
+    }
+
+    newEcritures[index] = ecriture;
+    setFormData(prev => ({ ...prev, ecritures: newEcritures }));
   };
 
   const addEcritureRow = () => {
@@ -159,7 +172,7 @@ export default function ModeleSaisiePage() {
       ...prev,
       ecritures: [
         ...prev.ecritures,
-        { id: `new-${Date.now()}`, numeroCompte: '', libelle: '', sens: 'Debit' },
+        { id: `new-${Date.now()}`, numeroCompte: '', tiers: '', libelle: '', debit: '', credit: '' },
       ],
     }));
   };
@@ -196,6 +209,9 @@ export default function ModeleSaisiePage() {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+  };
 
   return (
     <>
@@ -263,7 +279,7 @@ export default function ModeleSaisiePage() {
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-        <DialogContent className="max-w-3xl" onInteractOutside={(e) => { if (!isViewMode) e.preventDefault()}} onEscapeKeyDown={(e) => { if (!isViewMode) e.preventDefault()}}>
+        <DialogContent className="max-w-6xl" onInteractOutside={(e) => { if (!isViewMode) e.preventDefault()}} onEscapeKeyDown={(e) => { if (!isViewMode) e.preventDefault()}}>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>
@@ -282,35 +298,39 @@ export default function ModeleSaisiePage() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" value={formData.description} onChange={handleInputChange} disabled={isViewMode}/>
               </div>
-              <div className="space-y-2">
-                <Label>Écritures comptables</Label>
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2"><List className="h-4 w-4"/>Lignes d'écriture</Label>
                 <div className="border rounded-md">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[120px]">N° Compte</TableHead>
-                        <TableHead>Libellé de l'écriture</TableHead>
-                        <TableHead className="w-[120px]">Sens</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
+                        <TableHead className="w-[50px]">N°</TableHead>
+                        <TableHead>Compte général</TableHead>
+                        <TableHead>Tiers</TableHead>
+                        <TableHead>Libellé</TableHead>
+                        <TableHead className="w-[150px]">Débit</TableHead>
+                        <TableHead className="w-[150px]">Crédit</TableHead>
+                        <TableHead className="w-[50px]">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {formData.ecritures.map((ecriture, index) => (
                         <TableRow key={ecriture.id}>
+                          <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                           <TableCell>
-                            <Input value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} disabled={isViewMode}/>
+                            <Input placeholder="Saisir un compte" value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} disabled={isViewMode}/>
                           </TableCell>
                           <TableCell>
-                            <Input value={ecriture.libelle} onChange={(e) => handleEcritureChange(index, 'libelle', e.target.value)} disabled={isViewMode}/>
+                            <Input placeholder="Saisir un tiers" value={ecriture.tiers} onChange={(e) => handleEcritureChange(index, 'tiers', e.target.value)} disabled={isViewMode}/>
                           </TableCell>
                           <TableCell>
-                            <Select value={ecriture.sens} onValueChange={(value) => handleEcritureChange(index, 'sens', value)} disabled={isViewMode}>
-                              <SelectTrigger><SelectValue/></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Debit">Débit</SelectItem>
-                                <SelectItem value="Credit">Crédit</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Input placeholder="Libellé" value={ecriture.libelle} onChange={(e) => handleEcritureChange(index, 'libelle', e.target.value)} disabled={isViewMode}/>
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0.00" value={ecriture.debit} onChange={(e) => handleEcritureChange(index, 'debit', e.target.value)} disabled={isViewMode}/>
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0.00" value={ecriture.credit} onChange={(e) => handleEcritureChange(index, 'credit', e.target.value)} disabled={isViewMode}/>
                           </TableCell>
                           <TableCell>
                             {!isViewMode && (
@@ -324,17 +344,36 @@ export default function ModeleSaisiePage() {
                     </TableBody>
                   </Table>
                 </div>
-                {!isViewMode && (
-                  <Button type="button" variant="outline" size="sm" onClick={addEcritureRow}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter une ligne
-                  </Button>
-                )}
+                 {!isViewMode && (
+                  <div className="flex justify-between items-center">
+                    <Button type="button" variant="default" size="sm" onClick={addEcritureRow}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Ajouter une ligne
+                    </Button>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Total:</p>
+                        <p className="text-sm text-muted-foreground">Solde:</p>
+                      </div>
+                       <div className="text-right">
+                        <p className="font-semibold">{formatCurrency(totalDebit)}</p>
+                        <p className="font-semibold">{formatCurrency(solde)}</p>
+                       </div>
+                        <div className="text-right">
+                        <p className="font-semibold">{formatCurrency(totalCredit)}</p>
+                       </div>
+                      <Button type="button" variant="outline" size="sm">
+                        <Scale className="mr-2 h-4 w-4" />
+                        Équilibrer l'écriture
+                      </Button>
+                    </div>
+                  </div>
+                 )}
               </div>
             </div>
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 border-t mt-4">
               {isViewMode ? (
-                 <Button type="button" onClick={handleCloseModal}>Fermer</Button>
+                 <Button type="button" variant="outline" onClick={handleCloseModal}>Fermer</Button>
               ) : (
                 <>
                   <Button type="button" variant="outline" onClick={handleCloseModal}>Annuler</Button>
