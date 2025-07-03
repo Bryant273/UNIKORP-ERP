@@ -12,17 +12,26 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend, Tooltip } from "recharts"
+import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend } from "recharts"
 import { Calendar } from "@/components/ui/calendar"
 import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText } from "lucide-react"
 import { type ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
 
-const mainKpis = [
+type Kpi = {
+  title: string;
+  value: string;
+  icon: React.ElementType;
+  change?: string;
+  changeType?: 'up' | 'down';
+  breakdown?: string;
+};
+
+const mainKpis: Kpi[] = [
   { title: "Revenus (T3)", value: "€1.2M", change: "+15.2%", icon: DollarSign, changeType: "up" },
   { title: "Nouveaux Clients", value: "89", change: "+20.1%", icon: Users, changeType: "up" },
   { title: "Commandes en cours", value: "245", change: "-3.5%", icon: ShoppingCart, changeType: "down" },
-  { title: "Effectif Total", value: "112", change: "+2 employés", icon: UserCheck, changeType: "up" },
+  { title: "Effectif Total", value: "112", breakdown: "60 H / 52 F", icon: UserCheck },
 ];
 
 const skomptabKpis = [
@@ -101,7 +110,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       {/* KPIs Globaux */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {mainKpis.map(kpi => (
+        {mainKpis.map((kpi) => (
           <Card key={kpi.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
@@ -109,9 +118,15 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{kpi.value}</div>
-              <p className={`text-xs ${kpi.changeType === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                {kpi.change}
-              </p>
+              {kpi.breakdown ? (
+                <p className="text-xs text-muted-foreground">
+                  {kpi.breakdown}
+                </p>
+              ) : (
+                <p className={`text-xs ${kpi.changeType === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+                  {kpi.change}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -141,7 +156,7 @@ export default function DashboardPage() {
                         <CartesianGrid vertical={false} />
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                         <YAxis tickLine={false} axisLine={false} fontSize={12} />
-                        <Tooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
                         <Legend />
                         <Bar dataKey="revenus" fill="var(--color-revenus)" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="depenses" fill="var(--color-depenses)" radius={[4, 4, 0, 0]} />
@@ -172,7 +187,7 @@ export default function DashboardPage() {
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
                         <YAxis yAxisId="left" orientation="left" stroke="var(--color-leads)" tickLine={false} axisLine={false} fontSize={12} />
                         <YAxis yAxisId="right" orientation="right" stroke="var(--color-conversion)" tickLine={false} axisLine={false} fontSize={12} unit="%" />
-                        <Tooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
                         <Legend />
                         <Bar dataKey="leads" yAxisId="left" fill="var(--color-leads)" radius={[4, 4, 0, 0]} />
                         <Line type="monotone" dataKey="conversion" yAxisId="right" stroke="var(--color-conversion)" strokeWidth={2} dot={{ r: 4 }} />
@@ -202,7 +217,7 @@ export default function DashboardPage() {
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
                         <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" tickLine={false} axisLine={false} fontSize={12} />
                         <YAxis yAxisId="right" orientation="right" stroke="var(--color-retours)" tickLine={false} axisLine={false} fontSize={12} />
-                        <Tooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
                         <Legend />
                         <Bar dataKey="expeditions" yAxisId="left" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
                         <Line type="monotone" dataKey="retours" yAxisId="right" stroke="var(--color-retours)" strokeWidth={2} dot={{ r: 4 }} />
@@ -232,7 +247,7 @@ export default function DashboardPage() {
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
                         <YAxis yAxisId="left" orientation="left" stroke="var(--color-recrutements)" tickLine={false} axisLine={false} fontSize={12} />
                         <YAxis yAxisId="right" orientation="right" stroke="var(--color-effectif)" tickLine={false} axisLine={false} fontSize={12} />
-                        <Tooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
                         <Legend />
                         <Bar dataKey="recrutements" stackId="a" yAxisId="left" fill="var(--color-recrutements)" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="departs" stackId="a" yAxisId="left" fill="var(--color-departs)" radius={[4, 4, 0, 0]} />
