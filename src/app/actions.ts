@@ -10,6 +10,12 @@ import {
   type ParseAccountingPlanInput,
   type ParseAccountingPlanOutput,
 } from '@/ai/flows/parse-accounting-plan';
+import {
+  parseInvoice,
+  type ParseInvoiceInput,
+  type ParseInvoiceOutput,
+} from '@/ai/flows/parse-invoice';
+
 
 import { z } from 'zod';
 
@@ -84,4 +90,24 @@ export async function handleParseAccountingPlan(input: ParseAccountingPlanInput)
   // Simulate network delay and AI processing time
   await new Promise(resolve => setTimeout(resolve, 2500));
   return MOCK_PARSED_ACCOUNTS;
+}
+
+
+export async function handleParseInvoice(input: ParseInvoiceInput): Promise<ParseInvoiceOutput> {
+  // Simulate a real API call to the Genkit flow
+  // In a real app, you would remove the mock and call:
+  // return await parseInvoice(input);
+  
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Return mock data that simulates a successful parse
+  const MOCK_PARSED_INVOICE: ParseInvoiceOutput = {
+    numeroPiece: `INV-${Math.floor(Math.random() * 9000) + 1000}`,
+    tiers: 'Fournisseur Analysé S.A.',
+    dateOperation: new Date().toISOString().split('T')[0],
+    montantTotal: Math.round((Math.random() * 2000 + 500) * 100) / 100,
+    type: 'Achat',
+  };
+
+  return MOCK_PARSED_INVOICE;
 }
