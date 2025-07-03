@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Phone, Video, Search } from 'lucide-react';
+import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type User = {
@@ -106,19 +106,25 @@ export default function ChatPage() {
   const activeContact = activeConversation ? users[activeConversation.userId] : null;
 
   return (
-    <div className="flex h-[calc(100vh_-_8.5rem)] rounded-lg border bg-card text-card-foreground shadow-sm">
+    <div className="flex h-full rounded-lg border bg-card text-card-foreground shadow-sm">
       {/* Conversations List */}
       <div className="w-[320px] flex-shrink-0 border-r">
         <div className="flex h-full flex-col">
-          <div className="p-4">
+          <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-xl font-semibold tracking-tight">Conversations</h2>
-             <div className="relative mt-4">
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <PlusCircle className="h-5 w-5" />
+              <span className="sr-only">Nouvelle conversation</span>
+            </Button>
+          </div>
+           <div className="p-4 border-b">
+             <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Rechercher..." className="pl-8" />
               </div>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-4 pt-0">
+            <div className="p-2">
               {conversations.map(conv => {
                 const user = users[conv.userId];
                 const lastMessage = conv.messages[conv.messages.length - 1];
@@ -128,7 +134,7 @@ export default function ChatPage() {
                     onClick={() => setSelectedConversationId(conv.id)}
                     className={cn(
                       'w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-muted',
-                      selectedConversationId === conv.id && 'bg-primary/10 text-primary-foreground'
+                      selectedConversationId === conv.id && 'bg-primary/10'
                     )}
                   >
                     <Avatar className="h-12 w-12 border-2 border-primary/20">
@@ -203,13 +209,22 @@ export default function ChatPage() {
 
             {/* Input Form */}
             <div className="border-t p-4">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-4">
+              <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                <Button type="button" variant="ghost" size="icon" className="text-muted-foreground">
+                    <Smile className="h-5 w-5" />
+                    <span className="sr-only">Ajouter un émoji</span>
+                </Button>
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Écrivez votre message..."
                   autoComplete="off"
+                  className="flex-1"
                 />
+                 <Button type="button" variant="ghost" size="icon" className="text-muted-foreground">
+                    <Paperclip className="h-5 w-5" />
+                    <span className="sr-only">Joindre un fichier</span>
+                </Button>
                 <Button type="submit" size="icon" disabled={!newMessage.trim()}>
                   <Send className="h-5 w-5" />
                   <span className="sr-only">Envoyer</span>

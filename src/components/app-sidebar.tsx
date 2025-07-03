@@ -118,7 +118,7 @@ const getNavForPath = (pathname: string) => {
       items: skomptabNav,
     };
   }
-  if (pathname.startsWith('/logson') || pathname.startsWith('/markos') || pathname.startsWith('/socix') || pathname.startsWith('/chat')) {
+  if (pathname.startsWith('/logson') || pathname.startsWith('/markos') || pathname.startsWith('/socix')) {
      return {
       dashboardLink: pathname,
       items: [],
@@ -135,7 +135,7 @@ const getNavForPath = (pathname: string) => {
 export function AppSidebar() {
   const pathname = usePathname();
 
-  if (pathname === '/') {
+  if (pathname === '/' || pathname.startsWith('/chat')) {
     return null;
   }
 
