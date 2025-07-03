@@ -253,7 +253,7 @@ export default function ChatPage() {
                     const sender = users[message.senderId] || currentUser;
                     return (
                         <div key={message.id} className={cn(
-                            "flex items-end gap-3",
+                            "flex items-start gap-3",
                             message.senderId === currentUser.id ? "justify-end" : "justify-start"
                         )}>
                             {message.senderId !== currentUser.id && (
