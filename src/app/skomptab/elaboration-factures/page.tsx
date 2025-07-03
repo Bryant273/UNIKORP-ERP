@@ -47,7 +47,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- DATA TYPES & MOCK DATA ---
@@ -61,6 +60,7 @@ type LineItem = {
 
 type InvoiceData = {
   id: string;
+  invoiceTitle: string;
   clientName: string;
   clientAddress: string;
   invoiceNumber: string;
@@ -82,6 +82,7 @@ const calculateTotals = (invoice: Omit<InvoiceData, 'id'>) => {
 const initialInvoices: InvoiceData[] = [
   {
     id: 'inv_1',
+    invoiceTitle: 'Prestation de développement web',
     clientName: 'Client Alpha SARL',
     clientAddress: '10 Rue du Commerce, 33000 Bordeaux',
     invoiceNumber: 'FACT-2024-00123',
@@ -97,6 +98,7 @@ const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'inv_2',
+    invoiceTitle: 'Consulting SEO - Juillet 2024',
     clientName: 'Tech Innovante Inc.',
     clientAddress: '456 Avenue du Futur, Lyon',
     invoiceNumber: 'FACT-2024-00124',
@@ -117,6 +119,7 @@ const getDefaultInvoiceData = (): Omit<InvoiceData, 'id'> => {
     const nextInvoiceNumber = `FACT-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-001`;
 
     return {
+        invoiceTitle: '',
         clientName: '',
         clientAddress: '',
         invoiceNumber: nextInvoiceNumber,
@@ -146,6 +149,7 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                 <div className="text-right">
                     <h2 className="text-2xl font-bold uppercase text-primary">FACTURE</h2>
                     <p className="font-mono text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{invoice.invoiceTitle}</p>
                 </div>
             </div>
             <div className="flex justify-between mb-8">
@@ -305,6 +309,10 @@ export default function ElaborationFacturesPage() {
     doc.text("FACTURE", 150, 20);
     doc.setFontSize(10);
     doc.text(invoice.invoiceNumber, 150, 26);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(invoice.invoiceTitle, 150, 32, {align: 'right'});
+    doc.setTextColor(40, 40, 40);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -402,10 +410,10 @@ export default function ElaborationFacturesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>N° Facture</TableHead>
-                            <TableHead>Date d'émission</TableHead>
+                            <TableHead className="w-[120px]">Date d'émission</TableHead>
                             <TableHead>Tiers</TableHead>
-                            <TableHead className="text-right">Montant TTC</TableHead>
+                            <TableHead>Libellé</TableHead>
+                            <TableHead className="text-right w-[150px]">Montant TTC</TableHead>
                             <TableHead className="text-right w-[200px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -414,9 +422,9 @@ export default function ElaborationFacturesPage() {
                             const { total } = calculateTotals(invoice);
                             return (
                                 <TableRow key={invoice.id} className="odd:bg-muted/50">
-                                    <TableCell className="font-mono">{invoice.invoiceNumber}</TableCell>
                                     <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
                                     <TableCell className="font-medium">{invoice.clientName}</TableCell>
+                                    <TableCell>{invoice.invoiceTitle}</TableCell>
                                     <TableCell className="text-right font-mono">{total.toFixed(2)} XOF</TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-end gap-2">
@@ -448,10 +456,16 @@ export default function ElaborationFacturesPage() {
                         <div className="p-6 space-y-6">
                             <Card>
                                 <CardHeader><CardTitle>Informations sur la facture</CardTitle></CardHeader>
-                                <CardContent className="grid sm:grid-cols-3 gap-4">
-                                    <div className="space-y-2"><Label htmlFor="invoiceNumber">N° de facture</Label><Input id="invoiceNumber" value={formData.invoiceNumber} onChange={(e) => handleFormChange('invoiceNumber', e.target.value)} disabled={isViewMode} /></div>
-                                    <div className="space-y-2"><Label htmlFor="invoiceDate">Date de facturation</Label><Input id="invoiceDate" type="date" value={formData.invoiceDate} onChange={(e) => handleFormChange('invoiceDate', e.target.value)} disabled={isViewMode} /></div>
-                                    <div className="space-y-2"><Label htmlFor="dueDate">Date d'échéance</Label><Input id="dueDate" type="date" value={formData.dueDate} onChange={(e) => handleFormChange('dueDate', e.target.value)} disabled={isViewMode} /></div>
+                                <CardContent className="space-y-4">
+                                     <div className="space-y-2">
+                                        <Label htmlFor="invoiceTitle">Libellé de la facture</Label>
+                                        <Input id="invoiceTitle" value={formData.invoiceTitle} onChange={(e) => handleFormChange('invoiceTitle', e.target.value)} placeholder="Ex: Prestation de service" disabled={isViewMode} />
+                                    </div>
+                                    <div className="grid sm:grid-cols-3 gap-4">
+                                        <div className="space-y-2"><Label htmlFor="invoiceNumber">N° de facture</Label><Input id="invoiceNumber" value={formData.invoiceNumber} onChange={(e) => handleFormChange('invoiceNumber', e.target.value)} disabled={isViewMode} /></div>
+                                        <div className="space-y-2"><Label htmlFor="invoiceDate">Date de facturation</Label><Input id="invoiceDate" type="date" value={formData.invoiceDate} onChange={(e) => handleFormChange('invoiceDate', e.target.value)} disabled={isViewMode} /></div>
+                                        <div className="space-y-2"><Label htmlFor="dueDate">Date d'échéance</Label><Input id="dueDate" type="date" value={formData.dueDate} onChange={(e) => handleFormChange('dueDate', e.target.value)} disabled={isViewMode} /></div>
+                                    </div>
                                 </CardContent>
                             </Card>
                             <Card>
