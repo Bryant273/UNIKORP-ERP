@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -207,7 +207,7 @@ type AutocompleteInputProps = {
 
 function AutocompleteInput({ items, value, onValueChange, getDisplayValue, placeholder, disabled }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(() => getDisplayValue(value));
+  const [inputValue, setInputValue] = useState('');
 
   useEffect(() => {
     setInputValue(getDisplayValue(value));
@@ -215,7 +215,7 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
 
   const filteredItems = useMemo(() => {
     if (!inputValue) {
-      return items.slice(0, 10);
+      return isOpen ? items.slice(0, 10) : [];
     }
     const lowercasedInput = inputValue.toLowerCase();
     return items
@@ -224,28 +224,27 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
         item.label.toLowerCase().includes(lowercasedInput)
       )
       .slice(0, 10);
-  }, [inputValue, items]);
+  }, [inputValue, items, isOpen]);
 
   const handleSelect = (item: AutocompleteItem) => {
     onValueChange(item.value, item.data);
-    setInputValue(getDisplayValue(item.value));
     setIsOpen(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newInputValue = e.target.value;
-    setInputValue(newInputValue);
-    if (newInputValue === '') {
-      onValueChange('');
-    }
+    setInputValue(e.target.value);
     if (!isOpen) setIsOpen(true);
   };
 
+  const handleFocus = () => {
+    if (!disabled) setIsOpen(true);
+  };
+
   const handleBlur = () => {
-    // We use a small timeout to allow the popover's onMouseDown to fire before closing.
     setTimeout(() => {
-        if(isOpen) setIsOpen(false);
-    }, 150);
+      setIsOpen(false);
+      setInputValue(getDisplayValue(value));
+    }, 200);
   };
 
   return (
@@ -256,6 +255,7 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
           value={inputValue}
           onChange={handleInputChange}
           onBlur={handleBlur}
+          onFocus={handleFocus}
           disabled={disabled}
           autoComplete="off"
         />
@@ -272,7 +272,10 @@ function AutocompleteInput({ items, value, onValueChange, getDisplayValue, place
                 key={item.value}
                 type="button"
                 className="w-full text-left rounded-sm p-2 text-sm hover:bg-accent"
-                onMouseDown={() => handleSelect(item)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(item);
+                }}
               >
                 {item.label}
               </button>
@@ -462,7 +465,38 @@ export default function SaisieComptablePage() {
   }
 
   const compteItems = useMemo(() => MOCK_COMPTES_GENERAUX.map(c => ({ value: c.numero, label: `${c.numero} - ${c.intitule}`, data: c })), []);
-  const tiersItems = useMemo(() => MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: `${c.intitule} (${c.numero})`, data: c })), []);
+  const tiersItems = useMemo(() => MOCK_COMPTES_TIERS.map(c => ({ value: c.numero, label: c.intitule, data: c })), []);
+
+  const getCompteDisplayValue = useCallback((val: string) => val || '', []);
+
+  const getTiersDisplayValue = useCallback((val: string) => {
+      const tiers = MOCK_COMPTES_TIERS.find(t => t.numero === val);
+      return tiers ? tiers.intitule : (val || '');
+  }, []);
+
+  const handleLigneCompteChange = useCallback((id: string, newValue: string, itemData?: any) => {
+    setFormData(prev => {
+      const newLignes = prev.lignes.map(ligne => {
+        if (ligne.id === id) {
+          const updatedLigne = { ...ligne, compte: newValue };
+          if (itemData && !ligne.libelle) {
+            updatedLigne.libelle = itemData.intitule;
+          }
+          return updatedLigne;
+        }
+        return ligne;
+      });
+      return { ...prev, lignes: newLignes };
+    });
+  }, []);
+
+  const handleLigneTiersChange = useCallback((id: string, newValue: string) => {
+    setFormData(prev => ({
+      ...prev,
+      lignes: prev.lignes.map(ligne => ligne.id === id ? { ...ligne, tiers: newValue } : ligne)
+    }));
+  }, []);
+
 
   return (
     <>
@@ -638,13 +672,8 @@ export default function SaisieComptablePage() {
                               <AutocompleteInput
                                 items={compteItems}
                                 value={ligne.compte}
-                                getDisplayValue={(val) => val}
-                                onValueChange={(newValue, itemData) => {
-                                  handleLigneChange(ligne.id, 'compte', newValue);
-                                  if (itemData && !ligne.libelle) {
-                                    handleLigneChange(ligne.id, 'libelle', itemData.intitule);
-                                  }
-                                }}
+                                getDisplayValue={getCompteDisplayValue}
+                                onValueChange={(newValue, itemData) => handleLigneCompteChange(ligne.id, newValue, itemData)}
                                 placeholder="Compte"
                                 disabled={isViewMode}
                               />
@@ -653,10 +682,8 @@ export default function SaisieComptablePage() {
                               <AutocompleteInput
                                 items={tiersItems}
                                 value={ligne.tiers}
-                                getDisplayValue={(val) => MOCK_COMPTES_TIERS.find(t => t.numero === val)?.intitule || val }
-                                onValueChange={(newValue) => {
-                                  handleLigneChange(ligne.id, 'tiers', newValue);
-                                }}
+                                getDisplayValue={getTiersDisplayValue}
+                                onValueChange={(newValue) => handleLigneTiersChange(ligne.id, newValue)}
                                 placeholder="Tiers"
                                 disabled={isViewMode}
                               />
