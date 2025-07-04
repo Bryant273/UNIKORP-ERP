@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -43,47 +44,60 @@ const MOCK_BILAN_COMPTABLE_2025: BilanData = {
     actif: [
         { libelle: 'ACTIF IMMOBILISÉ', isHeader: true },
         { libelle: 'Immobilisations incorporelles', isSubTitle: true },
-        { libelle: 'Frais de recherche et développement', isSubItem: true, brut: 20000, amortissement: 5000, net: 15000, netN1: 10000 },
-        { libelle: 'Concessions, brevets, licences...', isSubItem: true, brut: 70000, amortissement: 10000, net: 60000, netN1: 50000 },
+        { libelle: 'Frais de développement', isSubItem: true, brut: 20000, amortissement: 5000, net: 15000, netN1: 10000 },
+        { libelle: 'Concessions, brevets...', isSubItem: true, brut: 70000, amortissement: 10000, net: 60000, netN1: 50000 },
         { libelle: 'Immobilisations corporelles', isSubTitle: true },
         { libelle: 'Terrains', isSubItem: true, brut: 100000, amortissement: 0, net: 100000, netN1: 100000 },
         { libelle: 'Constructions', isSubItem: true, brut: 250000, amortissement: 50000, net: 200000, netN1: 180000 },
         { libelle: 'Immobilisations financières', isSubTitle: true },
-        { libelle: 'Participations', isSubItem: true, brut: 25000, amortissement: 0, net: 25000, netN1: 20000 },
-        { libelle: 'Total I', isTotal: true, brut: 465000, amortissement: 65000, net: 400000, netN1: 360000 },
+        { libelle: 'Titres de participation', isSubItem: true, brut: 25000, amortissement: 0, net: 25000, netN1: 20000 },
+        { libelle: 'Total Actif Immobilisé (I)', isTotal: true, brut: 465000, amortissement: 65000, net: 400000, netN1: 360000 },
 
         { libelle: 'ACTIF CIRCULANT', isHeader: true },
-        { libelle: 'Stocks et en-cours', isSubTitle: true, brut: 85000, amortissement: 0, net: 85000, netN1: 80000 },
+        { libelle: 'Stocks', isSubTitle: true },
+        { libelle: 'Marchandises', isSubItem: true, brut: 85000, amortissement: 5000, net: 80000, netN1: 75000 },
         { libelle: 'Créances', isSubTitle: true },
-        { libelle: 'Créances clients et comptes rattachés', isSubItem: true, brut: 150000, amortissement: 0, net: 150000, netN1: 140000 },
-        { libelle: 'Disponibilités', isSubTitle: true, brut: 95000, amortissement: 0, net: 95000, netN1: 100000 },
-        { libelle: 'Total II', isTotal: true, brut: 330000, amortissement: 0, net: 330000, netN1: 320000 },
+        { libelle: 'Clients et comptes rattachés', isSubItem: true, brut: 150000, amortissement: 10000, net: 140000, netN1: 130000 },
+        { libelle: 'Total Actif Circulant (II)', isTotal: true, brut: 235000, amortissement: 15000, net: 220000, netN1: 205000 },
         
-        { libelle: 'Charges constatées d\'avance', isSubTitle: true, brut: 20000, amortissement: 0, net: 20000, netN1: 15000 },
-        
-        { libelle: 'TOTAL ACTIF', isGrandTotal: true, brut: 815000, amortissement: 65000, net: 750000, netN1: 695000 },
+        { libelle: 'TRÉSORERIE - ACTIF', isHeader: true },
+        { libelle: 'Banques, caisse', isSubTitle: true, brut: 95000, amortissement: 0, net: 95000, netN1: 100000 },
+        { libelle: 'Total Trésorerie - Actif (III)', isTotal: true, brut: 95000, amortissement: 0, net: 95000, netN1: 100000 },
+
+        { libelle: 'TOTAL ACTIF (I + II + III)', isGrandTotal: true, brut: 795000, amortissement: 80000, net: 715000, netN1: 665000 },
     ],
     passif: [
         { libelle: 'CAPITAUX PROPRES', isHeader: true },
-        { libelle: 'Capital social ou individuel', isSubTitle: true, net: 200000, netN1: 200000 },
-        { libelle: 'Réserves', isSubTitle: true },
-        { libelle: 'Réserve légale', isSubItem: true, net: 20000, netN1: 15000 },
-        { libelle: 'Autres réserves', isSubItem: true, net: 130000, netN1: 100000 },
+        { libelle: 'Capital social', isSubTitle: true, net: 200000, netN1: 200000 },
+        { libelle: 'Réserves (légale, statutaires, ...)', isSubTitle: true, net: 150000, netN1: 115000 },
         { libelle: "Résultat de l'exercice", isSubTitle: true, net: 80000, netN1: 75000 },
-        { libelle: 'Total I', isTotal: true, net: 430000, netN1: 390000 },
-        { libelle: 'DETTES', isHeader: true },
-        { libelle: 'Dettes financières', isSubTitle: true, net: 200000, netN1: 220000 },
+        { libelle: 'Total Capitaux Propres (I)', isTotal: true, net: 430000, netN1: 390000 },
+        
+        { libelle: 'DETTES FINANCIÈRES', isHeader: true },
+        { libelle: 'Emprunts et dettes assimilées', isSubTitle: true, net: 150000, netN1: 180000 },
+        { libelle: 'Total Dettes Financières (II)', isTotal: true, net: 150000, netN1: 180000 },
+
+        { libelle: 'CAPITAUX PERMANENTS (I + II)', isTotal: true, net: 580000, netN1: 570000 },
+        
+        { libelle: 'PASSIF CIRCULANT', isHeader: true },
         { libelle: 'Dettes fournisseurs', isSubTitle: true, net: 110000, netN1: 105000 },
-        { libelle: 'Dettes fiscales et sociales', isSubTitle: true, net: 10000, netN1: 10000 },
-        { libelle: 'Total II', isTotal: true, net: 320000, netN1: 335000 },
-        { libelle: 'TOTAL PASSIF', isGrandTotal: true, net: 750000, netN1: 725000 },
+        { libelle: 'Dettes fiscales et sociales', isSubTitle: true, net: 20000, netN1: 15000 },
+        { libelle: 'Total Passif Circulant (III)', isTotal: true, net: 130000, netN1: 120000 },
+        
+        { libelle: 'TRÉSORERIE - PASSIF', isHeader: true },
+        { libelle: 'Concours bancaires courants', isSubTitle: true, net: 5000, netN1: 10000 },
+        { libelle: 'Total Trésorerie - Passif (IV)', isTotal: true, net: 5000, netN1: 10000 },
+        
+        { libelle: 'TOTAL PASSIF (I + II + III + IV)', isGrandTotal: true, net: 715000, netN1: 700000 },
     ],
-    totalActif: 750000,
-    totalPassif: 750000,
+    totalActif: 715000,
+    totalPassif: 715000,
 };
 
 const getBilanData = (year: string, type: BilanType): BilanData | null => {
     if (type === 'comptable') {
+        // In a real app, this would fetch and compute data for the given year.
+        // For now, we return the same mock data regardless of the year.
         return MOCK_BILAN_COMPTABLE_2025;
     }
     return null;
@@ -137,30 +151,45 @@ export default function BilanPage() {
         
         const headStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const, lineWidth: 0.1 };
         const bodyStyles = { lineWidth: 0.1 };
-        const footStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const, lineWidth: 0.1 };
 
-        const generateTableBody = (lignes: BilanLigne[], isActif: boolean) => {
+        const generateTableBody = (lignes: BilanLigne[]) => {
             return lignes.map(ligne => {
-                const libelleCell = { content: ligne.libelle, styles: { fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal', cellWidth: isActif ? 50: 80 }};
-                if(isActif) {
-                    return [
-                        libelleCell,
-                        { content: formatAmount(ligne.brut), styles: { halign: 'right' as const } },
-                        { content: formatAmount(ligne.amortissement), styles: { halign: 'right' as const } },
-                        { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
-                        { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
-                    ];
-                }
+                const libelleCell = { 
+                    content: ligne.libelle, 
+                    styles: { 
+                        fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal',
+                        cellWidth: 80,
+                    }
+                };
                 return [
                     libelleCell,
+                    { content: formatAmount(ligne.brut), styles: { halign: 'right' as const } },
+                    { content: formatAmount(ligne.amortissement), styles: { halign: 'right' as const } },
                     { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
                     { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
                 ];
             });
         };
 
-        const actifBody = generateTableBody(reportData.actif, true);
-        const passifBody = generateTableBody(reportData.passif, false);
+        const generatePassifTableBody = (lignes: BilanLigne[]) => {
+             return lignes.map(ligne => {
+                const libelleCell = { 
+                    content: ligne.libelle, 
+                    styles: { 
+                        fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal',
+                        cellWidth: 120,
+                    }
+                };
+                return [
+                    libelleCell,
+                    { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+                    { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
+                ];
+            });
+        }
+
+        const actifBody = generateTableBody(reportData.actif);
+        const passifBody = generatePassifTableBody(reportData.passif);
 
         // Header
         doc.setFontSize(9);
@@ -184,27 +213,25 @@ export default function BilanPage() {
 
         // Actif Table
         autoTable(doc, {
-            head: [['ACTIF', 'Brut', 'Amort.', 'Net', 'Net N-1']],
+            head: [['ACTIF', 'Brut', 'Amort. & Prov.', 'Net', 'Net N-1']],
             body: actifBody,
             theme: 'grid',
-            headStyles: headStyles,
-            bodyStyles: bodyStyles,
-            footStyles: footStyles,
+            headStyles,
+            bodyStyles,
             startY: 50,
             tableWidth: 180,
             margin: { left: 15 }
         });
 
-        // Passif Table - needs to be on a new page or below
         const finalY = (doc as any).lastAutoTable.finalY || 50;
 
+        // Passif Table
         autoTable(doc, {
             head: [['PASSIF', 'Net', 'Net N-1']],
             body: passifBody,
             theme: 'grid',
-            headStyles: headStyles,
-            bodyStyles: bodyStyles,
-            footStyles: footStyles,
+            headStyles,
+            bodyStyles,
             startY: finalY + 10,
             tableWidth: 180,
             margin: { left: 15 }
@@ -275,14 +302,20 @@ export default function BilanPage() {
                     </DialogHeader>
                     {reportData ? (
                          <div className="max-h-[70vh] overflow-y-auto p-2 border rounded-md bg-muted/20">
-                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
                                 {/* Actif Column */}
                                 <div className="space-y-2">
-                                    <h3 className="text-lg font-bold text-center border-b-2 pb-1 mb-2">ACTIF</h3>
-                                    <table className="w-full text-xs">
+                                    <table className="w-full text-xs table-fixed">
+                                        <colgroup>
+                                            <col style={{width: '40%'}} />
+                                            <col style={{width: '15%'}} />
+                                            <col style={{width: '15%'}} />
+                                            <col style={{width: '15%'}} />
+                                            <col style={{width: '15%'}} />
+                                        </colgroup>
                                         <thead>
                                             <tr className="border-b">
-                                                <th className="text-left py-1 font-semibold w-1/2">Libellé</th>
+                                                <th className="text-left py-1 font-semibold">ACTIF</th>
                                                 <th className="text-right py-1 font-semibold">Brut</th>
                                                 <th className="text-right py-1 font-semibold">Amort.</th>
                                                 <th className="text-right py-1 font-semibold">Net</th>
@@ -291,7 +324,7 @@ export default function BilanPage() {
                                         </thead>
                                         <tbody>
                                             {reportData.actif.map((ligne, idx) => (
-                                                <tr key={idx} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                <tr key={`actif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
                                                     <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
                                                     <td className="text-right font-mono py-1">{formatAmount(ligne.brut)}</td>
                                                     <td className="text-right font-mono py-1">{formatAmount(ligne.amortissement)}</td>
@@ -304,18 +337,22 @@ export default function BilanPage() {
                                 </div>
                                 {/* Passif Column */}
                                 <div className="space-y-2">
-                                     <h3 className="text-lg font-bold text-center border-b-2 pb-1 mb-2">PASSIF</h3>
-                                     <table className="w-full text-xs">
+                                     <table className="w-full text-xs table-fixed">
+                                        <colgroup>
+                                            <col style={{width: '70%'}} />
+                                            <col style={{width: '15%'}} />
+                                            <col style={{width: '15%'}} />
+                                        </colgroup>
                                         <thead>
                                             <tr className="border-b">
-                                                <th className="text-left py-1 font-semibold w-3/4">Libellé</th>
+                                                <th className="text-left py-1 font-semibold">PASSIF</th>
                                                 <th className="text-right py-1 font-semibold">Net</th>
                                                 <th className="text-right py-1 font-semibold">Net N-1</th>
                                             </tr>
                                         </thead>
                                          <tbody>
                                             {reportData.passif.map((ligne, idx) => (
-                                                <tr key={idx} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                <tr key={`passif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
                                                     <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
                                                     <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
                                                     <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
