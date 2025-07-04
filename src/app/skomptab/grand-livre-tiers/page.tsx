@@ -22,18 +22,35 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock data
 const MOCK_ECRITURES_LIVRE_TIERS = [
-    { id: 6, dateSaisie: '2024-07-01', numeroCompta: 'AC-001', journal: 'AC', dateOperation: '2024-07-01', numeroPiece: 'F001', libelle: 'Achat initial', compte: '401000', tiers: 'FOURN_A', debit: 0, credit: 1770 },
-    { id: 7, dateSaisie: '2024-07-04', numeroCompta: 'BNP-001', journal: 'BNP', dateOperation: '2024-07-04', numeroPiece: 'PAY001', libelle: 'Paiement F001', compte: '401000', tiers: 'FOURN_A', debit: 1770, credit: 0 },
-    { id: 8, dateSaisie: '2024-07-05', numeroCompta: 'AC-002', journal: 'AC', dateOperation: '2024-07-04', numeroPiece: 'F002', libelle: 'Achat complémentaire', compte: '401000', tiers: 'FOURN_B', debit: 0, credit: 750 },
-    { id: 9, dateSaisie: '2024-07-02', numeroCompta: 'VE-001', journal: 'VE', dateOperation: '2024-07-02', numeroPiece: 'INV001', libelle: 'Vente de services', compte: '411000', tiers: 'CLIENT_X', debit: 3000, credit: 0 },
-    { id: 10, dateSaisie: '2024-07-18', numeroCompta: 'BNP-002', journal: 'BNP', dateOperation: '2024-07-18', numeroPiece: 'REC001', libelle: 'Réception paiement INV001', compte: '411000', tiers: 'CLIENT_X', debit: 0, credit: 3000 },
-    { id: 11, dateSaisie: '2024-07-15', numeroCompta: 'VE-002', journal: 'VE', dateOperation: '2024-07-14', numeroPiece: 'INV002', libelle: 'Développement Web', compte: '411000', tiers: 'CLIENT_Y', debit: 5000, credit: 0 },
+    // FOURN_A
+    { id: 1, dateSaisie: '2024-07-01', numeroCompta: 'AC-001', journal: 'AC', dateOperation: '2024-07-01', numeroPiece: 'F001', libelle: 'Achat initial', compte: '401000', tiers: 'FOURN_A', debit: 0, credit: 1770 },
+    { id: 2, dateSaisie: '2024-07-04', numeroCompta: 'BNP-001', journal: 'BNP', dateOperation: '2024-07-04', numeroPiece: 'PAY001', libelle: 'Paiement F001', compte: '401000', tiers: 'FOURN_A', debit: 1770, credit: 0 },
+    
+    // FOURN_B
+    { id: 3, dateSaisie: '2024-07-05', numeroCompta: 'AC-002', journal: 'AC', dateOperation: '2024-07-04', numeroPiece: 'F002', libelle: 'Achat complémentaire', compte: '401000', tiers: 'FOURN_B', debit: 0, credit: 885 },
+    { id: 4, dateSaisie: '2024-07-20', numeroCompta: 'BNP-003', journal: 'BNP', dateOperation: '2024-07-20', numeroPiece: 'PAY002', libelle: 'Paiement F002', compte: '401000', tiers: 'FOURN_B', debit: 885, credit: 0 },
+
+    // FOURN_C
+    { id: 5, dateSaisie: '2024-07-12', numeroCompta: 'AC-006', journal: 'AC', dateOperation: '2024-07-12', numeroPiece: 'F006', libelle: 'Achat consommables', compte: '401000', tiers: 'FOURN_C', debit: 0, credit: 450 },
+    
+    // CLIENT_X
+    { id: 6, dateSaisie: '2024-07-02', numeroCompta: 'VE-001', journal: 'VE', dateOperation: '2024-07-02', numeroPiece: 'INV001', libelle: 'Vente de services', compte: '411000', tiers: 'CLIENT_X', debit: 3540, credit: 0 },
+    { id: 7, dateSaisie: '2024-07-18', numeroCompta: 'BNP-002', journal: 'BNP', dateOperation: '2024-07-18', numeroPiece: 'REC001', libelle: 'Réception paiement INV001', compte: '411000', tiers: 'CLIENT_X', debit: 0, credit: 3540 },
+    
+    // CLIENT_Y
+    { id: 8, dateSaisie: '2024-07-15', numeroCompta: 'VE-002', journal: 'VE', dateOperation: '2024-07-14', numeroPiece: 'INV002', libelle: 'Développement Web', compte: '411000', tiers: 'CLIENT_Y', debit: 5900, credit: 0 },
+    { id: 9, dateSaisie: '2024-07-28', numeroCompta: 'BNP-004', journal: 'BNP', dateOperation: '2024-07-28', numeroPiece: 'REC002', libelle: 'Acompte INV002', compte: '411000', tiers: 'CLIENT_Y', debit: 0, credit: 2000 },
+    
+    // CLIENT_Z
+    { id: 10, dateSaisie: '2024-07-19', numeroCompta: 'VE-003', journal: 'VE', dateOperation: '2024-07-19', numeroPiece: 'INV003', libelle: 'Vente Matériel', compte: '411000', tiers: 'CLIENT_Z', debit: 1200, credit: 0 },
 ];
 const MOCK_TIERS = [
     { code: 'FOURN_A', intitule: 'Fournisseur A', type: 'Fournisseur' },
     { code: 'FOURN_B', intitule: 'Fournisseur B', type: 'Fournisseur' },
-    { code: 'CLIENT_X', intitule: 'Client X', type: 'Client' },
-    { code: 'CLIENT_Y', intitule: 'Client Y', type: 'Client' },
+    { code: 'FOURN_C', intitule: 'Fournisseur C (Papeterie)', type: 'Fournisseur' },
+    { code: 'CLIENT_X', intitule: 'Client X Solutions', type: 'Client' },
+    { code: 'CLIENT_Y', intitule: 'Client Y Industries', type: 'Client' },
+    { code: 'CLIENT_Z', intitule: 'Client Z Consulting', type: 'Client' },
 ];
 
 type GroupedData = Record<string, (typeof MOCK_ECRITURES_LIVRE_TIERS)>;
