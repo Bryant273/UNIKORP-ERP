@@ -134,8 +134,7 @@ export function AppSidebar() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client, after the initial render.
-    // This prevents a hydration mismatch.
+    setIsClient(true);
     const savedState = localStorage.getItem('sidebarOpenSections');
     if (savedState) {
       try {
@@ -144,19 +143,18 @@ export function AppSidebar() {
           setOpenSections(parsedState);
         }
       } catch (e) {
-        // Fallback to default if data is malformed
         setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
       }
     } else {
-      // Default for first-time visit
       setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
     }
-    setIsClient(true);
-  }, []); // Empty dependency array ensures this runs once on mount.
+  }, []);
 
   const handleValueChange = (value: string[]) => {
     setOpenSections(value);
-    localStorage.setItem('sidebarOpenSections', JSON.stringify(value));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarOpenSections', JSON.stringify(value));
+    }
   };
 
   const specialPages = ['/chat', '/notifications', '/settings', '/help'];
@@ -180,11 +178,11 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
-        {items.length > 0 && (
+        {items.length > 0 && isClient && (
           <Accordion
             type="multiple"
             className="w-full px-4"
-            value={isClient ? openSections : []} // Use safe default on server/initial render
+            value={openSections}
             onValueChange={handleValueChange}
           >
             {items.map((item) => (
