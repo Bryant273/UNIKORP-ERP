@@ -94,11 +94,57 @@ const MOCK_BILAN_COMPTABLE_2025: BilanData = {
     totalPassif: 715000,
 };
 
+const MOCK_BILAN_FONCTIONNEL_2025: BilanData = {
+    actif: [
+        { libelle: 'EMPLOIS STABLES', isHeader: true },
+        { libelle: 'Actif immobilisé brut', isSubTitle: true, net: 465000 },
+        { libelle: 'Total Emplois Stables', isTotal: true, net: 465000 },
+        
+        { libelle: 'ACTIF CIRCULANT', isHeader: true },
+        { libelle: 'D\'Exploitation', isSubTitle: true },
+        { libelle: 'Stocks (brut)', isSubItem: true, net: 85000 },
+        { libelle: 'Créances clients (brut)', isSubItem: true, net: 150000 },
+        { libelle: 'Total Actif Circulant d\'Exploitation', isTotal: true, net: 235000 },
+        
+        { libelle: 'Hors Exploitation', isSubTitle: true },
+        { libelle: 'Autres créances (vide pour démo)', isSubItem: true, net: 0 },
+        { libelle: 'Total Actif Circulant Hors Exploitation', isTotal: true, net: 0 },
+
+        { libelle: 'TRÉSORERIE ACTIVE', isHeader: true },
+        { libelle: 'Disponibilités & VMP', isSubTitle: true, net: 95000 },
+        
+        { libelle: 'TOTAL ACTIF', isGrandTotal: true, net: 795000 },
+    ],
+    passif: [
+        { libelle: 'RESSOURCES STABLES', isHeader: true },
+        { libelle: 'Capitaux propres', isSubTitle: true, net: 430000 },
+        { libelle: 'Amortissements et provisions', isSubTitle: true, net: 80000 },
+        { libelle: 'Dettes financières (> 1 an)', isSubTitle: true, net: 150000 },
+        { libelle: 'Total Ressources Stables', isTotal: true, net: 660000 },
+        
+        { libelle: 'PASSIF CIRCULANT', isHeader: true },
+        { libelle: 'D\'Exploitation', isSubTitle: true },
+        { libelle: 'Dettes fournisseurs', isSubItem: true, net: 110000 },
+        { libelle: 'Dettes fiscales et sociales', isSubItem: true, net: 20000 },
+        { libelle: 'Total Passif Circulant d\'Exploitation', isTotal: true, net: 130000 },
+        
+        { libelle: 'Hors Exploitation', isSubTitle: true },
+        { libelle: 'Autres dettes (vide pour démo)', isSubItem: true, net: 0 },
+        { libelle: 'Total Passif Circulant Hors Exploitation', isTotal: true, net: 0 },
+
+        { libelle: 'TRÉSORERIE PASSIVE', isHeader: true },
+        { libelle: 'Concours bancaires courants', isSubTitle: true, net: 5000 },
+        
+        { libelle: 'TOTAL PASSIF', isGrandTotal: true, net: 795000 },
+    ],
+    totalActif: 795000,
+    totalPassif: 795000,
+};
+
 const getBilanData = (year: string, type: BilanType): BilanData | null => {
-    if (type === 'comptable') {
-        // In a real app, this would fetch and compute data for the given year.
-        // For now, we return the same mock data regardless of the year.
-        return MOCK_BILAN_COMPTABLE_2025;
+    if (year === '2025') {
+        if (type === 'comptable') return MOCK_BILAN_COMPTABLE_2025;
+        if (type === 'fonctionnel') return MOCK_BILAN_FONCTIONNEL_2025;
     }
     return null;
 };
@@ -130,7 +176,7 @@ export default function BilanPage() {
         if (!data) {
             toast({
                 title: "Fonctionnalité non disponible",
-                description: `La génération du bilan de type "${selectedType}" n'est pas encore implémentée.`,
+                description: `La génération du bilan de type "${selectedType}" pour l'année ${selectedYear} n'est pas encore implémentée.`,
                 variant: "destructive",
             });
             return;
@@ -147,51 +193,12 @@ export default function BilanPage() {
         const userName = "Utilisateur Unikorp";
         const moduleName = "SKOMPTAB";
         const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
-        const reportTitle = `Bilan comptable - Exercice ${selectedYear}`;
+        
+        const reportTitle = `Bilan ${selectedType} - Exercice ${selectedYear}`;
         
         const headStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const, lineWidth: 0.1 };
         const bodyStyles = { lineWidth: 0.1 };
 
-        const generateActifTableBody = (lignes: BilanLigne[]) => {
-            return lignes.map(ligne => {
-                const libelleCell = { 
-                    content: ligne.libelle, 
-                    styles: { 
-                        fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal',
-                        cellWidth: 80,
-                    }
-                };
-                return [
-                    libelleCell,
-                    { content: formatAmount(ligne.brut), styles: { halign: 'right' as const } },
-                    { content: formatAmount(ligne.amortissement), styles: { halign: 'right' as const } },
-                    { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
-                    { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
-                ];
-            });
-        };
-
-        const generatePassifTableBody = (lignes: BilanLigne[]) => {
-             return lignes.map(ligne => {
-                const libelleCell = { 
-                    content: ligne.libelle, 
-                    styles: { 
-                        fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal',
-                        cellWidth: 120,
-                    }
-                };
-                return [
-                    libelleCell,
-                    { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
-                    { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
-                ];
-            });
-        }
-
-        const actifBody = generateActifTableBody(reportData.actif);
-        const passifBody = generatePassifTableBody(reportData.passif);
-
-        // Header drawing function (without page numbers)
         const drawHeader = () => {
             doc.setFontSize(9);
             doc.setTextColor(150);
@@ -212,46 +219,42 @@ export default function BilanPage() {
             doc.text(`Imprimé le : ${printDateTime}`, 190, 30, { align: 'right' });
             doc.text(`Par : ${userName}`, 190, 35, { align: 'right' });
         };
+        
+        if (selectedType === 'comptable') {
+            const generateActifTableBody = (lignes: BilanLigne[]) => lignes.map(ligne => [
+                { content: ligne.libelle, styles: { fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal', cellWidth: 80 } },
+                { content: formatAmount(ligne.brut), styles: { halign: 'right' as const } },
+                { content: formatAmount(ligne.amortissement), styles: { halign: 'right' as const } },
+                { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+                { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
+            ]);
 
-        // Actif Table (Page 1)
-        autoTable(doc, {
-            head: [['ACTIF', 'Brut', 'Amort. & Prov.', 'Net', 'Net N-1']],
-            body: actifBody,
-            theme: 'grid',
-            headStyles,
-            bodyStyles,
-            startY: 50,
-            tableWidth: 180,
-            margin: { left: 15 },
-            didDrawPage: drawHeader
-        });
+            const generatePassifTableBody = (lignes: BilanLigne[]) => lignes.map(ligne => [
+                { content: ligne.libelle, styles: { fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal', cellWidth: 120 } },
+                { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+                { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
+            ]);
 
-        // Passif Table (Page 2)
-        doc.addPage();
-        autoTable(doc, {
-            head: [['PASSIF', 'Net', 'Net N-1']],
-            body: passifBody,
-            theme: 'grid',
-            headStyles,
-            bodyStyles,
-            startY: 50,
-            tableWidth: 180,
-            margin: { left: 15 },
-            didDrawPage: drawHeader
-        });
+            autoTable(doc, { head: [['ACTIF', 'Brut', 'Amort. & Prov.', 'Net', 'Net N-1']], body: generateActifTableBody(reportData.actif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
+            doc.addPage();
+            autoTable(doc, { head: [['PASSIF', 'Net', 'Net N-1']], body: generatePassifTableBody(reportData.passif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
+        } else if (selectedType === 'fonctionnel') {
+            const generateTableBody = (lignes: BilanLigne[]) => lignes.map(ligne => [
+                { content: ligne.libelle, styles: { fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal', cellWidth: 120 } },
+                { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } }
+            ]);
+            
+            autoTable(doc, { head: [['ACTIF', 'Valeur']], body: generateTableBody(reportData.actif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
+            doc.addPage();
+            autoTable(doc, { head: [['PASSIF', 'Valeur']], body: generateTableBody(reportData.passif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
+        }
 
-        // Add page numbers to all pages at the end
+
         const pageCount = (doc as any).internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(
-                `Page ${i} sur ${pageCount}`,
-                doc.internal.pageSize.getWidth() / 2,
-                doc.internal.pageSize.getHeight() - 10,
-                { align: 'center' }
-            );
+            doc.setFontSize(8); doc.setTextColor(150);
+            doc.text(`Page ${i} sur ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
         }
 
         doc.save(`bilan_${selectedType}_${selectedYear}.pdf`);
@@ -320,6 +323,7 @@ export default function BilanPage() {
                          <div className="max-h-[70vh] overflow-y-auto p-2 border rounded-md bg-muted/20">
                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
                                 {/* Actif Column */}
+                                {selectedType === 'comptable' && (
                                 <div className="space-y-2">
                                     <table className="w-full text-xs table-fixed">
                                         <colgroup>
@@ -351,7 +355,31 @@ export default function BilanPage() {
                                         </tbody>
                                     </table>
                                 </div>
+                                )}
+                                {selectedType === 'fonctionnel' && (
+                                <div className="space-y-2">
+                                     <table className="w-full text-xs table-fixed">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left py-1 font-semibold">ACTIF</th>
+                                                <th className="text-right py-1 font-semibold">Valeur</th>
+                                            </tr>
+                                        </thead>
+                                         <tbody>
+                                            {reportData.actif.map((ligne, idx) => (
+                                                <tr key={`actif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                )}
+
+
                                 {/* Passif Column */}
+                                {selectedType === 'comptable' && (
                                 <div className="space-y-2">
                                      <table className="w-full text-xs table-fixed">
                                         <colgroup>
@@ -377,6 +405,27 @@ export default function BilanPage() {
                                         </tbody>
                                     </table>
                                 </div>
+                                )}
+                                {selectedType === 'fonctionnel' && (
+                                <div className="space-y-2">
+                                    <table className="w-full text-xs table-fixed">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left py-1 font-semibold">PASSIF</th>
+                                                <th className="text-right py-1 font-semibold">Valeur</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {reportData.passif.map((ligne, idx) => (
+                                                <tr key={`passif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                )}
                              </div>
                          </div>
                     ) : (
@@ -391,3 +440,5 @@ export default function BilanPage() {
         </>
     );
 }
+
+    
