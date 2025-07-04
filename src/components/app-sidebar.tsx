@@ -138,10 +138,8 @@ const getNavForPath = (pathname: string) => {
 export function AppSidebar() {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<string[]>([]);
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
     const savedState = localStorage.getItem('sidebarOpenSections');
     if (savedState) {
       try {
@@ -150,10 +148,8 @@ export function AppSidebar() {
           setOpenSections(parsedState);
         }
       } catch (e) {
-        setOpenSections(['GESTION', 'ÉTATS COMPTABLES', 'ÉTATS FINANCIERS']);
+         // Silently fail is ok, default state will be used.
       }
-    } else {
-      setOpenSections(['GESTION', 'ÉTATS COMPTABLES', 'ÉTATS FINANCIERS']);
     }
   }, []);
 
@@ -185,7 +181,7 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
-        {items.length > 0 && isClient && (
+        {items.length > 0 && (
           <Accordion
             type="multiple"
             className="w-full px-4"
