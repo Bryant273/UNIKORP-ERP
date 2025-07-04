@@ -59,8 +59,8 @@ const skomptabNav = [
     title: 'GESTION',
     icon: Settings,
     subItems: [
-      { title: 'Saisie & Brouillard', href: '/skomptab/brouillards', icon: Pencil },
-      { title: 'Écritures validées', href: '/skomptab/saisie-comptable', icon: Calculator },
+      { title: 'Brouillards', href: '/skomptab/brouillards', icon: Pencil },
+      { title: 'Saisie comptable', href: '/skomptab/saisie-comptable', icon: Calculator },
       { title: 'Digitalisation des factures', href: '/skomptab/digitalisation-factures', icon: FileScan },
       { title: 'Contrôle de trésorerie', href: '/skomptab/controle-tresorerie', icon: Landmark },
       { title: 'Elaboration des factures', href: '/skomptab/elaboration-factures', icon: FilePlus },

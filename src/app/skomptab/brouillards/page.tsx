@@ -292,7 +292,7 @@ export default function BrouillardsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-                <CardTitle className="text-2xl">Saisie & Brouillard</CardTitle>
+                <CardTitle className="text-2xl">Brouillards</CardTitle>
                 <CardDescription>
                     Consultez, modifiez et validez les écritures comptables avant leur intégration définitive.
                 </CardDescription>
