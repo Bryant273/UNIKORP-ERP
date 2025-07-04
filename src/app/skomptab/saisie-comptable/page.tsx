@@ -385,13 +385,15 @@ export default function SaisieComptablePage() {
                             </Popover>
                         </div>
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="numeroPiece">N° Pièce *</Label>
-                        <Input id="numeroPiece" value={formData.numeroPiece} onChange={(e) => handleFormChange('numeroPiece', e.target.value)} disabled={isViewMode}/>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="libelleOperation">Libellé de l'opération *</Label>
-                        <Input id="libelleOperation" value={formData.libelleOperation} onChange={(e) => handleFormChange('libelleOperation', e.target.value)} disabled={isViewMode}/>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="numeroPiece">N° Pièce *</Label>
+                          <Input id="numeroPiece" value={formData.numeroPiece} onChange={(e) => handleFormChange('numeroPiece', e.target.value)} disabled={isViewMode}/>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="libelleOperation">Libellé de l'opération *</Label>
+                          <Input id="libelleOperation" value={formData.libelleOperation} onChange={(e) => handleFormChange('libelleOperation', e.target.value)} disabled={isViewMode}/>
+                        </div>
                     </div>
 
                     <Separator/>
@@ -430,8 +432,8 @@ export default function SaisieComptablePage() {
                             </Table>
                         </div>
                         <div className="flex justify-between items-start">
-                            <Button type="button" variant="default" onClick={addLigne} disabled={isViewMode}><PlusCircle className="mr-2 h-4 w-4"/>Ajouter une ligne</Button>
-                            <div className="w-full max-w-sm space-y-2 text-sm">
+                           {!isViewMode && <Button type="button" variant="default" onClick={addLigne} disabled={isViewMode}><PlusCircle className="mr-2 h-4 w-4"/>Ajouter une ligne</Button>}
+                            <div className="w-full max-w-sm space-y-2 text-sm ml-auto">
                                 <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
                                 <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
                                 <Separator/>
