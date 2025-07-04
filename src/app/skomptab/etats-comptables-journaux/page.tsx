@@ -178,7 +178,7 @@ export default function EtatsComptablesJournauxPage() {
             // Header
             doc.setFontSize(9);
             doc.setTextColor(150);
-            doc.text(`Imprimé depuis UNIKORP - ${moduleName}`, 20, 15);
+            doc.text(`Imprimé depuis UNIKORP® - ${moduleName}`, 20, 15);
             doc.setDrawColor(220);
             doc.line(20, 18, 190, 18);
 
@@ -295,8 +295,7 @@ export default function EtatsComptablesJournauxPage() {
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto pr-4">
                  <div className="mb-6">
-                    <p className="text-xs text-muted-foreground">Imprimé depuis UNIKORP - SKOMPTAB</p>
-                    <div className="flex justify-between items-start mt-2 p-4 border rounded-lg">
+                    <div className="flex justify-between items-start p-4 border rounded-lg">
                         <div className="flex items-center gap-4">
                             <Logo className="h-12 w-12 text-primary"/>
                             <div>
