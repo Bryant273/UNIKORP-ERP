@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Calendar as CalendarIcon, Download } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
@@ -19,6 +18,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Logo } from '@/components/logo';
 
 // Mock data
 type EcritureLivreTiers = {
@@ -260,10 +260,25 @@ export default function GrandLivreTiersPage() {
                         <DialogTitle>Grand Livre Tiers</DialogTitle>
                         <DialogDescription>
                             Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
-                            Imprimé le {printDateTime}.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
+                         <div className="mb-4">
+                            <div className="flex justify-between items-start p-4 border rounded-lg">
+                                <div className="flex items-center gap-4">
+                                    <Logo className="h-12 w-12 text-primary"/>
+                                    <div>
+                                        <p className="font-bold">Votre Société S.A.</p>
+                                    </div>
+                                </div>
+                                <div className="text-right text-xs text-muted-foreground">
+                                    <p><span className="font-semibold text-foreground">État :</span> Grand Livre Tiers</p>
+                                    <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                                    <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                                    <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
+                                </div>
+                            </div>
+                        </div>
                         {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([tiersCode, ecritures]) => {
                             const tiersInfo = MOCK_TIERS.find(t => t.code === tiersCode);
                             const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);

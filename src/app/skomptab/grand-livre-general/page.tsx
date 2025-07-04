@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Calendar as CalendarIcon, Download } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
@@ -19,6 +18,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Logo } from '@/components/logo';
 
 // Mock data
 const MOCK_ECRITURES_LIVRE = [
@@ -215,19 +215,35 @@ export default function GrandLivreGeneralPage() {
                                 </div>
                             </ScrollArea>
                         </div>
-                        <div className="space-y-2">
-                            <Label>Période</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yy')} - ${format(period.to, 'dd/MM/yy')}`: format(period.from, 'dd/MM/yyyy')) : 'Sélectionnez'}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar mode="range" selected={period} onSelect={setPeriod} numberOfMonths={2} locale={fr} />
-                                </PopoverContent>
-                            </Popover>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Date de début</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Date de fin</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>
@@ -243,10 +259,25 @@ export default function GrandLivreGeneralPage() {
                         <DialogTitle>Grand Livre Général</DialogTitle>
                         <DialogDescription>
                             Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
-                            Imprimé le {printDateTime}.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
+                        <div className="mb-4">
+                            <div className="flex justify-between items-start p-4 border rounded-lg">
+                                <div className="flex items-center gap-4">
+                                    <Logo className="h-12 w-12 text-primary"/>
+                                    <div>
+                                        <p className="font-bold">Votre Société S.A.</p>
+                                    </div>
+                                </div>
+                                <div className="text-right text-xs text-muted-foreground">
+                                    <p><span className="font-semibold text-foreground">État :</span> Grand Livre Général</p>
+                                    <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                                    <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                                    <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
+                                </div>
+                            </div>
+                        </div>
                         {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([compte, ecritures]) => {
                             const compteInfo = MOCK_COMPTES.find(c => c.numero === compte);
                             const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);

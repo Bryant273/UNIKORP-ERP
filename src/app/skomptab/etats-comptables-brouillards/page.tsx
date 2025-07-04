@@ -340,6 +340,24 @@ export default function EtatsComptablesBrouillardsPage() {
                 </DialogDescription>
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto pr-4">
+                 <div className="mb-6">
+                    <div className="flex justify-between items-start p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                            <Logo className="h-12 w-12 text-primary"/>
+                            <div>
+                                <p className="font-bold">Votre Société S.A.</p>
+                            </div>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground">
+                            <p><span className="font-semibold text-foreground">État :</span> Brouillard Comptable</p>
+                            <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                            {selectedJournal && <p><span className="font-semibold text-foreground">Journal :</span> {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</p>}
+                            {selectedStagiaire && <p><span className="font-semibold text-foreground">Saisi par :</span> {selectedStagiaire}</p>}
+                            <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                            <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
+                        </div>
+                    </div>
+                </div>
                  <Table>
                     <TableHeader className="sticky top-0 bg-secondary">
                         <TableRow>
