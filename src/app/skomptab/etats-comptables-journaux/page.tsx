@@ -57,9 +57,7 @@ const MOCK_JOURNALS = [
 type LigneJournal = {
     date: string;
     numeroPiece: string;
-    libelleOperation: string;
     numeroCompte: string;
-    libelleCompte: string;
     tiers: string;
     libelleEcriture: string;
     debit: number;
@@ -69,19 +67,21 @@ type LigneJournal = {
 const generateMockData = (journalCode: string, period: DateRange): LigneJournal[] => {
     if (journalCode === 'AC') {
         return [
-            { date: '2024-07-05', libelleOperation: 'Achat Mat. Prem. Fournisseur A', numeroPiece: 'F2407-001', numeroCompte: '607000', libelleCompte: 'Achats Marchandises', tiers: 'Fournisseur A', libelleEcriture: 'Achat Mat. Prem.', debit: 1200.00, credit: 0 },
-            { date: '2024-07-05', libelleOperation: 'Achat Mat. Prem. Fournisseur A', numeroPiece: 'F2407-001', numeroCompte: '445660', libelleCompte: 'TVA Déductible', tiers: '', libelleEcriture: 'TVA / Achat Mat. Prem.', debit: 216.00, credit: 0 },
-            { date: '2024-07-05', libelleOperation: 'Achat Mat. Prem. Fournisseur A', numeroPiece: 'F2407-001', numeroCompte: '401000', libelleCompte: 'Fournisseurs', tiers: 'Fournisseur A', libelleEcriture: 'Facture Fournisseur A', debit: 0, credit: 1416.00 },
-            { date: '2024-07-12', libelleOperation: 'Achat Stock Fournisseur B', numeroPiece: 'F2407-002', numeroCompte: '601000', libelleCompte: 'Achats Stockés', tiers: 'Fournisseur B', libelleEcriture: 'Achat Stock', debit: 3500.00, credit: 0 },
-            { date: '2024-07-12', libelleOperation: 'Achat Stock Fournisseur B', numeroPiece: 'F2407-002', numeroCompte: '445660', libelleCompte: 'TVA Déductible', tiers: '', libelleEcriture: 'TVA / Achat Stock', debit: 630.00, credit: 0 },
-            { date: '2024-07-12', libelleOperation: 'Achat Stock Fournisseur B', numeroPiece: 'F2407-002', numeroCompte: '401000', libelleCompte: 'Fournisseurs', tiers: 'Fournisseur B', libelleEcriture: 'Facture Fournisseur B', debit: 0, credit: 4130.00 },
+            // First operation from image
+            { date: '2024-01-15', numeroPiece: 'F2401-001', numeroCompte: '602100', tiers: '', libelleEcriture: 'Matières premières', debit: 1000000, credit: 0 },
+            { date: '2024-01-15', numeroPiece: 'F2401-001', numeroCompte: '445660', tiers: '', libelleEcriture: 'TVA déductible', debit: 180000, credit: 0 },
+            { date: '2024-01-15', numeroPiece: 'F2401-001', numeroCompte: '401000', tiers: 'FOURN001', libelleEcriture: 'Xmaginsie', debit: 0, credit: 1180000 },
+            // Second operation from image
+            { date: '2024-01-22', numeroPiece: 'F2401-002', numeroCompte: '601400', tiers: '', libelleEcriture: 'Fournitures consommables', debit: 500000, credit: 0 },
+            { date: '2024-01-22', numeroPiece: 'F2401-002', numeroCompte: '445660', tiers: '', libelleEcriture: 'TVA déductible', debit: 90000, credit: 0 },
+            { date: '2024-01-22', numeroPiece: 'F2401-002', numeroCompte: '401000', tiers: 'FOURN002', libelleEcriture: 'FournisPlus', debit: 0, credit: 590000 },
         ];
     }
     if (journalCode === 'VE') {
          return [
-            { date: '2024-07-08', libelleOperation: 'Facture Vente Client X', numeroPiece: 'V2407-015', numeroCompte: '411000', libelleCompte: 'Clients', tiers: 'Client X', libelleEcriture: 'Facture Client X', debit: 2400.00, credit: 0 },
-            { date: '2024-07-08', libelleOperation: 'Facture Vente Client X', numeroPiece: 'V2407-015', numeroCompte: '707000', libelleCompte: 'Ventes Marchandises', tiers: '', libelleEcriture: 'Vente Matériel', debit: 0, credit: 2000.00 },
-            { date: '2024-07-08', libelleOperation: 'Facture Vente Client X', numeroPiece: 'V2407-015', numeroCompte: '445710', libelleCompte: 'TVA Collectée', tiers: '', libelleEcriture: 'TVA / Vente Matériel', debit: 0, credit: 400.00 },
+            { date: '2024-07-08', numeroPiece: 'V2407-015', numeroCompte: '411000', tiers: 'Client X', libelleEcriture: 'Facture Client X', debit: 2400000, credit: 0 },
+            { date: '2024-07-08', numeroPiece: 'V2407-015', numeroCompte: '707000', tiers: '', libelleEcriture: 'Vente Matériel', debit: 0, credit: 2000000 },
+            { date: '2024-07-08', numeroPiece: 'V2407-015', numeroCompte: '445710', tiers: '', libelleEcriture: 'TVA / Vente Matériel', debit: 0, credit: 400000 },
         ];
     }
     return [];
@@ -94,8 +94,8 @@ export default function EtatsComptablesJournauxPage() {
 
   const [selectedJournal, setSelectedJournal] = useState<string | null>(null);
   const [period, setPeriod] = useState<DateRange | undefined>({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    to: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+    from: new Date(2024, 0, 1),
+    to: new Date(2024, 0, 31),
   });
   
   const [journalData, setJournalData] = useState<LigneJournal[]>([]);
@@ -141,30 +141,32 @@ export default function EtatsComptablesJournauxPage() {
     doc.text(`Période du ${periodString}`, 105, 28, { align: 'center' });
 
     const tableBody = Object.values(groupedData).flatMap(lignes => {
-      const headerRow = [
-        { 
-          content: `${format(new Date(lignes[0].date), 'dd/MM/yyyy')} | ${lignes[0].numeroPiece} | ${lignes[0].libelleOperation}`,
-          colSpan: 7, 
-          styles: { fontStyle: 'bold', fillColor: [240, 240, 240], textColor: 20 } 
-        }
-      ];
-      const dataRows = lignes.map(ligne => ([
-          '', '', ligne.numeroCompte, ligne.tiers || '-', ligne.libelleEcriture,
-          ligne.debit > 0 ? ligne.debit.toFixed(2) : '',
-          ligne.credit > 0 ? ligne.credit.toFixed(2) : '',
-      ]));
-      return [headerRow, ...dataRows];
+        const firstRow = [
+            { content: format(new Date(lignes[0].date), 'dd/MM/yyyy'), rowSpan: lignes.length, styles: { halign: 'center', valign: 'middle' } },
+            lignes[0].numeroCompte,
+            lignes[0].tiers || '-',
+            lignes[0].libelleEcriture,
+            { content: lignes[0].debit > 0 ? lignes[0].debit.toLocaleString('fr-FR') : '', styles: { textColor: [0, 128, 0] } },
+            { content: lignes[0].credit > 0 ? lignes[0].credit.toLocaleString('fr-FR') : '', styles: { textColor: [255, 0, 0] } },
+        ];
+        const otherRows = lignes.slice(1).map(ligne => ([
+            ligne.numeroCompte,
+            ligne.tiers || '-',
+            ligne.libelleEcriture,
+            { content: ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : '', styles: { textColor: [0, 128, 0] } },
+            { content: ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : '', styles: { textColor: [255, 0, 0] } },
+        ]));
+        return [firstRow, ...otherRows];
     });
-
 
     autoTable(doc, {
         startY: 35,
-        head: [['Date', 'N° Pièce', 'Compte', 'Tiers', 'Libellé', 'Débit', 'Crédit']],
+        head: [['Date', 'Compte Général', 'Tiers', 'Libellé', 'Débit', 'Crédit']],
         body: tableBody,
-        foot: [['', '', '', '', 'Totaux', totalDebit.toFixed(2), totalCredit.toFixed(2)]],
+        foot: [[{content: 'Totaux', colSpan: 4, styles: { halign: 'right' }}, {content: totalDebit.toLocaleString('fr-FR'), styles: {halign: 'center'}}, {content: totalCredit.toLocaleString('fr-FR'), styles: {halign: 'center'}}]],
         theme: 'striped',
-        headStyles: { fillColor: [28, 32, 57], halign: 'center' },
-        footStyles: { fillColor: [22, 25, 45], fontStyle: 'bold', halign: 'center' },
+        headStyles: { fillColor: [241, 245, 249], textColor: [45, 55, 72], fontStyle: 'bold', halign: 'center' },
+        footStyles: { fillColor: [226, 232, 240], fontStyle: 'bold' },
         bodyStyles: { halign: 'center' },
         didDrawPage: (data) => {
             const pageCount = doc.internal.getNumberOfPages();
@@ -264,9 +266,8 @@ export default function EtatsComptablesJournauxPage() {
                  <Table>
                     <TableHeader className="sticky top-0 bg-secondary">
                         <TableRow>
-                            <TableHead className="w-[100px] text-center">Date</TableHead>
-                            <TableHead className="w-[120px] text-center">N° Pièce</TableHead>
-                            <TableHead className="w-[120px] text-center">Compte</TableHead>
+                            <TableHead className="w-[120px] text-center">Date</TableHead>
+                            <TableHead className="w-[120px] text-center">Compte Général</TableHead>
                             <TableHead className="w-[150px] text-center">Tiers</TableHead>
                             <TableHead className="text-center">Libellé</TableHead>
                             <TableHead className="w-[120px] text-center">Débit</TableHead>
@@ -274,39 +275,39 @@ export default function EtatsComptablesJournauxPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {journalData.length > 0 ? Object.entries(groupedData).map(([numeroPiece, lignes]) => (
-                            <React.Fragment key={numeroPiece}>
-                                <TableRow className="bg-muted/50 font-semibold">
-                                    <TableCell className="text-center">{format(new Date(lignes[0].date), 'dd/MM/yyyy')}</TableCell>
-                                    <TableCell className="text-center">{numeroPiece}</TableCell>
-                                    <TableCell colSpan={5} className="text-center italic text-muted-foreground">{lignes[0].libelleOperation}</TableCell>
-                                </TableRow>
+                        {journalData.length > 0 ? Object.values(groupedData).map((lignes, groupIndex) => (
+                            <React.Fragment key={groupIndex}>
                                 {lignes.map((ligne, ligneIndex) => (
-                                    <TableRow key={`${numeroPiece}-${ligneIndex}`}>
-                                        <TableCell colSpan={2} />
+                                    <TableRow key={`${groupIndex}-${ligneIndex}`} className="even:bg-muted/30">
+                                        {ligneIndex === 0 && (
+                                            <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
+                                                {format(new Date(ligne.date), 'dd/MM/yyyy')}
+                                            </TableCell>
+                                        )}
                                         <TableCell className="text-center font-mono">{ligne.numeroCompte}</TableCell>
                                         <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
                                         <TableCell className="text-center">{ligne.libelleEcriture}</TableCell>
-                                        <TableCell className="text-center font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
-                                        <TableCell className="text-center font-mono">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
+                                        <TableCell className="text-center font-mono text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                        <TableCell className="text-center font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
                                     </TableRow>
                                 ))}
+                                { (groupIndex < Object.values(groupedData).length - 1) && <TableRow><TableCell colSpan={6} className="p-0 h-px bg-border"></TableCell></TableRow>}
                             </React.Fragment>
                         )) : (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
+                                <TableCell colSpan={6} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                     {journalData.length > 0 &&
                       <TableFooter>
                           <TableRow className="bg-secondary">
-                              <TableCell colSpan={5} className="text-center font-bold">Totaux</TableCell>
-                              <TableCell className="text-center font-bold font-mono">{totalDebit.toFixed(2)}</TableCell>
-                              <TableCell className="text-center font-bold font-mono">{totalCredit.toFixed(2)}</TableCell>
+                              <TableCell colSpan={4} className="text-center font-bold">Totaux</TableCell>
+                              <TableCell className="text-center font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                              <TableCell className="text-center font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
                           </TableRow>
                           <TableRow>
-                              <TableCell colSpan={5}></TableCell>
+                              <TableCell colSpan={4}></TableCell>
                               <TableCell colSpan={2} className="text-center font-bold">
                                   {totalDebit.toFixed(2) === totalCredit.toFixed(2) ? "Équilibré" : "Déséquilibré"}
                               </TableCell>
