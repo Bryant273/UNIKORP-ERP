@@ -37,11 +37,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, FileText, PlusCircle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-
-// --- DATA TYPES & MOCK DATA ---
 
 type LigneEcriture = {
   id: string;
@@ -65,6 +63,20 @@ type EcritureComptable = {
 
 const initialEcritures: EcritureComptable[] = [
   {
+    id: 1,
+    dateSaisie: '2024-07-20',
+    numeroCompta: 'AC-202407-0001',
+    journal: 'AC',
+    dateOperation: '2024-07-19',
+    numeroPiece: 'F2024-150',
+    libelleOperation: 'Achat de matières premières - Fournisseur A',
+    lignes: [
+      { id: 'l1-1', compte: '601000', tiers: '', libelle: 'Achat Mat. Prem.', debit: 1500, credit: 0 },
+      { id: 'l1-2', compte: '445660', tiers: '', libelle: 'TVA déductible', debit: 300, credit: 0 },
+      { id: 'l1-3', compte: '401000', tiers: 'FOURN_A', libelle: 'Fournisseur A', debit: 0, credit: 1800 },
+    ],
+  },
+  {
     id: 2,
     dateSaisie: '2024-07-21',
     numeroCompta: 'VE-202407-0003',
@@ -78,19 +90,25 @@ const initialEcritures: EcritureComptable[] = [
       { id: 'l2-3', compte: '445710', tiers: '', libelle: 'TVA collectée', debit: 0, credit: 400 },
     ],
   },
-    {
-    id: 1,
-    dateSaisie: '2024-07-20',
-    numeroCompta: 'AC-202407-0015',
+  {
+    id: 3,
+    dateSaisie: '2024-07-22',
+    numeroCompta: 'BNP-202407-0012',
+    journal: 'BNP',
+    dateOperation: '2024-07-22',
+    numeroPiece: 'VIR-56',
+    libelleOperation: 'Virement interne',
+    lignes: [],
+  },
+  {
+    id: 4,
+    dateSaisie: '2024-07-23',
+    numeroCompta: 'AC-202407-0002',
     journal: 'AC',
-    dateOperation: '2024-07-19',
-    numeroPiece: 'F24-AC-001',
-    libelleOperation: 'Achat de matières premières - Fournisseur A',
-    lignes: [
-      { id: 'l1-1', compte: '601000', tiers: '', libelle: 'Achat Mat. Prem.', debit: 1500, credit: 0 },
-      { id: 'l1-2', compte: '445660', tiers: '', libelle: 'TVA déductible', debit: 300, credit: 0 },
-      { id: 'l1-3', compte: '401000', tiers: 'FOURN_A', libelle: 'Fournisseur A', debit: 0, credit: 1800 },
-    ],
+    dateOperation: '2024-07-22',
+    numeroPiece: 'F2024-155',
+    libelleOperation: 'Achat fournitures',
+    lignes: [],
   },
   {
     id: 5,
@@ -100,13 +118,10 @@ const initialEcritures: EcritureComptable[] = [
     dateOperation: '2024-07-23',
     numeroPiece: 'FACT-089',
     libelleOperation: 'Vente marchandises Client Beta',
-    lignes: [
-        { id: 'l5-1', compte: '411000', tiers: 'CLIENT_BETA', libelle: 'Client Beta', debit: 6000, credit: 0 },
-        { id: 'l5-2', compte: '707000', tiers: '', libelle: 'Vente de marchandise', debit: 0, credit: 5000 },
-        { id: 'l5-3', compte: '445710', tiers: '', libelle: 'TVA collectée', debit: 0, credit: 1000 },
-    ],
+    lignes: [],
   },
 ];
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -138,10 +153,24 @@ export default function SaisieComptablePage() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Saisie Comptable (Grand Livre)</CardTitle>
-          <CardDescription>
-            Consultez et gérez les écritures comptables de l'entreprise.
-          </CardDescription>
+           <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl">Saisie Comptable</CardTitle>
+              <CardDescription>
+                Enregistrez, consultez et gérez vos écritures comptables.
+              </CardDescription>
+            </div>
+            <div className='flex items-center gap-2'>
+                <Button variant="outline">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Utiliser un modèle
+                </Button>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Enregistrer une écriture
+                </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -149,7 +178,7 @@ export default function SaisieComptablePage() {
               <TableRow>
                 <TableHead className="w-[50px] text-center">#</TableHead>
                 <TableHead>Date de saisie</TableHead>
-                <TableHead>N° Saisie</TableHead>
+                <TableHead>N° Compta</TableHead>
                 <TableHead>Journal</TableHead>
                 <TableHead>Date de l'opération</TableHead>
                 <TableHead>N° Pièce</TableHead>
@@ -195,7 +224,7 @@ export default function SaisieComptablePage() {
         </CardContent>
         <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Total de <span className="font-bold">{ecritures.length}</span> écritures.
+            Total de {ecritures.length} écritures comptables.
           </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
@@ -235,7 +264,7 @@ export default function SaisieComptablePage() {
             <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/50">
                 <div className="space-y-1"><Label>Journal</Label><p className="font-semibold">{viewingEcriture.journal}</p></div>
-                <div className="space-y-1"><Label>Date Opération</Label><p className="font-semibold">{viewingEcriture.dateOperation}</p></div>
+                <div className="space-y-1"><Label>Date Opération</Label><p className="font-semibold">{new Date(viewingEcriture.dateOperation).toLocaleDateString('fr-FR')}</p></div>
                 <div className="space-y-1"><Label>N° Pièce</Label><p className="font-semibold">{viewingEcriture.numeroPiece}</p></div>
                  <div className="space-y-1 col-span-full"><Label>Libellé Opération</Label><p className="font-semibold">{viewingEcriture.libelleOperation}</p></div>
               </div>
