@@ -152,10 +152,58 @@ const MOCK_BILAN_FONCTIONNEL_2025: BilanData = {
     totalPassif: 795000,
 };
 
+const MOCK_BILAN_FINANCIER_2025: BilanData = {
+    actif: [
+        { libelle: "Valeurs immobilisées ou actif à plus d'un an", isHeader: true },
+        { libelle: 'Immobilisations incorporelles', numeroCompte: '20', isSubItem: true, net: 75000, netN1: 60000 },
+        { libelle: 'Immobilisations corporelles', numeroCompte: '21', isSubItem: true, net: 300000, netN1: 280000 },
+        { libelle: 'Immobilisations financières', numeroCompte: '26', isSubItem: true, net: 25000, netN1: 20000 },
+        { libelle: "Total Actif à plus d'un an", isTotal: true, net: 400000, netN1: 360000 },
+
+        { libelle: "Actif à moins d'un an", isHeader: true },
+        { libelle: "Valeurs d'exploitation (A)", isSubTitle: true },
+        { libelle: 'Marchandises (Stocks flottants)', numeroCompte: '370000', isSubItem: true, net: 80000, netN1: 75000 },
+        { libelle: 'Total Valeurs d\'exploitation', isTotal: true, net: 80000, netN1: 75000 },
+        { libelle: "Valeurs réalisables (B)", isSubTitle: true },
+        { libelle: 'Clients et comptes rattachés', numeroCompte: '411000', isSubItem: true, net: 140000, netN1: 130000 },
+        { libelle: 'Total Valeurs réalisables', isTotal: true, net: 140000, netN1: 130000 },
+        { libelle: "Disponibilités (C)", isSubTitle: true },
+        { libelle: 'Banques', numeroCompte: '512000', isSubItem: true, net: 90000, netN1: 95000 },
+        { libelle: 'Caisse', numeroCompte: '530000', isSubItem: true, net: 5000, netN1: 5000 },
+        { libelle: 'Total Disponibilités', isTotal: true, net: 95000, netN1: 100000 },
+        { libelle: "Total Actif à moins d'un an (A+B+C)", isTotal: true, net: 315000, netN1: 305000 },
+        
+        { libelle: 'TOTAL ACTIF', isGrandTotal: true, net: 715000, netN1: 665000 },
+    ],
+    passif: [
+        { libelle: 'Capitaux propres', isHeader: true },
+        { libelle: 'Capital social', numeroCompte: '101000', isSubItem: true, net: 200000, netN1: 200000 },
+        { libelle: 'Réserves', numeroCompte: '106000', isSubItem: true, net: 150000, netN1: 115000 },
+        { libelle: "Résultat de l'exercice", numeroCompte: '120000', isSubItem: true, net: 80000, netN1: 75000 },
+        { libelle: 'Total Capitaux Propres', isTotal: true, net: 430000, netN1: 390000 },
+        
+        { libelle: 'Dettes à long terme', isHeader: true },
+        { libelle: 'Emprunts et dettes assimilées (> 1 an)', numeroCompte: '164000', isSubItem: true, net: 150000, netN1: 180000 },
+        { libelle: 'Total Dettes à long terme', isTotal: true, net: 150000, netN1: 180000 },
+        
+        { libelle: 'Dettes à court terme', isHeader: true },
+        { libelle: 'Dettes fournisseurs', numeroCompte: '401000', isSubItem: true, net: 110000, netN1: 105000 },
+        { libelle: 'Dettes fiscales et sociales', numeroCompte: '440000', isSubItem: true, net: 20000, netN1: 15000 },
+        { libelle: 'Concours bancaires courants', numeroCompte: '519000', isSubItem: true, net: 5000, netN1: 10000 },
+        { libelle: 'Total Dettes à court terme', isTotal: true, net: 135000, netN1: 130000 },
+        
+        { libelle: 'TOTAL PASSIF', isGrandTotal: true, net: 715000, netN1: 700000 },
+    ],
+    totalActif: 715000,
+    totalPassif: 715000,
+};
+
+
 const getBilanData = (year: string, type: BilanType): BilanData | null => {
     if (year === '2025') {
         if (type === 'comptable') return MOCK_BILAN_COMPTABLE_2025;
         if (type === 'fonctionnel') return MOCK_BILAN_FONCTIONNEL_2025;
+        if (type === 'financier') return MOCK_BILAN_FINANCIER_2025;
     }
     return null;
 };
@@ -210,25 +258,26 @@ export default function BilanPage() {
         const headStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const, lineWidth: 0.1 };
         const bodyStyles = { lineWidth: 0.1 };
 
-        const drawHeader = () => {
+        const drawHeader = (data: any) => {
             doc.setFontSize(9);
             doc.setTextColor(150);
-            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, 20, 15);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
             doc.setDrawColor(220);
-            doc.line(20, 18, 190, 18);
-            doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
+            doc.line(data.settings.margin.left, 18, doc.internal.pageSize.getWidth() - data.settings.margin.right, 18);
+            doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
             
             doc.setFontSize(14);
             doc.setTextColor(40, 40, 40);
             doc.setFont('helvetica', 'bold');
-            doc.text(companyName, 35, 28);
+            doc.text(companyName, data.settings.margin.left + 15, 28);
             
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(100);
-            doc.text(`État : ${reportTitle}`, 190, 25, { align: 'right' });
-            doc.text(`Imprimé le : ${printDateTime}`, 190, 30, { align: 'right' });
-            doc.text(`Par : ${userName}`, 190, 35, { align: 'right' });
+            const rightX = doc.internal.pageSize.getWidth() - data.settings.margin.right;
+            doc.text(`État : ${reportTitle}`, rightX, 25, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, rightX, 30, { align: 'right' });
+            doc.text(`Par : ${userName}`, rightX, 35, { align: 'right' });
         };
         
         if (selectedType === 'comptable') {
@@ -251,16 +300,17 @@ export default function BilanPage() {
             autoTable(doc, { head: [['Compte', 'ACTIF', 'Brut', 'Amort. & Prov.', 'Net', 'Net N-1']], body: generateActifTableBody(reportData.actif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
             doc.addPage();
             autoTable(doc, { head: [['Compte', 'PASSIF', 'Net', 'Net N-1']], body: generatePassifTableBody(reportData.passif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
-        } else if (selectedType === 'fonctionnel') {
+        } else if (selectedType === 'fonctionnel' || selectedType === 'financier') {
             const generateTableBody = (lignes: BilanLigne[]) => lignes.map(ligne => [
                 { content: ligne.numeroCompte || '', styles: { fontStyle: 'normal', cellWidth: 25 } },
                 { content: ligne.libelle, styles: { fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal', cellWidth: 95 } },
                 { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } }
             ]);
             
-            autoTable(doc, { head: [['Compte', 'ACTIF', 'Valeur']], body: generateTableBody(reportData.actif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
+            const headLabel = selectedType === 'fonctionnel' ? 'Valeur' : 'Valeur Nette';
+            autoTable(doc, { head: [['Compte', 'ACTIF', headLabel]], body: generateTableBody(reportData.actif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
             doc.addPage();
-            autoTable(doc, { head: [['Compte', 'PASSIF', 'Valeur']], body: generateTableBody(reportData.passif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
+            autoTable(doc, { head: [['Compte', 'PASSIF', headLabel]], body: generateTableBody(reportData.passif), theme: 'grid', headStyles, bodyStyles, startY: 50, tableWidth: 180, margin: { left: 15 }, didDrawPage: drawHeader });
         }
 
 
@@ -362,7 +412,7 @@ export default function BilanPage() {
                                             {reportData.actif.map((ligne, idx) => (
                                                 <tr key={`actif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
                                                     <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
                                                     <td className="text-right font-mono py-1">{formatAmount(ligne.brut)}</td>
                                                     <td className="text-right font-mono py-1">{formatAmount(ligne.amortissement)}</td>
                                                     <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
@@ -373,7 +423,7 @@ export default function BilanPage() {
                                     </table>
                                 </div>
                                 )}
-                                {selectedType === 'fonctionnel' && (
+                                {(selectedType === 'fonctionnel' || selectedType === 'financier') && (
                                 <div className="space-y-2">
                                      <table className="w-full text-xs table-fixed">
                                         <colgroup>
@@ -385,14 +435,14 @@ export default function BilanPage() {
                                             <tr className="border-b">
                                                 <th className="text-left py-1 font-semibold">Compte</th>
                                                 <th className="text-left py-1 font-semibold">ACTIF</th>
-                                                <th className="text-right py-1 font-semibold">Valeur</th>
+                                                <th className="text-right py-1 font-semibold">{selectedType === 'fonctionnel' ? 'Valeur' : 'Valeur Nette'}</th>
                                             </tr>
                                         </thead>
                                          <tbody>
                                             {reportData.actif.map((ligne, idx) => (
                                                 <tr key={`actif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
                                                     <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
                                                     <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
                                                 </tr>
                                             ))}
@@ -424,7 +474,7 @@ export default function BilanPage() {
                                             {reportData.passif.map((ligne, idx) => (
                                                 <tr key={`passif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
                                                     <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
                                                     <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
                                                     <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
                                                 </tr>
@@ -433,7 +483,7 @@ export default function BilanPage() {
                                     </table>
                                 </div>
                                 )}
-                                {selectedType === 'fonctionnel' && (
+                                {(selectedType === 'fonctionnel' || selectedType === 'financier') && (
                                 <div className="space-y-2">
                                     <table className="w-full text-xs table-fixed">
                                         <colgroup>
@@ -445,14 +495,14 @@ export default function BilanPage() {
                                             <tr className="border-b">
                                                 <th className="text-left py-1 font-semibold">Compte</th>
                                                 <th className="text-left py-1 font-semibold">PASSIF</th>
-                                                <th className="text-right py-1 font-semibold">Valeur</th>
+                                                <th className="text-right py-1 font-semibold">{selectedType === 'fonctionnel' ? 'Valeur' : 'Valeur Nette'}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {reportData.passif.map((ligne, idx) => (
                                                 <tr key={`passif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
                                                     <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
                                                     <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
                                                 </tr>
                                             ))}
@@ -474,3 +524,5 @@ export default function BilanPage() {
         </>
     );
 }
+
+    
