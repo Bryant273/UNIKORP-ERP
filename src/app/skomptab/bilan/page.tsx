@@ -152,7 +152,7 @@ export default function BilanPage() {
         const headStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const, lineWidth: 0.1 };
         const bodyStyles = { lineWidth: 0.1 };
 
-        const generateTableBody = (lignes: BilanLigne[]) => {
+        const generateActifTableBody = (lignes: BilanLigne[]) => {
             return lignes.map(ligne => {
                 const libelleCell = { 
                     content: ligne.libelle, 
@@ -188,30 +188,32 @@ export default function BilanPage() {
             });
         }
 
-        const actifBody = generateTableBody(reportData.actif);
+        const actifBody = generateActifTableBody(reportData.actif);
         const passifBody = generatePassifTableBody(reportData.passif);
 
-        // Header
-        doc.setFontSize(9);
-        doc.setTextColor(150);
-        doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, 20, 15);
-        doc.setDrawColor(220);
-        doc.line(20, 18, 190, 18);
-        doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
-        
-        doc.setFontSize(14);
-        doc.setTextColor(40, 40, 40);
-        doc.setFont('helvetica', 'bold');
-        doc.text(companyName, 35, 28);
-        
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100);
-        doc.text(`État : ${reportTitle}`, 190, 25, { align: 'right' });
-        doc.text(`Imprimé le : ${printDateTime}`, 190, 30, { align: 'right' });
-        doc.text(`Par : ${userName}`, 190, 35, { align: 'right' });
+        // Header drawing function (without page numbers)
+        const drawHeader = () => {
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, 20, 15);
+            doc.setDrawColor(220);
+            doc.line(20, 18, 190, 18);
+            doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.setFont('helvetica', 'bold');
+            doc.text(companyName, 35, 28);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            doc.text(`État : ${reportTitle}`, 190, 25, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, 190, 30, { align: 'right' });
+            doc.text(`Par : ${userName}`, 190, 35, { align: 'right' });
+        };
 
-        // Actif Table
+        // Actif Table (Page 1)
         autoTable(doc, {
             head: [['ACTIF', 'Brut', 'Amort. & Prov.', 'Net', 'Net N-1']],
             body: actifBody,
@@ -220,23 +222,37 @@ export default function BilanPage() {
             bodyStyles,
             startY: 50,
             tableWidth: 180,
-            margin: { left: 15 }
+            margin: { left: 15 },
+            didDrawPage: drawHeader
         });
 
-        const finalY = (doc as any).lastAutoTable.finalY || 50;
-
-        // Passif Table
+        // Passif Table (Page 2)
+        doc.addPage();
         autoTable(doc, {
             head: [['PASSIF', 'Net', 'Net N-1']],
             body: passifBody,
             theme: 'grid',
             headStyles,
             bodyStyles,
-            startY: finalY + 10,
+            startY: 50,
             tableWidth: 180,
-            margin: { left: 15 }
+            margin: { left: 15 },
+            didDrawPage: drawHeader
         });
 
+        // Add page numbers to all pages at the end
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(
+                `Page ${i} sur ${pageCount}`,
+                doc.internal.pageSize.getWidth() / 2,
+                doc.internal.pageSize.getHeight() - 10,
+                { align: 'center' }
+            );
+        }
 
         doc.save(`bilan_${selectedType}_${selectedYear}.pdf`);
     };
