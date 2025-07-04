@@ -214,14 +214,13 @@ export function AppSidebar() {
               </AccordionItem>
             ))}
           </Accordion>
-        ) : (
+        ) : items.length > 0 ? (
           <div className="space-y-4 px-4">
-            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+            {items.map((item) => (
+              <div key={item.title} className="h-10 w-full animate-pulse rounded-md bg-muted" />
+            ))}
           </div>
-        )}
+        ) : null}
         {placeholder && (
           <div className="p-4 text-sm text-muted-foreground">{placeholder}</div>
         )}
