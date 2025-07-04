@@ -141,7 +141,7 @@ export default function EtatsComptablesJournauxPage() {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const journalInfo = MOCK_JOURNALS.find(j => j.code === selectedJournal);
-    const periodString = period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A';
+    const periodString = period?.from ? (period.to ? `${format(period.from, 'dd MM yyyy')} au ${format(period.to, 'dd MM yyyy')}` : format(period.from, 'dd MM yyyy')) : 'N/A';
     const companyName = "Votre Société S.A."; // Placeholder
     const userName = "Utilisateur Unikorp"; // Placeholder
     const moduleName = "SKOMPTAB";
@@ -149,7 +149,7 @@ export default function EtatsComptablesJournauxPage() {
 
     const tableBody = Object.values(groupedData).flatMap(lignes => {
         const firstRow = [
-            { content: format(new Date(lignes[0].date), 'dd/MM/yyyy'), rowSpan: lignes.length, styles: { halign: 'center', valign: 'middle' } },
+            { content: format(new Date(lignes[0].date), 'dd MM yyyy'), rowSpan: lignes.length, styles: { halign: 'center', valign: 'middle' } },
             { content: lignes[0].numeroPiece, rowSpan: lignes.length, styles: { halign: 'center', valign: 'middle' } },
             lignes[0].numeroCompte,
             lignes[0].tiers || '-',
@@ -327,7 +327,7 @@ export default function EtatsComptablesJournauxPage() {
                         {journalData.length > 0 ? Object.values(groupedData).map((lignes, groupIndex) => (
                             <React.Fragment key={groupIndex}>
                                 {lignes.map((ligne, ligneIndex) => (
-                                    <TableRow key={`${groupIndex}-${ligneIndex}`} className={groupIndex % 2 !== 0 ? 'bg-muted/30' : ''}>
+                                    <TableRow key={`${groupIndex}-${ligneIndex}`} className={groupIndex % 2 !== 0 ? 'bg-muted' : ''}>
                                         {ligneIndex === 0 && (
                                             <>
                                                 <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
