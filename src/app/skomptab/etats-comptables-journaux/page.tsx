@@ -150,6 +150,7 @@ export default function EtatsComptablesJournauxPage() {
     const tableBody = Object.values(groupedData).flatMap(lignes => {
         const firstRow = [
             { content: format(new Date(lignes[0].date), 'dd/MM/yyyy'), rowSpan: lignes.length, styles: { halign: 'center', valign: 'middle' } },
+            { content: lignes[0].numeroPiece, rowSpan: lignes.length, styles: { halign: 'center', valign: 'middle' } },
             lignes[0].numeroCompte,
             lignes[0].tiers || '-',
             lignes[0].libelleEcriture,
@@ -167,9 +168,9 @@ export default function EtatsComptablesJournauxPage() {
     });
 
     autoTable(doc, {
-        head: [['Date', 'Compte Général', 'Tiers', 'Libellé', 'Débit', 'Crédit']],
+        head: [['Date', 'N° Pièce', 'Compte Général', 'Tiers', 'Libellé', 'Débit', 'Crédit']],
         body: tableBody,
-        foot: [[{content: 'Totaux', colSpan: 4, styles: { halign: 'right' }}, {content: totalDebit.toLocaleString('fr-FR'), styles: {halign: 'center'}}, {content: totalCredit.toLocaleString('fr-FR'), styles: {halign: 'center'}}]],
+        foot: [[{content: 'Totaux', colSpan: 5, styles: { halign: 'right' }}, {content: totalDebit.toLocaleString('fr-FR'), styles: {halign: 'center'}}, {content: totalCredit.toLocaleString('fr-FR'), styles: {halign: 'center'}}]],
         theme: 'striped',
         headStyles: { fillColor: [241, 245, 249], textColor: [45, 55, 72], fontStyle: 'bold', halign: 'center' },
         footStyles: { fillColor: [226, 232, 240], fontStyle: 'bold' },
@@ -286,7 +287,7 @@ export default function EtatsComptablesJournauxPage() {
       
       {/* --- Display Modal --- */}
       <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-        <DialogContent className="max-w-5xl">
+        <DialogContent className="max-w-6xl">
             <DialogHeader>
                 <DialogTitle>Journal - {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</DialogTitle>
                 <DialogDescription>
@@ -314,6 +315,7 @@ export default function EtatsComptablesJournauxPage() {
                     <TableHeader className="sticky top-0 bg-secondary">
                         <TableRow>
                             <TableHead className="w-[120px] text-center">Date</TableHead>
+                            <TableHead className="w-[120px] text-center">N° Pièce</TableHead>
                             <TableHead className="w-[120px] text-center">Compte Général</TableHead>
                             <TableHead className="w-[150px] text-center">Tiers</TableHead>
                             <TableHead className="text-center">Libellé</TableHead>
@@ -327,9 +329,14 @@ export default function EtatsComptablesJournauxPage() {
                                 {lignes.map((ligne, ligneIndex) => (
                                     <TableRow key={`${groupIndex}-${ligneIndex}`} className={groupIndex % 2 !== 0 ? 'bg-muted/30' : ''}>
                                         {ligneIndex === 0 && (
-                                            <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
-                                                {format(new Date(ligne.date), 'dd/MM/yyyy')}
-                                            </TableCell>
+                                            <>
+                                                <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
+                                                    {format(new Date(ligne.date), 'dd/MM/yyyy')}
+                                                </TableCell>
+                                                <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
+                                                    {ligne.numeroPiece}
+                                                </TableCell>
+                                            </>
                                         )}
                                         <TableCell className="text-center font-mono">{ligne.numeroCompte}</TableCell>
                                         <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
@@ -341,19 +348,19 @@ export default function EtatsComptablesJournauxPage() {
                             </React.Fragment>
                         )) : (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
+                                <TableCell colSpan={7} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                     {journalData.length > 0 &&
                       <TableFooter>
                           <TableRow className="bg-secondary">
-                              <TableCell colSpan={4} className="text-center font-bold">Totaux</TableCell>
+                              <TableCell colSpan={5} className="text-center font-bold">Totaux</TableCell>
                               <TableCell className="text-center font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
                               <TableCell className="text-center font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
                           </TableRow>
                           <TableRow>
-                              <TableCell colSpan={4}></TableCell>
+                              <TableCell colSpan={5}></TableCell>
                               <TableCell colSpan={2} className="text-center font-bold">
                                   {totalDebit.toFixed(2) === totalCredit.toFixed(2) ? "Équilibré" : "Déséquilibré"}
                               </TableCell>
