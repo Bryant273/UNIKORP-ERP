@@ -138,8 +138,10 @@ const getNavForPath = (pathname: string) => {
 export function AppSidebar() {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<string[]>([]);
-
+  
   useEffect(() => {
+    // This effect runs only on the client, after the initial render.
+    // This prevents a hydration mismatch.
     const savedState = localStorage.getItem('sidebarOpenSections');
     if (savedState) {
       try {
@@ -155,7 +157,7 @@ export function AppSidebar() {
       // Default for first-time visit
       setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
     }
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount.
 
   const handleValueChange = (value: string[]) => {
     setOpenSections(value);
