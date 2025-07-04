@@ -140,8 +140,27 @@ export function AppSidebar() {
   const [openSections, setOpenSections] = useState<string[]>([]);
 
   useEffect(() => {
-    setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
+    const savedState = localStorage.getItem('sidebarOpenSections');
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        if (Array.isArray(parsedState)) {
+          setOpenSections(parsedState);
+        }
+      } catch (e) {
+        // Fallback to default if data is malformed
+        setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
+      }
+    } else {
+      // Default for first-time visit
+      setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
+    }
   }, []);
+
+  const handleValueChange = (value: string[]) => {
+    setOpenSections(value);
+    localStorage.setItem('sidebarOpenSections', JSON.stringify(value));
+  };
 
   const specialPages = ['/chat', '/notifications', '/settings', '/help'];
   if (pathname === '/' || specialPages.some(p => pathname.startsWith(p))) {
@@ -165,7 +184,12 @@ export function AppSidebar() {
           </Link>
         </div>
         {items.length > 0 && (
-          <Accordion type="multiple" className="w-full px-4" value={openSections} onValueChange={setOpenSections}>
+          <Accordion
+            type="multiple"
+            className="w-full px-4"
+            value={openSections}
+            onValueChange={handleValueChange}
+          >
             {items.map((item) => (
               <AccordionItem value={item.title} key={item.title} className="border-b-0">
                 <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
