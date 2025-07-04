@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -63,9 +64,9 @@ const initialModeles: ModeleSaisie[] = [
     libelle: 'Achat de marchandises',
     description: 'Modèle pour enregistrer un achat simple de marchandises avec TVA.',
     ecritures: [
-      { id: 'e1', numeroCompte: '607000', tiers: '', libelle: 'Achats de marchandises', debit: '', credit: '' },
-      { id: 'e2', numeroCompte: '445660', tiers: '', libelle: 'TVA déductible', debit: '', credit: '' },
-      { id: 'e3', numeroCompte: '401000', tiers: 'FOURNISSEUR', libelle: 'Dette fournisseur', debit: '', credit: '' },
+      { id: 'e1', numeroCompte: '607000', tiers: '', libelle: 'Achats de marchandises', debit: 'MONTANT_HT', credit: '' },
+      { id: 'e2', numeroCompte: '445660', tiers: '', libelle: 'TVA déductible', debit: 'MONTANT_TVA', credit: '' },
+      { id: 'e3', numeroCompte: '401000', tiers: 'FOURNISSEUR', libelle: 'Dette fournisseur', debit: '', credit: 'MONTANT_TTC' },
     ],
   },
   {
@@ -73,9 +74,9 @@ const initialModeles: ModeleSaisie[] = [
     libelle: 'Vente de services',
     description: 'Modèle pour une vente de prestation de services avec TVA.',
     ecritures: [
-        { id: 'e4', numeroCompte: '411000', tiers: 'CLIENT', libelle: 'Créance client', debit: '', credit: '' },
-        { id: 'e5', numeroCompte: '706000', tiers: '', libelle: 'Prestations de services', debit: '', credit: '' },
-        { id: 'e6', numeroCompte: '445710', tiers: '', libelle: 'TVA collectée', debit: '', credit: '' },
+        { id: 'e4', numeroCompte: '411000', tiers: 'CLIENT', libelle: 'Créance client', debit: 'MONTANT_TTC', credit: '' },
+        { id: 'e5', numeroCompte: '706000', tiers: '', libelle: 'Prestations de services', debit: '', credit: 'MONTANT_HT' },
+        { id: 'e6', numeroCompte: '445710', tiers: '', libelle: 'TVA collectée', debit: '', credit: 'MONTANT_TVA' },
     ],
   },
   {
@@ -83,8 +84,8 @@ const initialModeles: ModeleSaisie[] = [
     libelle: 'Paiement des salaires',
     description: 'Enregistrement du paiement des salaires nets.',
     ecritures: [
-        { id: 'e7', numeroCompte: '421000', tiers: '', libelle: 'Personnel - Rémunérations dues', debit: '', credit: '' },
-        { id: 'e8', numeroCompte: '512000', tiers: '', libelle: 'Banque', debit: '', credit: '' },
+        { id: 'e7', numeroCompte: '421000', tiers: '', libelle: 'Personnel - Rémunérations dues', debit: 'SALAIRE_NET', credit: '' },
+        { id: 'e8', numeroCompte: '512000', tiers: '', libelle: 'Banque', debit: '', credit: 'SALAIRE_NET' },
     ],
   },
 ];
@@ -143,8 +144,11 @@ export default function ModeleSaisiePage() {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
   
-  const handleEcritureChange = (index: number, field: keyof Omit<EcritureModele, 'id'>, value: string) => {
+  const handleEcritureChange = (id: string, field: keyof Omit<EcritureModele, 'id'>, value: string) => {
     const newEcritures = [...formData.ecritures];
+    const index = newEcritures.findIndex(e => e.id === id);
+    if (index === -1) return;
+    
     const ecriture = { ...newEcritures[index], [field]: value };
 
     if (field === 'debit' && value) {
@@ -221,8 +225,8 @@ export default function ModeleSaisiePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-center">Libellé</TableHead>
-                  <TableHead className="text-center">Description</TableHead>
+                  <TableHead>Libellé</TableHead>
+                  <TableHead>Description</TableHead>
                   <TableHead className="w-[150px] text-center">Nb. Écritures</TableHead>
                   <TableHead className="w-[150px] text-center">Actions</TableHead>
                 </TableRow>
@@ -230,10 +234,10 @@ export default function ModeleSaisiePage() {
               <TableBody>
                 {modeles.map((modele) => (
                   <TableRow key={modele.id} className="odd:bg-muted/50">
-                    <TableCell className="font-medium text-center">{modele.libelle}</TableCell>
-                    <TableCell className="text-muted-foreground text-center">{modele.description}</TableCell>
+                    <TableCell className="font-medium">{modele.libelle}</TableCell>
+                    <TableCell className="text-muted-foreground">{modele.description}</TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary">{modele.ecritures.length} écritures</Badge>
+                      <Badge variant="secondary">{modele.ecritures.length} lignes</Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -291,11 +295,11 @@ export default function ModeleSaisiePage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[50px] text-center">N°</TableHead>
-                        <TableHead className="text-center">Compte général</TableHead>
-                        <TableHead className="text-center">Tiers</TableHead>
-                        <TableHead className="text-center">Libellé</TableHead>
-                        <TableHead className="w-[150px] text-center">Débit</TableHead>
-                        <TableHead className="w-[150px] text-center">Crédit</TableHead>
+                        <TableHead>Compte général</TableHead>
+                        <TableHead>Tiers</TableHead>
+                        <TableHead>Libellé</TableHead>
+                        <TableHead className="w-[150px]">Débit</TableHead>
+                        <TableHead className="w-[150px]">Crédit</TableHead>
                         <TableHead className="w-[50px] text-center">Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -304,19 +308,19 @@ export default function ModeleSaisiePage() {
                         <TableRow key={ecriture.id} className="odd:bg-muted/50">
                           <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
                           <TableCell>
-                            <Input placeholder="Saisir un compte" value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(index, 'numeroCompte', e.target.value)} disabled={isViewMode} className="text-center"/>
+                            <Input placeholder="Ex: 607000" value={ecriture.numeroCompte} onChange={(e) => handleEcritureChange(ecriture.id, 'numeroCompte', e.target.value)} disabled={isViewMode} />
                           </TableCell>
                           <TableCell>
-                            <Input placeholder="Saisir un tiers" value={ecriture.tiers} onChange={(e) => handleEcritureChange(index, 'tiers', e.target.value)} disabled={isViewMode} className="text-center"/>
+                            <Input placeholder="Ex: FOURNISSEUR" value={ecriture.tiers} onChange={(e) => handleEcritureChange(ecriture.id, 'tiers', e.target.value)} disabled={isViewMode} />
                           </TableCell>
                           <TableCell>
-                            <Input placeholder="Libellé" value={ecriture.libelle} onChange={(e) => handleEcritureChange(index, 'libelle', e.target.value)} disabled={isViewMode} className="text-center"/>
+                            <Input placeholder="Ex: Achats de marchandises" value={ecriture.libelle} onChange={(e) => handleEcritureChange(ecriture.id, 'libelle', e.target.value)} disabled={isViewMode} />
                           </TableCell>
                           <TableCell>
-                            <Input type="number" placeholder="0.00" value={ecriture.debit} onChange={(e) => handleEcritureChange(index, 'debit', e.target.value)} disabled={isViewMode} className="text-center"/>
+                            <Input placeholder="Ex: MONTANT_HT" value={ecriture.debit} onChange={(e) => handleEcritureChange(ecriture.id, 'debit', e.target.value)} disabled={isViewMode} />
                           </TableCell>
                           <TableCell>
-                            <Input type="number" placeholder="0.00" value={ecriture.credit} onChange={(e) => handleEcritureChange(index, 'credit', e.target.value)} disabled={isViewMode} className="text-center"/>
+                            <Input placeholder="Ex: MONTANT_TTC" value={ecriture.credit} onChange={(e) => handleEcritureChange(ecriture.id, 'credit', e.target.value)} disabled={isViewMode} />
                           </TableCell>
                           <TableCell className="text-center">
                             {!isViewMode && (
@@ -332,7 +336,7 @@ export default function ModeleSaisiePage() {
                 </div>
                  {!isViewMode && (
                   <div className="flex justify-start">
-                    <Button type="button" variant="default" size="sm" onClick={addEcritureRow}>
+                    <Button type="button" variant="outline" size="sm" onClick={addEcritureRow}>
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Ajouter une ligne
                     </Button>

@@ -16,8 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -45,7 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Pencil, Trash2, FileText, PlusCircle, Scale, List, Calendar as CalendarIcon } from 'lucide-react';
+import { Eye, Pencil, Trash2, FileText, PlusCircle, List, Calendar as CalendarIcon } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -79,34 +77,21 @@ type EcritureComptable = {
 };
 
 const initialEcritures: EcritureComptable[] = [
-  {
-    id: 1,
-    dateSaisie: '2024-07-20',
-    numeroCompta: 'AC-202407-0001',
-    journal: 'AC',
-    dateOperation: '2024-07-19',
-    numeroPiece: 'F2024-150',
-    libelleOperation: 'Achat de matières premières - Fournisseur A',
-    lignes: [
-      { id: 'l1-1', compte: '601000', tiers: 'FOURN_A', libelle: 'Achat Mat. Prem.', debit: 1500, credit: 0 },
-      { id: 'l1-2', compte: '445660', tiers: '', libelle: 'TVA déductible', debit: 300, credit: 0 },
-      { id: 'l1-3', compte: '401000', tiers: 'FOURN_A', libelle: 'Dette Fournisseur A', debit: 0, credit: 1800 },
-    ],
-  },
-  {
-    id: 2,
-    dateSaisie: '2024-07-21',
-    numeroCompta: 'VE-202407-0003',
-    journal: 'VE',
-    dateOperation: '2024-07-20',
-    numeroPiece: 'FACT-088',
-    libelleOperation: 'Vente de services - Client B',
-    lignes: [
-      { id: 'l2-1', compte: '411000', tiers: 'CLIENT_B', libelle: 'Créance Client B', debit: 2400, credit: 0 },
-      { id: 'l2-2', compte: '706000', tiers: '', libelle: 'Prestation de service', debit: 0, credit: 2000 },
-      { id: 'l2-3', compte: '445710', tiers: '', libelle: 'TVA collectée', debit: 0, credit: 400 },
-    ],
-  },
+  { id: 1, dateSaisie: '2024-07-20', numeroCompta: 'AC-202407-0001', journal: 'AC', dateOperation: '2024-07-19', numeroPiece: 'F2024-150', libelleOperation: 'Achat matières premières', lignes: [] },
+  { id: 2, dateSaisie: '2024-07-21', numeroCompta: 'VE-202407-0003', journal: 'VE', dateOperation: '2024-07-20', numeroPiece: 'FACT-088', libelleOperation: 'Vente de services', lignes: [] },
+  { id: 3, dateSaisie: '2024-07-22', numeroCompta: 'BNP-202407-0010', journal: 'BNP', dateOperation: '2024-07-22', numeroPiece: 'VIR-015', libelleOperation: 'Virement Loyer', lignes: [] },
+  { id: 4, dateSaisie: '2024-07-23', numeroCompta: 'OD-202407-0001', journal: 'OD', dateOperation: '2024-07-23', numeroPiece: 'OD-SAL', libelleOperation: 'Ecriture de salaires', lignes: [] },
+  { id: 5, dateSaisie: '2024-07-24', numeroCompta: 'AC-202407-0002', journal: 'AC', dateOperation: '2024-07-23', numeroPiece: 'F2024-151', libelleOperation: 'Achat fournitures bureau', lignes: [] },
+  { id: 6, dateSaisie: '2024-07-25', numeroCompta: 'VE-202407-0004', journal: 'VE', dateOperation: '2024-07-25', numeroPiece: 'FACT-089', libelleOperation: 'Vente de marchandises', lignes: [] },
+  { id: 7, dateSaisie: '2024-07-26', numeroCompta: 'BNP-202407-0011', journal: 'BNP', dateOperation: '2024-07-26', numeroPiece: 'CHQ-789', libelleOperation: 'Paiement Fournisseur Y', lignes: [] },
+  { id: 8, dateSaisie: '2024-07-27', numeroCompta: 'VE-202407-0005', journal: 'VE', dateOperation: '2024-07-27', numeroPiece: 'FACT-090', libelleOperation: 'Vente de services', lignes: [] },
+  { id: 9, dateSaisie: '2024-07-28', numeroCompta: 'AC-202407-0003', journal: 'AC', dateOperation: '2024-07-28', numeroPiece: 'F2024-152', libelleOperation: 'Achat de logiciels', lignes: [] },
+  { id: 10, dateSaisie: '2024-07-29', numeroCompta: 'BNP-202407-0012', journal: 'BNP', dateOperation: '2024-07-29', numeroPiece: 'DEP-004', libelleOperation: 'Dépôt espèces', lignes: [] },
+  { id: 11, dateSaisie: '2024-07-30', numeroCompta: 'OD-202407-0002', journal: 'OD', dateOperation: '2024-07-30', numeroPiece: 'OD-AMORT', libelleOperation: 'Amortissements mensuels', lignes: [] },
+  { id: 12, dateSaisie: '2024-07-31', numeroCompta: 'VE-202407-0006', journal: 'VE', dateOperation: '2024-07-31', numeroPiece: 'FACT-091', libelleOperation: 'Vente marchandises', lignes: [] },
+  { id: 13, dateSaisie: '2024-08-01', numeroCompta: 'AC-202408-0001', journal: 'AC', dateOperation: '2024-08-01', numeroPiece: 'F2024-153', libelleOperation: 'Achat de services externes', lignes: [] },
+  { id: 14, dateSaisie: '2024-08-02', numeroCompta: 'BNP-202408-0001', journal: 'BNP', dateOperation: '2024-08-02', numeroPiece: 'VIR-016', libelleOperation: 'Paiement impôts', lignes: [] },
+  { id: 15, dateSaisie: '2024-08-03', numeroCompta: 'VE-202408-0001', journal: 'VE', dateOperation: '2024-08-03', numeroPiece: 'FACT-092', libelleOperation: 'Vente de services IT', lignes: [] },
 ];
 
 const defaultEcritureData: Omit<EcritureComptable, 'id' | 'numeroCompta'> = {
@@ -157,6 +142,9 @@ export default function SaisieComptablePage() {
         setEcritures(ecritures.filter(e => e.id !== ecritureToDelete.id));
         setEcritureToDelete(null);
         toast({ title: "Écriture supprimée", description: "L'écriture a été retirée du journal." });
+        if (currentEcritures.length === 1 && currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
     }
   };
 
@@ -227,7 +215,7 @@ export default function SaisieComptablePage() {
     } else {
         const newEcriture: EcritureComptable = {
             id: Date.now(),
-            numeroCompta: `${formData.journal}-${format(new Date(), 'yyyyMM')}-${Math.floor(Math.random() * 999) + 1}`,
+            numeroCompta: `${formData.journal}-${format(new Date(), 'yyyyMM')}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`,
             ...formData,
         };
         setEcritures(prev => [newEcriture, ...prev]);
@@ -266,7 +254,7 @@ export default function SaisieComptablePage() {
               <TableRow>
                 <TableHead className="w-[50px] text-center">#</TableHead>
                 <TableHead>Date de saisie</TableHead>
-                <TableHead>N° Compta</TableHead>
+                <TableHead>N° Saisie</TableHead>
                 <TableHead>Journal</TableHead>
                 <TableHead>Date de l'opération</TableHead>
                 <TableHead>N° Pièce</TableHead>
@@ -421,8 +409,8 @@ export default function SaisieComptablePage() {
                                         <TableCell><Input placeholder="Saisir un compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
                                         <TableCell><Input placeholder="Saisir un tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
                                         <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
-                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
-                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
                                         <TableCell className="text-center">
                                             {!isViewMode && <Button type="button" variant="ghost" size="icon" onClick={() => removeLigne(ligne.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>}
                                         </TableCell>
@@ -446,7 +434,6 @@ export default function SaisieComptablePage() {
                     </div>
                 </div>
                  <DialogFooter className="pt-4 border-t mt-4 gap-2">
-                    {!isViewMode && <Button type="button" variant="outline" className="mr-auto"><Scale className="mr-2 h-4 w-4"/>Équilibrer l'écriture</Button>}
                     <Button type="button" variant="outline" onClick={closeModal}>
                         {isViewMode ? 'Fermer' : 'Annuler'}
                     </Button>

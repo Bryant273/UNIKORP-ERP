@@ -38,12 +38,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Pencil, Trash2, Eye, ShieldCheck, Download } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Eye, ShieldCheck, Download, List, Calendar as CalendarIcon, FileText } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 // --- DATA TYPES & MOCK DATA ---
 
@@ -111,9 +123,21 @@ const initialEcritures: Ecriture[] = [
   },
 ];
 
+const defaultEcritureData: Omit<Ecriture, 'id' | 'statut' | 'saisiePar'> = {
+    dateOperation: new Date().toISOString().split('T')[0],
+    journal: '',
+    numeroPiece: '',
+    libelleOperation: '',
+    lignes: [
+        { id: `line-${Date.now()}-1`, compte: '', tiers: '', libelle: '', debit: 0, credit: 0 },
+        { id: `line-${Date.now()}-2`, compte: '', tiers: '', libelle: '', debit: 0, credit: 0 },
+    ]
+}
+
+
 const calculateTotalsForEcriture = (lignes: LigneEcriture[]) => {
-  const totalDebit = lignes.reduce((acc, l) => acc + l.debit, 0);
-  const totalCredit = lignes.reduce((acc, l) => acc + l.credit, 0);
+  const totalDebit = lignes.reduce((acc, l) => acc + (Number(l.debit) || 0), 0);
+  const totalCredit = lignes.reduce((acc, l) => acc + (Number(l.credit) || 0), 0);
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.001;
   return { totalDebit, totalCredit, isBalanced };
 };
@@ -127,7 +151,7 @@ export default function BrouillardsPage() {
   const [ecritureToValidate, setEcritureToValidate] = useState<Ecriture | null>(null);
   const { toast } = useToast();
   
-  const [formData, setFormData] = useState<Ecriture | null>(null);
+  const [formData, setFormData] = useState<Omit<Ecriture, 'id' | 'statut' | 'saisiePar'>>(defaultEcritureData);
 
   const { totalDebit, totalCredit, isBalanced } = useMemo(() => {
     if (!formData) return { totalDebit: 0, totalCredit: 0, isBalanced: true };
@@ -137,8 +161,15 @@ export default function BrouillardsPage() {
   const resetModalState = () => {
     setIsModalOpen(false);
     setEditingEcriture(null);
-    setFormData(null);
+    setFormData(defaultEcritureData);
     setIsViewMode(false);
+  };
+
+  const handleOpenCreateModal = () => {
+    setEditingEcriture(null);
+    setFormData(defaultEcritureData);
+    setIsViewMode(false);
+    setIsModalOpen(true);
   };
 
   const handleOpenModal = (ecriture: Ecriture, viewMode: boolean) => {
@@ -170,30 +201,59 @@ export default function BrouillardsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData || !editingEcriture) return;
-
     if (!isBalanced) {
       toast({ title: "Déséquilibre", description: "L'écriture doit être équilibrée avant de pouvoir être enregistrée.", variant: "destructive" });
       return;
     }
 
-    setEcritures(ecritures.map(e => e.id === editingEcriture.id ? formData : e));
+    if (editingEcriture) {
+      setEcritures(ecritures.map(e => e.id === editingEcriture.id ? { ...editingEcriture, ...formData } : e));
+      toast({ title: 'Modifications enregistrées', description: 'L\'écriture a été mise à jour dans le brouillard.' });
+    } else {
+        const newEcriture: Ecriture = {
+            id: Date.now(),
+            ...formData,
+            statut: 'brouillard',
+            saisiePar: 'Jean Stagiaire' // Placeholder for current user
+        }
+        setEcritures([newEcriture, ...ecritures]);
+        toast({ title: 'Écriture ajoutée au brouillard.'})
+    }
+    
     resetModalState();
-    toast({ title: 'Modifications enregistrées', description: 'L\'écriture a été mise à jour dans le brouillard.' });
   };
   
   const handleLigneChange = (id: string, field: keyof LigneEcriture, value: string | number) => {
-    if (!formData) return;
-    const newLignes = formData.lignes.map(ligne => {
-      if (ligne.id === id) {
-        const updatedLigne = { ...ligne, [field]: value };
-        if (field === 'debit' && Number(value) > 0) updatedLigne.credit = 0;
-        if (field === 'credit' && Number(value) > 0) updatedLigne.debit = 0;
-        return updatedLigne;
-      }
-      return ligne;
-    });
-    setFormData(prev => prev ? { ...prev, lignes: newLignes } : null);
+    setFormData(prev => {
+        const newLignes = prev.lignes.map(ligne => {
+            if (ligne.id === id) {
+                const updatedLigne = { ...ligne, [field]: value };
+                if (field === 'debit' && Number(value) > 0) updatedLigne.credit = 0;
+                if (field === 'credit' && Number(value) > 0) updatedLigne.debit = 0;
+                return updatedLigne;
+            }
+            return ligne;
+        });
+        return {...prev, lignes: newLignes};
+    })
+  };
+
+  const handleFormChange = (field: keyof Omit<Ecriture, 'id' | 'lignes' | 'statut' | 'saisiePar'>, value: string) => {
+    setFormData(prev => ({...prev, [field]: value}));
+  };
+
+  const addLigne = () => {
+    setFormData(prev => ({
+        ...prev,
+        lignes: [...prev.lignes, { id: `line-${Date.now()}`, compte: '', tiers: '', libelle: '', debit: 0, credit: 0 }]
+    }));
+  };
+
+  const removeLigne = (id: string) => {
+     setFormData(prev => ({
+        ...prev,
+        lignes: prev.lignes.filter(l => l.id !== id)
+    }));
   };
 
   const handleExportPDF = () => {
@@ -232,7 +292,7 @@ export default function BrouillardsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-                <CardTitle className="text-2xl">Brouillard Comptable</CardTitle>
+                <CardTitle className="text-2xl">Saisie & Brouillard</CardTitle>
                 <CardDescription>
                     Consultez, modifiez et validez les écritures comptables avant leur intégration définitive.
                 </CardDescription>
@@ -242,7 +302,7 @@ export default function BrouillardsPage() {
                     <Download className="mr-2 h-4 w-4" />
                     Exporter Brouillard
                 </Button>
-                <Button>
+                <Button onClick={handleOpenCreateModal}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Saisir une nouvelle écriture
                 </Button>
@@ -267,7 +327,7 @@ export default function BrouillardsPage() {
                 const { isBalanced } = calculateTotalsForEcriture(ecriture.lignes);
                 return (
                   <TableRow key={ecriture.id} className="odd:bg-muted/50">
-                    <TableCell>{ecriture.dateOperation}</TableCell>
+                    <TableCell>{new Date(ecriture.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
                     <TableCell className="font-mono">{ecriture.numeroPiece}</TableCell>
                     <TableCell className="font-medium">{ecriture.libelleOperation}</TableCell>
                     <TableCell>{ecriture.saisiePar}</TableCell>
@@ -303,58 +363,112 @@ export default function BrouillardsPage() {
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={resetModalState}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-6xl">
             <form onSubmit={handleSubmit}>
                 <DialogHeader>
-                    <DialogTitle>{isViewMode ? 'Consulter l\'écriture' : 'Modifier l\'écriture'}</DialogTitle>
-                    <DialogDescription>
-                        {isViewMode ? `Détails de l'écriture pour la pièce ${formData?.numeroPiece}.` : 'Modifiez les lignes de l\'écriture. Assurez-vous que l\'écriture est équilibrée.'}
-                    </DialogDescription>
+                    <DialogTitle className='flex items-center gap-2'>
+                        <PlusCircle/>
+                        {isViewMode ? 'Détails de l\'écriture' : editingEcriture ? 'Modifier une écriture' : 'Saisie d\'une écriture'}
+                    </DialogTitle>
                 </DialogHeader>
-                {formData && (
-                  <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
-                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="space-y-1"><Label>Journal</Label><p className="font-semibold">{formData.journal}</p></div>
-                        <div className="space-y-1"><Label>Date Opération</Label><p className="font-semibold">{formData.dateOperation}</p></div>
-                        <div className="space-y-1"><Label>N° Pièce</Label><p className="font-semibold">{formData.numeroPiece}</p></div>
-                        <div className="space-y-1"><Label>Saisi par</Label><p className="font-semibold">{formData.saisiePar}</p></div>
-                     </div>
-                     <div className="space-y-1"><Label>Libellé Opération</Label><p className="font-semibold">{formData.libelleOperation}</p></div>
-                     <Separator/>
-                     <Table>
-                        <TableHeader><TableRow><TableHead>Compte</TableHead><TableHead>Tiers</TableHead><TableHead>Libellé</TableHead><TableHead>Débit</TableHead><TableHead>Crédit</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            {formData.lignes.map(ligne => (
-                                <TableRow key={ligne.id}>
-                                    <TableCell><Input value={ligne.compte} onChange={e => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode}/></TableCell>
-                                    <TableCell><Input value={ligne.tiers} onChange={e => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode}/></TableCell>
-                                    <TableCell><Input value={ligne.libelle} onChange={e => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode}/></TableCell>
-                                    <TableCell><Input type="number" value={ligne.debit || ''} onChange={e => handleLigneChange(ligne.id, 'debit', parseFloat(e.target.value))} disabled={isViewMode}/></TableCell>
-                                    <TableCell><Input type="number" value={ligne.credit || ''} onChange={e => handleLigneChange(ligne.id, 'credit', parseFloat(e.target.value))} disabled={isViewMode}/></TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                     </Table>
-                     <div className="w-full max-w-sm space-y-2 text-sm p-4 border rounded-lg bg-muted/50 ml-auto">
-                        <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)}</span></div>
-                        <Separator/>
-                        <div className={`flex justify-between font-bold ${!isBalanced ? 'text-destructive' : 'text-green-600'}`}>
-                           <span>Solde:</span>
-                           <span className="font-mono">{(totalDebit - totalCredit).toFixed(2)}</span>
+                <div className="py-4 space-y-6 max-h-[70vh] overflow-y-auto pr-4">
+                     {/* General Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                           <Label htmlFor="dateOperation">Date de l'opération *</Label>
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !formData.dateOperation && "text-muted-foreground")} disabled={isViewMode}>
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {formData.dateOperation ? format(new Date(formData.dateOperation), "dd/MM/yyyy") : <span>Choisir une date</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar mode="single" selected={new Date(formData.dateOperation)} onSelect={(date) => handleFormChange('dateOperation', date?.toISOString().split('T')[0] || '')} initialFocus />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="journal">Journal *</Label>
+                            <Select value={formData.journal} onValueChange={(value) => handleFormChange('journal', value)} disabled={isViewMode}>
+                                <SelectTrigger id="journal">
+                                    <SelectValue placeholder="Sélectionnez un journal" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="AC">AC - Achats</SelectItem>
+                                    <SelectItem value="VE">VE - Ventes</SelectItem>
+                                    <SelectItem value="BNP">BNP - Banque</SelectItem>
+                                    <SelectItem value="OD">OD - Opérations diverses</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label>Saisi par</Label>
+                            <Input value={editingEcriture?.saisiePar || 'Jean Stagiaire'} disabled/>
                         </div>
                     </div>
-                  </div>
-                )}
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="numeroPiece">N° Pièce *</Label>
+                          <Input id="numeroPiece" value={formData.numeroPiece} onChange={(e) => handleFormChange('numeroPiece', e.target.value)} disabled={isViewMode}/>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="libelleOperation">Libellé de l'opération *</Label>
+                          <Input id="libelleOperation" value={formData.libelleOperation} onChange={(e) => handleFormChange('libelleOperation', e.target.value)} disabled={isViewMode}/>
+                        </div>
+                    </div>
+                    <Separator/>
+                     <div className="space-y-4">
+                        <h3 className="text-lg font-medium flex items-center gap-2"><List/> Lignes d'écriture</h3>
+                        <div className="border rounded-lg">
+                             <Table>
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px] text-center">N°</TableHead>
+                                    <TableHead className="text-center">Compte général</TableHead>
+                                    <TableHead className="text-center">Tiers</TableHead>
+                                    <TableHead className="text-center">Libellé</TableHead>
+                                    <TableHead className="w-[150px] text-center">Débit</TableHead>
+                                    <TableHead className="w-[150px] text-center">Crédit</TableHead>
+                                    <TableHead className="w-[50px] text-center">Action</TableHead>
+                                </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                 {formData.lignes.map((ligne, index) => (
+                                    <TableRow key={ligne.id}>
+                                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                                        <TableCell><Input placeholder="Saisir un compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Saisir un tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell className="text-center">
+                                            {!isViewMode && <Button type="button" variant="ghost" size="icon" onClick={() => removeLigne(ligne.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>}
+                                        </TableCell>
+                                    </TableRow>
+                                 ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        <div className="flex justify-between items-start">
+                           {!isViewMode && <Button type="button" variant="default" onClick={addLigne} disabled={isViewMode}><PlusCircle className="mr-2 h-4 w-4"/>Ajouter une ligne</Button>}
+                            <div className="w-full max-w-sm space-y-2 text-sm ml-auto">
+                                <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
+                                <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
+                                <Separator/>
+                                <div className={`flex justify-between font-bold ${!isBalanced ? 'text-destructive' : 'text-green-600'}`}>
+                                    <span>Solde:</span>
+                                    <span className="font-mono">{(totalDebit - totalCredit).toFixed(2)} FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <DialogFooter className="pt-4 border-t mt-4">
-                  {isViewMode ? (
-                     <Button type="button" variant="outline" onClick={resetModalState}>Fermer</Button>
-                  ) : (
-                    <>
-                      <Button type="button" variant="outline" onClick={resetModalState}>Annuler</Button>
-                      <Button type="submit" disabled={!isBalanced}>Enregistrer</Button>
-                    </>
-                  )}
+                  <Button type="button" variant="outline" onClick={resetModalState}>
+                      {isViewMode ? 'Fermer' : 'Annuler'}
+                  </Button>
+                  {!isViewMode && <Button type="submit" disabled={!isBalanced}>Enregistrer</Button>}
                 </DialogFooter>
             </form>
         </DialogContent>
