@@ -159,6 +159,7 @@ export default function SaisieComptablePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState(defaultEcritureData);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isFromTemplate, setIsFromTemplate] = useState(false);
   const { toast } = useToast();
 
   const totalPages = Math.ceil(ecritures.length / ITEMS_PER_PAGE);
@@ -195,12 +196,14 @@ export default function SaisieComptablePage() {
     setIsModalOpen(false);
     setEditingEcriture(null);
     setIsViewMode(false);
+    setIsFromTemplate(false);
   }
 
   const handleOpenCreateModal = () => {
     setEditingEcriture(null);
     setFormData(defaultEcritureData);
     setIsViewMode(false);
+    setIsFromTemplate(false);
     setIsModalOpen(true);
   };
 
@@ -284,7 +287,8 @@ export default function SaisieComptablePage() {
     }));
 
     setIsTemplateModalOpen(false);
-    handleOpenCreateModal();
+    setIsFromTemplate(true);
+    setIsModalOpen(true);
   };
 
 
@@ -469,9 +473,9 @@ export default function SaisieComptablePage() {
                                  {formData.lignes.map((ligne, index) => (
                                     <TableRow key={ligne.id}>
                                         <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
-                                        <TableCell><Input placeholder="Saisir un compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
-                                        <TableCell><Input placeholder="Saisir un tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
-                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Saisir un compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode || isFromTemplate} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Saisir un tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode || isFromTemplate} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode || isFromTemplate} className="text-center"/></TableCell>
                                         <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
                                         <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
                                         <TableCell className="text-center">

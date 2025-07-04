@@ -188,6 +188,7 @@ export default function BrouillardsPage() {
   const [ecritureToDelete, setEcritureToDelete] = useState<Ecriture | null>(null);
   const [ecritureToValidate, setEcritureToValidate] = useState<Ecriture | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isFromTemplate, setIsFromTemplate] = useState(false);
   const { toast } = useToast();
   
   const [formData, setFormData] = useState<Omit<Ecriture, 'id' | 'statut' | 'saisiePar'>>(defaultEcritureData);
@@ -202,12 +203,14 @@ export default function BrouillardsPage() {
     setEditingEcriture(null);
     setFormData(defaultEcritureData);
     setIsViewMode(false);
+    setIsFromTemplate(false);
   };
 
   const handleOpenCreateModal = () => {
     setEditingEcriture(null);
     setFormData(defaultEcritureData);
     setIsViewMode(false);
+    setIsFromTemplate(false);
     setIsModalOpen(true);
   };
 
@@ -298,13 +301,11 @@ export default function BrouillardsPage() {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const tableData = ecritures.map(e => {
-        const { isBalanced } = calculateTotalsForEcriture(e.lignes);
         return [
             e.dateOperation,
             e.numeroPiece,
             e.libelleOperation,
             e.saisiePar,
-            isBalanced ? 'Équilibrée' : 'Déséquilibrée',
             e.statut === 'validee' ? 'Validée' : 'En Brouillard'
         ];
     });
@@ -316,7 +317,7 @@ export default function BrouillardsPage() {
     
     autoTable(doc, {
         startY: 35,
-        head: [['Date Op.', 'N° Pièce', 'Libellé', 'Saisi par', 'Équilibre', 'Statut']],
+        head: [['Date Op.', 'N° Pièce', 'Libellé', 'Saisi par', 'Statut']],
         body: tableData,
         theme: 'striped',
         headStyles: { fillColor: [28, 32, 57] },
@@ -342,7 +343,8 @@ export default function BrouillardsPage() {
     }));
 
     setIsTemplateModalOpen(false);
-    handleOpenCreateModal();
+    setIsFromTemplate(true);
+    setIsModalOpen(true);
   };
 
 
@@ -381,7 +383,6 @@ export default function BrouillardsPage() {
                 <TableHead>N° Pièce</TableHead>
                 <TableHead>Libellé</TableHead>
                 <TableHead>Saisi par</TableHead>
-                <TableHead className="text-center">Équilibre</TableHead>
                 <TableHead className="text-center">Statut</TableHead>
                 <TableHead className="w-[180px] text-center">Actions</TableHead>
               </TableRow>
@@ -395,11 +396,6 @@ export default function BrouillardsPage() {
                     <TableCell className="font-mono">{ecriture.numeroPiece}</TableCell>
                     <TableCell className="font-medium">{ecriture.libelleOperation}</TableCell>
                     <TableCell>{ecriture.saisiePar}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={isBalanced ? 'default' : 'destructive'} className={isBalanced ? 'bg-green-100 text-green-800' : ''}>
-                        {isBalanced ? 'Équilibrée' : 'Déséquilibrée'}
-                      </Badge>
-                    </TableCell>
                      <TableCell className="text-center">
                       <Badge variant={ecriture.statut === 'validee' ? 'secondary' : 'default'} className={ecriture.statut === 'validee' ? '' : 'bg-yellow-100 text-yellow-800'}>
                         {ecriture.statut === 'validee' ? 'Validée' : 'En Brouillard'}
@@ -501,9 +497,9 @@ export default function BrouillardsPage() {
                                  {formData.lignes.map((ligne, index) => (
                                     <TableRow key={ligne.id}>
                                         <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
-                                        <TableCell><Input placeholder="Saisir un compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
-                                        <TableCell><Input placeholder="Saisir un tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
-                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Saisir un compte" value={ligne.compte} onChange={(e) => handleLigneChange(ligne.id, 'compte', e.target.value)} disabled={isViewMode || isFromTemplate} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Saisir un tiers" value={ligne.tiers} onChange={(e) => handleLigneChange(ligne.id, 'tiers', e.target.value)} disabled={isViewMode || isFromTemplate} className="text-center"/></TableCell>
+                                        <TableCell><Input placeholder="Libellé" value={ligne.libelle} onChange={(e) => handleLigneChange(ligne.id, 'libelle', e.target.value)} disabled={isViewMode || isFromTemplate} className="text-center"/></TableCell>
                                         <TableCell><Input type="number" placeholder="0.00" value={ligne.debit || ''} onChange={(e) => handleLigneChange(ligne.id, 'debit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
                                         <TableCell><Input type="number" placeholder="0.00" value={ligne.credit || ''} onChange={(e) => handleLigneChange(ligne.id, 'credit', parseFloat(e.target.value))} disabled={isViewMode} className="text-center"/></TableCell>
                                         <TableCell className="text-center">
