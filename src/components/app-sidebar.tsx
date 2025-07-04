@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -76,6 +77,12 @@ const skomptabNav = [
       { title: 'Grand livre général', href: '/skomptab/grand-livre-general', icon: BookCopy },
       { title: 'Grand livre tiers', href: '/skomptab/grand-livre-tiers', icon: BookCopy },
       { title: 'Balance générale', href: '/skomptab/balance-generale', icon: Scale },
+    ]
+  },
+  {
+    title: 'ÉTATS FINANCIERS',
+    icon: BarChartHorizontal,
+    subItems: [
       { title: 'Bilan', href: '/skomptab/bilan', icon: BarChartHorizontal },
       { title: 'Compte de résultat', href: '/skomptab/compte-de-resultat', icon: BarChartHorizontal },
       { title: 'Tableau des SIG', href: '/skomptab/tableau-sig', icon: Table },
@@ -143,10 +150,10 @@ export function AppSidebar() {
           setOpenSections(parsedState);
         }
       } catch (e) {
-        setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
+        setOpenSections(['GESTION', 'ÉTATS COMPTABLES', 'ÉTATS FINANCIERS']);
       }
     } else {
-      setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
+      setOpenSections(['GESTION', 'ÉTATS COMPTABLES', 'ÉTATS FINANCIERS']);
     }
   }, []);
 
