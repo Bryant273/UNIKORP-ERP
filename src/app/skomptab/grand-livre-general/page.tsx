@@ -23,30 +23,30 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 // Mock data
 const MOCK_ECRITURES_LIVRE = [
     // Compte 607000 - Achats de marchandises
-    { id: 1, dateSaisie: '2024-07-01', numeroCompta: 'AC-001', journal: 'AC', dateOperation: '2024-07-01', numeroPiece: 'F001', libelle: 'Achat initial Fournisseur A', compte: '607000', debit: 1500, credit: 0 },
-    { id: 2, dateSaisie: '2024-07-05', numeroCompta: 'AC-002', journal: 'AC', dateOperation: '2024-07-04', numeroPiece: 'F002', libelle: 'Achat complémentaire Fournisseur B', compte: '607000', debit: 750, credit: 0 },
-    { id: 3, dateSaisie: '2024-07-10', numeroCompta: 'AC-005', journal: 'AC', dateOperation: '2024-07-10', numeroPiece: 'F005', libelle: 'Achat Matériel X Fournisseur A', compte: '607000', debit: 2200, credit: 0 },
+    { id: 1, dateSaisie: '2025-01-10', numeroCompta: 'AC-001', journal: 'AC', dateOperation: '2025-01-10', numeroPiece: 'F001', libelle: 'Achat initial Fournisseur A', compte: '607000', debit: 1500, credit: 0 },
+    { id: 2, dateSaisie: '2025-01-15', numeroCompta: 'AC-002', journal: 'AC', dateOperation: '2025-01-14', numeroPiece: 'F002', libelle: 'Achat complémentaire Fournisseur B', compte: '607000', debit: 750, credit: 0 },
+    { id: 3, dateSaisie: '2025-01-20', numeroCompta: 'AC-005', journal: 'AC', dateOperation: '2025-01-20', numeroPiece: 'F005', libelle: 'Achat Matériel X Fournisseur A', compte: '607000', debit: 2200, credit: 0 },
     
     // Compte 706000 - Prestations de services
-    { id: 4, dateSaisie: '2024-07-02', numeroCompta: 'VE-001', journal: 'VE', dateOperation: '2024-07-02', numeroPiece: 'INV001', libelle: 'Service de conseil Client X', compte: '706000', debit: 0, credit: 3000 },
-    { id: 5, dateSaisie: '2024-07-15', numeroCompta: 'VE-002', journal: 'VE', dateOperation: '2024-07-14', numeroPiece: 'INV002', libelle: 'Développement Web Client Y', compte: '706000', debit: 0, credit: 5000 },
+    { id: 4, dateSaisie: '2025-02-02', numeroCompta: 'VE-001', journal: 'VE', dateOperation: '2025-02-02', numeroPiece: 'INV001', libelle: 'Service de conseil Client X', compte: '706000', debit: 0, credit: 3000 },
+    { id: 5, dateSaisie: '2025-02-15', numeroCompta: 'VE-002', journal: 'VE', dateOperation: '2025-02-14', numeroPiece: 'INV002', libelle: 'Développement Web Client Y', compte: '706000', debit: 0, credit: 5000 },
     
     // Compte 445660 - TVA déductible
-    { id: 6, dateSaisie: '2024-07-01', numeroCompta: 'AC-001', journal: 'AC', dateOperation: '2024-07-01', numeroPiece: 'F001', libelle: 'TVA / Achat initial', compte: '445660', debit: 270, credit: 0 },
-    { id: 7, dateSaisie: '2024-07-05', numeroCompta: 'AC-002', journal: 'AC', dateOperation: '2024-07-04', numeroPiece: 'F002', libelle: 'TVA / Achat complémentaire', compte: '445660', debit: 135, credit: 0 },
-    { id: 8, dateSaisie: '2024-07-10', numeroCompta: 'AC-005', journal: 'AC', dateOperation: '2024-07-10', numeroPiece: 'F005', libelle: 'TVA / Achat Matériel X', compte: '445660', debit: 396, credit: 0 },
+    { id: 6, dateSaisie: '2025-01-10', numeroCompta: 'AC-001', journal: 'AC', dateOperation: '2025-01-10', numeroPiece: 'F001', libelle: 'TVA / Achat initial', compte: '445660', debit: 270, credit: 0 },
+    { id: 7, dateSaisie: '2025-01-15', numeroCompta: 'AC-002', journal: 'AC', dateOperation: '2025-01-14', numeroPiece: 'F002', libelle: 'TVA / Achat complémentaire', compte: '445660', debit: 135, credit: 0 },
+    { id: 8, dateSaisie: '2025-01-20', numeroCompta: 'AC-005', journal: 'AC', dateOperation: '2025-01-20', numeroPiece: 'F005', libelle: 'TVA / Achat Matériel X', compte: '445660', debit: 396, credit: 0 },
 
     // Compte 445710 - TVA Collectée
-    { id: 9, dateSaisie: '2024-07-02', numeroCompta: 'VE-001', journal: 'VE', dateOperation: '2024-07-02', numeroPiece: 'INV001', libelle: 'TVA / Service de conseil', compte: '445710', debit: 0, credit: 540 },
-    { id: 10, dateSaisie: '2024-07-15', numeroCompta: 'VE-002', journal: 'VE', dateOperation: '2024-07-14', numeroPiece: 'INV002', libelle: 'TVA / Développement Web', compte: '445710', debit: 0, credit: 900 },
+    { id: 9, dateSaisie: '2025-02-02', numeroCompta: 'VE-001', journal: 'VE', dateOperation: '2025-02-02', numeroPiece: 'INV001', libelle: 'TVA / Service de conseil', compte: '445710', debit: 0, credit: 540 },
+    { id: 10, dateSaisie: '2025-02-15', numeroCompta: 'VE-002', journal: 'VE', dateOperation: '2025-02-14', numeroPiece: 'INV002', libelle: 'TVA / Développement Web', compte: '445710', debit: 0, credit: 900 },
 
     // Compte 512000 - Banque
-    { id: 11, dateSaisie: '2024-07-04', numeroCompta: 'BNP-001', journal: 'BNP', dateOperation: '2024-07-04', numeroPiece: 'PAY001', libelle: 'Paiement Fournisseur A', compte: '512000', debit: 0, credit: 1770 },
-    { id: 12, dateSaisie: '2024-07-18', numeroCompta: 'BNP-002', journal: 'BNP', dateOperation: '2024-07-18', numeroPiece: 'REC001', libelle: 'Réception paiement Client X', compte: '512000', debit: 3540, credit: 0 },
-    { id: 13, dateSaisie: '2024-07-20', numeroCompta: 'BNP-003', journal: 'BNP', dateOperation: '2024-07-20', numeroPiece: 'PAY002', libelle: 'Paiement Fournisseur B', compte: '512000', debit: 0, credit: 885 },
+    { id: 11, dateSaisie: '2025-02-04', numeroCompta: 'BNP-001', journal: 'BNP', dateOperation: '2025-02-04', numeroPiece: 'PAY001', libelle: 'Paiement Fournisseur A', compte: '512000', debit: 0, credit: 1770 },
+    { id: 12, dateSaisie: '2025-02-18', numeroCompta: 'BNP-002', journal: 'BNP', dateOperation: '2025-02-18', numeroPiece: 'REC001', libelle: 'Réception paiement Client X', compte: '512000', debit: 3540, credit: 0 },
+    { id: 13, dateSaisie: '2025-02-20', numeroCompta: 'BNP-003', journal: 'BNP', dateOperation: '2025-02-20', numeroPiece: 'PAY002', libelle: 'Paiement Fournisseur B', compte: '512000', debit: 0, credit: 885 },
 
     // Compte 625000 - Déplacements
-    { id: 14, dateSaisie: '2024-07-25', numeroCompta: 'OD-001', journal: 'OD', dateOperation: '2024-07-25', numeroPiece: 'NDF01', libelle: 'Note de frais Jean D.', compte: '625000', debit: 120, credit: 0 },
+    { id: 14, dateSaisie: '2025-03-25', numeroCompta: 'OD-001', journal: 'OD', dateOperation: '2025-03-25', numeroPiece: 'NDF01', libelle: 'Note de frais Jean D.', compte: '625000', debit: 120, credit: 0 },
 ];
 const MOCK_COMPTES = [
     { numero: '445660', intitule: 'TVA déductible' },
@@ -68,8 +68,8 @@ export default function GrandLivreGeneralPage() {
 
     // Filters
     const [period, setPeriod] = useState<DateRange | undefined>({
-        from: new Date(new Date().getFullYear(), 0, 1),
-        to: new Date(new Date().getFullYear(), 11, 31),
+        from: new Date(2025, 0, 1),
+        to: new Date(2025, 11, 31),
     });
     const [selectedComptes, setSelectedComptes] = useState<string[]>([]);
     
@@ -248,45 +248,49 @@ export default function GrandLivreGeneralPage() {
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
                         {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([compte, ecritures]) => {
-                            let runningBalance = 0;
                             const compteInfo = MOCK_COMPTES.find(c => c.numero === compte);
+                            const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
+                            const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
+                            const solde = totalDebit - totalCredit;
                             return (
                                 <div key={compte}>
-                                    <h3 className="font-semibold text-lg mb-2 bg-muted p-2 rounded-md">
+                                    <h3 className="font-semibold text-lg mb-2 bg-secondary text-secondary-foreground p-2 rounded-md">
                                         Compte: {compte} - {compteInfo?.intitule || 'Inconnu'}
                                     </h3>
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Date Saisie</TableHead>
-                                                <TableHead>N° Saisie</TableHead>
                                                 <TableHead>Date Op.</TableHead>
-                                                <TableHead>N° Pièce</TableHead>
                                                 <TableHead>Journal</TableHead>
+                                                <TableHead>N° Pièce</TableHead>
                                                 <TableHead>Libellé</TableHead>
                                                 <TableHead className="text-right">Débit</TableHead>
                                                 <TableHead className="text-right">Crédit</TableHead>
-                                                <TableHead className="text-right">Solde</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {ecritures.map((ecriture: any) => {
-                                                runningBalance += ecriture.debit - ecriture.credit;
-                                                return (
-                                                    <TableRow key={ecriture.id}>
-                                                        <TableCell>{format(new Date(ecriture.dateSaisie), 'dd/MM/yy')}</TableCell>
-                                                        <TableCell className="font-mono">{ecriture.numeroCompta}</TableCell>
-                                                        <TableCell>{format(new Date(ecriture.dateOperation), 'dd/MM/yy')}</TableCell>
-                                                        <TableCell>{ecriture.numeroPiece}</TableCell>
-                                                        <TableCell>{ecriture.journal}</TableCell>
-                                                        <TableCell>{ecriture.libelle}</TableCell>
-                                                        <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toFixed(2) : ''}</TableCell>
-                                                        <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toFixed(2) : ''}</TableCell>
-                                                        <TableCell className="text-right font-mono font-semibold">{runningBalance.toFixed(2)}</TableCell>
-                                                    </TableRow>
-                                                )
-                                            })}
+                                            {ecritures.map((ecriture: any) => (
+                                                <TableRow key={ecriture.id}>
+                                                    <TableCell>{format(new Date(ecriture.dateOperation), 'dd/MM/yyyy')}</TableCell>
+                                                    <TableCell>{ecriture.journal}</TableCell>
+                                                    <TableCell>{ecriture.numeroPiece}</TableCell>
+                                                    <TableCell>{ecriture.libelle}</TableCell>
+                                                    <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toFixed(2) : ''}</TableCell>
+                                                    <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toFixed(2) : ''}</TableCell>
+                                                </TableRow>
+                                            ))}
                                         </TableBody>
+                                        <TableFooter>
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
+                                                <TableCell className="text-right font-bold font-mono">{totalDebit.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-bold font-mono">{totalCredit.toFixed(2)}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
+                                                <TableCell className="text-right font-bold font-mono">{solde.toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        </TableFooter>
                                     </Table>
                                 </div>
                             )

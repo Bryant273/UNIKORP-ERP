@@ -21,39 +21,41 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock data
-const MOCK_ECRITURES_LIVRE_TIERS = [
-    // FOURN_A
-    { id: 1, dateSaisie: '2024-07-01', numeroCompta: 'AC-001', journal: 'AC', dateOperation: '2024-07-01', numeroPiece: 'F001', libelle: 'Achat initial', compte: '401000', tiers: 'FOURN_A', debit: 0, credit: 1770 },
-    { id: 2, dateSaisie: '2024-07-04', numeroCompta: 'BNP-001', journal: 'BNP', dateOperation: '2024-07-04', numeroPiece: 'PAY001', libelle: 'Paiement F001', compte: '401000', tiers: 'FOURN_A', debit: 1770, credit: 0 },
-    
-    // FOURN_B
-    { id: 3, dateSaisie: '2024-07-05', numeroCompta: 'AC-002', journal: 'AC', dateOperation: '2024-07-04', numeroPiece: 'F002', libelle: 'Achat complémentaire', compte: '401000', tiers: 'FOURN_B', debit: 0, credit: 885 },
-    { id: 4, dateSaisie: '2024-07-20', numeroCompta: 'BNP-003', journal: 'BNP', dateOperation: '2024-07-20', numeroPiece: 'PAY002', libelle: 'Paiement F002', compte: '401000', tiers: 'FOURN_B', debit: 885, credit: 0 },
+type EcritureLivreTiers = {
+    id: number;
+    numeroCompta: string;
+    journal: string;
+    date: string;
+    compteGeneral: string;
+    operation: string;
+    tiersCode: string;
+    tiersLibelle: string;
+    dateEcriture: string;
+    debit: number;
+    credit: number;
+};
+const MOCK_ECRITURES_LIVRE_TIERS: EcritureLivreTiers[] = [
+    // SEFIATOU OLAWNI - Supplier. Two unpaid invoices.
+    { id: 1, numeroCompta: 'AC-2025-001', journal: 'Achats', date: '2025-01-31', compteGeneral: '4011', operation: 'ROULEAUX DE BOBINE ET PINCEAUX', tiersCode: 'SEFIATOU', tiersLibelle: 'SEFIATOU OLAWNI', dateEcriture: '2025-01-31', debit: 0, credit: 17000 },
+    { id: 2, numeroCompta: 'AC-2025-002', journal: 'Achats', date: '2025-02-15', compteGeneral: '4011', operation: 'ACHAT PEINTURE', tiersCode: 'SEFIATOU', tiersLibelle: 'SEFIATOU OLAWNI', dateEcriture: '2025-02-15', debit: 0, credit: 17000 },
 
-    // FOURN_C
-    { id: 5, dateSaisie: '2024-07-12', numeroCompta: 'AC-006', journal: 'AC', dateOperation: '2024-07-12', numeroPiece: 'F006', libelle: 'Achat consommables', compte: '401000', tiers: 'FOURN_C', debit: 0, credit: 450 },
+    // IVOIREWIN - Supplier. Two invoices, both paid. Zero balance.
+    { id: 3, numeroCompta: 'AC-2025-010', journal: 'Achats', date: '2025-02-12', compteGeneral: '4011', operation: 'GASOIL', tiersCode: 'IVOIREWIN', tiersLibelle: 'IVOIREWIN', dateEcriture: '2025-02-12', debit: 0, credit: 655000 },
+    { id: 4, numeroCompta: 'TR-2025-015', journal: 'Trésorerie', date: '2025-02-28', compteGeneral: '4011', operation: 'PAIEMENT FACTURE GASOIL', tiersCode: 'IVOIREWIN', tiersLibelle: 'IVOIREWIN', dateEcriture: '2025-02-28', debit: 655000, credit: 0 },
+    { id: 5, numeroCompta: 'AC-2025-011', journal: 'Achats', date: '2025-03-20', compteGeneral: '4011', operation: 'GASOIL', tiersCode: 'IVOIREWIN', tiersLibelle: 'IVOIREWIN', dateEcriture: '2025-03-20', debit: 0, credit: 655000 },
+    { id: 6, numeroCompta: 'TR-2025-018', journal: 'Trésorerie', date: '2025-03-31', compteGeneral: '4011', operation: 'PAIEMENT FACTURE GASOIL', tiersCode: 'IVOIREWIN', tiersLibelle: 'IVOIREWIN', dateEcriture: '2025-03-31', debit: 655000, credit: 0 },
     
-    // CLIENT_X
-    { id: 6, dateSaisie: '2024-07-02', numeroCompta: 'VE-001', journal: 'VE', dateOperation: '2024-07-02', numeroPiece: 'INV001', libelle: 'Vente de services', compte: '411000', tiers: 'CLIENT_X', debit: 3540, credit: 0 },
-    { id: 7, dateSaisie: '2024-07-18', numeroCompta: 'BNP-002', journal: 'BNP', dateOperation: '2024-07-18', numeroPiece: 'REC001', libelle: 'Réception paiement INV001', compte: '411000', tiers: 'CLIENT_X', debit: 0, credit: 3540 },
-    
-    // CLIENT_Y
-    { id: 8, dateSaisie: '2024-07-15', numeroCompta: 'VE-002', journal: 'VE', dateOperation: '2024-07-14', numeroPiece: 'INV002', libelle: 'Développement Web', compte: '411000', tiers: 'CLIENT_Y', debit: 5900, credit: 0 },
-    { id: 9, dateSaisie: '2024-07-28', numeroCompta: 'BNP-004', journal: 'BNP', dateOperation: '2024-07-28', numeroPiece: 'REC002', libelle: 'Acompte INV002', compte: '411000', tiers: 'CLIENT_Y', debit: 0, credit: 2000 },
-    
-    // CLIENT_Z
-    { id: 10, dateSaisie: '2024-07-19', numeroCompta: 'VE-003', journal: 'VE', dateOperation: '2024-07-19', numeroPiece: 'INV003', libelle: 'Vente Matériel', compte: '411000', tiers: 'CLIENT_Z', debit: 1200, credit: 0 },
+    // CLIENT_ALPHA - Client. One invoice, unpaid.
+    { id: 7, numeroCompta: 'VE-2025-005', journal: 'Ventes', date: '2025-03-10', compteGeneral: '4111', operation: 'VENTE PRESTATION', tiersCode: 'CLIENT_ALPHA', tiersLibelle: 'CLIENT ALPHA', dateEcriture: '2025-03-10', debit: 1200000, credit: 0 },
 ];
+
 const MOCK_TIERS = [
-    { code: 'FOURN_A', intitule: 'Fournisseur A', type: 'Fournisseur' },
-    { code: 'FOURN_B', intitule: 'Fournisseur B', type: 'Fournisseur' },
-    { code: 'FOURN_C', intitule: 'Fournisseur C (Papeterie)', type: 'Fournisseur' },
-    { code: 'CLIENT_X', intitule: 'Client X Solutions', type: 'Client' },
-    { code: 'CLIENT_Y', intitule: 'Client Y Industries', type: 'Client' },
-    { code: 'CLIENT_Z', intitule: 'Client Z Consulting', type: 'Client' },
+    { code: 'SEFIATOU', intitule: 'SEFIATOU OLAWNI', type: 'Fournisseur', compteGeneral: '40110000396' },
+    { code: 'IVOIREWIN', intitule: 'IVOIREWIN', type: 'Fournisseur', compteGeneral: '40110000397' },
+    { code: 'CLIENT_ALPHA', intitule: 'CLIENT ALPHA', type: 'Client', compteGeneral: '41110000101' },
 ];
 
-type GroupedData = Record<string, (typeof MOCK_ECRITURES_LIVRE_TIERS)>;
+type GroupedData = Record<string, EcritureLivreTiers[]>;
 
 export default function GrandLivreTiersPage() {
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
@@ -64,8 +66,8 @@ export default function GrandLivreTiersPage() {
 
     // Filters
     const [period, setPeriod] = useState<DateRange | undefined>({
-        from: new Date(new Date().getFullYear(), 0, 1),
-        to: new Date(new Date().getFullYear(), 11, 31),
+        from: new Date(2025, 0, 1),
+        to: new Date(2025, 11, 31),
     });
     const [selectedTiers, setSelectedTiers] = useState<string[]>([]);
 
@@ -88,10 +90,10 @@ export default function GrandLivreTiersPage() {
         }
 
         const filteredEcritures = MOCK_ECRITURES_LIVRE_TIERS.filter(e => {
-            if (!e.tiers) return false;
-            const dateOp = new Date(e.dateOperation);
+            if (!e.tiersCode) return false;
+            const dateOp = new Date(e.date);
             const inPeriod = period?.from && period?.to && dateOp >= period.from && dateOp <= period.to;
-            const inTiersSelection = selectedTiers.includes(e.tiers);
+            const inTiersSelection = selectedTiers.includes(e.tiersCode);
             return inPeriod && inTiersSelection;
         });
 
@@ -101,17 +103,17 @@ export default function GrandLivreTiersPage() {
         }
 
         const groupedData = filteredEcritures.reduce((acc, ecriture) => {
-            if (ecriture.tiers) {
-                if (!acc[ecriture.tiers]) {
-                    acc[ecriture.tiers] = [];
+            if (ecriture.tiersCode) {
+                if (!acc[ecriture.tiersCode]) {
+                    acc[ecriture.tiersCode] = [];
                 }
-                acc[ecriture.tiers].push(ecriture);
+                acc[ecriture.tiersCode].push(ecriture);
             }
             return acc;
         }, {} as GroupedData);
         
         Object.keys(groupedData).forEach(tiers => {
-            groupedData[tiers].sort((a,b) => new Date(a.dateOperation).getTime() - new Date(b.dateOperation).getTime());
+            groupedData[tiers].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         });
 
         setReportData(groupedData);
@@ -136,29 +138,32 @@ export default function GrandLivreTiersPage() {
 
             const tiersInfo = MOCK_TIERS.find(t => t.code === tiersCode);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Tiers: ${tiersCode} - ${tiersInfo?.intitule || ''}`, 15, finalY + 5);
+            doc.text(`Tiers: ${tiersInfo?.compteGeneral || tiersCode} | ${tiersInfo?.intitule || ''}`, 15, finalY + 5);
             finalY += 10;
             
-            let runningBalance = 0;
-            const tableData = ecritures.map(e => {
-                runningBalance += e.debit - e.credit;
-                return [
-                    format(new Date(e.dateSaisie), 'dd/MM/yy'),
-                    e.numeroCompta,
-                    format(new Date(e.dateOperation), 'dd/MM/yy'),
-                    e.numeroPiece,
-                    e.journal,
-                    e.libelle,
-                    e.debit > 0 ? e.debit.toFixed(2) : '',
-                    e.credit > 0 ? e.credit.toFixed(2) : '',
-                    runningBalance.toFixed(2)
-                ];
-            });
+            const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
+            const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
+            const solde = totalDebit - totalCredit;
+
+            const tableData = ecritures.map(e => [
+                e.numeroCompta,
+                e.journal,
+                format(new Date(e.date), 'dd/MM/yyyy'),
+                e.operation,
+                e.debit > 0 ? e.debit.toLocaleString('fr-FR') : '',
+                e.credit > 0 ? e.credit.toLocaleString('fr-FR') : '',
+            ]);
+            
+            const tableFooter = [
+                ['', '', '', { content: 'Total :', styles: { halign: 'right', fontStyle: 'bold' } }, { content: totalDebit.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } }, { content: totalCredit.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } }],
+                ['', '', '', '', { content: 'Solde :', styles: { halign: 'right', fontStyle: 'bold' } }, { content: solde.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } }],
+            ]
 
             autoTable(doc, {
                 startY: finalY,
-                head: [['Date Saisie', 'N° Saisie', 'Date Op.', 'N° Pièce', 'Journal', 'Libellé', 'Débit', 'Crédit', 'Solde']],
+                head: [['N° Compta', 'Journal', 'Date', 'Opération', 'Débit', 'Crédit']],
                 body: tableData,
+                foot: tableFooter,
                 theme: 'striped',
                 headStyles: { fillColor: [226, 232, 240] },
                 didDrawPage: (data) => {
@@ -260,45 +265,56 @@ export default function GrandLivreTiersPage() {
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
                         {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([tiersCode, ecritures]) => {
-                            let runningBalance = 0;
                             const tiersInfo = MOCK_TIERS.find(t => t.code === tiersCode);
+                            const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
+                            const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
+                            let solde = totalDebit - totalCredit;
+                            // For suppliers (401), a credit balance is expected, so we inverse the logic for display
+                            if (tiersInfo?.compteGeneral.startsWith('401')) {
+                                solde = totalCredit - totalDebit;
+                            }
+
                             return (
-                                <div key={tiersCode}>
-                                    <h3 className="font-semibold text-lg mb-2 bg-muted p-2 rounded-md">
-                                        Tiers: {tiersCode} - {tiersInfo?.intitule || 'Inconnu'}
+                                <div key={tiersCode} className="mb-4 break-inside-avoid">
+                                    <h3 className="font-semibold text-base mb-2 p-2 rounded-md bg-secondary text-secondary-foreground">
+                                        {tiersInfo?.compteGeneral} | {tiersInfo?.intitule}
                                     </h3>
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Date Saisie</TableHead>
-                                                <TableHead>N° Saisie</TableHead>
-                                                <TableHead>Date Op.</TableHead>
-                                                <TableHead>N° Pièce</TableHead>
+                                                <TableHead>N° Compta</TableHead>
                                                 <TableHead>Journal</TableHead>
-                                                <TableHead>Libellé</TableHead>
+                                                <TableHead>Date</TableHead>
+                                                <TableHead>Opération</TableHead>
                                                 <TableHead className="text-right">Débit</TableHead>
                                                 <TableHead className="text-right">Crédit</TableHead>
-                                                <TableHead className="text-right">Solde</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {ecritures.map((ecriture: any) => {
-                                                runningBalance += ecriture.debit - ecriture.credit;
-                                                return (
-                                                    <TableRow key={ecriture.id}>
-                                                        <TableCell>{format(new Date(ecriture.dateSaisie), 'dd/MM/yy')}</TableCell>
-                                                        <TableCell className="font-mono">{ecriture.numeroCompta}</TableCell>
-                                                        <TableCell>{format(new Date(ecriture.dateOperation), 'dd/MM/yy')}</TableCell>
-                                                        <TableCell>{ecriture.numeroPiece}</TableCell>
-                                                        <TableCell>{ecriture.journal}</TableCell>
-                                                        <TableCell>{ecriture.libelle}</TableCell>
-                                                        <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toFixed(2) : ''}</TableCell>
-                                                        <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toFixed(2) : ''}</TableCell>
-                                                        <TableCell className="text-right font-mono font-semibold">{runningBalance.toFixed(2)}</TableCell>
-                                                    </TableRow>
-                                                )
-                                            })}
+                                            {ecritures.map((ecriture: EcritureLivreTiers) => (
+                                                <TableRow key={ecriture.id}>
+                                                    <TableCell className="font-mono text-xs">{ecriture.numeroCompta}</TableCell>
+                                                    <TableCell>{ecriture.journal}</TableCell>
+                                                    <TableCell>{format(new Date(ecriture.date), 'dd/MM/yyyy')}</TableCell>
+                                                    <TableCell>{ecriture.operation}</TableCell>
+                                                    <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                                    <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toLocaleString('fr-FR') : ''}</TableCell>
+                                                </TableRow>
+                                            ))}
                                         </TableBody>
+                                        <TableFooter>
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
+                                                <TableCell className="text-right font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                                <TableCell className="text-right font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
+                                                <TableCell className={`text-right font-bold font-mono ${solde !== 0 ? 'text-red-500' : ''}`}>
+                                                    {solde.toLocaleString('fr-FR')}
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableFooter>
                                     </Table>
                                 </div>
                             )
