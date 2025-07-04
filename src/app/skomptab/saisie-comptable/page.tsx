@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -20,6 +19,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,7 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye } from 'lucide-react';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
@@ -54,7 +63,7 @@ type EcritureComptable = {
   lignes: LigneEcriture[];
 };
 
-const validatedEcritures: EcritureComptable[] = [
+const initialEcritures: EcritureComptable[] = [
   {
     id: 2,
     dateSaisie: '2024-07-21',
@@ -67,6 +76,20 @@ const validatedEcritures: EcritureComptable[] = [
       { id: 'l2-1', compte: '411000', tiers: 'CLIENT_B', libelle: 'Client B', debit: 2400, credit: 0 },
       { id: 'l2-2', compte: '706000', tiers: '', libelle: 'Prestation de service', debit: 0, credit: 2000 },
       { id: 'l2-3', compte: '445710', tiers: '', libelle: 'TVA collectée', debit: 0, credit: 400 },
+    ],
+  },
+    {
+    id: 1,
+    dateSaisie: '2024-07-20',
+    numeroCompta: 'AC-202407-0015',
+    journal: 'AC',
+    dateOperation: '2024-07-19',
+    numeroPiece: 'F24-AC-001',
+    libelleOperation: 'Achat de matières premières - Fournisseur A',
+    lignes: [
+      { id: 'l1-1', compte: '601000', tiers: '', libelle: 'Achat Mat. Prem.', debit: 1500, credit: 0 },
+      { id: 'l1-2', compte: '445660', tiers: '', libelle: 'TVA déductible', debit: 300, credit: 0 },
+      { id: 'l1-3', compte: '401000', tiers: 'FOURN_A', libelle: 'Fournisseur A', debit: 0, credit: 1800 },
     ],
   },
   {
@@ -88,8 +111,9 @@ const validatedEcritures: EcritureComptable[] = [
 const ITEMS_PER_PAGE = 10;
 
 export default function SaisieComptablePage() {
-  const [ecritures, setEcritures] = useState<EcritureComptable[]>(validatedEcritures);
+  const [ecritures, setEcritures] = useState<EcritureComptable[]>(initialEcritures);
   const [viewingEcriture, setViewingEcriture] = useState<EcritureComptable | null>(null);
+  const [ecritureToDelete, setEcritureToDelete] = useState<EcritureComptable | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(ecritures.length / ITEMS_PER_PAGE);
@@ -102,19 +126,22 @@ export default function SaisieComptablePage() {
       setCurrentPage(newPage);
     }
   };
+  
+  const handleDelete = () => {
+    if (ecritureToDelete) {
+        setEcritures(ecritures.filter(e => e.id !== ecritureToDelete.id));
+        setEcritureToDelete(null);
+    }
+  };
 
   return (
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">Saisie Comptable (Grand Livre)</CardTitle>
-              <CardDescription>
-                Consultez les écritures comptables définitives. La saisie et la validation se font depuis la section 'Brouillards'.
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle className="text-2xl">Saisie Comptable (Grand Livre)</CardTitle>
+          <CardDescription>
+            Consultez et gérez les écritures comptables de l'entreprise.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -122,11 +149,11 @@ export default function SaisieComptablePage() {
               <TableRow>
                 <TableHead className="w-[50px] text-center">#</TableHead>
                 <TableHead>Date de saisie</TableHead>
-                <TableHead>N° Compta</TableHead>
+                <TableHead>N° Saisie</TableHead>
                 <TableHead>Journal</TableHead>
                 <TableHead>Date de l'opération</TableHead>
                 <TableHead>N° Pièce</TableHead>
-                <TableHead className="w-[120px] text-center">Actions</TableHead>
+                <TableHead className="w-[180px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -141,10 +168,20 @@ export default function SaisieComptablePage() {
                   <TableCell>{new Date(ecriture.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
                   <TableCell>{ecriture.numeroPiece}</TableCell>
                   <TableCell className="text-center">
-                    <Button variant="ghost" size="icon" onClick={() => setViewingEcriture(ecriture)}>
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">Voir</span>
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => setViewingEcriture(ecriture)}>
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">Voir</span>
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setEcritureToDelete(ecriture)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Supprimer</span>
+                        </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -152,13 +189,13 @@ export default function SaisieComptablePage() {
           </Table>
           {ecritures.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
-              Aucune écriture validée pour le moment.
+              Aucune écriture comptable enregistrée.
             </div>
           )}
         </CardContent>
         <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Total de <span className="font-bold">{ecritures.length}</span> écritures validées.
+            Total de <span className="font-bold">{ecritures.length}</span> écritures.
           </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
@@ -189,19 +226,19 @@ export default function SaisieComptablePage() {
       <Dialog open={!!viewingEcriture} onOpenChange={() => setViewingEcriture(null)}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Détails de l'écriture validée</DialogTitle>
+            <DialogTitle>Détails de l'écriture</DialogTitle>
             <DialogDescription>
-              Consultation d'une écriture comptable définitive.
+              Consultation de l'écriture N°{viewingEcriture?.numeroCompta}.
             </DialogDescription>
           </DialogHeader>
           {viewingEcriture && (
             <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/50">
                 <div className="space-y-1"><Label>Journal</Label><p className="font-semibold">{viewingEcriture.journal}</p></div>
                 <div className="space-y-1"><Label>Date Opération</Label><p className="font-semibold">{viewingEcriture.dateOperation}</p></div>
                 <div className="space-y-1"><Label>N° Pièce</Label><p className="font-semibold">{viewingEcriture.numeroPiece}</p></div>
+                 <div className="space-y-1 col-span-full"><Label>Libellé Opération</Label><p className="font-semibold">{viewingEcriture.libelleOperation}</p></div>
               </div>
-              <div className="space-y-1"><Label>Libellé Opération</Label><p className="font-semibold">{viewingEcriture.libelleOperation}</p></div>
               <Separator />
               <Table>
                 <TableHeader>
@@ -209,18 +246,18 @@ export default function SaisieComptablePage() {
                     <TableHead>Compte</TableHead>
                     <TableHead>Tiers</TableHead>
                     <TableHead>Libellé</TableHead>
-                    <TableHead>Débit</TableHead>
-                    <TableHead>Crédit</TableHead>
+                    <TableHead className="text-right">Débit</TableHead>
+                    <TableHead className="text-right">Crédit</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {viewingEcriture.lignes.map(ligne => (
                     <TableRow key={ligne.id}>
                       <TableCell>{ligne.compte}</TableCell>
-                      <TableCell>{ligne.tiers}</TableCell>
+                      <TableCell>{ligne.tiers || 'N/A'}</TableCell>
                       <TableCell>{ligne.libelle}</TableCell>
-                      <TableCell>{ligne.debit || ''}</TableCell>
-                      <TableCell>{ligne.credit || ''}</TableCell>
+                      <TableCell className="text-right font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
+                      <TableCell className="text-right font-mono">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -232,6 +269,19 @@ export default function SaisieComptablePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+       <AlertDialog open={!!ecritureToDelete} onOpenChange={() => setEcritureToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cette écriture ?</AlertDialogTitle>
+                <AlertDialogDescription>Cette action est irréversible et supprimera définitivement l'écriture comptable.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
