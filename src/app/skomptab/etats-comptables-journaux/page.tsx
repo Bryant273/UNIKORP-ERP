@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -54,10 +55,12 @@ const MOCK_JOURNALS = [
 ];
 
 type LigneJournal = {
-    jour: string;
+    date: string;
     numeroPiece: string;
+    libelleOperation: string;
     numeroCompte: string;
     libelleCompte: string;
+    tiers: string;
     libelleEcriture: string;
     debit: number;
     credit: number;
@@ -66,19 +69,19 @@ type LigneJournal = {
 const generateMockData = (journalCode: string, period: DateRange): LigneJournal[] => {
     if (journalCode === 'AC') {
         return [
-            { jour: '05', numeroPiece: 'F2407-001', numeroCompte: '607000', libelleCompte: 'Achats Marchandises', libelleEcriture: 'Achat Mat. Prem. Fournisseur A', debit: 1200.00, credit: 0 },
-            { jour: '05', numeroPiece: 'F2407-001', numeroCompte: '445660', libelleCompte: 'TVA Déductible', libelleEcriture: 'TVA / Achat Mat. Prem.', debit: 216.00, credit: 0 },
-            { jour: '05', numeroPiece: 'F2407-001', numeroCompte: '401000', libelleCompte: 'Fournisseurs', libelleEcriture: 'Facture Fournisseur A', debit: 0, credit: 1416.00 },
-            { jour: '12', numeroPiece: 'F2407-002', numeroCompte: '601000', libelleCompte: 'Achats Stockés', libelleEcriture: 'Achat Stock Fournisseur B', debit: 3500.00, credit: 0 },
-            { jour: '12', numeroPiece: 'F2407-002', numeroCompte: '445660', libelleCompte: 'TVA Déductible', libelleEcriture: 'TVA / Achat Stock', debit: 630.00, credit: 0 },
-            { jour: '12', numeroPiece: 'F2407-002', numeroCompte: '401000', libelleCompte: 'Fournisseurs', libelleEcriture: 'Facture Fournisseur B', debit: 0, credit: 4130.00 },
+            { date: '2024-07-05', libelleOperation: 'Achat Mat. Prem. Fournisseur A', numeroPiece: 'F2407-001', numeroCompte: '607000', libelleCompte: 'Achats Marchandises', tiers: 'Fournisseur A', libelleEcriture: 'Achat Mat. Prem.', debit: 1200.00, credit: 0 },
+            { date: '2024-07-05', libelleOperation: 'Achat Mat. Prem. Fournisseur A', numeroPiece: 'F2407-001', numeroCompte: '445660', libelleCompte: 'TVA Déductible', tiers: '', libelleEcriture: 'TVA / Achat Mat. Prem.', debit: 216.00, credit: 0 },
+            { date: '2024-07-05', libelleOperation: 'Achat Mat. Prem. Fournisseur A', numeroPiece: 'F2407-001', numeroCompte: '401000', libelleCompte: 'Fournisseurs', tiers: 'Fournisseur A', libelleEcriture: 'Facture Fournisseur A', debit: 0, credit: 1416.00 },
+            { date: '2024-07-12', libelleOperation: 'Achat Stock Fournisseur B', numeroPiece: 'F2407-002', numeroCompte: '601000', libelleCompte: 'Achats Stockés', tiers: 'Fournisseur B', libelleEcriture: 'Achat Stock', debit: 3500.00, credit: 0 },
+            { date: '2024-07-12', libelleOperation: 'Achat Stock Fournisseur B', numeroPiece: 'F2407-002', numeroCompte: '445660', libelleCompte: 'TVA Déductible', tiers: '', libelleEcriture: 'TVA / Achat Stock', debit: 630.00, credit: 0 },
+            { date: '2024-07-12', libelleOperation: 'Achat Stock Fournisseur B', numeroPiece: 'F2407-002', numeroCompte: '401000', libelleCompte: 'Fournisseurs', tiers: 'Fournisseur B', libelleEcriture: 'Facture Fournisseur B', debit: 0, credit: 4130.00 },
         ];
     }
     if (journalCode === 'VE') {
          return [
-            { jour: '08', numeroPiece: 'V2407-015', numeroCompte: '411000', libelleCompte: 'Clients', libelleEcriture: 'Facture Client X', debit: 2400.00, credit: 0 },
-            { jour: '08', numeroPiece: 'V2407-015', numeroCompte: '707000', libelleCompte: 'Ventes Marchandises', libelleEcriture: 'Vente Matériel', debit: 0, credit: 2000.00 },
-            { jour: '08', numeroPiece: 'V2407-015', numeroCompte: '445710', libelleCompte: 'TVA Collectée', libelleEcriture: 'TVA / Vente Matériel', debit: 0, credit: 400.00 },
+            { date: '2024-07-08', libelleOperation: 'Facture Vente Client X', numeroPiece: 'V2407-015', numeroCompte: '411000', libelleCompte: 'Clients', tiers: 'Client X', libelleEcriture: 'Facture Client X', debit: 2400.00, credit: 0 },
+            { date: '2024-07-08', libelleOperation: 'Facture Vente Client X', numeroPiece: 'V2407-015', numeroCompte: '707000', libelleCompte: 'Ventes Marchandises', tiers: '', libelleEcriture: 'Vente Matériel', debit: 0, credit: 2000.00 },
+            { date: '2024-07-08', libelleOperation: 'Facture Vente Client X', numeroPiece: 'V2407-015', numeroCompte: '445710', libelleCompte: 'TVA Collectée', tiers: '', libelleEcriture: 'TVA / Vente Matériel', debit: 0, credit: 400.00 },
         ];
     }
     return [];
@@ -116,6 +119,17 @@ export default function EtatsComptablesJournauxPage() {
   const totalDebit = journalData.reduce((acc, item) => acc + item.debit, 0);
   const totalCredit = journalData.reduce((acc, item) => acc + item.credit, 0);
 
+  const groupedData = useMemo(() => {
+    return journalData.reduce((acc, ligne) => {
+        const key = ligne.numeroPiece;
+        if (!acc[key]) {
+            acc[key] = [];
+        }
+        acc[key].push(ligne);
+        return acc;
+    }, {} as Record<string, LigneJournal[]>);
+  }, [journalData]);
+
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const journalInfo = MOCK_JOURNALS.find(j => j.code === selectedJournal);
@@ -126,16 +140,33 @@ export default function EtatsComptablesJournauxPage() {
     doc.setFontSize(12);
     doc.text(`Période du ${periodString}`, 105, 28, { align: 'center' });
 
+    const tableBody = Object.values(groupedData).flatMap(lignes => {
+      const headerRow = [
+        { 
+          content: `${format(new Date(lignes[0].date), 'dd/MM/yyyy')} | ${lignes[0].numeroPiece} | ${lignes[0].libelleOperation}`,
+          colSpan: 7, 
+          styles: { fontStyle: 'bold', fillColor: [240, 240, 240], textColor: 20 } 
+        }
+      ];
+      const dataRows = lignes.map(ligne => ([
+          '', '', ligne.numeroCompte, ligne.tiers || '-', ligne.libelleEcriture,
+          ligne.debit > 0 ? ligne.debit.toFixed(2) : '',
+          ligne.credit > 0 ? ligne.credit.toFixed(2) : '',
+      ]));
+      return [headerRow, ...dataRows];
+    });
+
+
     autoTable(doc, {
         startY: 35,
-        head: [['Jour', 'N° Pièce', 'N° Compte', 'Libellé Écriture', 'Débit', 'Crédit']],
-        body: journalData.map(l => [l.jour, l.numeroPiece, l.numeroCompte, l.libelleEcriture, l.debit.toFixed(2), l.credit.toFixed(2)]),
-        foot: [['Totaux', '', '', '', totalDebit.toFixed(2), totalCredit.toFixed(2)]],
+        head: [['Date', 'N° Pièce', 'Compte', 'Tiers', 'Libellé', 'Débit', 'Crédit']],
+        body: tableBody,
+        foot: [['', '', '', '', 'Totaux', totalDebit.toFixed(2), totalCredit.toFixed(2)]],
         theme: 'striped',
-        headStyles: { fillColor: [28, 32, 57] },
-        footStyles: { fillColor: [22, 25, 45], fontStyle: 'bold' },
+        headStyles: { fillColor: [28, 32, 57], halign: 'center' },
+        footStyles: { fillColor: [22, 25, 45], fontStyle: 'bold', halign: 'center' },
+        bodyStyles: { halign: 'center' },
         didDrawPage: (data) => {
-            // Footer
             const pageCount = doc.internal.getNumberOfPages();
             doc.setFontSize(10);
             doc.text(`Page ${String(pageCount)}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
@@ -182,21 +213,35 @@ export default function EtatsComptablesJournauxPage() {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="space-y-2">
-                    <Label>Période</Label>
-                     <Popover>
-                        <PopoverTrigger asChild>
-                             <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {period?.from ? (
-                                    period.to ? `${format(period.from, 'dd/MM/yy', { locale: fr })} - ${format(period.to, 'dd/MM/yy', { locale: fr })}` : format(period.from, 'dd/MM/yyyy')
-                                ) : 'Sélectionnez une période'}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="range" selected={period} onSelect={setPeriod} numberOfMonths={2} locale={fr}/>
-                        </PopoverContent>
-                    </Popover>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Date de début</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Date de fin</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
             </div>
             <DialogFooter>
@@ -208,7 +253,7 @@ export default function EtatsComptablesJournauxPage() {
       
       {/* --- Display Modal --- */}
       <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-5xl">
             <DialogHeader>
                 <DialogTitle>Journal - {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</DialogTitle>
                 <DialogDescription>
@@ -219,39 +264,49 @@ export default function EtatsComptablesJournauxPage() {
                  <Table>
                     <TableHeader className="sticky top-0 bg-secondary">
                         <TableRow>
-                            <TableHead className="w-[50px] text-center">Jour</TableHead>
-                            <TableHead className="text-center">N° Pièce</TableHead>
-                            <TableHead className="text-center">N° Compte</TableHead>
-                            <TableHead className="text-center">Libellé écriture</TableHead>
-                            <TableHead className="w-[120px] text-right">Débit</TableHead>
-                            <TableHead className="w-[120px] text-right">Crédit</TableHead>
+                            <TableHead className="w-[100px] text-center">Date</TableHead>
+                            <TableHead className="w-[120px] text-center">N° Pièce</TableHead>
+                            <TableHead className="w-[120px] text-center">Compte</TableHead>
+                            <TableHead className="w-[150px] text-center">Tiers</TableHead>
+                            <TableHead className="text-center">Libellé</TableHead>
+                            <TableHead className="w-[120px] text-center">Débit</TableHead>
+                            <TableHead className="w-[120px] text-center">Crédit</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {journalData.length > 0 ? journalData.map((ligne, index) => (
-                             <TableRow key={index} className="odd:bg-muted/50">
-                                <TableCell className="text-center">{ligne.jour}</TableCell>
-                                <TableCell className="text-center">{ligne.numeroPiece}</TableCell>
-                                <TableCell className="text-center font-mono">{ligne.numeroCompte}</TableCell>
-                                <TableCell className="text-center">{ligne.libelleEcriture}</TableCell>
-                                <TableCell className="text-right font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
-                                <TableCell className="text-right font-mono">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
-                            </TableRow>
+                        {journalData.length > 0 ? Object.entries(groupedData).map(([numeroPiece, lignes]) => (
+                            <React.Fragment key={numeroPiece}>
+                                <TableRow className="bg-muted/50 font-semibold">
+                                    <TableCell className="text-center">{format(new Date(lignes[0].date), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell className="text-center">{numeroPiece}</TableCell>
+                                    <TableCell colSpan={5} className="text-center italic text-muted-foreground">{lignes[0].libelleOperation}</TableCell>
+                                </TableRow>
+                                {lignes.map((ligne, ligneIndex) => (
+                                    <TableRow key={`${numeroPiece}-${ligneIndex}`}>
+                                        <TableCell colSpan={2} />
+                                        <TableCell className="text-center font-mono">{ligne.numeroCompte}</TableCell>
+                                        <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
+                                        <TableCell className="text-center">{ligne.libelleEcriture}</TableCell>
+                                        <TableCell className="text-center font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
+                                        <TableCell className="text-center font-mono">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </React.Fragment>
                         )) : (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
+                                <TableCell colSpan={7} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                     {journalData.length > 0 &&
                       <TableFooter>
                           <TableRow className="bg-secondary">
-                              <TableCell colSpan={4} className="text-right font-bold">Totaux</TableCell>
-                              <TableCell className="text-right font-bold font-mono">{totalDebit.toFixed(2)}</TableCell>
-                              <TableCell className="text-right font-bold font-mono">{totalCredit.toFixed(2)}</TableCell>
+                              <TableCell colSpan={5} className="text-center font-bold">Totaux</TableCell>
+                              <TableCell className="text-center font-bold font-mono">{totalDebit.toFixed(2)}</TableCell>
+                              <TableCell className="text-center font-bold font-mono">{totalCredit.toFixed(2)}</TableCell>
                           </TableRow>
                           <TableRow>
-                              <TableCell colSpan={4}></TableCell>
+                              <TableCell colSpan={5}></TableCell>
                               <TableCell colSpan={2} className="text-center font-bold">
                                   {totalDebit.toFixed(2) === totalCredit.toFixed(2) ? "Équilibré" : "Déséquilibré"}
                               </TableCell>
