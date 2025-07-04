@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from '@/components/ui/table';
 import { Calendar as CalendarIcon, Download, ArrowLeft } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -232,17 +232,19 @@ export default function CompteDeResultatPage() {
         const periodString = period?.from ? (period.to ? `${format(period.from, 'dd LLL yyyy', { locale: fr })} au ${format(period.to, 'dd LLL yyyy', { locale: fr })}` : format(period.from, 'dd LLL yyyy', { locale: fr })) : 'N/A';
         
         const tableBody = reportData.map(line => {
-            if (line.value === null) return [{ content: '', colSpan: 2, styles: { minCellHeight: 5 } }];
+            if (line.value === null) return [{ content: '', colSpan: 3, styles: { minCellHeight: 5 } }];
             return [
-                { content: line.label, styles: { fontStyle: (line.isSubTotal || line.isGrandTotal) ? 'bold' : 'normal', cellPadding: { left: 4 + (line.indent || 0) * 8 } } },
+                { content: line.ref, styles: { fontStyle: 'normal', cellWidth: 20 } },
+                { content: line.label, styles: { fontStyle: (line.isSubTotal || line.isGrandTotal) ? 'bold' : 'normal', cellPadding: { left: 4 + (line.indent || 0) * 4 } } },
                 { content: formatAmount(line.value), styles: { halign: 'right', fontStyle: (line.isSubTotal || line.isGrandTotal) ? 'bold' : 'normal' } }
             ];
         });
 
         autoTable(doc, {
+            head: [['Ref.', 'Libellé', 'Valeur']],
             body: tableBody,
-            theme: 'plain',
-            columnStyles: { 1: { cellWidth: 40 } },
+            theme: 'striped',
+            headStyles: { fillColor: [226, 232, 240] },
             didDrawPage: (data) => {
                 doc.setFontSize(9); doc.setTextColor(150);
                 doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
@@ -263,12 +265,17 @@ export default function CompteDeResultatPage() {
             margin: { top: 50 },
             willDrawCell: (data) => {
                 const line = reportData[data.row.index];
-                if (line?.isSubTotal || line?.isGrandTotal) {
-                    doc.setDrawColor(200, 200, 200);
-                    doc.line(data.cell.x, data.cell.y + data.cell.height - 1, data.cell.x + data.cell.width, data.cell.y + data.cell.height - 1);
-                    if (line.isGrandTotal) {
-                        doc.line(data.cell.x, data.cell.y + data.cell.height - 2, data.cell.x + data.cell.width, data.cell.y + data.cell.height - 2);
-                    }
+                if (line?.isSubTotal || line?.isGrandTotal || line?.isEmphasized) {
+                    doc.setFont(undefined, 'bold');
+                }
+                if (line?.isSubTotal && !line.isEmphasized) {
+                    doc.setFillColor(241, 245, 249); // bg-slate-100
+                }
+                 if (line?.isEmphasized) {
+                    doc.setFillColor(226, 232, 240); // bg-slate-200
+                }
+                 if (line?.isGrandTotal) {
+                    doc.setFillColor(203, 213, 225); // bg-slate-300
                 }
             }
         });
@@ -291,7 +298,7 @@ export default function CompteDeResultatPage() {
             </Card>
 
             <Dialog open={modalStep !== 'closed'} onOpenChange={(open) => !open && handleCloseModal()}>
-                <DialogContent className={modalStep === 'display' ? "max-w-3xl" : "sm:max-w-md"}>
+                <DialogContent className={modalStep === 'display' ? "max-w-4xl" : "sm:max-w-md"}>
                     {modalStep === 'selection' && (
                         <>
                             <DialogHeader>
@@ -329,17 +336,26 @@ export default function CompteDeResultatPage() {
                             </DialogHeader>
                             <div className="max-h-[70vh] overflow-y-auto pr-4 border rounded-md">
                                 <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[80px]">Ref.</TableHead>
+                                            <TableHead>Libellé</TableHead>
+                                            <TableHead className="text-right">Valeur</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
                                     <TableBody>
                                         {reportData.map((line) => (
                                             <TableRow key={line.ref || Math.random()} className={cn(
-                                                (line.isSubTotal || line.isGrandTotal) && "font-bold border-t",
-                                                line.isEmphasized && "text-base",
-                                                line.isGrandTotal && "border-t-2"
+                                                (line.isSubTotal || line.isGrandTotal) && "font-bold",
+                                                line.isSubTotal && !line.isEmphasized && "bg-muted/50",
+                                                line.isEmphasized && "bg-secondary",
+                                                line.isGrandTotal && "border-y-2 border-primary/50 bg-primary/10"
                                             )}>
                                                 {line.value === null ? (
-                                                    <TableCell colSpan={2} className="h-4"></TableCell>
+                                                    <TableCell colSpan={3} className="h-4"></TableCell>
                                                 ) : (
                                                     <>
+                                                        <TableCell className="font-mono text-xs">{line.ref}</TableCell>
                                                         <TableCell style={{ paddingLeft: `${1 + (line.indent || 0) * 1.5}rem` }}>
                                                             {line.label}
                                                         </TableCell>
@@ -366,4 +382,3 @@ export default function CompteDeResultatPage() {
         </>
     );
 }
-
