@@ -17,6 +17,8 @@ import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock data
 const MOCK_ECRITURES_LIVRE = [
@@ -47,8 +49,13 @@ export default function GrandLivreGeneralPage() {
         from: new Date(new Date().getFullYear(), 0, 1),
         to: new Date(new Date().getFullYear(), 11, 31),
     });
-    const [compteDebut, setCompteDebut] = useState('');
-    const [compteFin, setCompteFin] = useState('');
+    const [selectedComptes, setSelectedComptes] = useState<string[]>([]);
+    
+    const handleCompteToggle = (compteNumero: string) => {
+        setSelectedComptes(prev => 
+            prev.includes(compteNumero) ? prev.filter(code => code !== compteNumero) : [...prev, compteNumero]
+        );
+    };
 
     useEffect(() => {
         if (isDisplayModalOpen) {
@@ -57,11 +64,16 @@ export default function GrandLivreGeneralPage() {
     }, [isDisplayModalOpen]);
 
     const handleGenerate = () => {
+        if (selectedComptes.length === 0) {
+            toast({ title: "Aucun compte sélectionné", description: "Veuillez sélectionner au moins un compte.", variant: "destructive" });
+            return;
+        }
+
         const filteredEcritures = MOCK_ECRITURES_LIVRE.filter(e => {
             const dateOp = new Date(e.dateOperation);
             const inPeriod = period?.from && period?.to && dateOp >= period.from && dateOp <= period.to;
-            const inCompteRange = (!compteDebut || e.compte >= compteDebut) && (!compteFin || e.compte <= compteFin);
-            return inPeriod && inCompteRange;
+            const inCompteSelection = selectedComptes.includes(e.compte);
+            return inPeriod && inCompteSelection;
         });
 
         if (filteredEcritures.length === 0) {
@@ -162,6 +174,26 @@ export default function GrandLivreGeneralPage() {
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="space-y-2">
+                             <Label>Comptes à afficher</Label>
+                            <ScrollArea className="h-60 rounded-md border p-4">
+                                <div className="space-y-2">
+                                    {MOCK_COMPTES.map(compte => (
+                                        <div key={compte.numero} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`compte-${compte.numero}`}
+                                                checked={selectedComptes.includes(compte.numero)}
+                                                onCheckedChange={() => handleCompteToggle(compte.numero)}
+                                            />
+                                            <Label htmlFor={`compte-${compte.numero}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
+                                                <span className="font-mono text-xs p-1 bg-muted rounded-sm w-20 text-center">{compte.numero}</span>
+                                                <span>{compte.intitule}</span>
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </div>
+                        <div className="space-y-2">
                             <Label>Période</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -174,16 +206,6 @@ export default function GrandLivreGeneralPage() {
                                     <Calendar mode="range" selected={period} onSelect={setPeriod} numberOfMonths={2} locale={fr} />
                                 </PopoverContent>
                             </Popover>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="compteDebut">Compte de début</Label>
-                                <Input id="compteDebut" value={compteDebut} onChange={(e) => setCompteDebut(e.target.value)} placeholder="Ex: 600000" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="compteFin">Compte de fin</Label>
-                                <Input id="compteFin" value={compteFin} onChange={(e) => setCompteFin(e.target.value)} placeholder="Ex: 799999" />
-                            </div>
                         </div>
                     </div>
                     <DialogFooter>

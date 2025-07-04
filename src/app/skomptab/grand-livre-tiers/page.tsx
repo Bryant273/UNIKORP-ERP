@@ -17,6 +17,8 @@ import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock data
 const MOCK_ECRITURES_LIVRE_TIERS = [
@@ -48,8 +50,13 @@ export default function GrandLivreTiersPage() {
         from: new Date(new Date().getFullYear(), 0, 1),
         to: new Date(new Date().getFullYear(), 11, 31),
     });
-    const [tiersDebut, setTiersDebut] = useState('');
-    const [tiersFin, setTiersFin] = useState('');
+    const [selectedTiers, setSelectedTiers] = useState<string[]>([]);
+
+    const handleTierToggle = (tierCode: string) => {
+        setSelectedTiers(prev => 
+            prev.includes(tierCode) ? prev.filter(code => code !== tierCode) : [...prev, tierCode]
+        );
+    };
 
     useEffect(() => {
         if (isDisplayModalOpen) {
@@ -58,12 +65,17 @@ export default function GrandLivreTiersPage() {
     }, [isDisplayModalOpen]);
 
     const handleGenerate = () => {
+        if (selectedTiers.length === 0) {
+            toast({ title: "Aucun tiers sélectionné", description: "Veuillez sélectionner au moins un tiers.", variant: "destructive" });
+            return;
+        }
+
         const filteredEcritures = MOCK_ECRITURES_LIVRE_TIERS.filter(e => {
             if (!e.tiers) return false;
             const dateOp = new Date(e.dateOperation);
             const inPeriod = period?.from && period?.to && dateOp >= period.from && dateOp <= period.to;
-            const inTiersRange = (!tiersDebut || e.tiers >= tiersDebut) && (!tiersFin || e.tiers <= tiersFin);
-            return inPeriod && inTiersRange;
+            const inTiersSelection = selectedTiers.includes(e.tiers);
+            return inPeriod && inTiersSelection;
         });
 
         if (filteredEcritures.length === 0) {
@@ -159,40 +171,63 @@ export default function GrandLivreTiersPage() {
             <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Paramètres du Grand Livre Tiers</DialogTitle>
-                        <DialogDescription>
-                            Choisissez la période et les tiers à afficher.
-                        </DialogDescription>
+                        <DialogTitle>Consultation du Grand Livre Tiers</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="space-y-2">
-                            <Label>Période</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yy')} - ${format(period.to, 'dd/MM/yy')}`: format(period.from, 'dd/MM/yyyy')) : 'Sélectionnez'}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar mode="range" selected={period} onSelect={setPeriod} numberOfMonths={2} locale={fr} />
-                                </PopoverContent>
-                            </Popover>
+                             <Label>Tiers à afficher</Label>
+                            <ScrollArea className="h-60 rounded-md border">
+                                <div className="p-4 space-y-2">
+                                    {MOCK_TIERS.map(tier => (
+                                        <div key={tier.code} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`tier-${tier.code}`}
+                                                checked={selectedTiers.includes(tier.code)}
+                                                onCheckedChange={() => handleTierToggle(tier.code)}
+                                            />
+                                            <Label htmlFor={`tier-${tier.code}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
+                                                <span className="font-mono text-xs w-24 text-center">{tier.code}</span>
+                                                <span>{tier.intitule} ({tier.type.toLowerCase()})</span>
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="tiersDebut">Tiers de début</Label>
-                                <Input id="tiersDebut" value={tiersDebut} onChange={(e) => setTiersDebut(e.target.value)} placeholder="Ex: CLIENT_A" />
+                                <Label>Date de début</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="tiersFin">Tiers de fin</Label>
-                                <Input id="tiersFin" value={tiersFin} onChange={(e) => setTiersFin(e.target.value)} placeholder="Ex: FOURN_Z" />
+                                <Label>Date de fin</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsSelectionModalOpen(false)}>Annuler</Button>
-                        <Button onClick={handleGenerate}>Générer l'état</Button>
+                        <Button onClick={handleGenerate}>Générer</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
