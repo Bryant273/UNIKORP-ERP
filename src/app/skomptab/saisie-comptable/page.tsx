@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -94,6 +95,46 @@ const initialEcritures: EcritureComptable[] = [
   { id: 15, dateSaisie: '2024-08-03', numeroCompta: 'VE-202408-0001', journal: 'VE', dateOperation: '2024-08-03', numeroPiece: 'FACT-092', libelleOperation: 'Vente de services IT', lignes: [] },
 ];
 
+type EcritureModele = {
+  id: string;
+  numeroCompte: string;
+  tiers: string;
+  libelle: string;
+  debit: string;
+  credit: string;
+};
+
+type ModeleSaisie = {
+  id: number;
+  libelle: string;
+  description: string;
+  ecritures: EcritureModele[];
+};
+
+const initialModeles: ModeleSaisie[] = [
+  {
+    id: 1,
+    libelle: 'Achat de marchandises',
+    description: 'Modèle pour enregistrer un achat simple de marchandises avec TVA.',
+    ecritures: [
+      { id: 'e1', numeroCompte: '607000', tiers: '', libelle: 'Achats de marchandises', debit: 'MONTANT_HT', credit: '' },
+      { id: 'e2', numeroCompte: '445660', tiers: '', libelle: 'TVA déductible', debit: 'MONTANT_TVA', credit: '' },
+      { id: 'e3', numeroCompte: '401000', tiers: 'FOURNISSEUR', libelle: 'Dette fournisseur', debit: '', credit: 'MONTANT_TTC' },
+    ],
+  },
+  {
+    id: 2,
+    libelle: 'Vente de services',
+    description: 'Modèle pour une vente de prestation de services avec TVA.',
+    ecritures: [
+        { id: 'e4', numeroCompte: '411000', tiers: 'CLIENT', libelle: 'Créance client', debit: 'MONTANT_TTC', credit: '' },
+        { id: 'e5', numeroCompte: '706000', tiers: '', libelle: 'Prestations de services', debit: '', credit: 'MONTANT_HT' },
+        { id: 'e6', numeroCompte: '445710', tiers: '', libelle: 'TVA collectée', debit: '', credit: 'MONTANT_TVA' },
+    ],
+  },
+];
+
+
 const defaultEcritureData: Omit<EcritureComptable, 'id' | 'numeroCompta'> = {
     dateSaisie: new Date().toISOString().split('T')[0],
     journal: '',
@@ -116,6 +157,7 @@ export default function SaisieComptablePage() {
   const [ecritureToDelete, setEcritureToDelete] = useState<EcritureComptable | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState(defaultEcritureData);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const { toast } = useToast();
 
   const totalPages = Math.ceil(ecritures.length / ITEMS_PER_PAGE);
@@ -224,6 +266,26 @@ export default function SaisieComptablePage() {
     closeModal();
   }
 
+  const handleSelectTemplate = (template: ModeleSaisie) => {
+    const newLignes = template.ecritures.map(e => ({
+        id: `line-${Date.now()}-${e.id}`,
+        compte: e.numeroCompte,
+        tiers: e.tiers,
+        libelle: e.libelle,
+        debit: 0,
+        credit: 0
+    }));
+
+    setFormData(prev => ({
+        ...prev,
+        libelleOperation: template.libelle,
+        lignes: newLignes
+    }));
+
+    setIsTemplateModalOpen(false);
+    handleOpenCreateModal();
+  };
+
 
   return (
     <>
@@ -237,7 +299,7 @@ export default function SaisieComptablePage() {
               </CardDescription>
             </div>
             <div className='flex items-center gap-2'>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => setIsTemplateModalOpen(true)}>
                     <FileText className="mr-2 h-4 w-4" />
                     Utiliser un modèle
                 </Button>
@@ -455,6 +517,28 @@ export default function SaisieComptablePage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Utiliser un modèle de saisie</DialogTitle>
+                <DialogDescription>Sélectionnez un modèle pour pré-remplir une nouvelle écriture.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                {initialModeles.map(modele => (
+                    <Card key={modele.id} className="hover:bg-accent transition-colors">
+                        <CardHeader className="flex flex-row items-center justify-between p-4">
+                            <div>
+                                <h3 className="font-semibold">{modele.libelle}</h3>
+                                <p className="text-sm text-muted-foreground">{modele.description}</p>
+                            </div>
+                            <Button onClick={() => handleSelectTemplate(modele)}>Sélectionner</Button>
+                        </CardHeader>
+                    </Card>
+                ))}
+            </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

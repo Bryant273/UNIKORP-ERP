@@ -72,6 +72,7 @@ const skomptabNav = [
     icon: FileText,
     subItems: [
       { title: 'Journaux', href: '/skomptab/etats-comptables-journaux', icon: BookUser },
+      { title: 'Brouillards', href: '/skomptab/etats-comptables-brouillards', icon: FileSearch },
       { title: 'Grand livre général', href: '/skomptab/grand-livre-general', icon: BookCopy },
       { title: 'Grand livre tiers', href: '/skomptab/grand-livre-tiers', icon: BookCopy },
       { title: 'Balance générale', href: '/skomptab/balance-generale', icon: Scale },
