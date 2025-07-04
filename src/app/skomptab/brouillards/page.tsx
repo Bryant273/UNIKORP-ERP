@@ -2,13 +2,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,7 +43,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Pencil, Trash2, Eye, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Eye, ShieldCheck, Download } from 'lucide-react';
 
 // --- DATA TYPES & MOCK DATA ---
 
@@ -63,6 +64,7 @@ type Ecriture = {
   libelleOperation: string;
   lignes: LigneEcriture[];
   statut: 'brouillard' | 'validee';
+  saisiePar: string;
 };
 
 const initialEcritures: Ecriture[] = [
@@ -78,6 +80,7 @@ const initialEcritures: Ecriture[] = [
       { id: 'l1-3', compte: '401000', tiers: 'FOURN_A', libelle: 'Fournisseur A', debit: 0, credit: 1800 },
     ],
     statut: 'brouillard',
+    saisiePar: 'Jean Stagiaire',
   },
   {
     id: 2,
@@ -91,6 +94,7 @@ const initialEcritures: Ecriture[] = [
       { id: 'l2-3', compte: '445710', tiers: '', libelle: 'TVA collectée', debit: 0, credit: 400 },
     ],
     statut: 'validee',
+    saisiePar: 'Marie Comptable',
   },
   {
     id: 3,
@@ -103,6 +107,7 @@ const initialEcritures: Ecriture[] = [
       { id: 'l3-2', compte: '421000', tiers: '', libelle: 'Personnel - Rémunérations dues', debit: 0, credit: 2300 },
     ],
     statut: 'brouillard',
+    saisiePar: 'Jean Stagiaire',
   },
 ];
 
@@ -191,21 +196,57 @@ export default function BrouillardsPage() {
     setFormData(prev => prev ? { ...prev, lignes: newLignes } : null);
   };
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableData = ecritures.map(e => {
+        const { isBalanced } = calculateTotalsForEcriture(e.lignes);
+        return [
+            e.dateOperation,
+            e.numeroPiece,
+            e.libelleOperation,
+            e.saisiePar,
+            isBalanced ? 'Équilibrée' : 'Déséquilibrée',
+            e.statut === 'validee' ? 'Validée' : 'En Brouillard'
+        ];
+    });
+
+    doc.setFontSize(18);
+    doc.text('État du Brouillard Comptable', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Date d'export: ${new Date().toLocaleDateString('fr-FR')}`, 15, 30);
+    
+    autoTable(doc, {
+        startY: 35,
+        head: [['Date Op.', 'N° Pièce', 'Libellé', 'Saisi par', 'Équilibre', 'Statut']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [28, 32, 57] },
+    });
+
+    doc.save(`etat_brouillard_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <>
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-                <CardTitle className="text-2xl">Saisie & Brouillard Comptable</CardTitle>
+                <CardTitle className="text-2xl">Brouillard Comptable</CardTitle>
                 <CardDescription>
-                    Saisissez, modifiez et validez les écritures comptables avant leur intégration définitive.
+                    Consultez, modifiez et validez les écritures comptables avant leur intégration définitive.
                 </CardDescription>
             </div>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Saisir une nouvelle écriture
-            </Button>
+            <div className='flex items-center gap-2'>
+                <Button variant="outline" onClick={handleExportPDF}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Exporter Brouillard
+                </Button>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Saisir une nouvelle écriture
+                </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -213,9 +254,9 @@ export default function BrouillardsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Date Op.</TableHead>
-                <TableHead>Journal</TableHead>
                 <TableHead>N° Pièce</TableHead>
                 <TableHead>Libellé</TableHead>
+                <TableHead>Saisi par</TableHead>
                 <TableHead className="text-center">Équilibre</TableHead>
                 <TableHead className="text-center">Statut</TableHead>
                 <TableHead className="w-[180px] text-center">Actions</TableHead>
@@ -227,9 +268,9 @@ export default function BrouillardsPage() {
                 return (
                   <TableRow key={ecriture.id} className="odd:bg-muted/50">
                     <TableCell>{ecriture.dateOperation}</TableCell>
-                    <TableCell><Badge variant="outline">{ecriture.journal}</Badge></TableCell>
                     <TableCell className="font-mono">{ecriture.numeroPiece}</TableCell>
                     <TableCell className="font-medium">{ecriture.libelleOperation}</TableCell>
+                    <TableCell>{ecriture.saisiePar}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant={isBalanced ? 'default' : 'destructive'} className={isBalanced ? 'bg-green-100 text-green-800' : ''}>
                         {isBalanced ? 'Équilibrée' : 'Déséquilibrée'}
@@ -272,10 +313,11 @@ export default function BrouillardsPage() {
                 </DialogHeader>
                 {formData && (
                   <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="space-y-1"><Label>Journal</Label><p className="font-semibold">{formData.journal}</p></div>
                         <div className="space-y-1"><Label>Date Opération</Label><p className="font-semibold">{formData.dateOperation}</p></div>
                         <div className="space-y-1"><Label>N° Pièce</Label><p className="font-semibold">{formData.numeroPiece}</p></div>
+                        <div className="space-y-1"><Label>Saisi par</Label><p className="font-semibold">{formData.saisiePar}</p></div>
                      </div>
                      <div className="space-y-1"><Label>Libellé Opération</Label><p className="font-semibold">{formData.libelleOperation}</p></div>
                      <Separator/>

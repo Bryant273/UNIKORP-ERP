@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -108,9 +109,9 @@ export default function SaisieComptablePage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl">Écritures Validées (Grand Livre)</CardTitle>
+              <CardTitle className="text-2xl">Saisie Comptable (Grand Livre)</CardTitle>
               <CardDescription>
-                Consultez les écritures comptables définitives. La saisie se fait depuis la section 'Saisie & Brouillard'.
+                Consultez les écritures comptables définitives. La saisie et la validation se font depuis la section 'Brouillards'.
               </CardDescription>
             </div>
           </div>
