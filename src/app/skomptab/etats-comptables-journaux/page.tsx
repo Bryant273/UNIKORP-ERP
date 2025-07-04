@@ -134,11 +134,11 @@ export default function EtatsComptablesJournauxPage() {
     const doc = new jsPDF();
     const journalInfo = MOCK_JOURNALS.find(j => j.code === selectedJournal);
     const periodString = period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A';
-    
-    doc.setFontSize(18);
-    doc.text(`Journal des Opérations - ${journalInfo?.intitule || ''}`, 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`Période du ${periodString}`, 105, 28, { align: 'center' });
+    const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+    const companyName = "Votre Société S.A."; // Placeholder
+    const userName = "Utilisateur Unikorp"; // Placeholder
+    const moduleName = "SKOMPTAB";
+    const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
 
     const tableBody = Object.values(groupedData).flatMap(lignes => {
         const firstRow = [
@@ -160,7 +160,6 @@ export default function EtatsComptablesJournauxPage() {
     });
 
     autoTable(doc, {
-        startY: 35,
         head: [['Date', 'Compte Général', 'Tiers', 'Libellé', 'Débit', 'Crédit']],
         body: tableBody,
         foot: [[{content: 'Totaux', colSpan: 4, styles: { halign: 'right' }}, {content: totalDebit.toLocaleString('fr-FR'), styles: {halign: 'center'}}, {content: totalCredit.toLocaleString('fr-FR'), styles: {halign: 'center'}}]],
@@ -169,10 +168,35 @@ export default function EtatsComptablesJournauxPage() {
         footStyles: { fillColor: [226, 232, 240], fontStyle: 'bold' },
         bodyStyles: { halign: 'center' },
         didDrawPage: (data) => {
-            const pageCount = doc.internal.getNumberOfPages();
-            doc.setFontSize(10);
-            doc.text(`Page ${String(pageCount)}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-        }
+            // Header
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text(`Imprimé depuis UNIKORP - ${moduleName}`, 20, 15);
+            doc.setDrawColor(220);
+            doc.line(20, 18, 190, 18);
+
+            doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.setFont('helvetica', 'bold');
+            doc.text(companyName, 35, 28);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            doc.text(`Journal : ${journalInfo?.intitule || 'N/A'}`, 190, 25, { align: 'right' });
+            doc.text(`Période : ${periodString}`, 190, 30, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, 190, 35, { align: 'right' });
+            doc.text(`Par : ${userName}`, 190, 40, { align: 'right' });
+
+            // Footer
+            const pageCountTotal = doc.internal.getNumberOfPages();
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+        },
+        margin: { top: 50 }
     });
 
     doc.save(`journal_${selectedJournal}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
