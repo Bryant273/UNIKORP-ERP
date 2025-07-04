@@ -18,20 +18,22 @@ type BilanType = 'comptable' | 'fonctionnel' | 'financier';
 
 type BilanLigne = {
     libelle: string;
-    montant: number | null;
+    brut?: number | null;
+    amortissement?: number | null;
+    net?: number | null;
+    netN1?: number | null;
+    isHeader?: boolean;
     isSubTitle?: boolean;
     isSubItem?: boolean;
+    isTotal?: boolean;
+    isGrandTotal?: boolean;
+    isFootnote?: boolean;
 };
 
-type BilanSectionData = {
-    titre: string;
-    lignes: BilanLigne[];
-    total: number;
-};
 
 type BilanData = {
-    actif: BilanSectionData[];
-    passif: BilanSectionData[];
+    actif: BilanLigne[];
+    passif: BilanLigne[];
     totalActif: number;
     totalPassif: number;
 };
@@ -39,63 +41,42 @@ type BilanData = {
 // --- MOCK DATA ---
 const MOCK_BILAN_COMPTABLE_2025: BilanData = {
     actif: [
-        {
-            titre: 'ACTIF IMMOBILISÉ',
-            lignes: [
-                { libelle: 'Immobilisations incorporelles', montant: null, isSubTitle: true },
-                { libelle: "Frais de recherche et développement", montant: 15000, isSubItem: true },
-                { libelle: 'Concessions, brevets, licences', montant: 60000, isSubItem: true },
-                { libelle: 'Immobilisations corporelles', montant: null, isSubTitle: true },
-                { libelle: 'Terrains', montant: 100000, isSubItem: true },
-                { libelle: 'Constructions', montant: 200000, isSubItem: true },
-                { libelle: 'Immobilisations financières', montant: null, isSubTitle: true },
-                { libelle: 'Participations', montant: 25000, isSubItem: true },
-            ],
-            total: 400000,
-        },
-        {
-            titre: 'ACTIF CIRCULANT',
-            lignes: [
-                 { libelle: 'Stocks et en-cours', montant: 85000, isSubTitle: true },
-                 { libelle: 'Créances', montant: null, isSubTitle: true },
-                 { libelle: 'Créances clients et comptes rattachés', montant: 150000, isSubItem: true },
-                 { libelle: 'Disponibilités', montant: 95000, isSubTitle: true },
-            ],
-            total: 330000,
-        },
-        {
-            titre: 'COMPTE DE RÉGULARISATION',
-            lignes: [
-                { libelle: 'Charges à répartir', montant: 20000, isSubItem: true },
-            ],
-            total: 20000
-        }
+        { libelle: 'ACTIF IMMOBILISÉ', isHeader: true },
+        { libelle: 'Immobilisations incorporelles', isSubTitle: true },
+        { libelle: 'Frais de recherche et développement', isSubItem: true, brut: 20000, amortissement: 5000, net: 15000, netN1: 10000 },
+        { libelle: 'Concessions, brevets, licences...', isSubItem: true, brut: 70000, amortissement: 10000, net: 60000, netN1: 50000 },
+        { libelle: 'Immobilisations corporelles', isSubTitle: true },
+        { libelle: 'Terrains', isSubItem: true, brut: 100000, amortissement: 0, net: 100000, netN1: 100000 },
+        { libelle: 'Constructions', isSubItem: true, brut: 250000, amortissement: 50000, net: 200000, netN1: 180000 },
+        { libelle: 'Immobilisations financières', isSubTitle: true },
+        { libelle: 'Participations', isSubItem: true, brut: 25000, amortissement: 0, net: 25000, netN1: 20000 },
+        { libelle: 'Total I', isTotal: true, brut: 465000, amortissement: 65000, net: 400000, netN1: 360000 },
+
+        { libelle: 'ACTIF CIRCULANT', isHeader: true },
+        { libelle: 'Stocks et en-cours', isSubTitle: true, brut: 85000, amortissement: 0, net: 85000, netN1: 80000 },
+        { libelle: 'Créances', isSubTitle: true },
+        { libelle: 'Créances clients et comptes rattachés', isSubItem: true, brut: 150000, amortissement: 0, net: 150000, netN1: 140000 },
+        { libelle: 'Disponibilités', isSubTitle: true, brut: 95000, amortissement: 0, net: 95000, netN1: 100000 },
+        { libelle: 'Total II', isTotal: true, brut: 330000, amortissement: 0, net: 330000, netN1: 320000 },
+        
+        { libelle: 'Charges constatées d\'avance', isSubTitle: true, brut: 20000, amortissement: 0, net: 20000, netN1: 15000 },
+        
+        { libelle: 'TOTAL ACTIF', isGrandTotal: true, brut: 815000, amortissement: 65000, net: 750000, netN1: 695000 },
     ],
     passif: [
-        {
-            titre: 'CAPITAUX PROPRES',
-            lignes: [
-                { libelle: 'Capital social', montant: 200000, isSubItem: true },
-                { libelle: 'Réserves', montant: 150000, isSubItem: true },
-                { libelle: "Résultat de l'exercice", montant: 80000, isSubItem: true },
-            ],
-            total: 430000,
-        },
-        {
-            titre: 'PROVISIONS POUR RISQUES ET CHARGES',
-            lignes: [
-                { libelle: 'Provisions pour risques', montant: 10000, isSubItem: true },
-            ],
-            total: 10000,
-        },
-        {
-            titre: 'DETTES',
-            lignes: [
-                { libelle: 'Dettes financières', montant: 200000, isSubTitle: true },
-                { libelle: 'Dettes fournisseurs', montant: 110000, isSubTitle: true },
-            ],
-            total: 310000,
-        },
+        { libelle: 'CAPITAUX PROPRES', isHeader: true },
+        { libelle: 'Capital social ou individuel', isSubTitle: true, net: 200000, netN1: 200000 },
+        { libelle: 'Réserves', isSubTitle: true },
+        { libelle: 'Réserve légale', isSubItem: true, net: 20000, netN1: 15000 },
+        { libelle: 'Autres réserves', isSubItem: true, net: 130000, netN1: 100000 },
+        { libelle: "Résultat de l'exercice", isSubTitle: true, net: 80000, netN1: 75000 },
+        { libelle: 'Total I', isTotal: true, net: 430000, netN1: 390000 },
+        { libelle: 'DETTES', isHeader: true },
+        { libelle: 'Dettes financières', isSubTitle: true, net: 200000, netN1: 220000 },
+        { libelle: 'Dettes fournisseurs', isSubTitle: true, net: 110000, netN1: 105000 },
+        { libelle: 'Dettes fiscales et sociales', isSubTitle: true, net: 10000, netN1: 10000 },
+        { libelle: 'Total II', isTotal: true, net: 320000, netN1: 335000 },
+        { libelle: 'TOTAL PASSIF', isGrandTotal: true, net: 750000, netN1: 725000 },
     ],
     totalActif: 750000,
     totalPassif: 750000,
@@ -107,6 +88,11 @@ const getBilanData = (year: string, type: BilanType): BilanData | null => {
     }
     return null;
 };
+
+const formatAmount = (amount?: number | null) => {
+    if (amount === null || amount === undefined) return '';
+    return amount.toLocaleString('fr-FR');
+}
 
 export default function BilanPage() {
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
@@ -148,27 +134,33 @@ export default function BilanPage() {
         const moduleName = "SKOMPTAB";
         const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
         const reportTitle = `Bilan comptable - Exercice ${selectedYear}`;
-        const headStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const };
+        
+        const headStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const, lineWidth: 0.1 };
+        const bodyStyles = { lineWidth: 0.1 };
+        const footStyles = { fillColor: '#e2e8f0', textColor: '#1e293b', fontStyle: 'bold' as const, lineWidth: 0.1 };
 
-        const generateColumnBody = (sections: BilanSectionData[]) => {
-            const body: any[] = [];
-            sections.forEach(section => {
-                body.push([{ content: section.titre, styles: { fontStyle: 'bold', fillColor: '#f1f5f9' } }, { content: section.total.toLocaleString('fr-FR'), styles: { halign: 'right' as const, fontStyle: 'bold', fillColor: '#f1f5f9' } }]);
-                section.lignes.forEach(ligne => {
-                    if (ligne.isSubTitle) {
-                        body.push([{ content: `  ${ligne.libelle}`, colSpan: 2, styles: { fontStyle: 'bold' as const } }]);
-                    } else {
-                        body.push([
-                            `    ${ligne.libelle}`,
-                            { content: ligne.montant?.toLocaleString('fr-FR'), styles: { halign: 'right' as const } }
-                        ]);
-                    }
-                });
+        const generateTableBody = (lignes: BilanLigne[], isActif: boolean) => {
+            return lignes.map(ligne => {
+                const libelleCell = { content: ligne.libelle, styles: { fontStyle: (ligne.isHeader || ligne.isTotal || ligne.isGrandTotal) ? 'bold' : 'normal', cellWidth: isActif ? 50: 80 }};
+                if(isActif) {
+                    return [
+                        libelleCell,
+                        { content: formatAmount(ligne.brut), styles: { halign: 'right' as const } },
+                        { content: formatAmount(ligne.amortissement), styles: { halign: 'right' as const } },
+                        { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+                        { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
+                    ];
+                }
+                return [
+                    libelleCell,
+                    { content: formatAmount(ligne.net), styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+                    { content: formatAmount(ligne.netN1), styles: { halign: 'right' as const } }
+                ];
             });
-            return body;
         };
-        const actifBody = generateColumnBody(reportData.actif);
-        const passifBody = generateColumnBody(reportData.passif);
+
+        const actifBody = generateTableBody(reportData.actif, true);
+        const passifBody = generateTableBody(reportData.passif, false);
 
         // Header
         doc.setFontSize(9);
@@ -192,27 +184,32 @@ export default function BilanPage() {
 
         // Actif Table
         autoTable(doc, {
-            head: [['ACTIF', '']],
+            head: [['ACTIF', 'Brut', 'Amort.', 'Net', 'Net N-1']],
             body: actifBody,
-            foot: [[{content: 'TOTAL ACTIF', styles: headStyles }, { content: reportData.totalActif.toLocaleString('fr-FR'), styles: {...headStyles, halign: 'right'} }]],
             theme: 'grid',
             headStyles: headStyles,
-            tableWidth: 85,
+            bodyStyles: bodyStyles,
+            footStyles: footStyles,
             startY: 50,
+            tableWidth: 180,
             margin: { left: 15 }
         });
 
-        // Passif Table
+        // Passif Table - needs to be on a new page or below
+        const finalY = (doc as any).lastAutoTable.finalY || 50;
+
         autoTable(doc, {
-            head: [['PASSIF', '']],
+            head: [['PASSIF', 'Net', 'Net N-1']],
             body: passifBody,
-            foot: [[{ content: 'TOTAL PASSIF', styles: headStyles }, { content: reportData.totalPassif.toLocaleString('fr-FR'), styles: {...headStyles, halign: 'right'} }]],
             theme: 'grid',
             headStyles: headStyles,
-            tableWidth: 85,
-            startY: 50,
-            margin: { left: 110 }
+            bodyStyles: bodyStyles,
+            footStyles: footStyles,
+            startY: finalY + 10,
+            tableWidth: 180,
+            margin: { left: 15 }
         });
+
 
         doc.save(`bilan_${selectedType}_${selectedYear}.pdf`);
     };
@@ -277,55 +274,55 @@ export default function BilanPage() {
                         </DialogDescription>
                     </DialogHeader>
                     {reportData ? (
-                         <div className="max-h-[70vh] overflow-y-auto p-4 border rounded-md bg-muted/20">
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         <div className="max-h-[70vh] overflow-y-auto p-2 border rounded-md bg-muted/20">
+                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Actif Column */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold text-center border-b-2 pb-2 mb-4" style={{borderColor: 'hsl(var(--primary))'}}>ACTIF</h3>
-                                    {reportData.actif.map((section, index) => (
-                                        <div key={index} className="space-y-1">
-                                            <div className="flex justify-between font-bold bg-secondary p-2 rounded-t-md text-secondary-foreground">
-                                                <span>{section.titre}</span>
-                                                <span>{section.total.toLocaleString('fr-FR')}</span>
-                                            </div>
-                                            <div className="border border-t-0 rounded-b-md p-2 space-y-1">
-                                                {section.lignes.map((ligne, idx) => (
-                                                    <div key={idx} className={cn("flex justify-between text-sm", ligne.isSubItem && "pl-4")}>
-                                                        <span className={cn(ligne.isSubTitle && "font-semibold")}>{ligne.libelle}</span>
-                                                        {ligne.montant !== null && <span className="font-mono">{ligne.montant.toLocaleString('fr-FR')}</span>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="flex justify-between font-bold text-lg p-3 bg-primary/10 rounded-md mt-4">
-                                        <span>TOTAL ACTIF</span>
-                                        <span className="font-mono">{reportData.totalActif.toLocaleString('fr-FR')}</span>
-                                    </div>
+                                <div className="space-y-2">
+                                    <h3 className="text-lg font-bold text-center border-b-2 pb-1 mb-2">ACTIF</h3>
+                                    <table className="w-full text-xs">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left py-1 font-semibold w-1/2">Libellé</th>
+                                                <th className="text-right py-1 font-semibold">Brut</th>
+                                                <th className="text-right py-1 font-semibold">Amort.</th>
+                                                <th className="text-right py-1 font-semibold">Net</th>
+                                                <th className="text-right py-1 font-semibold">Net N-1</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {reportData.actif.map((ligne, idx) => (
+                                                <tr key={idx} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.brut)}</td>
+                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.amortissement)}</td>
+                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                                 {/* Passif Column */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold text-center border-b-2 pb-2 mb-4" style={{borderColor: 'hsl(var(--primary))'}}>PASSIF</h3>
-                                    {reportData.passif.map((section, index) => (
-                                        <div key={index} className="space-y-1">
-                                            <div className="flex justify-between font-bold bg-secondary p-2 rounded-t-md text-secondary-foreground">
-                                                <span>{section.titre}</span>
-                                                <span>{section.total.toLocaleString('fr-FR')}</span>
-                                            </div>
-                                            <div className="border border-t-0 rounded-b-md p-2 space-y-1">
-                                                {section.lignes.map((ligne, idx) => (
-                                                    <div key={idx} className={cn("flex justify-between text-sm", ligne.isSubItem && "pl-4")}>
-                                                        <span className={cn(ligne.isSubTitle && "font-semibold")}>{ligne.libelle}</span>
-                                                        {ligne.montant !== null && <span className="font-mono">{ligne.montant.toLocaleString('fr-FR')}</span>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="flex justify-between font-bold text-lg p-3 bg-primary/10 rounded-md mt-4">
-                                        <span>TOTAL PASSIF</span>
-                                        <span className="font-mono">{reportData.totalPassif.toLocaleString('fr-FR')}</span>
-                                    </div>
+                                <div className="space-y-2">
+                                     <h3 className="text-lg font-bold text-center border-b-2 pb-1 mb-2">PASSIF</h3>
+                                     <table className="w-full text-xs">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left py-1 font-semibold w-3/4">Libellé</th>
+                                                <th className="text-right py-1 font-semibold">Net</th>
+                                                <th className="text-right py-1 font-semibold">Net N-1</th>
+                                            </tr>
+                                        </thead>
+                                         <tbody>
+                                            {reportData.passif.map((ligne, idx) => (
+                                                <tr key={idx} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2", ligne.isGrandTotal && "font-extrabold text-sm pt-2")}>{ligne.libelle}</td>
+                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                              </div>
                          </div>
