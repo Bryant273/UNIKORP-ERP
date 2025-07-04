@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -44,6 +44,7 @@ import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Logo } from '@/components/logo';
 
 
 // MOCK DATA
@@ -99,7 +100,14 @@ export default function EtatsComptablesJournauxPage() {
   });
   
   const [journalData, setJournalData] = useState<LigneJournal[]>([]);
+  const [printDateTime, setPrintDateTime] = useState('');
   const { toast } = useToast();
+  
+  useEffect(() => {
+    if (isDisplayModalOpen) {
+        setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
+    }
+  }, [isDisplayModalOpen]);
 
   const handleShowJournal = () => {
     if (!selectedJournal || !period?.from) {
@@ -134,7 +142,6 @@ export default function EtatsComptablesJournauxPage() {
     const doc = new jsPDF();
     const journalInfo = MOCK_JOURNALS.find(j => j.code === selectedJournal);
     const periodString = period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A';
-    const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
     const companyName = "Votre Société S.A."; // Placeholder
     const userName = "Utilisateur Unikorp"; // Placeholder
     const moduleName = "SKOMPTAB";
@@ -287,6 +294,23 @@ export default function EtatsComptablesJournauxPage() {
                 </DialogDescription>
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto pr-4">
+                 <div className="mb-6">
+                    <p className="text-xs text-muted-foreground">Imprimé depuis UNIKORP - SKOMPTAB</p>
+                    <div className="flex justify-between items-start mt-2 p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                            <Logo className="h-12 w-12 text-primary"/>
+                            <div>
+                                <p className="font-bold">Votre Société S.A.</p>
+                            </div>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground">
+                            <p><span className="font-semibold text-foreground">Journal :</span> {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</p>
+                            <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                            <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                            <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
+                        </div>
+                    </div>
+                </div>
                  <Table>
                     <TableHeader className="sticky top-0 bg-secondary">
                         <TableRow>
@@ -302,7 +326,7 @@ export default function EtatsComptablesJournauxPage() {
                         {journalData.length > 0 ? Object.values(groupedData).map((lignes, groupIndex) => (
                             <React.Fragment key={groupIndex}>
                                 {lignes.map((ligne, ligneIndex) => (
-                                    <TableRow key={`${groupIndex}-${ligneIndex}`} className="even:bg-muted/30">
+                                    <TableRow key={`${groupIndex}-${ligneIndex}`} className={groupIndex % 2 !== 0 ? 'bg-muted/30' : ''}>
                                         {ligneIndex === 0 && (
                                             <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
                                                 {format(new Date(ligne.date), 'dd/MM/yyyy')}
@@ -315,7 +339,6 @@ export default function EtatsComptablesJournauxPage() {
                                         <TableCell className="text-center font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
                                     </TableRow>
                                 ))}
-                                { (groupIndex < Object.values(groupedData).length - 1) && <TableRow><TableCell colSpan={6} className="p-0 h-px bg-border"></TableCell></TableRow>}
                             </React.Fragment>
                         )) : (
                             <TableRow>
