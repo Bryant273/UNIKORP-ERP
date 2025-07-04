@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -138,8 +137,10 @@ const getNavForPath = (pathname: string) => {
 export function AppSidebar() {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<string[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // This effect runs only on the client, after the component has mounted.
     const savedState = localStorage.getItem('sidebarOpenSections');
     if (savedState) {
       try {
@@ -151,13 +152,12 @@ export function AppSidebar() {
          // Silently fail is ok, default state will be used.
       }
     }
+    setIsClient(true);
   }, []);
 
   const handleValueChange = (value: string[]) => {
     setOpenSections(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('sidebarOpenSections', JSON.stringify(value));
-    }
+    localStorage.setItem('sidebarOpenSections', JSON.stringify(value));
   };
 
   const specialPages = ['/chat', '/notifications', '/settings', '/help'];
@@ -181,7 +181,7 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
-        {items.length > 0 && (
+        {isClient && items.length > 0 ? (
           <Accordion
             type="multiple"
             className="w-full px-4"
@@ -214,6 +214,13 @@ export function AppSidebar() {
               </AccordionItem>
             ))}
           </Accordion>
+        ) : (
+          <div className="space-y-4 px-4">
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+          </div>
         )}
         {placeholder && (
           <div className="p-4 text-sm text-muted-foreground">{placeholder}</div>
