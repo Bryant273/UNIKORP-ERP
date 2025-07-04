@@ -122,28 +122,21 @@ export default function GrandLivreGeneralPage() {
     
     const handleExportPDF = () => {
         const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text('Grand Livre Général', 105, 20, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(`Période du ${format(period!.from!, 'dd/MM/yyyy')} au ${format(period!.to!, 'dd/MM/yyyy')}`, 15, 30);
+        const companyName = "Votre Société S.A.";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SKOMPTAB";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const periodString = period?.from ? (period.to ? `${format(period.from, 'dd LLL yyyy', { locale: fr })} au ${format(period.to, 'dd LLL yyyy', { locale: fr })}` : format(period.from, 'dd LLL yyyy', { locale: fr })) : 'N/A';
         
-        let finalY = 35;
-
+        const tableBody: any[] = [];
         Object.entries(reportData).forEach(([compte, ecritures]) => {
-            if (finalY > 250) {
-                doc.addPage();
-                finalY = 20;
-            }
-
             const compteInfo = MOCK_COMPTES.find(c => c.numero === compte);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Compte: ${compte} - ${compteInfo?.intitule || ''}`, 15, finalY + 5);
-            finalY += 10;
+            tableBody.push([{ content: `Compte: ${compte} - ${compteInfo?.intitule || ''}`, colSpan: 9, styles: { fontStyle: 'bold', fillColor: '#f1f5f9' } }]);
             
             let runningBalance = 0;
-            const tableData = ecritures.map(e => {
+            ecritures.forEach(e => {
                 runningBalance += e.debit - e.credit;
-                return [
+                tableBody.push([
                     format(new Date(e.dateSaisie), 'dd/MM/yy'),
                     e.numeroCompta,
                     format(new Date(e.dateOperation), 'dd/MM/yy'),
@@ -153,22 +146,46 @@ export default function GrandLivreGeneralPage() {
                     e.debit > 0 ? e.debit.toFixed(2) : '',
                     e.credit > 0 ? e.credit.toFixed(2) : '',
                     runningBalance.toFixed(2)
-                ];
+                ]);
             });
-
-            autoTable(doc, {
-                startY: finalY,
-                head: [['Date Saisie', 'N° Saisie', 'Date Op.', 'N° Pièce', 'Journal', 'Libellé', 'Débit', 'Crédit', 'Solde']],
-                body: tableData,
-                theme: 'striped',
-                headStyles: { fillColor: [226, 232, 240] },
-                didDrawPage: (data) => {
-                    finalY = data.cursor?.y || 20;
-                }
-            });
-            finalY = (doc as any).lastAutoTable.finalY + 10;
         });
-
+    
+        autoTable(doc, {
+            head: [['Date Saisie', 'N° Saisie', 'Date Op.', 'N° Pièce', 'Journal', 'Libellé', 'Débit', 'Crédit', 'Solde']],
+            body: tableBody,
+            theme: 'striped',
+            headStyles: { fillColor: [226, 232, 240] },
+            didDrawPage: (data) => {
+                // Header
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(`Imprimé via UNIKORP (R) - ${moduleName}`, 20, 15);
+                doc.setDrawColor(220);
+                doc.line(20, 18, 190, 18);
+                doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(40, 40, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text(companyName, 35, 28);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100);
+                doc.text(`État : Grand Livre Général`, 190, 25, { align: 'right' });
+                doc.text(`Période : ${periodString}`, 190, 30, { align: 'right' });
+                doc.text(`Imprimé le : ${printDateTime}`, 190, 35, { align: 'right' });
+                doc.text(`Par : ${userName}`, 190, 40, { align: 'right' });
+    
+                // Footer
+                const pageCountTotal = (doc as any).internal.getNumberOfPages();
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
+            },
+            margin: { top: 50 }
+        });
+    
         doc.save(`grand_livre_general_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     };
 

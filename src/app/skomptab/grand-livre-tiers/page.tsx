@@ -123,56 +123,82 @@ export default function GrandLivreTiersPage() {
     
     const handleExportPDF = () => {
         const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text('Grand Livre Tiers', 105, 20, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(`Période du ${format(period!.from!, 'dd/MM/yyyy')} au ${format(period!.to!, 'dd/MM/yyyy')}`, 15, 30);
+        const companyName = "Votre Société S.A.";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SKOMPTAB";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const periodString = period?.from ? (period.to ? `${format(period.from, 'dd LLL yyyy', { locale: fr })} au ${format(period.to, 'dd LLL yyyy', { locale: fr })}` : format(period.from, 'dd LLL yyyy', { locale: fr })) : 'N/A';
         
-        let finalY = 35;
-
+        const tableBody: any[] = [];
         Object.entries(reportData).forEach(([tiersCode, ecritures]) => {
-            if (finalY > 250) {
-                doc.addPage();
-                finalY = 20;
-            }
-
             const tiersInfo = MOCK_TIERS.find(t => t.code === tiersCode);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Tiers: ${tiersInfo?.compteGeneral || tiersCode} | ${tiersInfo?.intitule || ''}`, 15, finalY + 5);
-            finalY += 10;
+            tableBody.push([{ content: `Tiers: ${tiersInfo?.compteGeneral || tiersCode} | ${tiersInfo?.intitule || ''}`, colSpan: 6, styles: { fontStyle: 'bold', fillColor: '#f1f5f9' } }]);
             
             const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
             const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
-            const solde = totalDebit - totalCredit;
-
-            const tableData = ecritures.map(e => [
-                e.numeroCompta,
-                e.journal,
-                format(new Date(e.date), 'dd/MM/yyyy'),
-                e.operation,
-                e.debit > 0 ? e.debit.toLocaleString('fr-FR') : '',
-                e.credit > 0 ? e.credit.toLocaleString('fr-FR') : '',
-            ]);
-            
-            const tableFooter = [
-                ['', '', '', { content: 'Total :', styles: { halign: 'right', fontStyle: 'bold' } }, { content: totalDebit.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } }, { content: totalCredit.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } }],
-                ['', '', '', '', { content: 'Solde :', styles: { halign: 'right', fontStyle: 'bold' } }, { content: solde.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } }],
-            ]
-
-            autoTable(doc, {
-                startY: finalY,
-                head: [['N° Compta', 'Journal', 'Date', 'Opération', 'Débit', 'Crédit']],
-                body: tableData,
-                foot: tableFooter,
-                theme: 'striped',
-                headStyles: { fillColor: [226, 232, 240] },
-                didDrawPage: (data) => {
-                    finalY = data.cursor?.y || 20;
-                }
+            let solde = totalDebit - totalCredit;
+            if (tiersInfo?.compteGeneral.startsWith('401')) {
+                solde = totalCredit - totalDebit;
+            }
+    
+            ecritures.forEach(e => {
+                tableBody.push([
+                    e.numeroCompta,
+                    e.journal,
+                    format(new Date(e.date), 'dd/MM/yyyy'),
+                    e.operation,
+                    e.debit > 0 ? e.debit.toLocaleString('fr-FR') : '',
+                    e.credit > 0 ? e.credit.toLocaleString('fr-FR') : '',
+                ]);
             });
-            finalY = (doc as any).lastAutoTable.finalY + 10;
+            
+            tableBody.push([
+                { content: 'Total :', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
+                { content: totalDebit.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } },
+                { content: totalCredit.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } },
+            ]);
+            tableBody.push([
+                { content: 'Solde :', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
+                { content: solde.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } },
+            ]);
         });
-
+    
+        autoTable(doc, {
+            head: [['N° Compta', 'Journal', 'Date', 'Opération', 'Débit', 'Crédit']],
+            body: tableBody,
+            theme: 'striped',
+            headStyles: { fillColor: [226, 232, 240] },
+            didDrawPage: (data) => {
+                 // Header
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(`Imprimé via UNIKORP (R) - ${moduleName}`, 20, 15);
+                doc.setDrawColor(220);
+                doc.line(20, 18, 190, 18);
+                doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(40, 40, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text(companyName, 35, 28);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100);
+                doc.text(`État : Grand Livre Tiers`, 190, 25, { align: 'right' });
+                doc.text(`Période : ${periodString}`, 190, 30, { align: 'right' });
+                doc.text(`Imprimé le : ${printDateTime}`, 190, 35, { align: 'right' });
+                doc.text(`Par : ${userName}`, 190, 40, { align: 'right' });
+    
+                // Footer
+                const pageCountTotal = (doc as any).internal.getNumberOfPages();
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
+            },
+            margin: { top: 50 }
+        });
+    
         doc.save(`grand_livre_tiers_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     };
 

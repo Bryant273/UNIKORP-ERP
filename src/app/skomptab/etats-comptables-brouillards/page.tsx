@@ -198,7 +198,7 @@ export default function EtatsComptablesBrouillardsPage() {
     const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
 
     const tableBody = Object.values(groupedData).flatMap(group => {
-        const firstRow = [
+        const firstRow: any[] = [
             { content: format(new Date(group.dateOperation), 'dd MM yyyy'), rowSpan: group.lignes.length, styles: { halign: 'center', valign: 'middle' } },
             { content: group.numeroPiece, rowSpan: group.lignes.length, styles: { halign: 'center', valign: 'middle' } },
             group.lignes[0].compte,
@@ -230,7 +230,7 @@ export default function EtatsComptablesBrouillardsPage() {
             // Header
             doc.setFontSize(9);
             doc.setTextColor(150);
-            doc.text(`Imprimé depuis UNIKORP® - ${moduleName}`, 20, 15);
+            doc.text(`Imprimé via UNIKORP (R) - ${moduleName}`, 20, 15);
             doc.setDrawColor(220);
             doc.line(20, 18, 190, 18);
             doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
@@ -249,10 +249,10 @@ export default function EtatsComptablesBrouillardsPage() {
             doc.text(`Par : ${userName}`, 190, 40, { align: 'right' });
 
             // Footer
-            const pageCountTotal = doc.internal.getNumberOfPages();
+            const pageCountTotal = (doc as any).internal.getNumberOfPages();
             doc.setFontSize(8);
             doc.setTextColor(150);
-            doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+            doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
         },
         margin: { top: 50 }
     });
