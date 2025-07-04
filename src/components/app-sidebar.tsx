@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -77,12 +76,6 @@ const skomptabNav = [
       { title: 'Grand livre général', href: '/skomptab/grand-livre-general', icon: BookCopy },
       { title: 'Grand livre tiers', href: '/skomptab/grand-livre-tiers', icon: BookCopy },
       { title: 'Balance générale', href: '/skomptab/balance-generale', icon: Scale },
-    ]
-  },
-  {
-    title: 'ÉTATS FINANCIERS',
-    icon: BarChartHorizontal,
-    subItems: [
       { title: 'Bilan', href: '/skomptab/bilan', icon: BarChartHorizontal },
       { title: 'Compte de résultat', href: '/skomptab/compte-de-resultat', icon: BarChartHorizontal },
       { title: 'Tableau des SIG', href: '/skomptab/tableau-sig', icon: Table },
@@ -138,7 +131,8 @@ const getNavForPath = (pathname: string) => {
 export function AppSidebar() {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<string[]>([]);
-  
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
     // This effect runs only on the client, after the initial render.
     // This prevents a hydration mismatch.
@@ -157,6 +151,7 @@ export function AppSidebar() {
       // Default for first-time visit
       setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
     }
+    setIsClient(true);
   }, []); // Empty dependency array ensures this runs once on mount.
 
   const handleValueChange = (value: string[]) => {
@@ -189,7 +184,7 @@ export function AppSidebar() {
           <Accordion
             type="multiple"
             className="w-full px-4"
-            value={openSections}
+            value={isClient ? openSections : []} // Use safe default on server/initial render
             onValueChange={handleValueChange}
           >
             {items.map((item) => (
