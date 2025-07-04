@@ -96,41 +96,47 @@ const MOCK_BILAN_COMPTABLE_2025: BilanData = {
 
 const MOCK_BILAN_FONCTIONNEL_2025: BilanData = {
     actif: [
-        { libelle: 'EMPLOIS STABLES', isHeader: true },
-        { libelle: 'Actif immobilisé brut', isSubTitle: true, net: 465000 },
+        { libelle: 'EMPLOIS STABLES (Actif Immobilisé Brut)', isHeader: true },
+        { libelle: 'Frais de développement', isSubItem: true, net: 20000 },
+        { libelle: 'Concessions, brevets...', isSubItem: true, net: 70000 },
+        { libelle: 'Terrains', isSubItem: true, net: 100000 },
+        { libelle: 'Constructions', isSubItem: true, net: 250000 },
+        { libelle: 'Titres de participation', isSubItem: true, net: 25000 },
         { libelle: 'Total Emplois Stables', isTotal: true, net: 465000 },
-        
+
         { libelle: 'ACTIF CIRCULANT', isHeader: true },
-        { libelle: 'D\'Exploitation', isSubTitle: true },
-        { libelle: 'Stocks (brut)', isSubItem: true, net: 85000 },
+        { libelle: 'Actif Circulant d\'Exploitation', isSubTitle: true },
+        { libelle: 'Stocks de marchandises (brut)', isSubItem: true, net: 85000 },
         { libelle: 'Créances clients (brut)', isSubItem: true, net: 150000 },
-        { libelle: 'Total Actif Circulant d\'Exploitation', isTotal: true, net: 235000 },
-        
-        { libelle: 'Hors Exploitation', isSubTitle: true },
-        { libelle: 'Autres créances (vide pour démo)', isSubItem: true, net: 0 },
-        { libelle: 'Total Actif Circulant Hors Exploitation', isTotal: true, net: 0 },
+        { libelle: 'Total ACE', isTotal: true, net: 235000 },
+
+        { libelle: 'Actif Circulant Hors Exploitation', isSubTitle: true },
+        { libelle: 'Autres créances (pour démo)', isSubItem: true, net: 0 },
+        { libelle: 'Total ACHE', isTotal: true, net: 0 },
 
         { libelle: 'TRÉSORERIE ACTIVE', isHeader: true },
-        { libelle: 'Disponibilités & VMP', isSubTitle: true, net: 95000 },
+        { libelle: 'Banques, caisse', isSubTitle: true, net: 95000 },
         
         { libelle: 'TOTAL ACTIF', isGrandTotal: true, net: 795000 },
     ],
     passif: [
         { libelle: 'RESSOURCES STABLES', isHeader: true },
-        { libelle: 'Capitaux propres', isSubTitle: true, net: 430000 },
-        { libelle: 'Amortissements et provisions', isSubTitle: true, net: 80000 },
-        { libelle: 'Dettes financières (> 1 an)', isSubTitle: true, net: 150000 },
+        { libelle: 'Capital social', isSubItem: true, net: 200000 },
+        { libelle: 'Réserves (légale, statutaires, ...)', isSubItem: true, net: 150000 },
+        { libelle: "Résultat de l'exercice", isSubItem: true, net: 80000 },
+        { libelle: 'Amortissements et provisions', isSubItem: true, net: 80000 },
+        { libelle: 'Dettes financières (> 1 an)', isSubItem: true, net: 150000 },
         { libelle: 'Total Ressources Stables', isTotal: true, net: 660000 },
-        
+
         { libelle: 'PASSIF CIRCULANT', isHeader: true },
-        { libelle: 'D\'Exploitation', isSubTitle: true },
+        { libelle: 'Passif Circulant d\'Exploitation', isSubTitle: true },
         { libelle: 'Dettes fournisseurs', isSubItem: true, net: 110000 },
         { libelle: 'Dettes fiscales et sociales', isSubItem: true, net: 20000 },
-        { libelle: 'Total Passif Circulant d\'Exploitation', isTotal: true, net: 130000 },
+        { libelle: 'Total PCE', isTotal: true, net: 130000 },
         
-        { libelle: 'Hors Exploitation', isSubTitle: true },
-        { libelle: 'Autres dettes (vide pour démo)', isSubItem: true, net: 0 },
-        { libelle: 'Total Passif Circulant Hors Exploitation', isTotal: true, net: 0 },
+        { libelle: 'Passif Circulant Hors Exploitation', isSubTitle: true },
+        { libelle: 'Autres dettes (pour démo)', isSubItem: true, net: 0 },
+        { libelle: 'Total PCHE', isTotal: true, net: 0 },
 
         { libelle: 'TRÉSORERIE PASSIVE', isHeader: true },
         { libelle: 'Concours bancaires courants', isSubTitle: true, net: 5000 },
