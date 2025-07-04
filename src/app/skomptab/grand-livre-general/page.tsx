@@ -159,7 +159,7 @@ export default function GrandLivreGeneralPage() {
                 // Header
                 doc.setFontSize(9);
                 doc.setTextColor(150);
-                doc.text(`Imprimé via UNIKORP (R) - ${moduleName}`, 20, 15);
+                doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, 20, 15);
                 doc.setDrawColor(220);
                 doc.line(20, 18, 190, 18);
                 doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
@@ -232,7 +232,7 @@ export default function GrandLivreGeneralPage() {
                                 </div>
                             </ScrollArea>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Date de début</Label>
                                 <Popover>
@@ -243,7 +243,7 @@ export default function GrandLivreGeneralPage() {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
+                                        <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ ...p, from: date }))} locale={fr} />
                                     </PopoverContent>
                                 </Popover>
                             </div>
@@ -257,7 +257,7 @@ export default function GrandLivreGeneralPage() {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
+                                        <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ ...p, to: date }))} locale={fr} />
                                     </PopoverContent>
                                 </Popover>
                             </div>

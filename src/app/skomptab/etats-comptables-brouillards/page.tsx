@@ -230,7 +230,7 @@ export default function EtatsComptablesBrouillardsPage() {
             // Header
             doc.setFontSize(9);
             doc.setTextColor(150);
-            doc.text(`Imprimé via UNIKORP (R) - ${moduleName}`, 20, 15);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, 20, 15);
             doc.setDrawColor(220);
             doc.line(20, 18, 190, 18);
             doc.addImage(logoDataUri, 'PNG', 20, 22, 12, 12);
