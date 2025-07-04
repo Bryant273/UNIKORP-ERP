@@ -137,9 +137,8 @@ const getNavForPath = (pathname: string) => {
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [openSections, setOpenSections] = useState<string[]>([]); // Use state for controlled component
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
-  // Set default open sections only on the client-side after mount
   useEffect(() => {
     setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
   }, []);
