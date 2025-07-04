@@ -62,6 +62,7 @@ type Ecriture = {
   numeroPiece: string;
   libelleOperation: string;
   lignes: LigneEcriture[];
+  statut: 'brouillard' | 'validee';
 };
 
 const initialEcritures: Ecriture[] = [
@@ -76,6 +77,7 @@ const initialEcritures: Ecriture[] = [
       { id: 'l1-2', compte: '445660', tiers: '', libelle: 'TVA déductible', debit: 300, credit: 0 },
       { id: 'l1-3', compte: '401000', tiers: 'FOURN_A', libelle: 'Fournisseur A', debit: 0, credit: 1800 },
     ],
+    statut: 'brouillard',
   },
   {
     id: 2,
@@ -88,6 +90,7 @@ const initialEcritures: Ecriture[] = [
       { id: 'l2-2', compte: '706000', tiers: '', libelle: 'Prestation de service', debit: 0, credit: 2000 },
       { id: 'l2-3', compte: '445710', tiers: '', libelle: 'TVA collectée', debit: 0, credit: 400 },
     ],
+    statut: 'validee',
   },
   {
     id: 3,
@@ -99,6 +102,7 @@ const initialEcritures: Ecriture[] = [
       { id: 'l3-1', compte: '641000', tiers: '', libelle: 'Rémunérations', debit: 3000, credit: 0 },
       { id: 'l3-2', compte: '421000', tiers: '', libelle: 'Personnel - Rémunérations dues', debit: 0, credit: 2300 },
     ],
+    statut: 'brouillard',
   },
 ];
 
@@ -135,7 +139,7 @@ export default function BrouillardsPage() {
   const handleOpenModal = (ecriture: Ecriture, viewMode: boolean) => {
     setEditingEcriture(ecriture);
     setFormData(JSON.parse(JSON.stringify(ecriture)));
-    setIsViewMode(viewMode);
+    setIsViewMode(viewMode || ecriture.statut === 'validee');
     setIsModalOpen(true);
   };
 
@@ -149,11 +153,11 @@ export default function BrouillardsPage() {
 
   const handleValidate = () => {
     if (ecritureToValidate) {
-        setEcritures(ecritures.filter(e => e.id !== ecritureToValidate.id));
+        setEcritures(ecritures.map(e => e.id === ecritureToValidate.id ? { ...e, statut: 'validee' } : e));
         setEcritureToValidate(null);
         toast({
             title: 'Écriture validée !',
-            description: 'L\'écriture a été transférée vers les journaux officiels.',
+            description: "L'écriture est maintenant définitive et ne peut plus être modifiée.",
             className: 'bg-green-100 border-green-300 text-green-800'
         });
     }
@@ -193,14 +197,14 @@ export default function BrouillardsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-                <CardTitle className="text-2xl">Brouillard Comptable</CardTitle>
+                <CardTitle className="text-2xl">Saisie & Brouillard Comptable</CardTitle>
                 <CardDescription>
-                    Consultez, modifiez et validez les écritures comptables avant leur intégration définitive.
+                    Saisissez, modifiez et validez les écritures comptables avant leur intégration définitive.
                 </CardDescription>
             </div>
-            <Button disabled>
+            <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Ajouter une écriture
+                Saisir une nouvelle écriture
             </Button>
           </div>
         </CardHeader>
@@ -208,38 +212,40 @@ export default function BrouillardsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Date Op.</TableHead>
-                <TableHead className="text-center">Journal</TableHead>
-                <TableHead className="text-center">N° Pièce</TableHead>
-                <TableHead className="text-center">Libellé</TableHead>
-                <TableHead className="text-center">Total Débit</TableHead>
-                <TableHead className="text-center">Total Crédit</TableHead>
+                <TableHead>Date Op.</TableHead>
+                <TableHead>Journal</TableHead>
+                <TableHead>N° Pièce</TableHead>
+                <TableHead>Libellé</TableHead>
+                <TableHead className="text-center">Équilibre</TableHead>
                 <TableHead className="text-center">Statut</TableHead>
                 <TableHead className="w-[180px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {ecritures.map((ecriture) => {
-                const { totalDebit, totalCredit, isBalanced } = calculateTotalsForEcriture(ecriture.lignes);
+                const { isBalanced } = calculateTotalsForEcriture(ecriture.lignes);
                 return (
                   <TableRow key={ecriture.id} className="odd:bg-muted/50">
-                    <TableCell className="text-center">{ecriture.dateOperation}</TableCell>
-                    <TableCell className="text-center"><Badge variant="outline">{ecriture.journal}</Badge></TableCell>
-                    <TableCell className="font-mono text-center">{ecriture.numeroPiece}</TableCell>
-                    <TableCell className="font-medium text-center">{ecriture.libelleOperation}</TableCell>
-                    <TableCell className="font-mono text-center">{totalDebit.toFixed(2)}</TableCell>
-                    <TableCell className="font-mono text-center">{totalCredit.toFixed(2)}</TableCell>
+                    <TableCell>{ecriture.dateOperation}</TableCell>
+                    <TableCell><Badge variant="outline">{ecriture.journal}</Badge></TableCell>
+                    <TableCell className="font-mono">{ecriture.numeroPiece}</TableCell>
+                    <TableCell className="font-medium">{ecriture.libelleOperation}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant={isBalanced ? 'default' : 'destructive'} className={isBalanced ? 'bg-green-100 text-green-800' : ''}>
                         {isBalanced ? 'Équilibrée' : 'Déséquilibrée'}
                       </Badge>
                     </TableCell>
+                     <TableCell className="text-center">
+                      <Badge variant={ecriture.statut === 'validee' ? 'secondary' : 'default'} className={ecriture.statut === 'validee' ? '' : 'bg-yellow-100 text-yellow-800'}>
+                        {ecriture.statut === 'validee' ? 'Validée' : 'En Brouillard'}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Button variant="ghost" size="icon" onClick={() => handleOpenModal(ecriture, true)}><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(ecriture, false)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setEcritureToDelete(ecriture)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setEcritureToValidate(ecriture)} disabled={!isBalanced} className="text-green-600 hover:text-green-700 disabled:opacity-50"><ShieldCheck className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(ecriture, false)} disabled={ecriture.statut === 'validee'}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setEcritureToDelete(ecriture)} className="text-destructive hover:text-destructive" disabled={ecriture.statut === 'validee'}><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setEcritureToValidate(ecriture)} disabled={!isBalanced || ecriture.statut === 'validee'} className="text-green-600 hover:text-green-700 disabled:opacity-50"><ShieldCheck className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -249,7 +255,7 @@ export default function BrouillardsPage() {
           </Table>
            {ecritures.length === 0 && (
              <div className="text-center py-16 border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground">Le brouillard est vide. Toutes les écritures ont été validées.</p>
+              <p className="text-muted-foreground">Le brouillard est vide. Saisissez une nouvelle écriture pour commencer.</p>
              </div>
            )}
         </CardContent>
@@ -323,7 +329,7 @@ export default function BrouillardsPage() {
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Valider l'écriture comptable ?</AlertDialogTitle>
-                <AlertDialogDescription>Cette action est irréversible. Une fois validée, l'écriture sera définitivement enregistrée dans les journaux et ne pourra plus être modifiée ou supprimée depuis le brouillard.</AlertDialogDescription>
+                <AlertDialogDescription>Cette action est irréversible. Une fois validée, l'écriture sera définitivement enregistrée dans les journaux et ne pourra plus être modifiée ou supprimée.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleValidate} className="bg-green-600 hover:bg-green-700">Valider</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>

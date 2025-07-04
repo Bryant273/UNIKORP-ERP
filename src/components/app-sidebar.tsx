@@ -37,6 +37,7 @@ import {
   Target,
   Calendar,
   GitCompareArrows,
+  Pencil,
 } from 'lucide-react';
 
 
@@ -57,7 +58,8 @@ const skomptabNav = [
     title: 'GESTION',
     icon: Settings,
     subItems: [
-      { title: 'Saisie comptable', href: '/skomptab/saisie-comptable', icon: Calculator },
+      { title: 'Saisie & Brouillard', href: '/skomptab/brouillards', icon: Pencil },
+      { title: 'Écritures validées', href: '/skomptab/saisie-comptable', icon: Calculator },
       { title: 'Digitalisation des factures', href: '/skomptab/digitalisation-factures', icon: FileScan },
       { title: 'Contrôle de trésorerie', href: '/skomptab/controle-tresorerie', icon: Landmark },
       { title: 'Elaboration des factures', href: '/skomptab/elaboration-factures', icon: FilePlus },
@@ -69,7 +71,6 @@ const skomptabNav = [
     icon: FileText,
     subItems: [
       { title: 'Journaux', href: '/skomptab/etats-comptables-journaux', icon: BookUser },
-      { title: 'Brouillards', href: '/skomptab/brouillards', icon: FileSearch },
       { title: 'Grand livre général', href: '/skomptab/grand-livre-general', icon: BookCopy },
       { title: 'Grand livre tiers', href: '/skomptab/grand-livre-tiers', icon: BookCopy },
       { title: 'Balance générale', href: '/skomptab/balance-generale', icon: Scale },
@@ -157,7 +158,7 @@ export function AppSidebar() {
           </Link>
         </div>
         {items.length > 0 && (
-          <Accordion type="multiple" className="w-full px-4">
+          <Accordion type="multiple" className="w-full px-4" defaultValue={['GESTION', 'ÉTATS COMPTABLES']}>
             {items.map((item) => (
               <AccordionItem value={item.title} key={item.title} className="border-b-0">
                 <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
