@@ -40,6 +40,7 @@ import {
   GitCompareArrows,
   Pencil,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 
 const skomptabNav = [
@@ -136,6 +137,12 @@ const getNavForPath = (pathname: string) => {
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const [openSections, setOpenSections] = useState<string[]>([]); // Use state for controlled component
+
+  // Set default open sections only on the client-side after mount
+  useEffect(() => {
+    setOpenSections(['GESTION', 'ÉTATS COMPTABLES']);
+  }, []);
 
   const specialPages = ['/chat', '/notifications', '/settings', '/help'];
   if (pathname === '/' || specialPages.some(p => pathname.startsWith(p))) {
@@ -159,7 +166,7 @@ export function AppSidebar() {
           </Link>
         </div>
         {items.length > 0 && (
-          <Accordion type="multiple" className="w-full px-4" defaultValue={['GESTION', 'ÉTATS COMPTABLES']}>
+          <Accordion type="multiple" className="w-full px-4" value={openSections} onValueChange={setOpenSections}>
             {items.map((item) => (
               <AccordionItem value={item.title} key={item.title} className="border-b-0">
                 <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
