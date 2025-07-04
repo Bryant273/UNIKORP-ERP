@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -40,6 +41,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Skeleton } from './ui/skeleton';
 
 
 const skomptabNav = [
@@ -134,10 +136,11 @@ const getNavForPath = (pathname: string) => {
   };
 };
 
-export function AppSidebar() {
+function SidebarNavContent() {
   const pathname = usePathname();
+  const { items } = getNavForPath(pathname);
   const [openSections, setOpenSections] = useState<string[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     const savedState = localStorage.getItem('sidebarOpenSections');
@@ -151,7 +154,7 @@ export function AppSidebar() {
         // Silently fail is ok, default state will be used.
       }
     }
-    setIsClient(true);
+    setIsMounted(true);
   }, []);
 
   const handleValueChange = (value: string[]) => {
@@ -159,59 +162,61 @@ export function AppSidebar() {
     localStorage.setItem('sidebarOpenSections', JSON.stringify(value));
   };
 
+  if (!isMounted) {
+    return (
+      <div className="space-y-4 px-4">
+        {items.map((item) => (
+          <Skeleton key={item.title} className="h-10 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <Accordion
+      type="multiple"
+      className="w-full px-4"
+      value={openSections}
+      onValueChange={handleValueChange}
+    >
+      {items.map((item) => (
+        <AccordionItem value={item.title} key={item.title} className="border-b-0">
+          <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
+            {item.title}
+          </AccordionTrigger>
+          <AccordionContent className="pl-4">
+            <ul className="space-y-1">
+              {item.subItems.map((subItem) => (
+                <li key={subItem.href}>
+                  <Link
+                    href={subItem.href}
+                    className={cn(
+                      'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                      pathname === subItem.href && 'bg-accent text-accent-foreground'
+                    )}
+                  >
+                   <subItem.icon className="h-4 w-4" />
+                    {subItem.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+}
+
+export function AppSidebar() {
+  const pathname = usePathname();
+
   const specialPages = ['/chat', '/notifications', '/settings', '/help'];
   if (pathname === '/' || specialPages.some(p => pathname.startsWith(p))) {
     return null;
   }
 
-  const { dashboardLink, items, placeholder } = getNavForPath(pathname);
-
-  const MainContent = () => {
-    if (!isClient) {
-      return items.length > 0 ? (
-        <div className="space-y-4 px-4">
-          {items.map((item) => (
-            <div key={item.title} className="h-10 w-full animate-pulse rounded-md bg-muted" />
-          ))}
-        </div>
-      ) : null;
-    }
-
-    return items.length > 0 ? (
-      <Accordion
-        type="multiple"
-        className="w-full px-4"
-        value={openSections}
-        onValueChange={handleValueChange}
-      >
-        {items.map((item) => (
-          <AccordionItem value={item.title} key={item.title} className="border-b-0">
-            <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
-              {item.title}
-            </AccordionTrigger>
-            <AccordionContent className="pl-4">
-              <ul className="space-y-1">
-                {item.subItems.map((subItem) => (
-                  <li key={subItem.href}>
-                    <Link
-                      href={subItem.href}
-                      className={cn(
-                        'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                        pathname === subItem.href && 'bg-accent text-accent-foreground'
-                      )}
-                    >
-                     <subItem.icon className="h-4 w-4" />
-                      {subItem.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    ) : null;
-  };
+  const { dashboardLink, placeholder } = getNavForPath(pathname);
 
   return (
     <aside className="hidden w-72 flex-col border-r bg-card sm:flex">
@@ -227,7 +232,7 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
-        <MainContent />
+        <SidebarNavContent />
         {placeholder && (
           <div className="p-4 text-sm text-muted-foreground">{placeholder}</div>
         )}
