@@ -140,7 +140,6 @@ export function AppSidebar() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client, after the component has mounted.
     const savedState = localStorage.getItem('sidebarOpenSections');
     if (savedState) {
       try {
@@ -149,7 +148,7 @@ export function AppSidebar() {
           setOpenSections(parsedState);
         }
       } catch (e) {
-         // Silently fail is ok, default state will be used.
+        // Silently fail is ok, default state will be used.
       }
     }
     setIsClient(true);
@@ -167,6 +166,53 @@ export function AppSidebar() {
 
   const { dashboardLink, items, placeholder } = getNavForPath(pathname);
 
+  const MainContent = () => {
+    if (!isClient) {
+      return items.length > 0 ? (
+        <div className="space-y-4 px-4">
+          {items.map((item) => (
+            <div key={item.title} className="h-10 w-full animate-pulse rounded-md bg-muted" />
+          ))}
+        </div>
+      ) : null;
+    }
+
+    return items.length > 0 ? (
+      <Accordion
+        type="multiple"
+        className="w-full px-4"
+        value={openSections}
+        onValueChange={handleValueChange}
+      >
+        {items.map((item) => (
+          <AccordionItem value={item.title} key={item.title} className="border-b-0">
+            <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
+              {item.title}
+            </AccordionTrigger>
+            <AccordionContent className="pl-4">
+              <ul className="space-y-1">
+                {item.subItems.map((subItem) => (
+                  <li key={subItem.href}>
+                    <Link
+                      href={subItem.href}
+                      className={cn(
+                        'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                        pathname === subItem.href && 'bg-accent text-accent-foreground'
+                      )}
+                    >
+                     <subItem.icon className="h-4 w-4" />
+                      {subItem.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    ) : null;
+  };
+
   return (
     <aside className="hidden w-72 flex-col border-r bg-card sm:flex">
       <div className="flex-1 overflow-y-auto">
@@ -181,46 +227,7 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
-        {isClient && items.length > 0 ? (
-          <Accordion
-            type="multiple"
-            className="w-full px-4"
-            value={openSections}
-            onValueChange={handleValueChange}
-          >
-            {items.map((item) => (
-              <AccordionItem value={item.title} key={item.title} className="border-b-0">
-                <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
-                  {item.title}
-                </AccordionTrigger>
-                <AccordionContent className="pl-4">
-                  <ul className="space-y-1">
-                    {item.subItems.map((subItem) => (
-                      <li key={subItem.href}>
-                        <Link
-                          href={subItem.href}
-                          className={cn(
-                            'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                            pathname === subItem.href && 'bg-accent text-accent-foreground'
-                          )}
-                        >
-                         <subItem.icon className="h-4 w-4" />
-                          {subItem.title}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        ) : items.length > 0 ? (
-          <div className="space-y-4 px-4">
-            {items.map((item) => (
-              <div key={item.title} className="h-10 w-full animate-pulse rounded-md bg-muted" />
-            ))}
-          </div>
-        ) : null}
+        <MainContent />
         {placeholder && (
           <div className="p-4 text-sm text-muted-foreground">{placeholder}</div>
         )}
