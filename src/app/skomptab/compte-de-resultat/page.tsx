@@ -5,19 +5,16 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from '@/components/ui/table';
-import { Calendar as CalendarIcon, Download, ArrowLeft } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
+import { Download, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // --- DATA TYPES & MOCK DATA ---
 
@@ -198,7 +195,7 @@ const formatAmount = (amount: number) => {
 
 export default function CompteDeResultatPage() {
     const [modalStep, setModalStep] = useState<'closed' | 'selection' | 'display'>('closed');
-    const [period, setPeriod] = useState<DateRange | undefined>({ from: new Date(2025, 0, 1), to: new Date(2025, 11, 31) });
+    const [selectedYear, setSelectedYear] = useState<string>('2025');
     const [reportData, setReportData] = useState<ReportLine[]>([]);
     const [printDateTime, setPrintDateTime] = useState('');
     const { toast } = useToast();
@@ -214,10 +211,16 @@ export default function CompteDeResultatPage() {
     }, [modalStep]);
 
     const handleGenerate = () => {
-        if (!period?.from || !period?.to) {
-            toast({ title: "Période invalide", description: "Veuillez sélectionner une date de début et de fin.", variant: "destructive" });
+        if (!selectedYear) {
+            toast({ title: "Année invalide", description: "Veuillez sélectionner un exercice.", variant: "destructive" });
             return;
         }
+
+        if (selectedYear !== '2025') {
+            toast({ title: "Données non disponibles", description: `Le compte de résultat pour l'année ${selectedYear} n'est pas encore disponible.`, variant: "destructive" });
+            return;
+        }
+
         const data = calculateIncomeStatement(MOCK_ACCOUNT_BALANCES);
         setReportData(data);
         setModalStep('display');
@@ -229,7 +232,7 @@ export default function CompteDeResultatPage() {
         const userName = "Utilisateur Unikorp";
         const moduleName = "SKOMPTAB";
         const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
-        const periodString = period?.from ? (period.to ? `${format(period.from, 'dd LLL yyyy', { locale: fr })} au ${format(period.to, 'dd LLL yyyy', { locale: fr })}` : format(period.from, 'dd LLL yyyy', { locale: fr })) : 'N/A';
+        const periodString = `Exercice ${selectedYear}`;
         
         const tableBody = reportData.map(line => {
             if (line.value === null) return [{ content: '', colSpan: 3, styles: { minCellHeight: 5 } }];
@@ -280,7 +283,7 @@ export default function CompteDeResultatPage() {
             }
         });
 
-        doc.save(`compte_de_resultat_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+        doc.save(`compte_de_resultat_${selectedYear}.pdf`);
     };
 
     return (
@@ -303,22 +306,19 @@ export default function CompteDeResultatPage() {
                         <>
                             <DialogHeader>
                                 <DialogTitle>Paramètres du Compte de Résultat</DialogTitle>
-                                <DialogDescription>Choisissez la période pour générer le rapport.</DialogDescription>
+                                <DialogDescription>Choisissez l'exercice pour générer le rapport.</DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="space-y-2">
-                                    <Label>Période</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {period?.from ? (period.to ? `${format(period.from, 'dd LLL yyyy', { locale: fr })} - ${format(period.to, 'dd LLL yyyy', { locale: fr })}` : format(period.from, 'dd LLL yyyy', { locale: fr })) : 'Sélectionnez une période'}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar mode="range" selected={period} onSelect={setPeriod} numberOfMonths={2} locale={fr} />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <Label htmlFor="year-select">Exercice fiscal</Label>
+                                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                        <SelectTrigger id="year-select"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="2025">2025</SelectItem>
+                                            <SelectItem value="2024">2024</SelectItem>
+                                            <SelectItem value="2023">2023</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
                             <DialogFooter>
@@ -332,7 +332,7 @@ export default function CompteDeResultatPage() {
                         <>
                             <DialogHeader>
                                 <DialogTitle>Compte de Résultat</DialogTitle>
-                                <DialogDescription>Période du {period?.from ? format(period.from, 'dd LLL yyyy', { locale: fr }) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', { locale: fr }) : ''}.</DialogDescription>
+                                <DialogDescription>Exercice de l'année {selectedYear}.</DialogDescription>
                             </DialogHeader>
                             <div className="max-h-[70vh] overflow-y-auto pr-4 border rounded-md">
                                 <Table>
