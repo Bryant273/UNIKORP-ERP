@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { Calendar as CalendarIcon, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, ArrowLeft } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -60,8 +59,7 @@ const MOCK_COMPTES = [
 type GroupedData = Record<string, (typeof MOCK_ECRITURES_LIVRE)>;
 
 export default function GrandLivreGeneralPage() {
-    const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-    const [isDisplayModalOpen, setIsDisplayModalOpen] = useState(false);
+    const [modalStep, setModalStep] = useState<'closed' | 'selection' | 'display'>('closed');
     const [reportData, setReportData] = useState<GroupedData>({});
     const [printDateTime, setPrintDateTime] = useState('');
     const { toast } = useToast();
@@ -79,11 +77,15 @@ export default function GrandLivreGeneralPage() {
         );
     };
 
+    const handleCloseModal = () => {
+        setModalStep('closed');
+    };
+
     useEffect(() => {
-        if (isDisplayModalOpen) {
+        if (modalStep === 'display') {
             setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
         }
-    }, [isDisplayModalOpen]);
+    }, [modalStep]);
 
     const handleGenerate = () => {
         if (selectedComptes.length === 0) {
@@ -116,8 +118,7 @@ export default function GrandLivreGeneralPage() {
         });
 
         setReportData(groupedData);
-        setIsSelectionModalOpen(false);
-        setIsDisplayModalOpen(true);
+        setModalStep('display');
     };
     
     const handleExportPDF = () => {
@@ -197,159 +198,165 @@ export default function GrandLivreGeneralPage() {
                     <CardDescription>Consultez le détail des mouvements par compte général.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-64">
-                    <Button size="lg" onClick={() => setIsSelectionModalOpen(true)}>
+                    <Button size="lg" onClick={() => setModalStep('selection')}>
                         Générer le Grand Livre
                     </Button>
                 </CardContent>
             </Card>
 
-            <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Paramètres du Grand Livre</DialogTitle>
-                        <DialogDescription>
-                            Choisissez la période et les comptes à afficher.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                             <Label>Comptes à afficher</Label>
-                            <ScrollArea className="h-60 rounded-md border p-4">
+            <Dialog open={modalStep !== 'closed'} onOpenChange={(open) => !open && handleCloseModal()}>
+                <DialogContent className={modalStep === 'display' ? "max-w-7xl" : "sm:max-w-md"}>
+                    {modalStep === 'selection' && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Paramètres du Grand Livre</DialogTitle>
+                                <DialogDescription>
+                                    Choisissez la période et les comptes à afficher.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
                                 <div className="space-y-2">
-                                    {MOCK_COMPTES.map(compte => (
-                                        <div key={compte.numero} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`compte-${compte.numero}`}
-                                                checked={selectedComptes.includes(compte.numero)}
-                                                onCheckedChange={() => handleCompteToggle(compte.numero)}
-                                            />
-                                            <Label htmlFor={`compte-${compte.numero}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
-                                                <span className="font-mono text-xs p-1 bg-muted rounded-sm w-20 text-center">{compte.numero}</span>
-                                                <span>{compte.intitule}</span>
-                                            </Label>
+                                     <Label>Comptes à afficher</Label>
+                                    <ScrollArea className="h-60 rounded-md border p-4">
+                                        <div className="space-y-2">
+                                            {MOCK_COMPTES.map(compte => (
+                                                <div key={compte.numero} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`compte-${compte.numero}`}
+                                                        checked={selectedComptes.includes(compte.numero)}
+                                                        onCheckedChange={() => handleCompteToggle(compte.numero)}
+                                                    />
+                                                    <Label htmlFor={`compte-${compte.numero}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
+                                                        <span className="font-mono text-xs p-1 bg-muted rounded-sm w-20 text-center">{compte.numero}</span>
+                                                        <span>{compte.intitule}</span>
+                                                    </Label>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    </ScrollArea>
                                 </div>
-                            </ScrollArea>
-                        </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Date de début</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ ...p, from: date }))} locale={fr} />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Date de fin</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ ...p, to: date }))} locale={fr} />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsSelectionModalOpen(false)}>Annuler</Button>
-                        <Button onClick={handleGenerate}>Générer l'état</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-                <DialogContent className="max-w-7xl">
-                    <DialogHeader>
-                        <DialogTitle>Grand Livre Général</DialogTitle>
-                        <DialogDescription>
-                            Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
-                        <div className="mb-4">
-                            <div className="flex justify-between items-start p-4 border rounded-lg">
-                                <div className="flex items-center gap-4">
-                                    <Logo className="h-12 w-12 text-primary"/>
-                                    <div>
-                                        <p className="font-bold">Votre Société S.A.</p>
+                                 <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Date de début</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ ...p, from: date }))} locale={fr} />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Date de fin</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ ...p, to: date }))} locale={fr} />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
                                 </div>
-                                <div className="text-right text-xs text-muted-foreground">
-                                    <p><span className="font-semibold text-foreground">État :</span> Grand Livre Général</p>
-                                    <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
-                                    <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
-                                    <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
-                                </div>
                             </div>
-                        </div>
-                        {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([compte, ecritures]) => {
-                            const compteInfo = MOCK_COMPTES.find(c => c.numero === compte);
-                            const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
-                            const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
-                            const solde = totalDebit - totalCredit;
-                            return (
-                                <div key={compte}>
-                                    <h3 className="font-semibold text-lg mb-2 bg-secondary text-secondary-foreground p-2 rounded-md">
-                                        Compte: {compte} - {compteInfo?.intitule || 'Inconnu'}
-                                    </h3>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Date Op.</TableHead>
-                                                <TableHead>Journal</TableHead>
-                                                <TableHead>N° Pièce</TableHead>
-                                                <TableHead>Libellé</TableHead>
-                                                <TableHead className="text-right">Débit</TableHead>
-                                                <TableHead className="text-right">Crédit</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {ecritures.map((ecriture: any) => (
-                                                <TableRow key={ecriture.id}>
-                                                    <TableCell>{format(new Date(ecriture.dateOperation), 'dd/MM/yyyy')}</TableCell>
-                                                    <TableCell>{ecriture.journal}</TableCell>
-                                                    <TableCell>{ecriture.numeroPiece}</TableCell>
-                                                    <TableCell>{ecriture.libelle}</TableCell>
-                                                    <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toFixed(2) : ''}</TableCell>
-                                                    <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toFixed(2) : ''}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                        <TableFooter>
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
-                                                <TableCell className="text-right font-bold font-mono">{totalDebit.toFixed(2)}</TableCell>
-                                                <TableCell className="text-right font-bold font-mono">{totalCredit.toFixed(2)}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
-                                                <TableCell className="text-right font-bold font-mono">{solde.toFixed(2)}</TableCell>
-                                            </TableRow>
-                                        </TableFooter>
-                                    </Table>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={handleCloseModal}>Annuler</Button>
+                                <Button onClick={handleGenerate}>Suivant</Button>
+                            </DialogFooter>
+                        </>
+                    )}
+                    
+                    {modalStep === 'display' && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Grand Livre Général</DialogTitle>
+                                <DialogDescription>
+                                    Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
+                                <div className="mb-4">
+                                    <div className="flex justify-between items-start p-4 border rounded-lg">
+                                        <div className="flex items-center gap-4">
+                                            <Logo className="h-12 w-12 text-primary"/>
+                                            <div>
+                                                <p className="font-bold">Votre Société S.A.</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right text-xs text-muted-foreground">
+                                            <p><span className="font-semibold text-foreground">État :</span> Grand Livre Général</p>
+                                            <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                                            <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                                            <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            )
-                        }) : (
-                            <div className="h-24 text-center">Aucune donnée pour les filtres sélectionnés.</div>
-                        )}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDisplayModalOpen(false)}>Fermer</Button>
-                        <Button onClick={handleExportPDF} disabled={Object.keys(reportData).length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
-                    </DialogFooter>
+                                {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([compte, ecritures]) => {
+                                    const compteInfo = MOCK_COMPTES.find(c => c.numero === compte);
+                                    const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
+                                    const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
+                                    const solde = totalDebit - totalCredit;
+                                    return (
+                                        <div key={compte}>
+                                            <h3 className="font-semibold text-lg mb-2 bg-secondary text-secondary-foreground p-2 rounded-md">
+                                                Compte: {compte} - {compteInfo?.intitule || 'Inconnu'}
+                                            </h3>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Date Op.</TableHead>
+                                                        <TableHead>Journal</TableHead>
+                                                        <TableHead>N° Pièce</TableHead>
+                                                        <TableHead>Libellé</TableHead>
+                                                        <TableHead className="text-right">Débit</TableHead>
+                                                        <TableHead className="text-right">Crédit</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {ecritures.map((ecriture: any) => (
+                                                        <TableRow key={ecriture.id}>
+                                                            <TableCell>{format(new Date(ecriture.dateOperation), 'dd/MM/yyyy')}</TableCell>
+                                                            <TableCell>{ecriture.journal}</TableCell>
+                                                            <TableCell>{ecriture.numeroPiece}</TableCell>
+                                                            <TableCell>{ecriture.libelle}</TableCell>
+                                                            <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toFixed(2) : ''}</TableCell>
+                                                            <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toFixed(2) : ''}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                                <TableFooter>
+                                                    <TableRow>
+                                                        <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
+                                                        <TableCell className="text-right font-bold font-mono">{totalDebit.toFixed(2)}</TableCell>
+                                                        <TableCell className="text-right font-bold font-mono">{totalCredit.toFixed(2)}</TableCell>
+                                                    </TableRow>
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
+                                                        <TableCell className="text-right font-bold font-mono">{solde.toFixed(2)}</TableCell>
+                                                    </TableRow>
+                                                </TableFooter>
+                                            </Table>
+                                        </div>
+                                    )
+                                }) : (
+                                    <div className="h-24 text-center">Aucune donnée pour les filtres sélectionnés.</div>
+                                )}
+                            </div>
+                            <DialogFooter>
+                                <Button variant="ghost" onClick={() => setModalStep('selection')}><ArrowLeft className="mr-2 h-4 w-4"/> Précédent</Button>
+                                <div className="flex-grow" />
+                                <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
+                                <Button onClick={handleExportPDF} disabled={Object.keys(reportData).length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+                            </DialogFooter>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </>

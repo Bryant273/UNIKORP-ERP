@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Download } from 'lucide-react';
+import { Download, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -117,8 +116,8 @@ const MOCK_BILAN_FONCTIONNEL_2025: BilanData = {
         { libelle: 'Total ACHE', isTotal: true, net: 0 },
 
         { libelle: 'TRÉSORERIE ACTIVE', isHeader: true },
-        { libelle: 'Banques', numeroCompte: '512000', isSubTitle: true, net: 90000 },
-        { libelle: 'Caisse', numeroCompte: '530000', isSubTitle: true, net: 5000 },
+        { libelle: 'Banques', numeroCompte: '512000', isSubItem: true, net: 90000 },
+        { libelle: 'Caisse', numeroCompte: '530000', isSubItem: true, net: 5000 },
         { libelle: 'Total Trésorerie Active', isTotal: true, net: 95000 },
         
         { libelle: 'TOTAL ACTIF', isGrandTotal: true, net: 795000 },
@@ -143,7 +142,7 @@ const MOCK_BILAN_FONCTIONNEL_2025: BilanData = {
         { libelle: 'Total PCHE', isTotal: true, net: 0 },
 
         { libelle: 'TRÉSORERIE PASSIVE', isHeader: true },
-        { libelle: 'Concours bancaires courants', numeroCompte: '519000', isSubTitle: true, net: 5000 },
+        { libelle: 'Concours bancaires courants', numeroCompte: '519000', isSubItem: true, net: 5000 },
         { libelle: 'Total Trésorerie Passive', isTotal: true, net: 5000 },
         
         { libelle: 'TOTAL PASSIF', isGrandTotal: true, net: 795000 },
@@ -214,8 +213,7 @@ const formatAmount = (amount?: number | null) => {
 }
 
 export default function BilanPage() {
-    const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-    const [isDisplayModalOpen, setIsDisplayModalOpen] = useState(false);
+    const [modalStep, setModalStep] = useState<'closed' | 'selection' | 'display'>('closed');
     
     const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
     const [selectedType, setSelectedType] = useState<BilanType>('comptable');
@@ -224,11 +222,18 @@ export default function BilanPage() {
     const [printDateTime, setPrintDateTime] = useState('');
     const { toast } = useToast();
 
+    const handleCloseModal = () => {
+        setModalStep('closed');
+        // Reset selections for next time
+        setSelectedYear(new Date().getFullYear().toString());
+        setSelectedType('comptable');
+    };
+
     useEffect(() => {
-        if (isDisplayModalOpen) {
+        if (modalStep === 'display') {
             setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
         }
-    }, [isDisplayModalOpen]);
+    }, [modalStep]);
 
     const handleGenerate = () => {
         const data = getBilanData(selectedYear, selectedType);
@@ -241,8 +246,7 @@ export default function BilanPage() {
             return;
         }
         setReportData(data);
-        setIsSelectionModalOpen(false);
-        setIsDisplayModalOpen(true);
+        setModalStep('display');
     };
 
     const handleExportPDF = () => {
@@ -332,197 +336,197 @@ export default function BilanPage() {
                     <CardDescription>Générez et consultez les différents types de bilans financiers.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-64">
-                    <Button size="lg" onClick={() => setIsSelectionModalOpen(true)}>
+                    <Button size="lg" onClick={() => setModalStep('selection')}>
                         Générer un Bilan
                     </Button>
                 </CardContent>
             </Card>
 
-            <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Paramètres du Bilan</DialogTitle>
-                        <DialogDescription>Choisissez l'exercice et le type de bilan à générer.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="year-select">Exercice fiscal (année)</Label>
-                            <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger id="year-select"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="2025">2025</SelectItem>
-                                    <SelectItem value="2024">2024</SelectItem>
-                                    <SelectItem value="2023">2023</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="type-select">Type de bilan</Label>
-                            <Select value={selectedType} onValueChange={(v) => setSelectedType(v as BilanType)}>
-                                <SelectTrigger id="type-select"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="comptable">Bilan comptable</SelectItem>
-                                    <SelectItem value="fonctionnel">Bilan fonctionnel</SelectItem>
-                                    <SelectItem value="financier">Bilan financier</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsSelectionModalOpen(false)}>Annuler</Button>
-                        <Button onClick={handleGenerate}>Générer le Bilan</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-                <DialogContent className="max-w-7xl">
-                    <DialogHeader>
-                        <DialogTitle>Bilan {selectedType} - Exercice {selectedYear}</DialogTitle>
-                        <DialogDescription>
-                            Aperçu du bilan. Vous pouvez l'exporter en PDF.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {reportData ? (
-                         <div className="max-h-[70vh] overflow-y-auto p-2 border rounded-md bg-muted/20">
-                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
-                                {/* Actif Column */}
-                                {selectedType === 'comptable' && (
+            <Dialog open={modalStep !== 'closed'} onOpenChange={(open) => !open && handleCloseModal()}>
+                <DialogContent className={modalStep === 'display' ? "max-w-7xl" : "sm:max-w-md"}>
+                    {modalStep === 'selection' && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Paramètres du Bilan</DialogTitle>
+                                <DialogDescription>Choisissez l'exercice et le type de bilan à générer.</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
                                 <div className="space-y-2">
-                                    <table className="w-full text-xs table-fixed">
-                                        <colgroup>
-                                            <col style={{width: '12%'}} />
-                                            <col style={{width: '38%'}} />
-                                            <col style={{width: '15%'}} />
-                                            <col style={{width: '15%'}} />
-                                            <col style={{width: '15%'}} />
-                                            <col style={{width: '15%'}} />
-                                        </colgroup>
-                                        <thead>
-                                            <tr className="border-b">
-                                                <th className="text-left py-1 font-semibold">Compte</th>
-                                                <th className="text-left py-1 font-semibold">ACTIF</th>
-                                                <th className="text-right py-1 font-semibold">Brut</th>
-                                                <th className="text-right py-1 font-semibold">Amort.</th>
-                                                <th className="text-right py-1 font-semibold">Net</th>
-                                                <th className="text-right py-1 font-semibold">Net N-1</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {reportData.actif.map((ligne, idx) => (
-                                                <tr key={`actif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                    <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.brut)}</td>
-                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.amortissement)}</td>
-                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
-                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                    <Label htmlFor="year-select">Exercice fiscal (année)</Label>
+                                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                        <SelectTrigger id="year-select"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="2025">2025</SelectItem>
+                                            <SelectItem value="2024">2024</SelectItem>
+                                            <SelectItem value="2023">2023</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                )}
-                                {(selectedType === 'fonctionnel' || selectedType === 'financier') && (
                                 <div className="space-y-2">
-                                     <table className="w-full text-xs table-fixed">
-                                        <colgroup>
-                                            <col style={{width: '20%'}} />
-                                            <col style={{width: '60%'}} />
-                                            <col style={{width: '20%'}} />
-                                        </colgroup>
-                                        <thead>
-                                            <tr className="border-b">
-                                                <th className="text-left py-1 font-semibold">Compte</th>
-                                                <th className="text-left py-1 font-semibold">ACTIF</th>
-                                                <th className="text-right py-1 font-semibold">{selectedType === 'fonctionnel' ? 'Valeur' : 'Valeur Nette'}</th>
-                                            </tr>
-                                        </thead>
-                                         <tbody>
-                                            {reportData.actif.map((ligne, idx) => (
-                                                <tr key={`actif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                    <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                    <Label htmlFor="type-select">Type de bilan</Label>
+                                    <Select value={selectedType} onValueChange={(v) => setSelectedType(v as BilanType)}>
+                                        <SelectTrigger id="type-select"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="comptable">Bilan comptable</SelectItem>
+                                            <SelectItem value="fonctionnel">Bilan fonctionnel</SelectItem>
+                                            <SelectItem value="financier">Bilan financier</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                )}
-
-
-                                {/* Passif Column */}
-                                {selectedType === 'comptable' && (
-                                <div className="space-y-2">
-                                     <table className="w-full text-xs table-fixed">
-                                        <colgroup>
-                                            <col style={{width: '15%'}} />
-                                            <col style={{width: '55%'}} />
-                                            <col style={{width: '15%'}} />
-                                            <col style={{width: '15%'}} />
-                                        </colgroup>
-                                        <thead>
-                                            <tr className="border-b">
-                                                <th className="text-left py-1 font-semibold">Compte</th>
-                                                <th className="text-left py-1 font-semibold">PASSIF</th>
-                                                <th className="text-right py-1 font-semibold">Net</th>
-                                                <th className="text-right py-1 font-semibold">Net N-1</th>
-                                            </tr>
-                                        </thead>
-                                         <tbody>
-                                            {reportData.passif.map((ligne, idx) => (
-                                                <tr key={`passif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                    <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
-                                                    <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                )}
-                                {(selectedType === 'fonctionnel' || selectedType === 'financier') && (
-                                <div className="space-y-2">
-                                    <table className="w-full text-xs table-fixed">
-                                        <colgroup>
-                                            <col style={{width: '20%'}} />
-                                            <col style={{width: '60%'}} />
-                                            <col style={{width: '20%'}} />
-                                        </colgroup>
-                                        <thead>
-                                            <tr className="border-b">
-                                                <th className="text-left py-1 font-semibold">Compte</th>
-                                                <th className="text-left py-1 font-semibold">PASSIF</th>
-                                                <th className="text-right py-1 font-semibold">{selectedType === 'fonctionnel' ? 'Valeur' : 'Valeur Nette'}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {reportData.passif.map((ligne, idx) => (
-                                                <tr key={`passif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                    <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                    <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                    <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                )}
-                             </div>
-                         </div>
-                    ) : (
-                        <div className="h-64 flex items-center justify-center text-muted-foreground">Erreur lors de la génération du rapport.</div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={handleCloseModal}>Annuler</Button>
+                                <Button onClick={handleGenerate}>Suivant</Button>
+                            </DialogFooter>
+                        </>
                     )}
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDisplayModalOpen(false)}>Fermer</Button>
-                        <Button onClick={handleExportPDF} disabled={!reportData}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
-                    </DialogFooter>
+                    
+                    {modalStep === 'display' && reportData && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Bilan {selectedType} - Exercice {selectedYear}</DialogTitle>
+                                <DialogDescription>
+                                    Aperçu du bilan. Vous pouvez l'exporter en PDF ou revenir en arrière pour modifier les paramètres.
+                                </DialogDescription>
+                            </DialogHeader>
+                             <div className="max-h-[70vh] overflow-y-auto p-2 border rounded-md bg-muted/20">
+                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
+                                    {/* Actif Column */}
+                                    {selectedType === 'comptable' && (
+                                    <div className="space-y-2">
+                                        <table className="w-full text-xs table-fixed">
+                                            <colgroup>
+                                                <col style={{width: '12%'}} />
+                                                <col style={{width: '38%'}} />
+                                                <col style={{width: '15%'}} />
+                                                <col style={{width: '15%'}} />
+                                                <col style={{width: '15%'}} />
+                                                <col style={{width: '15%'}} />
+                                            </colgroup>
+                                            <thead>
+                                                <tr className="border-b">
+                                                    <th className="text-left py-1 font-semibold">Compte</th>
+                                                    <th className="text-left py-1 font-semibold">ACTIF</th>
+                                                    <th className="text-right py-1 font-semibold">Brut</th>
+                                                    <th className="text-right py-1 font-semibold">Amort.</th>
+                                                    <th className="text-right py-1 font-semibold">Net</th>
+                                                    <th className="text-right py-1 font-semibold">Net N-1</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {reportData.actif.map((ligne, idx) => (
+                                                    <tr key={`actif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
+                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.brut)}</td>
+                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.amortissement)}</td>
+                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    )}
+                                    {(selectedType === 'fonctionnel' || selectedType === 'financier') && (
+                                    <div className="space-y-2">
+                                         <table className="w-full text-xs table-fixed">
+                                            <colgroup>
+                                                <col style={{width: '20%'}} />
+                                                <col style={{width: '60%'}} />
+                                                <col style={{width: '20%'}} />
+                                            </colgroup>
+                                            <thead>
+                                                <tr className="border-b">
+                                                    <th className="text-left py-1 font-semibold">Compte</th>
+                                                    <th className="text-left py-1 font-semibold">ACTIF</th>
+                                                    <th className="text-right py-1 font-semibold">{selectedType === 'fonctionnel' ? 'Valeur' : 'Valeur Nette'}</th>
+                                                </tr>
+                                            </thead>
+                                             <tbody>
+                                                {reportData.actif.map((ligne, idx) => (
+                                                    <tr key={`actif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
+                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    )}
+
+
+                                    {/* Passif Column */}
+                                    {selectedType === 'comptable' && (
+                                    <div className="space-y-2">
+                                         <table className="w-full text-xs table-fixed">
+                                            <colgroup>
+                                                <col style={{width: '15%'}} />
+                                                <col style={{width: '55%'}} />
+                                                <col style={{width: '15%'}} />
+                                                <col style={{width: '15%'}} />
+                                            </colgroup>
+                                            <thead>
+                                                <tr className="border-b">
+                                                    <th className="text-left py-1 font-semibold">Compte</th>
+                                                    <th className="text-left py-1 font-semibold">PASSIF</th>
+                                                    <th className="text-right py-1 font-semibold">Net</th>
+                                                    <th className="text-right py-1 font-semibold">Net N-1</th>
+                                                </tr>
+                                            </thead>
+                                             <tbody>
+                                                {reportData.passif.map((ligne, idx) => (
+                                                    <tr key={`passif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
+                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    )}
+                                    {(selectedType === 'fonctionnel' || selectedType === 'financier') && (
+                                    <div className="space-y-2">
+                                        <table className="w-full text-xs table-fixed">
+                                            <colgroup>
+                                                <col style={{width: '20%'}} />
+                                                <col style={{width: '60%'}} />
+                                                <col style={{width: '20%'}} />
+                                            </colgroup>
+                                            <thead>
+                                                <tr className="border-b">
+                                                    <th className="text-left py-1 font-semibold">Compte</th>
+                                                    <th className="text-left py-1 font-semibold">PASSIF</th>
+                                                    <th className="text-right py-1 font-semibold">{selectedType === 'fonctionnel' ? 'Valeur' : 'Valeur Nette'}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {reportData.passif.map((ligne, idx) => (
+                                                    <tr key={`passif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
+                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
+                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    )}
+                                 </div>
+                             </div>
+                            <DialogFooter>
+                                <Button variant="ghost" onClick={() => setModalStep('selection')}><ArrowLeft className="mr-2 h-4 w-4"/> Précédent</Button>
+                                <div className='flex-grow' />
+                                <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
+                                <Button onClick={handleExportPDF} disabled={!reportData}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+                            </DialogFooter>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </>
     );
 }
-
-    

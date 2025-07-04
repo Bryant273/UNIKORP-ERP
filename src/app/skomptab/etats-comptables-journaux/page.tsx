@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -37,7 +36,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
-import { Calendar as CalendarIcon, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, ArrowLeft } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -90,8 +89,7 @@ const generateMockData = (journalCode: string, period: DateRange): LigneJournal[
 
 
 export default function EtatsComptablesJournauxPage() {
-  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-  const [isDisplayModalOpen, setIsDisplayModalOpen] = useState(false);
+    const [modalStep, setModalStep] = useState<'closed' | 'selection' | 'display'>('closed');
 
   const [selectedJournal, setSelectedJournal] = useState<string | null>(null);
   const [period, setPeriod] = useState<DateRange | undefined>({
@@ -103,11 +101,15 @@ export default function EtatsComptablesJournauxPage() {
   const [printDateTime, setPrintDateTime] = useState('');
   const { toast } = useToast();
   
+  const handleCloseModal = () => {
+    setModalStep('closed');
+  }
+
   useEffect(() => {
-    if (isDisplayModalOpen) {
+    if (modalStep === 'display') {
         setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
     }
-  }, [isDisplayModalOpen]);
+  }, [modalStep]);
 
   const handleShowJournal = () => {
     if (!selectedJournal || !period?.from) {
@@ -120,8 +122,7 @@ export default function EtatsComptablesJournauxPage() {
     }
     const data = generateMockData(selectedJournal, period);
     setJournalData(data);
-    setIsSelectionModalOpen(false);
-    setIsDisplayModalOpen(true);
+    setModalStep('display');
   };
   
   const totalDebit = journalData.reduce((acc, item) => acc + item.debit, 0);
@@ -220,159 +221,163 @@ export default function EtatsComptablesJournauxPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-64">
-          <Button size="lg" onClick={() => setIsSelectionModalOpen(true)}>
+          <Button size="lg" onClick={() => setModalStep('selection')}>
             Afficher un journal
           </Button>
         </CardContent>
       </Card>
 
-      {/* --- Selection Modal --- */}
-      <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
-        <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-                <DialogTitle>Paramètres du Journal</DialogTitle>
-                <DialogDescription>
-                    Choisissez le journal et la période à consulter.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="journal">Journal</Label>
-                    <Select onValueChange={setSelectedJournal}>
-                        <SelectTrigger id="journal">
-                            <SelectValue placeholder="Sélectionnez un journal..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {MOCK_JOURNALS.map(j => <SelectItem key={j.code} value={j.code}>{j.intitule}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+      <Dialog open={modalStep !== 'closed'} onOpenChange={(open) => !open && handleCloseModal()}>
+        <DialogContent className={modalStep === 'display' ? "max-w-6xl" : "sm:max-w-md"}>
+          {modalStep === 'selection' && (
+            <>
+                <DialogHeader>
+                    <DialogTitle>Paramètres du Journal</DialogTitle>
+                    <DialogDescription>
+                        Choisissez le journal et la période à consulter.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
                     <div className="space-y-2">
-                        <Label>Date de début</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
-                            </PopoverContent>
-                        </Popover>
+                        <Label htmlFor="journal">Journal</Label>
+                        <Select onValueChange={setSelectedJournal}>
+                            <SelectTrigger id="journal">
+                                <SelectValue placeholder="Sélectionnez un journal..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MOCK_JOURNALS.map(j => <SelectItem key={j.code} value={j.code}>{j.intitule}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Date de fin</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
-                            </PopoverContent>
-                        </Popover>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Date de début</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Date de fin</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsSelectionModalOpen(false)}>Retour</Button>
-                <Button onClick={handleShowJournal}>Afficher</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* --- Display Modal --- */}
-      <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-        <DialogContent className="max-w-6xl">
-            <DialogHeader>
-                <DialogTitle>Journal - {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</DialogTitle>
-                <DialogDescription>
-                    Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto pr-4">
-                 <div className="mb-6">
-                    <div className="flex justify-between items-start p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                            <Logo className="h-12 w-12 text-primary"/>
-                            <div>
-                                <p className="font-bold">Votre Société S.A.</p>
+                <DialogFooter>
+                    <Button variant="outline" onClick={handleCloseModal}>Retour</Button>
+                    <Button onClick={handleShowJournal}>Afficher</Button>
+                </DialogFooter>
+            </>
+          )}
+
+          {modalStep === 'display' && (
+            <>
+                <DialogHeader>
+                    <DialogTitle>Journal - {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</DialogTitle>
+                    <DialogDescription>
+                        Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[60vh] overflow-y-auto pr-4">
+                     <div className="mb-6">
+                        <div className="flex justify-between items-start p-4 border rounded-lg">
+                            <div className="flex items-center gap-4">
+                                <Logo className="h-12 w-12 text-primary"/>
+                                <div>
+                                    <p className="font-bold">Votre Société S.A.</p>
+                                </div>
+                            </div>
+                            <div className="text-right text-xs text-muted-foreground">
+                                <p><span className="font-semibold text-foreground">Journal :</span> {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</p>
+                                <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                                <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                                <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
                             </div>
                         </div>
-                        <div className="text-right text-xs text-muted-foreground">
-                            <p><span className="font-semibold text-foreground">Journal :</span> {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</p>
-                            <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
-                            <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
-                            <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
-                        </div>
                     </div>
-                </div>
-                 <Table>
-                    <TableHeader className="sticky top-0 bg-secondary">
-                        <TableRow>
-                            <TableHead className="w-[120px] text-center">Date</TableHead>
-                            <TableHead className="w-[120px] text-center">N° Pièce</TableHead>
-                            <TableHead className="w-[120px] text-center">Compte Général</TableHead>
-                            <TableHead className="w-[150px] text-center">Tiers</TableHead>
-                            <TableHead className="text-center">Libellé</TableHead>
-                            <TableHead className="w-[120px] text-center">Débit</TableHead>
-                            <TableHead className="w-[120px] text-center">Crédit</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {journalData.length > 0 ? Object.values(groupedData).map((lignes, groupIndex) => (
-                            <React.Fragment key={groupIndex}>
-                                {lignes.map((ligne, ligneIndex) => (
-                                    <TableRow key={`${groupIndex}-${ligneIndex}`} className={groupIndex % 2 !== 0 ? 'bg-muted' : ''}>
-                                        {ligneIndex === 0 && (
-                                            <>
-                                                <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
-                                                    {format(new Date(ligne.date), 'dd/MM/yyyy')}
-                                                </TableCell>
-                                                <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
-                                                    {ligne.numeroPiece}
-                                                </TableCell>
-                                            </>
-                                        )}
-                                        <TableCell className="text-center font-mono">{ligne.numeroCompte}</TableCell>
-                                        <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
-                                        <TableCell className="text-center">{ligne.libelleEcriture}</TableCell>
-                                        <TableCell className="text-center font-mono text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
-                                        <TableCell className="text-center font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </React.Fragment>
-                        )) : (
+                     <Table>
+                        <TableHeader className="sticky top-0 bg-secondary">
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
+                                <TableHead className="w-[120px] text-center">Date</TableHead>
+                                <TableHead className="w-[120px] text-center">N° Pièce</TableHead>
+                                <TableHead className="w-[120px] text-center">Compte Général</TableHead>
+                                <TableHead className="w-[150px] text-center">Tiers</TableHead>
+                                <TableHead className="text-center">Libellé</TableHead>
+                                <TableHead className="w-[120px] text-center">Débit</TableHead>
+                                <TableHead className="w-[120px] text-center">Crédit</TableHead>
                             </TableRow>
-                        )}
-                    </TableBody>
-                    {journalData.length > 0 &&
-                      <TableFooter>
-                          <TableRow className="bg-secondary">
-                              <TableCell colSpan={5} className="text-center font-bold">Totaux</TableCell>
-                              <TableCell className="text-center font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
-                              <TableCell className="text-center font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                              <TableCell colSpan={5}></TableCell>
-                              <TableCell colSpan={2} className="text-center font-bold">
-                                  {totalDebit.toFixed(2) === totalCredit.toFixed(2) ? "Équilibré" : "Déséquilibré"}
-                              </TableCell>
-                          </TableRow>
-                      </TableFooter>
-                    }
-                 </Table>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDisplayModalOpen(false)}>Fermer</Button>
-                <Button onClick={handleExportPDF} disabled={journalData.length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
-            </DialogFooter>
+                        </TableHeader>
+                        <TableBody>
+                            {journalData.length > 0 ? Object.values(groupedData).map((lignes, groupIndex) => (
+                                <React.Fragment key={groupIndex}>
+                                    {lignes.map((ligne, ligneIndex) => (
+                                        <TableRow key={`${groupIndex}-${ligneIndex}`} className={groupIndex % 2 !== 0 ? 'bg-muted' : ''}>
+                                            {ligneIndex === 0 && (
+                                                <>
+                                                    <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
+                                                        {format(new Date(ligne.date), 'dd/MM/yyyy')}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={lignes.length} className="text-center align-middle font-medium border-r">
+                                                        {ligne.numeroPiece}
+                                                    </TableCell>
+                                                </>
+                                            )}
+                                            <TableCell className="text-center font-mono">{ligne.numeroCompte}</TableCell>
+                                            <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
+                                            <TableCell className="text-center">{ligne.libelleEcriture}</TableCell>
+                                            <TableCell className="text-center font-mono text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                            <TableCell className="text-center font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </React.Fragment>
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="h-24 text-center">Aucune donnée pour ce journal sur cette période.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                        {journalData.length > 0 &&
+                          <TableFooter>
+                              <TableRow className="bg-secondary">
+                                  <TableCell colSpan={5} className="text-center font-bold">Totaux</TableCell>
+                                  <TableCell className="text-center font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                  <TableCell className="text-center font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                  <TableCell colSpan={5}></TableCell>
+                                  <TableCell colSpan={2} className="text-center font-bold">
+                                      {totalDebit.toFixed(2) === totalCredit.toFixed(2) ? "Équilibré" : "Déséquilibré"}
+                                  </TableCell>
+                              </TableRow>
+                          </TableFooter>
+                        }
+                     </Table>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setModalStep('selection')}><ArrowLeft className="mr-2 h-4 w-4"/> Précédent</Button>
+                    <div className="flex-grow"/>
+                    <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
+                    <Button onClick={handleExportPDF} disabled={journalData.length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+                </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

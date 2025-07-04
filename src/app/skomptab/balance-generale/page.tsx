@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar as CalendarIcon, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, ArrowLeft } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -65,8 +65,7 @@ const BALANCE_TYPE_CONFIG: Record<BalanceType, { label: string; keys: (keyof Bal
 
 
 export default function BalanceGeneralePage() {
-    const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-    const [isDisplayModalOpen, setIsDisplayModalOpen] = useState(false);
+    const [modalStep, setModalStep] = useState<'closed' | 'selection' | 'display'>('closed');
     
     const [period, setPeriod] = useState<DateRange | undefined>({ from: new Date(2025, 0, 1), to: new Date(2025, 0, 31) });
     const [balanceType, setBalanceType] = useState<BalanceType>('8col');
@@ -74,12 +73,16 @@ export default function BalanceGeneralePage() {
     const [reportData, setReportData] = useState<BalanceRow[]>([]);
     const [printDateTime, setPrintDateTime] = useState('');
     const { toast } = useToast();
+    
+    const handleCloseModal = () => {
+        setModalStep('closed');
+    }
 
     useEffect(() => {
-        if (isDisplayModalOpen) {
+        if (modalStep === 'display') {
             setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
         }
-    }, [isDisplayModalOpen]);
+    }, [modalStep]);
 
     const handleGenerate = () => {
         if (!period?.from || !period?.to) {
@@ -118,12 +121,12 @@ export default function BalanceGeneralePage() {
         }
         
         setReportData(data);
-        setIsSelectionModalOpen(false);
-        setIsDisplayModalOpen(true);
+        setModalStep('display');
     };
 
     const tableConfig = BALANCE_TYPE_CONFIG[balanceType];
     const totals = useMemo(() => {
+        if (!reportData) return {};
         return tableConfig.keys.reduce((acc, key) => {
             if (typeof reportData[0]?.[key as keyof BalanceRow] === 'number') {
                 acc[key as keyof BalanceRow] = reportData.reduce((sum, row) => sum + (Number(row[key as keyof BalanceRow]) || 0), 0);
@@ -189,93 +192,99 @@ export default function BalanceGeneralePage() {
                     <CardDescription>Consultez la balance générale des comptes pour une période donnée.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-64">
-                    <Button size="lg" onClick={() => setIsSelectionModalOpen(true)}>
+                    <Button size="lg" onClick={() => setModalStep('selection')}>
                         Générer la Balance Générale
                     </Button>
                 </CardContent>
             </Card>
 
-            <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Paramètres de la Balance</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Type de Balance</Label>
-                            <Select value={balanceType} onValueChange={(v) => setBalanceType(v as BalanceType)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {Object.entries(BALANCE_TYPE_CONFIG).map(([key, { label }]) => (
-                                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Date de début</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild><Button variant="outline" className="w-full justify-start text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}</Button></PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ ...p, from: date }))} locale={fr} /></PopoverContent>
-                                </Popover>
+            <Dialog open={modalStep !== 'closed'} onOpenChange={(open) => !open && handleCloseModal()}>
+                <DialogContent className={modalStep === 'display' ? "max-w-7xl" : "sm:max-w-md"}>
+                    {modalStep === 'selection' && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Paramètres de la Balance</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="space-y-2">
+                                    <Label>Type de Balance</Label>
+                                    <Select value={balanceType} onValueChange={(v) => setBalanceType(v as BalanceType)}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(BALANCE_TYPE_CONFIG).map(([key, { label }]) => (
+                                                <SelectItem key={key} value={key}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Date de début</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild><Button variant="outline" className="w-full justify-start text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}</Button></PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ ...p, from: date }))} locale={fr} /></PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Date de fin</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild><Button variant="outline" className="w-full justify-start text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}</Button></PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ ...p, to: date }))} locale={fr} /></PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Date de fin</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild><Button variant="outline" className="w-full justify-start text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}</Button></PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ ...p, to: date }))} locale={fr} /></PopoverContent>
-                                </Popover>
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsSelectionModalOpen(false)}>Annuler</Button>
-                        <Button onClick={handleGenerate}>Générer l'état</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={handleCloseModal}>Annuler</Button>
+                                <Button onClick={handleGenerate}>Suivant</Button>
+                            </DialogFooter>
+                        </>
+                    )}
 
-            <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-                <DialogContent className="max-w-7xl">
-                    <DialogHeader>
-                        <DialogTitle>Balance Générale</DialogTitle>
-                        <DialogDescription>
-                             Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto pr-4">
-                         <Table>
-                            <TableHeader><TableRow>
-                                {tableConfig.headers.map(h => <TableHead key={h} className={h.includes('Compte') || h.includes('Intitulé') ? 'text-left' : 'text-right'}>{h}</TableHead>)}
-                            </TableRow></TableHeader>
-                            <TableBody>
-                                {reportData.map((row) => (
-                                    <TableRow key={row.numero}>
-                                        {tableConfig.keys.map(key => (
-                                            <TableCell key={key} className={key.includes('numero') || key.includes('intitule') ? 'text-left font-medium' : 'text-right font-mono'}>
-                                                {typeof row[key] === 'number' && (row[key] as number) === 0 ? '' : typeof row[key] === 'number' ? (row[key] as number).toLocaleString('fr-FR', {minimumFractionDigits: 2}) : row[key]}
-                                            </TableCell>
+                    {modalStep === 'display' && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Balance Générale</DialogTitle>
+                                <DialogDescription>
+                                     Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="max-h-[70vh] overflow-y-auto pr-4">
+                                 <Table>
+                                    <TableHeader><TableRow>
+                                        {tableConfig.headers.map(h => <TableHead key={h} className={h.includes('Compte') || h.includes('Intitulé') ? 'text-left' : 'text-right'}>{h}</TableHead>)}
+                                    </TableRow></TableHeader>
+                                    <TableBody>
+                                        {reportData.map((row) => (
+                                            <TableRow key={row.numero}>
+                                                {tableConfig.keys.map(key => (
+                                                    <TableCell key={key} className={key.includes('numero') || key.includes('intitule') ? 'text-left font-medium' : 'text-right font-mono'}>
+                                                        {typeof row[key] === 'number' && (row[key] as number) === 0 ? '' : typeof row[key] === 'number' ? (row[key] as number).toLocaleString('fr-FR', {minimumFractionDigits: 2}) : row[key]}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
                                         ))}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                            <TableFooter>
-                                <TableRow>
-                                    <TableCell colSpan={2} className="text-right font-bold">TOTAUX</TableCell>
-                                     {tableConfig.keys.slice(2).map(key => (
-                                         <TableCell key={`total-${key}`} className="text-right font-bold font-mono">
-                                             {(totals[key as keyof BalanceRow] || 0).toLocaleString('fr-FR', {minimumFractionDigits: 2})}
-                                         </TableCell>
-                                     ))}
-                                </TableRow>
-                            </TableFooter>
-                         </Table>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDisplayModalOpen(false)}>Fermer</Button>
-                        <Button onClick={handleExportPDF}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
-                    </DialogFooter>
+                                    </TableBody>
+                                    <TableFooter>
+                                        <TableRow>
+                                            <TableCell colSpan={2} className="text-right font-bold">TOTAUX</TableCell>
+                                             {tableConfig.keys.slice(2).map(key => (
+                                                 <TableCell key={`total-${key}`} className="text-right font-bold font-mono">
+                                                     {(totals[key as keyof BalanceRow] || 0).toLocaleString('fr-FR', {minimumFractionDigits: 2})}
+                                                 </TableCell>
+                                             ))}
+                                        </TableRow>
+                                    </TableFooter>
+                                 </Table>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="ghost" onClick={() => setModalStep('selection')}><ArrowLeft className="mr-2 h-4 w-4"/> Précédent</Button>
+                                <div className="flex-grow" />
+                                <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
+                                <Button onClick={handleExportPDF}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+                            </DialogFooter>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </>

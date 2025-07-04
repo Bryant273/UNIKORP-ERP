@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -38,7 +37,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Calendar as CalendarIcon, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, ArrowLeft } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -127,8 +126,7 @@ type GroupedEcriture = {
 };
 
 export default function EtatsComptablesBrouillardsPage() {
-  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-  const [isDisplayModalOpen, setIsDisplayModalOpen] = useState(false);
+    const [modalStep, setModalStep] = useState<'closed' | 'selection' | 'display'>('closed');
 
   const [selectedJournal, setSelectedJournal] = useState<string | null>(null);
   const [selectedStagiaire, setSelectedStagiaire] = useState<string | null>(null);
@@ -141,11 +139,15 @@ export default function EtatsComptablesBrouillardsPage() {
   const [printDateTime, setPrintDateTime] = useState('');
   const { toast } = useToast();
   
+  const handleCloseModal = () => {
+    setModalStep('closed');
+  }
+
   useEffect(() => {
-    if (isDisplayModalOpen) {
+    if (modalStep === 'display') {
         setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
     }
-  }, [isDisplayModalOpen]);
+  }, [modalStep]);
 
   const handleShowJournal = () => {
     if (!period?.from) {
@@ -162,8 +164,7 @@ export default function EtatsComptablesBrouillardsPage() {
     });
 
     setBrouillardData(filteredData);
-    setIsSelectionModalOpen(false);
-    setIsDisplayModalOpen(true);
+    setModalStep('display');
   };
   
   const groupedData = useMemo(() => {
@@ -270,165 +271,169 @@ export default function EtatsComptablesBrouillardsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-64">
-          <Button size="lg" onClick={() => setIsSelectionModalOpen(true)}>
+          <Button size="lg" onClick={() => setModalStep('selection')}>
             Générer un état de brouillard
           </Button>
         </CardContent>
       </Card>
 
-      {/* --- Selection Modal --- */}
-      <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
-        <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-                <DialogTitle>Paramètres de l'état</DialogTitle>
-                <DialogDescription>
-                    Choisissez les filtres pour générer votre état.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="journal">Journal (Optionnel)</Label>
-                    <Select onValueChange={setSelectedJournal}>
-                        <SelectTrigger id="journal">
-                            <SelectValue placeholder="Tous les journaux" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {MOCK_JOURNALS.map(j => <SelectItem key={j.code} value={j.code}>{j.intitule}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="stagiaire">Saisi par (Optionnel)</Label>
-                    <Select onValueChange={setSelectedStagiaire}>
-                        <SelectTrigger id="stagiaire">
-                            <SelectValue placeholder="Tous les utilisateurs" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {MOCK_STAGIAIRES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label>Période</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yy')} - ${format(period.to, 'dd/MM/yy')}`: format(period.from, 'dd/MM/yyyy')) : 'Sélectionnez'}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="range" selected={period} onSelect={setPeriod} numberOfMonths={2} locale={fr} />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsSelectionModalOpen(false)}>Annuler</Button>
-                <Button onClick={handleShowJournal}>Générer l'état</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* --- Display Modal --- */}
-      <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-        <DialogContent className="max-w-7xl">
-            <DialogHeader>
-                <DialogTitle>État du Brouillard</DialogTitle>
-                <DialogDescription>
-                    Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto pr-4">
-                 <div className="mb-6">
-                    <div className="flex justify-between items-start p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                            <Logo className="h-12 w-12 text-primary"/>
-                            <div>
-                                <p className="font-bold">Votre Société S.A.</p>
-                            </div>
-                        </div>
-                        <div className="text-right text-xs text-muted-foreground">
-                            <p><span className="font-semibold text-foreground">État :</span> Brouillard Comptable</p>
-                            <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
-                            {selectedJournal && <p><span className="font-semibold text-foreground">Journal :</span> {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</p>}
-                            {selectedStagiaire && <p><span className="font-semibold text-foreground">Saisi par :</span> {selectedStagiaire}</p>}
-                            <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
-                            <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
-                        </div>
+      <Dialog open={modalStep !== 'closed'} onOpenChange={(open) => !open && handleCloseModal()}>
+        <DialogContent className={modalStep === 'display' ? "max-w-7xl" : "sm:max-w-md"}>
+          {modalStep === 'selection' && (
+            <>
+                <DialogHeader>
+                    <DialogTitle>Paramètres de l'état</DialogTitle>
+                    <DialogDescription>
+                        Choisissez les filtres pour générer votre état.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="journal">Journal (Optionnel)</Label>
+                        <Select onValueChange={setSelectedJournal}>
+                            <SelectTrigger id="journal">
+                                <SelectValue placeholder="Tous les journaux" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MOCK_JOURNALS.map(j => <SelectItem key={j.code} value={j.code}>{j.intitule}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="stagiaire">Saisi par (Optionnel)</Label>
+                        <Select onValueChange={setSelectedStagiaire}>
+                            <SelectTrigger id="stagiaire">
+                                <SelectValue placeholder="Tous les utilisateurs" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MOCK_STAGIAIRES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Période</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yy')} - ${format(period.to, 'dd/MM/yy')}`: format(period.from, 'dd/MM/yyyy')) : 'Sélectionnez'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="range" selected={period} onSelect={setPeriod} numberOfMonths={2} locale={fr} />
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
-                 <Table>
-                    <TableHeader className="sticky top-0 bg-secondary">
-                        <TableRow>
-                            <TableHead className="w-[120px] text-center">Date Op.</TableHead>
-                            <TableHead className="w-[120px] text-center">N° Pièce</TableHead>
-                            <TableHead className="text-center">Compte</TableHead>
-                            <TableHead className="text-center">Tiers</TableHead>
-                            <TableHead className="text-center">Libellé</TableHead>
-                            <TableHead className="w-[120px] text-center">Débit</TableHead>
-                            <TableHead className="w-[120px] text-center">Crédit</TableHead>
-                            <TableHead className="w-[150px] text-center">Saisi par</TableHead>
-                            <TableHead className="w-[120px] text-center">Statut</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {brouillardData.length > 0 ? Object.values(groupedData).map((group, groupIndex) => (
-                            <React.Fragment key={group.numeroPiece}>
-                                {group.lignes.map((ligne, ligneIndex) => (
-                                    <TableRow key={`${group.numeroPiece}-${ligne.id}`} className={groupIndex % 2 !== 0 ? 'bg-muted/5' : ''}>
-                                        {ligneIndex === 0 && (
-                                            <>
-                                                <TableCell rowSpan={group.lignes.length} className="text-center align-middle font-medium border-r">
-                                                    {format(new Date(group.dateOperation), 'dd/MM/yyyy')}
-                                                </TableCell>
-                                                <TableCell rowSpan={group.lignes.length} className="text-center align-middle font-mono border-r">
-                                                    {group.numeroPiece}
-                                                </TableCell>
-                                            </>
-                                        )}
-                                        <TableCell className="text-center font-mono">{ligne.compte}</TableCell>
-                                        <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
-                                        <TableCell className="text-left">{ligneIndex === 0 ? <span className="font-semibold">{group.libelleOperation}</span> : <span className="pl-4 text-muted-foreground">{ligne.libelle}</span>}</TableCell>
-                                        <TableCell className="text-right font-mono text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR', {minimumFractionDigits: 2}) : ''}</TableCell>
-                                        <TableCell className="text-right font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR', {minimumFractionDigits: 2}) : ''}</TableCell>
-                                        {ligneIndex === 0 && (
-                                            <>
-                                                <TableCell rowSpan={group.lignes.length} className="text-center align-middle border-l">
-                                                    {group.saisiePar}
-                                                </TableCell>
-                                                <TableCell rowSpan={group.lignes.length} className="text-center align-middle border-l">
-                                                  <Badge variant={group.statut === 'validee' ? 'secondary' : 'default'} className={group.statut === 'validee' ? '' : 'bg-yellow-100 text-yellow-800'}>
-                                                    {group.statut === 'validee' ? 'Validée' : 'En Brouillard'}
-                                                  </Badge>
-                                                </TableCell>
-                                            </>
-                                        )}
-                                    </TableRow>
-                                ))}
-                            </React.Fragment>
-                        )) : (
+                <DialogFooter>
+                    <Button variant="outline" onClick={handleCloseModal}>Annuler</Button>
+                    <Button onClick={handleShowJournal}>Suivant</Button>
+                </DialogFooter>
+            </>
+          )}
+          
+          {modalStep === 'display' && (
+            <>
+                <DialogHeader>
+                    <DialogTitle>État du Brouillard</DialogTitle>
+                    <DialogDescription>
+                        Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[60vh] overflow-y-auto pr-4">
+                     <div className="mb-6">
+                        <div className="flex justify-between items-start p-4 border rounded-lg">
+                            <div className="flex items-center gap-4">
+                                <Logo className="h-12 w-12 text-primary"/>
+                                <div>
+                                    <p className="font-bold">Votre Société S.A.</p>
+                                </div>
+                            </div>
+                            <div className="text-right text-xs text-muted-foreground">
+                                <p><span className="font-semibold text-foreground">État :</span> Brouillard Comptable</p>
+                                <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                                {selectedJournal && <p><span className="font-semibold text-foreground">Journal :</span> {MOCK_JOURNALS.find(j => j.code === selectedJournal)?.intitule}</p>}
+                                {selectedStagiaire && <p><span className="font-semibold text-foreground">Saisi par :</span> {selectedStagiaire}</p>}
+                                <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                                <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
+                            </div>
+                        </div>
+                    </div>
+                     <Table>
+                        <TableHeader className="sticky top-0 bg-secondary">
                             <TableRow>
-                                <TableCell colSpan={9} className="h-24 text-center">Aucune donnée pour les filtres sélectionnés.</TableCell>
+                                <TableHead className="w-[120px] text-center">Date Op.</TableHead>
+                                <TableHead className="w-[120px] text-center">N° Pièce</TableHead>
+                                <TableHead className="text-center">Compte</TableHead>
+                                <TableHead className="text-center">Tiers</TableHead>
+                                <TableHead className="text-center">Libellé</TableHead>
+                                <TableHead className="w-[120px] text-center">Débit</TableHead>
+                                <TableHead className="w-[120px] text-center">Crédit</TableHead>
+                                <TableHead className="w-[150px] text-center">Saisi par</TableHead>
+                                <TableHead className="w-[120px] text-center">Statut</TableHead>
                             </TableRow>
-                        )}
-                    </TableBody>
-                    {brouillardData.length > 0 &&
-                      <TableFooter>
-                          <TableRow className="bg-secondary font-bold">
-                              <TableCell colSpan={5} className="text-right">Totaux</TableCell>
-                              <TableCell className="text-right font-mono">{totalDebit.toLocaleString('fr-FR', {minimumFractionDigits: 2})}</TableCell>
-                              <TableCell className="text-right font-mono">{totalCredit.toLocaleString('fr-FR', {minimumFractionDigits: 2})}</TableCell>
-                              <TableCell colSpan={2}></TableCell>
-                          </TableRow>
-                      </TableFooter>
-                    }
-                 </Table>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDisplayModalOpen(false)}>Fermer</Button>
-                <Button onClick={handleExportPDF} disabled={brouillardData.length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
-            </DialogFooter>
+                        </TableHeader>
+                        <TableBody>
+                            {brouillardData.length > 0 ? Object.values(groupedData).map((group, groupIndex) => (
+                                <React.Fragment key={group.numeroPiece}>
+                                    {group.lignes.map((ligne, ligneIndex) => (
+                                        <TableRow key={`${group.numeroPiece}-${ligne.id}`} className={groupIndex % 2 !== 0 ? 'bg-muted/5' : ''}>
+                                            {ligneIndex === 0 && (
+                                                <>
+                                                    <TableCell rowSpan={group.lignes.length} className="text-center align-middle font-medium border-r">
+                                                        {format(new Date(group.dateOperation), 'dd/MM/yyyy')}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={group.lignes.length} className="text-center align-middle font-mono border-r">
+                                                        {group.numeroPiece}
+                                                    </TableCell>
+                                                </>
+                                            )}
+                                            <TableCell className="text-center font-mono">{ligne.compte}</TableCell>
+                                            <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
+                                            <TableCell className="text-left">{ligneIndex === 0 ? <span className="font-semibold">{group.libelleOperation}</span> : <span className="pl-4 text-muted-foreground">{ligne.libelle}</span>}</TableCell>
+                                            <TableCell className="text-right font-mono text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR', {minimumFractionDigits: 2}) : ''}</TableCell>
+                                            <TableCell className="text-right font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR', {minimumFractionDigits: 2}) : ''}</TableCell>
+                                            {ligneIndex === 0 && (
+                                                <>
+                                                    <TableCell rowSpan={group.lignes.length} className="text-center align-middle border-l">
+                                                        {group.saisiePar}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={group.lignes.length} className="text-center align-middle border-l">
+                                                      <Badge variant={group.statut === 'validee' ? 'secondary' : 'default'} className={group.statut === 'validee' ? '' : 'bg-yellow-100 text-yellow-800'}>
+                                                        {group.statut === 'validee' ? 'Validée' : 'En Brouillard'}
+                                                      </Badge>
+                                                    </TableCell>
+                                                </>
+                                            )}
+                                        </TableRow>
+                                    ))}
+                                </React.Fragment>
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={9} className="h-24 text-center">Aucune donnée pour les filtres sélectionnés.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                        {brouillardData.length > 0 &&
+                          <TableFooter>
+                              <TableRow className="bg-secondary font-bold">
+                                  <TableCell colSpan={5} className="text-right">Totaux</TableCell>
+                                  <TableCell className="text-right font-mono">{totalDebit.toLocaleString('fr-FR', {minimumFractionDigits: 2})}</TableCell>
+                                  <TableCell className="text-right font-mono">{totalCredit.toLocaleString('fr-FR', {minimumFractionDigits: 2})}</TableCell>
+                                  <TableCell colSpan={2}></TableCell>
+                              </TableRow>
+                          </TableFooter>
+                        }
+                     </Table>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setModalStep('selection')}><ArrowLeft className="mr-2 h-4 w-4"/> Précédent</Button>
+                    <div className="flex-grow"/>
+                    <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
+                    <Button onClick={handleExportPDF} disabled={brouillardData.length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+                </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

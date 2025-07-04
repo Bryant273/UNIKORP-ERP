@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { Calendar as CalendarIcon, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, ArrowLeft } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -58,8 +57,7 @@ const MOCK_TIERS = [
 type GroupedData = Record<string, EcritureLivreTiers[]>;
 
 export default function GrandLivreTiersPage() {
-    const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-    const [isDisplayModalOpen, setIsDisplayModalOpen] = useState(false);
+    const [modalStep, setModalStep] = useState<'closed' | 'selection' | 'display'>('closed');
     const [reportData, setReportData] = useState<GroupedData>({});
     const [printDateTime, setPrintDateTime] = useState('');
     const { toast } = useToast();
@@ -77,11 +75,15 @@ export default function GrandLivreTiersPage() {
         );
     };
 
+    const handleCloseModal = () => {
+        setModalStep('closed');
+    };
+
     useEffect(() => {
-        if (isDisplayModalOpen) {
+        if (modalStep === 'display') {
             setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
         }
-    }, [isDisplayModalOpen]);
+    }, [modalStep]);
 
     const handleGenerate = () => {
         if (selectedTiers.length === 0) {
@@ -117,8 +119,7 @@ export default function GrandLivreTiersPage() {
         });
 
         setReportData(groupedData);
-        setIsSelectionModalOpen(false);
-        setIsDisplayModalOpen(true);
+        setModalStep('display');
     };
     
     const handleExportPDF = () => {
@@ -210,163 +211,169 @@ export default function GrandLivreTiersPage() {
                     <CardDescription>Consultez le détail des mouvements par client et fournisseur.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-64">
-                    <Button size="lg" onClick={() => setIsSelectionModalOpen(true)}>
+                    <Button size="lg" onClick={() => setModalStep('selection')}>
                         Générer le Grand Livre Tiers
                     </Button>
                 </CardContent>
             </Card>
 
-            <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Consultation du Grand Livre Tiers</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                             <Label>Tiers à afficher</Label>
-                            <ScrollArea className="h-60 rounded-md border">
-                                <div className="p-4 space-y-2">
-                                    {MOCK_TIERS.map(tier => (
-                                        <div key={tier.code} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`tier-${tier.code}`}
-                                                checked={selectedTiers.includes(tier.code)}
-                                                onCheckedChange={() => handleTierToggle(tier.code)}
-                                            />
-                                            <Label htmlFor={`tier-${tier.code}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
-                                                <span className="font-mono text-xs w-24 text-center">{tier.code}</span>
-                                                <span>{tier.intitule} ({tier.type.toLowerCase()})</span>
-                                            </Label>
+            <Dialog open={modalStep !== 'closed'} onOpenChange={(open) => !open && handleCloseModal()}>
+                <DialogContent className={modalStep === 'display' ? "max-w-7xl" : "sm:max-w-md"}>
+                    {modalStep === 'selection' && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Consultation du Grand Livre Tiers</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="space-y-2">
+                                     <Label>Tiers à afficher</Label>
+                                    <ScrollArea className="h-60 rounded-md border">
+                                        <div className="p-4 space-y-2">
+                                            {MOCK_TIERS.map(tier => (
+                                                <div key={tier.code} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`tier-${tier.code}`}
+                                                        checked={selectedTiers.includes(tier.code)}
+                                                        onCheckedChange={() => handleTierToggle(tier.code)}
+                                                    />
+                                                    <Label htmlFor={`tier-${tier.code}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
+                                                        <span className="font-mono text-xs w-24 text-center">{tier.code}</span>
+                                                        <span>{tier.intitule} ({tier.type.toLowerCase()})</span>
+                                                    </Label>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    </ScrollArea>
                                 </div>
-                            </ScrollArea>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Date de début</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Date de fin</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsSelectionModalOpen(false)}>Annuler</Button>
-                        <Button onClick={handleGenerate}>Générer</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isDisplayModalOpen} onOpenChange={setIsDisplayModalOpen}>
-                <DialogContent className="max-w-7xl">
-                    <DialogHeader>
-                        <DialogTitle>Grand Livre Tiers</DialogTitle>
-                        <DialogDescription>
-                            Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
-                         <div className="mb-4">
-                            <div className="flex justify-between items-start p-4 border rounded-lg">
-                                <div className="flex items-center gap-4">
-                                    <Logo className="h-12 w-12 text-primary"/>
-                                    <div>
-                                        <p className="font-bold">Votre Société S.A.</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Date de début</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {period?.from ? format(period.from, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar mode="single" selected={period?.from} onSelect={(date) => setPeriod(p => ({ from: date, to: p?.to }))} locale={fr} />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Date de fin</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {period?.to ? format(period.to, 'dd/MM/yyyy') : 'Sélectionnez'}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar mode="single" selected={period?.to} onSelect={(date) => setPeriod(p => ({ from: p?.from, to: date }))} locale={fr} />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
                                 </div>
-                                <div className="text-right text-xs text-muted-foreground">
-                                    <p><span className="font-semibold text-foreground">État :</span> Grand Livre Tiers</p>
-                                    <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
-                                    <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
-                                    <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
-                                </div>
                             </div>
-                        </div>
-                        {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([tiersCode, ecritures]) => {
-                            const tiersInfo = MOCK_TIERS.find(t => t.code === tiersCode);
-                            const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
-                            const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
-                            let solde = totalDebit - totalCredit;
-                            // For suppliers (401), a credit balance is expected, so we inverse the logic for display
-                            if (tiersInfo?.compteGeneral.startsWith('401')) {
-                                solde = totalCredit - totalDebit;
-                            }
+                            <DialogFooter>
+                                <Button variant="outline" onClick={handleCloseModal}>Annuler</Button>
+                                <Button onClick={handleGenerate}>Suivant</Button>
+                            </DialogFooter>
+                        </>
+                    )}
 
-                            return (
-                                <div key={tiersCode} className="mb-4 break-inside-avoid">
-                                    <h3 className="font-semibold text-base mb-2 p-2 rounded-md bg-secondary text-secondary-foreground">
-                                        {tiersInfo?.compteGeneral} | {tiersInfo?.intitule}
-                                    </h3>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>N° Compta</TableHead>
-                                                <TableHead>Journal</TableHead>
-                                                <TableHead>Date</TableHead>
-                                                <TableHead>Opération</TableHead>
-                                                <TableHead className="text-right">Débit</TableHead>
-                                                <TableHead className="text-right">Crédit</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {ecritures.map((ecriture: EcritureLivreTiers) => (
-                                                <TableRow key={ecriture.id}>
-                                                    <TableCell className="font-mono text-xs">{ecriture.numeroCompta}</TableCell>
-                                                    <TableCell>{ecriture.journal}</TableCell>
-                                                    <TableCell>{format(new Date(ecriture.date), 'dd/MM/yyyy')}</TableCell>
-                                                    <TableCell>{ecriture.operation}</TableCell>
-                                                    <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toLocaleString('fr-FR') : ''}</TableCell>
-                                                    <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toLocaleString('fr-FR') : ''}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                        <TableFooter>
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
-                                                <TableCell className="text-right font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
-                                                <TableCell className="text-right font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
-                                                <TableCell className={`text-right font-bold font-mono ${solde !== 0 ? 'text-red-500' : ''}`}>
-                                                    {solde.toLocaleString('fr-FR')}
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableFooter>
-                                    </Table>
+                    {modalStep === 'display' && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Grand Livre Tiers</DialogTitle>
+                                <DialogDescription>
+                                    Période du {period?.from ? format(period.from, 'dd LLL yyyy', {locale: fr}) : ''} au {period?.to ? format(period.to, 'dd LLL yyyy', {locale: fr}) : ''}.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6">
+                                 <div className="mb-4">
+                                    <div className="flex justify-between items-start p-4 border rounded-lg">
+                                        <div className="flex items-center gap-4">
+                                            <Logo className="h-12 w-12 text-primary"/>
+                                            <div>
+                                                <p className="font-bold">Votre Société S.A.</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right text-xs text-muted-foreground">
+                                            <p><span className="font-semibold text-foreground">État :</span> Grand Livre Tiers</p>
+                                            <p><span className="font-semibold text-foreground">Période :</span> {period?.from ? (period.to ? `${format(period.from, 'dd/MM/yyyy')} au ${format(period.to, 'dd/MM/yyyy')}` : format(period.from, 'dd/MM/yyyy')) : 'N/A'}</p>
+                                            <p><span className="font-semibold text-foreground">Imprimé le :</span> {printDateTime}</p>
+                                            <p><span className="font-semibold text-foreground">Par :</span> Utilisateur Unikorp</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            )
-                        }) : (
-                            <div className="h-24 text-center">Aucune donnée pour les filtres sélectionnés.</div>
-                        )}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDisplayModalOpen(false)}>Fermer</Button>
-                        <Button onClick={handleExportPDF} disabled={Object.keys(reportData).length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
-                    </DialogFooter>
+                                {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([tiersCode, ecritures]) => {
+                                    const tiersInfo = MOCK_TIERS.find(t => t.code === tiersCode);
+                                    const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
+                                    const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
+                                    let solde = totalDebit - totalCredit;
+                                    // For suppliers (401), a credit balance is expected, so we inverse the logic for display
+                                    if (tiersInfo?.compteGeneral.startsWith('401')) {
+                                        solde = totalCredit - totalDebit;
+                                    }
+
+                                    return (
+                                        <div key={tiersCode} className="mb-4 break-inside-avoid">
+                                            <h3 className="font-semibold text-base mb-2 p-2 rounded-md bg-secondary text-secondary-foreground">
+                                                {tiersInfo?.compteGeneral} | {tiersInfo?.intitule}
+                                            </h3>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>N° Compta</TableHead>
+                                                        <TableHead>Journal</TableHead>
+                                                        <TableHead>Date</TableHead>
+                                                        <TableHead>Opération</TableHead>
+                                                        <TableHead className="text-right">Débit</TableHead>
+                                                        <TableHead className="text-right">Crédit</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {ecritures.map((ecriture: EcritureLivreTiers) => (
+                                                        <TableRow key={ecriture.id}>
+                                                            <TableCell className="font-mono text-xs">{ecriture.numeroCompta}</TableCell>
+                                                            <TableCell>{ecriture.journal}</TableCell>
+                                                            <TableCell>{format(new Date(ecriture.date), 'dd/MM/yyyy')}</TableCell>
+                                                            <TableCell>{ecriture.operation}</TableCell>
+                                                            <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                                            <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toLocaleString('fr-FR') : ''}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                                <TableFooter>
+                                                    <TableRow>
+                                                        <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
+                                                        <TableCell className="text-right font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                                        <TableCell className="text-right font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
+                                                    </TableRow>
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
+                                                        <TableCell className={`text-right font-bold font-mono ${solde !== 0 ? 'text-red-500' : ''}`}>
+                                                            {solde.toLocaleString('fr-FR')}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </TableFooter>
+                                            </Table>
+                                        </div>
+                                    )
+                                }) : (
+                                    <div className="h-24 text-center">Aucune donnée pour les filtres sélectionnés.</div>
+                                )}
+                            </div>
+                            <DialogFooter>
+                                <Button variant="ghost" onClick={() => setModalStep('selection')}><ArrowLeft className="mr-2 h-4 w-4"/> Précédent</Button>
+                                <div className="flex-grow"/>
+                                <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
+                                <Button onClick={handleExportPDF} disabled={Object.keys(reportData).length === 0}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+                            </DialogFooter>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </>
