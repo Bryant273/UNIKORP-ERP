@@ -5,19 +5,23 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Legend, Tooltip } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart as RechartsPieChart, Pie, XAxis, YAxis, CartesianGrid, Legend, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, PlusCircle } from 'lucide-react';
+import { Eye, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 
 // --- DATA & CONFIGS ---
 
-// Report 1 Data
 const projetResultatData = [
   { projet: 'Projet Alpha', produits: 450000, charges: 320000, marge: 130000 },
   { projet: 'Projet Beta', produits: 680000, charges: 510000, marge: 170000 },
@@ -29,7 +33,6 @@ const projetResultatChartConfig = {
   charges: { label: "Charges", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
-// Report 2 Data
 const balanceAnalytiqueData = [
   { section: 'Direction Générale', debit: 150000, credit: 0 },
   { section: 'Production Atelier 1', debit: 450000, credit: 1200000 },
@@ -38,7 +41,6 @@ const balanceAnalytiqueData = [
   { section: 'Commercial Export', debit: 180000, credit: 0 },
 ];
 
-// Report 3 Data
 const pieChartData = [
   { name: 'Achats - Production', value: 400, fill: 'hsl(var(--chart-1))' },
   { name: 'Salaires - Production', value: 300, fill: 'hsl(var(--chart-2))' },
@@ -55,7 +57,6 @@ const pieChartConfig = {
   "Fournitures - Direction": { label: "Fournitures - Direction", color: "hsl(var(--chart-5))" },
 } satisfies ChartConfig;
 
-// Report 4 Data
 const margeProduitData = [
   { mois: 'Jan', produitA: 25.5, produitB: 35.2 },
   { mois: 'Fév', produitA: 26.1, produitB: 34.8 },
@@ -69,29 +70,51 @@ const margeProduitChartConfig = {
   produitB: { label: "Produit B (%)", color: "hsl(var(--chart-2))" },
 } satisfies ChartConfig;
 
-// --- REPORTS LIST ---
-
-type AnalyticReport = {
+type GeneratedReport = {
   id: string;
   title: string;
   description: string;
-  type: 'prédéfini' | 'personnalisé';
+  type: 'resultatProjet' | 'balanceDepartement' | 'repartitionCharges' | 'margeProduit';
 };
 
-const MOCK_REPORTS: AnalyticReport[] = [
-  { id: 'resultatProjet', title: 'Compte de Résultat par Projet', description: 'Analyse de la rentabilité de chaque projet.', type: 'prédéfini' },
-  { id: 'balanceDepartement', title: 'Balance Analytique par Département', description: 'Consultez le solde de chaque section analytique de type département.', type: 'prédéfini' },
-  { id: 'repartitionCharges', title: 'Répartition des Charges', description: 'Visualisez la distribution des charges sur les centres de coûts.', type: 'prédéfini' },
-  { id: 'margeProduit', title: 'Évolution de la Marge par Produit (%)', description: 'Suivez l\'évolution mensuelle de la marge pour chaque produit.', type: 'prédéfini' },
-  { id: 'customRep1', title: 'Mon Rapport Personnalisé', description: 'Exemple de rapport créé par un utilisateur.', type: 'personnalisé' },
+type MonthlyReportGroup = {
+  month: string;
+  reports: GeneratedReport[];
+};
+
+const MOCK_GENERATED_REPORTS: MonthlyReportGroup[] = [
+    {
+        month: "Juillet 2024",
+        reports: [
+            { id: 'jul24-res', title: 'Compte de Résultat par Projet', description: 'Analyse de la rentabilité de chaque projet.', type: 'resultatProjet' },
+            { id: 'jul24-bal', title: 'Balance Analytique par Département', description: 'Consultez le solde de chaque section analytique.', type: 'balanceDepartement' },
+            { id: 'jul24-rep', title: 'Répartition des Charges', description: 'Visualisez la distribution des charges.', type: 'repartitionCharges' },
+        ]
+    },
+    {
+        month: "Juin 2024",
+        reports: [
+            { id: 'jun24-res', title: 'Compte de Résultat par Projet', description: 'Analyse de la rentabilité de chaque projet.', type: 'resultatProjet' },
+            { id: 'jun24-bal', title: 'Balance Analytique par Département', description: 'Consultez le solde de chaque section analytique.', type: 'balanceDepartement' },
+            { id: 'jun24-rep', title: 'Répartition des Charges', description: 'Visualisez la distribution des charges.', type: 'repartitionCharges' },
+            { id: 'jun24-mar', title: 'Évolution de la Marge par Produit (%)', description: 'Suivez l\'évolution mensuelle de la marge.', type: 'margeProduit' },
+        ]
+    },
+    {
+        month: "Mai 2024",
+        reports: [
+            { id: 'may24-res', title: 'Compte de Résultat par Projet', description: 'Analyse de la rentabilité de chaque projet.', type: 'resultatProjet' },
+            { id: 'may24-rep', title: 'Répartition des Charges', description: 'Visualisez la distribution des charges.', type: 'repartitionCharges' },
+        ]
+    }
 ];
 
 export default function ReportingAnalytiquePage() {
-    const [viewingReport, setViewingReport] = useState<AnalyticReport | null>(null);
-    const [reportToDelete, setReportToDelete] = useState<AnalyticReport | null>(null);
+    const [viewingReport, setViewingReport] = useState<GeneratedReport | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { toast } = useToast();
 
-    const handleViewReport = (report: AnalyticReport) => {
+    const handleViewReport = (report: GeneratedReport) => {
         setViewingReport(report);
         setIsModalOpen(true);
     };
@@ -99,6 +122,56 @@ export default function ReportingAnalytiquePage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setViewingReport(null);
+    };
+    
+    const handleDownloadPDF = (report: GeneratedReport, period: string) => {
+        const doc = new jsPDF();
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+        const companyName = "Votre Société S.A.";
+        
+        doc.setFontSize(18);
+        doc.text(report.title, 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Période : ${period}`, 105, 26, { align: 'center' });
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Édité le ${printDateTime} par UNIKORP pour ${companyName}`, 105, 32, { align: 'center' });
+
+        let head: string[][] = [];
+        let body: any[][] = [];
+
+        switch(report.type) {
+            case 'resultatProjet':
+                head = [['Projet', 'Produits', 'Charges', 'Marge']];
+                body = projetResultatData.map(d => [d.projet, d.produits.toLocaleString(), d.charges.toLocaleString(), d.marge.toLocaleString()]);
+                break;
+            case 'balanceDepartement':
+                head = [['Section / Département', 'Débit', 'Crédit', 'Solde']];
+                body = balanceAnalytiqueData.map(d => {
+                    const solde = d.credit - d.debit;
+                    return [d.section, d.debit.toLocaleString(), d.credit.toLocaleString(), solde.toLocaleString()];
+                });
+                break;
+            case 'repartitionCharges':
+                head = [['Centre de Coût', 'Valeur']];
+                body = pieChartData.map(d => [d.name, d.value.toLocaleString()]);
+                break;
+            case 'margeProduit':
+                head = [['Mois', 'Marge Produit A (%)', 'Marge Produit B (%)']];
+                body = margeProduitData.map(d => [d.mois, d.produitA, d.produitB]);
+                break;
+        }
+
+        autoTable(doc, {
+            head: head,
+            body: body,
+            startY: 40,
+            theme: 'striped',
+            headStyles: { fillColor: '#1C2039' }
+        });
+
+        doc.save(`rapport_${report.id}.pdf`);
+        toast({ title: 'Téléchargement lancé', description: `Le rapport ${report.title} est en cours de téléchargement.` });
     };
 
   return (
@@ -108,43 +181,43 @@ export default function ReportingAnalytiquePage() {
             <div className="flex items-center justify-between">
                 <div>
                     <CardTitle className="text-2xl">Reporting Analytique</CardTitle>
-                    <CardDescription>Consultez les rapports analytiques pour piloter votre activité.</CardDescription>
+                    <CardDescription>Consultez les rapports analytiques générés automatiquement chaque mois.</CardDescription>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Créer un rapport
-                </Button>
             </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Titre du Rapport</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="w-[150px] text-center">Type</TableHead>
-                <TableHead className="w-[150px] text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {MOCK_REPORTS.map((report) => (
-                <TableRow key={report.id}>
-                  <TableCell className="font-medium">{report.title}</TableCell>
-                  <TableCell className="text-muted-foreground">{report.description}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={report.type === 'prédéfini' ? 'secondary' : 'default'}>{report.type}</Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleViewReport(report)}><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" disabled={report.type === 'prédéfini'}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" disabled={report.type === 'prédéfini'} onClick={() => setReportToDelete(report)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            <Accordion type="multiple" defaultValue={[MOCK_GENERATED_REPORTS[0].month]} className="w-full">
+                {MOCK_GENERATED_REPORTS.map((group) => (
+                    <AccordionItem value={group.month} key={group.month}>
+                        <AccordionTrigger className="text-lg font-semibold">{group.month}</AccordionTrigger>
+                        <AccordionContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Titre du Rapport</TableHead>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead className="w-[150px] text-center">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {group.reports.map((report) => (
+                                        <TableRow key={report.id}>
+                                            <TableCell className="font-medium">{report.title}</TableCell>
+                                            <TableCell className="text-muted-foreground">{report.description}</TableCell>
+                                            <TableCell className="text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleViewReport(report)}><Eye className="h-4 w-4" /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadPDF(report, group.month)}><Download className="h-4 w-4" /></Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
         </CardContent>
       </Card>
 
@@ -155,7 +228,7 @@ export default function ReportingAnalytiquePage() {
                 <DialogDescription>{viewingReport?.description}</DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-y-auto pr-4">
-                {viewingReport?.id === 'resultatProjet' && (
+                {viewingReport?.type === 'resultatProjet' && (
                     <Card className="mt-4">
                         <CardHeader><CardTitle>Données du Compte de Résultat par Projet</CardTitle></CardHeader>
                         <CardContent>
@@ -174,7 +247,7 @@ export default function ReportingAnalytiquePage() {
                         </CardContent>
                     </Card>
                 )}
-                 {viewingReport?.id === 'balanceDepartement' && (
+                 {viewingReport?.type === 'balanceDepartement' && (
                      <Card className="mt-4">
                         <CardHeader><CardTitle>Données de la Balance Analytique</CardTitle></CardHeader>
                         <CardContent>
@@ -182,7 +255,7 @@ export default function ReportingAnalytiquePage() {
                         </CardContent>
                     </Card>
                 )}
-                 {viewingReport?.id === 'repartitionCharges' && (
+                 {viewingReport?.type === 'repartitionCharges' && (
                      <Card className="mt-4">
                         <CardHeader><CardTitle>Données de Répartition des Charges</CardTitle></CardHeader>
                         <CardContent className="flex justify-center items-center gap-8">
@@ -193,7 +266,7 @@ export default function ReportingAnalytiquePage() {
                         </CardContent>
                     </Card>
                 )}
-                 {viewingReport?.id === 'margeProduit' && (
+                 {viewingReport?.type === 'margeProduit' && (
                     <Card className="mt-4">
                         <CardHeader><CardTitle>Données d'Évolution de la Marge</CardTitle></CardHeader>
                         <CardContent>
@@ -212,24 +285,12 @@ export default function ReportingAnalytiquePage() {
                         </CardContent>
                     </Card>
                  )}
-                 {viewingReport?.id.startsWith('custom') && (
-                     <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">Aperçu du rapport personnalisé à implémenter.</p>
-                    </div>
-                 )}
             </div>
             <DialogFooter className="pt-4 border-t">
                  <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
-      <AlertDialog open={!!reportToDelete} onOpenChange={() => setReportToDelete(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader><AlertDialogTitle>Êtes-vous certain ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible et supprimera le rapport personnalisé.</AlertDialogDescription></AlertDialogHeader>
-            <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={() => setReportToDelete(null)} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
-
