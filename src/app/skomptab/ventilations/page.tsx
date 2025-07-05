@@ -12,27 +12,34 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { GitCompareArrows, Loader2, PlusCircle, Eye, Trash2, Percent, CheckCircle, XCircle, Pencil } from 'lucide-react';
+import { GitCompareArrows, Loader2, PlusCircle, Eye, Trash2, Percent, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 // MOCK DATA
 
 // History of past ventilations
+type DistributionKey = {
+    sectionCode: string;
+    rate: number;
+};
 type VentilationHistory = {
     id: number;
     date: string;
+    periode: string;
     description: string;
-    status: 'Terminée' | 'Équilibrée';
-    accountsCount: number;
-    sectionsCount: number;
+    status: 'Terminée';
+    accounts: string[];
+    keys: DistributionKey[];
 };
 const MOCK_VENTILATION_HISTORY: VentilationHistory[] = [
-    { id: 1, date: '2024-07-28', description: 'Ventilation mensuelle des charges de personnel', status: 'Terminée', accountsCount: 1, sectionsCount: 3 },
-    { id: 2, date: '2024-07-25', description: 'Répartition des achats de fournitures', status: 'Terminée', accountsCount: 2, sectionsCount: 2 },
-    { id: 3, date: '2024-06-30', description: 'Clôture analytique Q2', status: 'Terminée', accountsCount: 5, sectionsCount: 8 },
+    { id: 1, date: '2024-07-28', periode: 'Juillet 2024', description: 'Ventilation mensuelle des charges de personnel', status: 'Terminée', accounts: ['641'], keys: [{sectionCode: 'DIR.GEN', rate: 40}, {sectionCode: 'PROD.A1', rate: 30}, {sectionCode: 'PROD.A2', rate: 30}] },
+    { id: 2, date: '2024-07-25', periode: 'Juillet 2024', description: 'Répartition des achats de fournitures', status: 'Terminée', accounts: ['601', '606'], keys: [{sectionCode: 'COMM.FR', rate: 50}, {sectionCode: 'COMM.EXP', rate: 50}]},
+    { id: 3, date: '2024-06-30', periode: 'Juin 2024', description: 'Clôture analytique Q2', status: 'Terminée', accounts: ['601','606','613','622','641'], keys: [{sectionCode: 'DIR.GEN', rate: 20}, {sectionCode: 'PROD.A1', rate: 40}, {sectionCode: 'PROD.A2', rate: 40}]},
 ];
+
 
 // Data for the modal
 const MOCK_COMPTES_GENERAUX = [
@@ -50,15 +57,6 @@ const MOCK_ANALYTIC_SECTIONS = [
     { code: 'COMM.EXP', name: 'Commercial Export' },
 ];
 
-// Types for the modal state
-type DistributionKey = {
-    sectionCode: string;
-    rate: number;
-};
-type AccountToVentilate = {
-    accountNumber: string;
-    keys: DistributionKey[];
-};
 
 // Main Component
 export default function VentilationsPage() {
@@ -71,122 +69,67 @@ export default function VentilationsPage() {
     // State for the modal logic
     const [editingVentilation, setEditingVentilation] = useState<VentilationHistory | null>(null);
     const [isViewMode, setIsViewMode] = useState(false);
-    const [selectedAccountForDistribution, setSelectedAccountForDistribution] = useState<string | null>(null);
-    const [accountsToVentilate, setAccountsToVentilate] = useState<AccountToVentilate[]>([]);
+    const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+    const [distributionKeys, setDistributionKeys] = useState<DistributionKey[]>([]);
+    const [description, setDescription] = useState('');
 
     const loadVentilationForModal = (ventilation: VentilationHistory, viewMode: boolean) => {
         setIsViewMode(viewMode);
         setEditingVentilation(ventilation);
-
-        const accounts = MOCK_COMPTES_GENERAUX.slice(0, ventilation.accountsCount).map(c => c.numero);
-        const sections = MOCK_ANALYTIC_SECTIONS.slice(0, ventilation.sectionsCount);
-        
-        const simulatedData: AccountToVentilate[] = accounts.map(accountNumber => {
-            const totalRate = 100;
-            let remainingRate = totalRate;
-            const keys: DistributionKey[] = sections.map((section, index) => {
-                if (index === sections.length - 1) {
-                    return { sectionCode: section.code, rate: remainingRate };
-                }
-                const rate = Math.floor(Math.random() * (remainingRate / 2)) + 1;
-                remainingRate -= rate;
-                return { sectionCode: section.code, rate };
-            });
-
-             // Ensure total is exactly 100
-            const currentTotal = keys.reduce((sum, key) => sum + key.rate, 0);
-            if(currentTotal !== 100 && keys.length > 0) {
-                keys[keys.length - 1].rate += (100 - currentTotal);
-            }
-            
-            return { accountNumber, keys };
-        });
-        
-        setAccountsToVentilate(simulatedData);
-        setSelectedAccountForDistribution(accounts[0] || null);
-
+        setSelectedAccounts(ventilation.accounts);
+        setDistributionKeys(ventilation.keys);
+        setDescription(ventilation.description);
         setIsVentilationModalOpen(true);
     };
 
     const handleAccountToggle = (accountNumber: string) => {
-        setAccountsToVentilate(prev => {
-            const exists = prev.some(a => a.accountNumber === accountNumber);
-            if (exists) {
-                if (selectedAccountForDistribution === accountNumber) {
-                    setSelectedAccountForDistribution(null);
-                }
-                return prev.filter(a => a.accountNumber !== accountNumber);
-            } else {
-                setSelectedAccountForDistribution(accountNumber);
-                return [...prev, { accountNumber, keys: [] }];
-            }
-        });
+        setSelectedAccounts(prev => 
+            prev.includes(accountNumber) 
+                ? prev.filter(a => a !== accountNumber)
+                : [...prev, accountNumber]
+        );
     };
     
     const handleAddKey = (sectionCode: string) => {
-        if (!selectedAccountForDistribution) return;
-        setAccountsToVentilate(prev => prev.map(acc => {
-            if (acc.accountNumber === selectedAccountForDistribution) {
-                if (acc.keys.some(k => k.sectionCode === sectionCode)) return acc;
-                return { ...acc, keys: [...acc.keys, { sectionCode, rate: 0 }] };
-            }
-            return acc;
-        }));
+        setDistributionKeys(prev => {
+            if (prev.some(k => k.sectionCode === sectionCode)) return prev;
+            return [...prev, { sectionCode, rate: 0 }];
+        });
     };
 
     const handleRemoveKey = (sectionCode: string) => {
-        if (!selectedAccountForDistribution) return;
-        setAccountsToVentilate(prev => prev.map(acc => 
-            acc.accountNumber === selectedAccountForDistribution 
-            ? { ...acc, keys: acc.keys.filter(k => k.sectionCode !== sectionCode) }
-            : acc
-        ));
+        setDistributionKeys(prev => prev.filter(k => k.sectionCode !== sectionCode));
     };
 
     const handleRateChange = (sectionCode: string, rate: number) => {
-        if (!selectedAccountForDistribution) return;
-        setAccountsToVentilate(prev => prev.map(acc => 
-            acc.accountNumber === selectedAccountForDistribution
-            ? { ...acc, keys: acc.keys.map(k => k.sectionCode === sectionCode ? {...k, rate: isNaN(rate) ? 0 : rate } : k) }
-            : acc
+        setDistributionKeys(prev => prev.map(key => 
+            key.sectionCode === sectionCode ? { ...key, rate: isNaN(rate) ? 0 : rate } : key
         ));
     };
 
-    const activeDistribution = accountsToVentilate.find(a => a.accountNumber === selectedAccountForDistribution);
-    const totalRate = useMemo(() => activeDistribution?.keys.reduce((sum, key) => sum + key.rate, 0) || 0, [activeDistribution]);
+    const totalRate = useMemo(() => distributionKeys.reduce((sum, key) => sum + key.rate, 0) || 0, [distributionKeys]);
     
     const isVentilationReady = useMemo(() => {
-        if (accountsToVentilate.length === 0) return false;
-        return accountsToVentilate.every(acc => {
-            const total = acc.keys.reduce((sum, key) => sum + key.rate, 0);
-            return total === 100;
-        });
-    }, [accountsToVentilate]);
+        if (selectedAccounts.length === 0 || distributionKeys.length === 0) return false;
+        return totalRate === 100;
+    }, [selectedAccounts, distributionKeys, totalRate]);
 
-    const getAccountStatus = (accountNumber: string) => {
-        const account = accountsToVentilate.find(a => a.accountNumber === accountNumber);
-        if (!account) return 'unchecked';
-        if (account.keys.length === 0) return 'pending';
-        const total = account.keys.reduce((sum, key) => sum + key.rate, 0);
-        return total === 100 ? 'complete' : 'pending';
-    };
 
     const handleVentilation = () => {
         setIsVentilating(true);
         toast({ title: "Ventilation en cours...", description: `Traitement des répartitions...` });
         
         setTimeout(() => {
-            const description = editingVentilation 
-                ? `Mise à jour : ${editingVentilation.description}`
-                : `Ventilation manuelle de ${accountsToVentilate.length} compte(s)`;
+            const finalDescription = description.trim() || `Ventilation de ${selectedAccounts.length} compte(s)`;
 
             const newHistoryEntry: VentilationHistory = {
                 id: editingVentilation?.id || Date.now(),
                 date: format(new Date(), 'yyyy-MM-dd'),
-                description: description,
+                periode: format(new Date(), 'MMMM yyyy', { locale: fr }),
+                description: finalDescription,
                 status: 'Terminée',
-                accountsCount: accountsToVentilate.length,
-                sectionsCount: [...new Set(accountsToVentilate.flatMap(a => a.keys.map(k => k.sectionCode)))].length,
+                accounts: selectedAccounts,
+                keys: distributionKeys,
             };
 
             if (editingVentilation) {
@@ -204,8 +147,9 @@ export default function VentilationsPage() {
 
     const resetModal = () => {
         setIsVentilationModalOpen(false);
-        setAccountsToVentilate([]);
-        setSelectedAccountForDistribution(null);
+        setSelectedAccounts([]);
+        setDistributionKeys([]);
+        setDescription('');
         setEditingVentilation(null);
         setIsViewMode(false);
     }
@@ -228,7 +172,7 @@ export default function VentilationsPage() {
                             <CardTitle className="text-2xl flex items-center gap-2"><GitCompareArrows /> Ventilations Analytiques</CardTitle>
                             <CardDescription>Définissez des clés de répartition et ventilez les charges/produits vers les sections analytiques.</CardDescription>
                         </div>
-                        <Button onClick={() => { setEditingVentilation(null); setIsViewMode(false); setIsVentilationModalOpen(true); }}>
+                        <Button onClick={() => setIsVentilationModalOpen(true)}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Lancer une ventilation
                         </Button>
@@ -239,9 +183,10 @@ export default function VentilationsPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Date</TableHead>
+                                <TableHead>Période</TableHead>
                                 <TableHead>Description</TableHead>
-                                <TableHead className="text-center">Comptes ventilés</TableHead>
-                                <TableHead className="text-center">Sections utilisées</TableHead>
+                                <TableHead className="text-center">Comptes</TableHead>
+                                <TableHead className="text-center">Sections</TableHead>
                                 <TableHead className="text-center">Statut</TableHead>
                                 <TableHead className="text-center w-[120px]">Actions</TableHead>
                             </TableRow>
@@ -250,9 +195,10 @@ export default function VentilationsPage() {
                             {history.map(item => (
                                 <TableRow key={item.id}>
                                     <TableCell>{format(new Date(item.date), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell className="capitalize">{item.periode}</TableCell>
                                     <TableCell className="font-medium">{item.description}</TableCell>
-                                    <TableCell className="text-center"><Badge variant="secondary">{item.accountsCount}</Badge></TableCell>
-                                    <TableCell className="text-center"><Badge variant="secondary">{item.sectionsCount}</Badge></TableCell>
+                                    <TableCell className="text-center"><Badge variant="secondary">{item.accounts.length}</Badge></TableCell>
+                                    <TableCell className="text-center"><Badge variant="secondary">{item.keys.length}</Badge></TableCell>
                                     <TableCell className="text-center"><Badge>{item.status}</Badge></TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-2">
@@ -269,11 +215,11 @@ export default function VentilationsPage() {
             </Card>
 
             <Dialog open={isVentilationModalOpen} onOpenChange={resetModal}>
-                <DialogContent className="max-w-6xl h-[85vh]">
+                <DialogContent className="max-w-4xl h-[85vh]">
                     <DialogHeader>
                         <DialogTitle>{modalTitle}</DialogTitle>
                         <DialogDescription>
-                            Sélectionnez les comptes, puis définissez les clés de répartition pour chaque section analytique.
+                            Sélectionnez les comptes, définissez une clé de répartition unique, puis lancez la ventilation.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid md:grid-cols-2 gap-6 py-4 flex-1 overflow-y-auto">
@@ -282,33 +228,20 @@ export default function VentilationsPage() {
                                 <Label className="font-semibold mb-2 block text-base">1. Comptes généraux à ventiler</Label>
                                 <ScrollArea className="h-48 rounded-md border p-4">
                                     <div className="space-y-2">
-                                        {MOCK_COMPTES_GENERAUX.map(compte => {
-                                            const status = getAccountStatus(compte.numero);
-                                            return (
-                                                <div key={compte.numero} className="flex items-center space-x-3">
-                                                    <Checkbox
-                                                        id={`compte-${compte.numero}`}
-                                                        checked={status !== 'unchecked'}
-                                                        onCheckedChange={() => handleAccountToggle(compte.numero)}
-                                                        disabled={isViewMode}
-                                                    />
-                                                    <Label
-                                                        htmlFor={`compte-${compte.numero}`}
-                                                        className={cn("flex-1 p-2 rounded-md transition-colors", !isViewMode && "cursor-pointer", selectedAccountForDistribution === compte.numero && "bg-accent text-accent-foreground")}
-                                                        onClick={() => { if(status !== 'unchecked' && !isViewMode) setSelectedAccountForDistribution(compte.numero) }}
-                                                    >
-                                                        <div className="flex justify-between items-center">
-                                                            <div>
-                                                                <span className="font-mono text-xs p-1 bg-muted rounded-sm w-16 text-center">{compte.numero}</span>
-                                                                <span className="ml-2">{compte.intitule}</span>
-                                                            </div>
-                                                            {status === 'complete' && <CheckCircle className="h-4 w-4 text-green-500" />}
-                                                            {status === 'pending' && <XCircle className="h-4 w-4 text-red-500" />}
-                                                        </div>
-                                                    </Label>
-                                                </div>
-                                            )
-                                        })}
+                                        {MOCK_COMPTES_GENERAUX.map(compte => (
+                                            <div key={compte.numero} className="flex items-center space-x-3">
+                                                <Checkbox
+                                                    id={`compte-${compte.numero}`}
+                                                    checked={selectedAccounts.includes(compte.numero)}
+                                                    onCheckedChange={() => handleAccountToggle(compte.numero)}
+                                                    disabled={isViewMode}
+                                                />
+                                                <Label htmlFor={`compte-${compte.numero}`} className="flex-1 p-2 rounded-md transition-colors cursor-pointer">
+                                                    <span className="font-mono text-xs p-1 bg-muted rounded-sm w-16 text-center">{compte.numero}</span>
+                                                    <span className="ml-2">{compte.intitule}</span>
+                                                </Label>
+                                            </div>
+                                        ))}
                                     </div>
                                 </ScrollArea>
                             </div>
@@ -322,7 +255,7 @@ export default function VentilationsPage() {
                                                     <span className="font-mono text-xs p-1 bg-muted rounded-sm w-24 text-center">{section.code}</span>
                                                     <span className="ml-2">{section.name}</span>
                                                 </div>
-                                                <Button type="button" size="sm" variant="outline" onClick={() => handleAddKey(section.code)} disabled={isViewMode || !selectedAccountForDistribution || activeDistribution?.keys.some(k => k.sectionCode === section.code)}>
+                                                <Button type="button" size="sm" variant="outline" onClick={() => handleAddKey(section.code)} disabled={isViewMode || distributionKeys.some(k => k.sectionCode === section.code)}>
                                                     Ajouter
                                                 </Button>
                                             </div>
@@ -332,43 +265,41 @@ export default function VentilationsPage() {
                             </div>
                         </div>
                         <div>
-                             <Label className="font-semibold mb-2 block text-base">3. Clés de Répartition</Label>
+                             <Label className="font-semibold mb-2 block text-base">3. Clé de Répartition</Label>
                              <Card className="h-[calc(100%-2rem)]">
-                                {selectedAccountForDistribution ? (
-                                    <div className="flex flex-col h-full">
-                                        <CardHeader>
-                                            <CardTitle className="text-lg">Compte: {selectedAccountForDistribution}</CardTitle>
-                                            <CardDescription>Définissez les pourcentages de répartition. Le total doit être 100%.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="flex-1 overflow-y-auto">
-                                            <Table>
-                                                <TableHeader><TableRow><TableHead>Section</TableHead><TableHead className="w-[100px]">Taux (%)</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
-                                                <TableBody>
-                                                    {activeDistribution?.keys.map(key => {
-                                                        const sectionInfo = MOCK_ANALYTIC_SECTIONS.find(s => s.code === key.sectionCode);
-                                                        return (
-                                                            <TableRow key={key.sectionCode}>
-                                                                <TableCell>{sectionInfo?.name || key.sectionCode}</TableCell>
-                                                                <TableCell><Input type="number" value={key.rate} onChange={(e) => handleRateChange(key.sectionCode, parseInt(e.target.value))} className="text-center" disabled={isViewMode} /></TableCell>
-                                                                <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveKey(key.sectionCode)} disabled={isViewMode}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
-                                                            </TableRow>
-                                                        )
-                                                    })}
-                                                </TableBody>
-                                            </Table>
-                                        </CardContent>
-                                        <CardFooter className={cn("p-4 border-t font-bold flex justify-between", totalRate === 100 ? 'text-green-600' : 'text-destructive')}>
-                                            <span>Total</span>
-                                            <span>{totalRate} %</span>
-                                        </CardFooter>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-muted-foreground text-center">
-                                        <p>Sélectionnez un compte à gauche<br/>pour définir sa répartition.</p>
-                                    </div>
-                                )}
+                                <div className="flex flex-col h-full">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">Taux de répartition (%)</CardTitle>
+                                        <CardDescription>Cette clé s'appliquera à tous les comptes sélectionnés. Le total doit faire 100%.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex-1 overflow-y-auto">
+                                        <Table>
+                                            <TableHeader><TableRow><TableHead>Section</TableHead><TableHead className="w-[100px]">Taux (%)</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
+                                            <TableBody>
+                                                {distributionKeys.map(key => {
+                                                    const sectionInfo = MOCK_ANALYTIC_SECTIONS.find(s => s.code === key.sectionCode);
+                                                    return (
+                                                        <TableRow key={key.sectionCode}>
+                                                            <TableCell>{sectionInfo?.name || key.sectionCode}</TableCell>
+                                                            <TableCell><Input type="number" value={key.rate} onChange={(e) => handleRateChange(key.sectionCode, parseInt(e.target.value))} className="text-center" disabled={isViewMode} /></TableCell>
+                                                            <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveKey(key.sectionCode)} disabled={isViewMode}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                    <CardFooter className={cn("p-4 border-t font-bold flex justify-between", totalRate === 100 ? 'text-green-600' : 'text-destructive')}>
+                                        <span>Total</span>
+                                        <span>{totalRate} %</span>
+                                    </CardFooter>
+                                </div>
                              </Card>
                         </div>
+                    </div>
+                     <div className='px-6'>
+                        <Label htmlFor="description">Description (Optionnel)</Label>
+                        <Input id="description" placeholder="Ex: Ventilation mensuelle des charges" value={description} onChange={e => setDescription(e.target.value)} disabled={isViewMode}/>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={resetModal}>
