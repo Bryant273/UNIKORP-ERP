@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 
 // --- TYPES ---
