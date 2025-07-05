@@ -45,8 +45,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, PlusCircle, Upload } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Upload, FileUp } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import { handleParseAccountingPlan } from '@/app/actions';
+import type { NatureCompte } from '@/ai/flows/parse-accounting-plan';
 
 type SectionType = 'Centre de coût' | 'Centre de profit' | 'Projet';
 
@@ -82,6 +87,14 @@ export default function PlanAnalytiquesPage() {
   const [formData, setFormData] = useState(defaultFormData);
   const [sectionToDelete, setSectionToDelete] = useState<SectionAnalytique | null>(null);
   const { toast } = useToast();
+
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -142,8 +155,135 @@ export default function PlanAnalytiquesPage() {
   };
   
   const getIndentLevel = (code: string) => {
-      return (code.split('.').length - 1) * 2; // 2rem padding for each level
+      return (code.split('.').length - 1) * 2;
   }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFileToUpload(e.target.files[0]);
+    }
+  };
+  
+  const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    handleDragEvents(e);
+    if (!isImporting) setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    handleDragEvents(e);
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    handleDragEvents(e);
+    setIsDragging(false);
+    if (isImporting) return;
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        setFileToUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const resetImportModal = () => {
+    if (isImporting) return;
+    setIsImportModalOpen(false);
+    setFileToUpload(null);
+    setImportOption('merge');
+    setIsDragging(false);
+  };
+  
+  const handleImport = async () => {
+    if (!fileToUpload) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un fichier à importer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+    setImportProgress(0);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(fileToUpload);
+    reader.onload = async () => {
+      const fileDataUri = reader.result as string;
+
+      const progressInterval = setInterval(() => {
+        setImportProgress(prev => (prev < 90 ? prev + 10 : 90));
+      }, 200);
+
+      try {
+        const parsedData = await handleParseAccountingPlan({
+          fileDataUri,
+          fileType: fileToUpload.type,
+        });
+
+        clearInterval(progressInterval);
+        setImportProgress(100);
+
+        const mapNatureToType = (nature: NatureCompte): SectionType => {
+            switch (nature) {
+                case 'Compte de résultat - Produit': return 'Centre de profit';
+                case 'Autre': return 'Projet';
+                default: return 'Centre de coût';
+            }
+        };
+
+        const newSections: Omit<SectionAnalytique, 'id'>[] = parsedData.map(item => ({
+            code: item.numero,
+            intitule: item.intitule,
+            type: mapNatureToType(item.nature),
+        }));
+
+        if (importOption === 'replace') {
+          setSections(newSections.map(s => ({...s, id: Math.random()})));
+        } else {
+          const existingCodes = new Set(sections.map(s => s.code));
+          const newUniqueSections = newSections
+            .filter(s => !existingCodes.has(s.code))
+            .map(s => ({...s, id: Math.random()}));
+          setSections([...sections, ...newUniqueSections].sort((a,b) => a.code.localeCompare(b.code)));
+        }
+        
+        toast({
+          title: "Importation réussie",
+          description: `Le plan analytique a été mis à jour avec succès.`,
+        });
+
+      } catch (error) {
+        clearInterval(progressInterval);
+        console.error(error);
+        toast({
+          title: "Erreur d'importation",
+          description: "Une erreur est survenue lors de l'analyse du fichier.",
+          variant: "destructive",
+        });
+      } finally {
+        setTimeout(() => {
+          setIsImporting(false);
+          setIsImportModalOpen(false);
+          setFileToUpload(null);
+          setImportOption('merge');
+          setImportProgress(0);
+        }, 1000);
+      }
+    };
+    reader.onerror = (error) => {
+        console.error("Error reading file:", error);
+        toast({
+            title: "Erreur",
+            description: "Impossible de lire le fichier.",
+            variant: "destructive",
+        });
+        setIsImporting(false);
+    };
+  };
 
   return (
     <>
@@ -157,7 +297,7 @@ export default function PlanAnalytiquesPage() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
                 <Upload className="mr-2 h-4 w-4" />
                 Importer
               </Button>
@@ -257,6 +397,85 @@ export default function PlanAnalytiquesPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isImportModalOpen} onOpenChange={resetImportModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Importer un plan analytique</DialogTitle>
+            <DialogDescription>
+              Chargez un fichier pour remplacer ou fusionner avec le plan analytique existant.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+             <div 
+                className={cn(
+                    "relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 hover:bg-muted/50",
+                    isDragging && "border-primary bg-primary/10",
+                    isImporting && "cursor-not-allowed opacity-50"
+                )}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragEvents}
+                onDrop={handleDrop}
+              >
+                  <Label htmlFor="file-upload" className={cn("flex flex-col items-center justify-center w-full h-full", isImporting ? "cursor-not-allowed" : "cursor-pointer")}>
+                    <FileUp className="w-10 h-10 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-center text-muted-foreground">
+                      <span className="font-semibold">Glissez-déposez un fichier</span> ou cliquez pour sélectionner
+                    </p>
+                    {fileToUpload && !isImporting && (
+                      <p className="mt-2 text-sm font-medium text-foreground">{fileToUpload.name}</p>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      PDF, MAE, XLSX, XLAM, XLS, CSV
+                    </p>
+                  </Label>
+                  <Input 
+                      id="file-upload" 
+                      type="file" 
+                      className="sr-only" 
+                      onChange={handleFileChange} 
+                      accept=".pdf,.mae,.xlsx,.xlam,.xls,.csv" 
+                      disabled={isImporting}
+                  />
+            </div>
+
+            {isImporting && (
+                <div className="space-y-2">
+                    <Progress value={importProgress} />
+                    <p className="text-sm text-center text-muted-foreground">Importation en cours... {Math.round(importProgress)}%</p>
+                </div>
+            )}
+            
+            {!isImporting && fileToUpload && (
+                <div className="space-y-3">
+                    <Label>Option d'importation</Label>
+                    <RadioGroup
+                        value={importOption}
+                        onValueChange={(value: 'merge' | 'replace') => setImportOption(value)}
+                        className="flex gap-4 pt-1"
+                        disabled={isImporting}
+                    >
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="merge" id="merge" />
+                        <Label htmlFor="merge" className="font-normal">Fusionner</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="replace" id="replace" />
+                        <Label htmlFor="replace" className="font-normal">Remplacer</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetImportModal} disabled={isImporting}>Annuler</Button>
+            <Button onClick={handleImport} disabled={!fileToUpload || isImporting}>
+                {isImporting ? 'Importation...' : 'Importer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
