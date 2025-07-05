@@ -39,6 +39,7 @@ import {
   Calendar,
   GitCompareArrows,
   Pencil,
+  BookDown,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -78,6 +79,7 @@ const skomptabNav = [
       { title: 'Grand livre général', href: '/skomptab/grand-livre-general', icon: BookCopy },
       { title: 'Grand livre tiers', href: '/skomptab/grand-livre-tiers', icon: BookCopy },
       { title: 'Balance générale', href: '/skomptab/balance-generale', icon: Scale },
+      { title: 'Amortissements', href: '/skomptab/amortissements', icon: BookDown },
     ]
   },
   {
@@ -143,19 +145,24 @@ function SidebarNavContent() {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const savedState = localStorage.getItem('sidebarOpenSections');
-    if (savedState) {
-      try {
-        const parsedState = JSON.parse(savedState);
-        if (Array.isArray(parsedState)) {
-          setOpenSections(parsedState);
-        }
-      } catch (e) {
-        // Silently fail is ok, default state will be used.
-      }
-    }
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      const savedState = localStorage.getItem('sidebarOpenSections');
+      if (savedState) {
+        try {
+          const parsedState = JSON.parse(savedState);
+          if (Array.isArray(parsedState)) {
+            setOpenSections(parsedState);
+          }
+        } catch (e) {
+          // Silently fail is ok, default state will be used.
+        }
+      }
+    }
+  }, [isMounted]);
 
   const handleValueChange = (value: string[]) => {
     setOpenSections(value);
