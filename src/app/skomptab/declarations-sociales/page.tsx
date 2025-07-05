@@ -19,8 +19,6 @@ import { fr } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 
 // --- TYPES ---
 type DeclarationType = 'Immatriculation Employeur' | 'Immatriculation Salarié' | 'Déclaration Mensuelle Salaires' | 'DAS' | 'Accident de Travail' | 'Maladie Professionnelle' | 'Modification Salarié' | 'Déclaration trimestrielle des cotisations';
@@ -236,49 +234,38 @@ function DeclarationsSocialesMainContent() {
     const mouvements = declarations.filter(d => mouvementTypes.includes(d.type));
     const accidents = declarations.filter(d => accidentTypes.includes(d.type));
     
-    const renderTableForCategory = (declarationsToRender: Declaration[], category: string) => (
-        <Card className="mt-4">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle className="capitalize">{category}</CardTitle>
-                    <CardDescription>Gérez toutes les déclarations relatives à la catégorie "{category}".</CardDescription>
-                </div>
-                <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Période / Date</TableHead>
-                            <TableHead>Type de Déclaration</TableHead>
-                            <TableHead className="text-center">Statut</TableHead>
-                            <TableHead className="text-center w-[150px]">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {declarationsToRender.length > 0 ? declarationsToRender.map((d) => {
-                            const isFinalized = d.statut === 'Traitée';
-                            return (
-                            <TableRow key={d.id}>
-                                <TableCell className="font-medium">{d.periode}</TableCell>
-                                <TableCell><Badge variant="secondary">{d.type}</Badge></TableCell>
-                                <TableCell className="text-center">{getStatusBadge(d)}</TableCell>
-                                <TableCell className="text-center">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <Button variant="ghost" size="icon" onClick={() => setViewingDeclaration(d)}><Eye className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon" onClick={() => openEditModal(d)} disabled={isFinalized}><Pencil className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handlePrintDeclaration(d)}><Download className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeclarationToDelete(d)} disabled={isFinalized}><Trash2 className="h-4 w-4" /></Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}) : (
-                            <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">Aucune déclaration dans cette catégorie.</TableCell></TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+    const renderTable = (declarationsToRender: Declaration[]) => (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Période / Date</TableHead>
+                    <TableHead>Type de Déclaration</TableHead>
+                    <TableHead className="text-center">Statut</TableHead>
+                    <TableHead className="text-center w-[150px]">Actions</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {declarationsToRender.length > 0 ? declarationsToRender.map((d) => {
+                    const isFinalized = d.statut === 'Traitée';
+                    return (
+                    <TableRow key={d.id}>
+                        <TableCell className="font-medium">{d.periode}</TableCell>
+                        <TableCell><Badge variant="secondary">{d.type}</Badge></TableCell>
+                        <TableCell className="text-center">{getStatusBadge(d)}</TableCell>
+                        <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                                <Button variant="ghost" size="icon" onClick={() => setViewingDeclaration(d)}><Eye className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => openEditModal(d)} disabled={isFinalized}><Pencil className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handlePrintDeclaration(d)}><Download className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeclarationToDelete(d)} disabled={isFinalized}><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                )}) : (
+                    <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">Aucune déclaration dans cette catégorie.</TableCell></TableRow>
+                )}
+            </TableBody>
+        </Table>
     );
 
     return (
@@ -287,18 +274,61 @@ function DeclarationsSocialesMainContent() {
                 <h1 className="text-3xl font-bold tracking-tight">Suivi des Déclarations Sociales</h1>
                 <p className="text-muted-foreground">Gérez et suivez l'état de toutes vos déclarations sociales, organisées par catégorie.</p>
             </div>
-            <Tabs defaultValue="periodiques" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="immatriculations">Immatriculations</TabsTrigger>
-                    <TabsTrigger value="periodiques">Déclarations Périodiques</TabsTrigger>
-                    <TabsTrigger value="mouvements">Mouvements de Personnel</TabsTrigger>
-                    <TabsTrigger value="accidents">Accidents & Maladies</TabsTrigger>
-                </TabsList>
-                <TabsContent value="immatriculations">{renderTableForCategory(immatriculations, "Immatriculations")}</TabsContent>
-                <TabsContent value="periodiques">{renderTableForCategory(periodiques, "Déclarations Périodiques")}</TabsContent>
-                <TabsContent value="mouvements">{renderTableForCategory(mouvements, "Mouvements de Personnel")}</TabsContent>
-                <TabsContent value="accidents">{renderTableForCategory(accidents, "Accidents & Maladies")}</TabsContent>
-            </Tabs>
+            
+            <div className="space-y-6">
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Immatriculations</CardTitle>
+                            <CardDescription>Gérez les immatriculations employeur et salarié.</CardDescription>
+                        </div>
+                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                    </CardHeader>
+                    <CardContent>
+                       {renderTable(immatriculations)}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Déclarations Périodiques</CardTitle>
+                            <CardDescription>Suivi des obligations récurrentes (mensuelles, trimestrielles, annuelles).</CardDescription>
+                        </div>
+                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                    </CardHeader>
+                    <CardContent>
+                        {renderTable(periodiques)}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Mouvements de Personnel</CardTitle>
+                            <CardDescription>Déclarations ponctuelles lors des embauches ou départs.</CardDescription>
+                        </div>
+                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                    </CardHeader>
+                    <CardContent>
+                        {renderTable(mouvements)}
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Accidents et Maladies</CardTitle>
+                            <CardDescription>Déclarations d'urgence ou exceptionnelles.</CardDescription>
+                        </div>
+                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                    </CardHeader>
+                    <CardContent>
+                        {renderTable(accidents)}
+                    </CardContent>
+                </Card>
+            </div>
+
 
             <DeclarationModal
                 isOpen={isModalOpen}
