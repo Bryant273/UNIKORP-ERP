@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,36 +13,88 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
 
 // --- TYPES ---
 type DeclarationStatus = 'Brouillon' | 'À payer' | 'Payé';
+type TaxType = 
+    | "Impôt synthétique"
+    | "Taxe forfaitaire des petits commerçants"
+    | "Droits d'enregistrement"
+    | "Droits de timbre"
+    | "Taxe de publicité foncière"
+    | "Droits fiscaux d'entrée"
+    | "Droits de douane proprement dits";
+
 type AutreImpot = {
     id: string;
-    nom: string;
-    description: string;
+    type: TaxType;
+    periode: string;
     montant: number;
     echeance: string;
     statut: DeclarationStatus;
+    data: any;
 };
+
+const TaxTypeOptions: TaxType[] = [
+    "Impôt synthétique", "Taxe forfaitaire des petits commerçants", "Droits d'enregistrement",
+    "Droits de timbre", "Taxe de publicité foncière", "Droits fiscaux d'entrée", "Droits de douane proprement dits"
+];
 
 // --- MOCK DATA ---
 const initialAutresImpots: AutreImpot[] = [
-    { id: 'imp-synth', nom: 'Impôt synthétique', description: 'Paiement libératoire', montant: 150000, echeance: 'Trimestriel', statut: 'À payer' },
-    { id: 'taxe-forfait', nom: 'Taxe forfaitaire des petits commerçants', description: 'Artisans et petits commerces', montant: 50000, echeance: 'Annuel', statut: 'Payé' },
-    { id: 'droit-enreg', nom: 'Droits d\'enregistrement', description: 'Actes de société', montant: 25000, echeance: 'Ponctuel', statut: 'Payé' },
-    { id: 'droit-timbre', nom: 'Droits de timbre', description: 'Timbres fiscaux', montant: 10000, echeance: 'Continu', statut: 'À payer' },
-    { id: 'droit-douane', nom: 'Droits de douane', description: 'Importation de marchandises', montant: 750000, echeance: 'Par opération', statut: 'Brouillon' },
+    { id: 'imp-synth', type: 'Impôt synthétique', periode: 'Année 2024', montant: 150000, echeance: 'Trimestriel', statut: 'À payer', data: { ncc: '12345A', raisonSociale: 'Commerce ABC', adresseLocal: 'Abidjan', natureActivite: 'Commerce de détail', caPrevisionnel: 30000000, montantImpotSynthetique: 150000 } },
+    { id: 'taxe-forfait', type: 'Taxe forfaitaire des petits commerçants', periode: 'Année 2024', montant: 50000, echeance: 'Annuel', statut: 'Payé', data: { ncc: '67890B', identiteContribuable: 'Artisan XYZ', typeActivite: 'artisanat', localisation: 'Yopougon', caDeclare: 8000000, classeTarifaire: 'Classe 2', montantTaxeForfaitaire: 50000 } },
+    { id: 'droit-enreg', type: 'Droits d\'enregistrement', periode: 'Juin 2024', montant: 25000, echeance: 'Ponctuel', statut: 'Payé', data: { natureActe: 'Cession de parts', parties: 'Mr. A et Mme. B', objetContrat: 'Cession de 50 parts', valeurDeclaree: 5000000, tauxApplicable: 0.5, montantDroits: 25000 } },
+    { id: 'droit-timbre', type: 'Droits de timbre', periode: 'Juillet 2024', montant: 10000, echeance: 'Continu', statut: 'À payer', data: { typeDocument: 'Contrats commerciaux', nombrePages: 20, valeurTimbreUnitaire: 500, montantTotalTimbres: 10000 } },
+    { id: 'droit-douane', type: 'Droits de douane proprement dits', periode: 'Import #123', montant: 750000, echeance: 'Par opération', statut: 'Brouillon', data: { codeTarifaire: '8517.12.00.00', valeurEnDouane: 5000000, tauxDouanier: 15, montantDroits: 750000 } },
 ];
 
-const defaultFormData: Omit<AutreImpot, 'id' | 'statut'> = {
-    nom: '',
-    description: '',
-    montant: 0,
-    echeance: '',
+const getDefaultDataForType = (type: TaxType): any => {
+    const base = {
+        ncc: '1234567A',
+        periode: format(new Date(), 'MMMM yyyy', { locale: fr }),
+    };
+    switch(type) {
+        case "Impôt synthétique": return { ...base, raisonSociale: '', adresseLocal: '', natureActivite: '', caPrevisionnel: 0, montantImpotSynthetique: 0 };
+        case "Taxe forfaitaire des petits commerçants": return { ...base, identiteContribuable: '', typeActivite: 'commerce', localisation: '', caDeclare: 0, classeTarifaire: '', montantTaxeForfaitaire: 0 };
+        case "Droits d'enregistrement": return { ...base, natureActe: '', parties: '', objetContrat: '', valeurDeclaree: 0, tauxApplicable: 0, montantDroits: 0 };
+        case "Droits de timbre": return { ...base, typeDocument: '', nombrePages: 0, valeurTimbreUnitaire: 0, montantTotalTimbres: 0 };
+        case "Taxe de publicité foncière": return { ...base, numeroTitreFoncier: '', natureOperation: '', superficie: 0, valeurBien: 0, tauxTaxe: 0, montantTaxe: 0 };
+        case "Droits fiscaux d'entrée": return { ...base, numeroDeclarationDouane: '', valeurCIF: 0, tauxDroitsFiscaux: 0, montantCalcule: 0, natureMarchandises: '' };
+        case "Droits de douane proprement dits": return { ...base, codeTarifaire: '', valeurEnDouane: 0, tauxDouanier: 0, montantDroits: 0, origineMarchandises: '' };
+        default: return { ...base };
+    }
 };
+
+// --- FORM COMPONENTS ---
+const FormField = ({ label, children, isRequired }: { label: string, children: React.ReactNode, isRequired?: boolean }) => (
+    <div className="space-y-2"><Label>{label}{isRequired && <span className="text-destructive"> *</span>}</Label>{children}</div>
+);
+
+function ImpotSynthetiqueForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((d: any) => ({ ...d, [field]: value }));
+    return <div className="space-y-4"><div className="grid md:grid-cols-2 gap-4"><FormField label="NCC" isRequired><Input value={data.ncc || ''} onChange={e => handleChange('ncc', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Raison sociale/Nom" isRequired><Input value={data.raisonSociale || ''} onChange={e => handleChange('raisonSociale', e.target.value)} disabled={isViewMode} /></FormField></div><FormField label="Adresse du local" isRequired><Input value={data.adresseLocal || ''} onChange={e => handleChange('adresseLocal', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Nature de l'activité" isRequired><Input value={data.natureActivite || ''} onChange={e => handleChange('natureActivite', e.target.value)} disabled={isViewMode} /></FormField><div className="grid md:grid-cols-2 gap-4"><FormField label="CA Prévisionnel" isRequired><Input type="number" value={data.caPrevisionnel || ''} onChange={e => handleChange('caPrevisionnel', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Montant de l'impôt" isRequired><Input type="number" value={data.montantImpotSynthetique || ''} onChange={e => handleChange('montantImpotSynthetique', e.target.value)} disabled={isViewMode} /></FormField></div></div>;
+}
+function DroitsTimbreForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((d: any) => ({ ...d, [field]: value }));
+    return <div className="space-y-4"><FormField label="Type de document" isRequired><Input value={data.typeDocument || ''} onChange={e => handleChange('typeDocument', e.target.value)} disabled={isViewMode} /></FormField><div className="grid md:grid-cols-2 gap-4"><FormField label="Nombre de pages" isRequired><Input type="number" value={data.nombrePages || ''} onChange={e => handleChange('nombrePages', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Valeur timbre unitaire" isRequired><Input type="number" value={data.valeurTimbreUnitaire || ''} onChange={e => handleChange('valeurTimbreUnitaire', e.target.value)} disabled={isViewMode} /></FormField></div></div>;
+}
+// Add other form components here...
+
+function TaxFormRenderer({ type, data, setData, isViewMode }: { type: TaxType, data: any, setData: Function, isViewMode: boolean }) {
+    switch (type) {
+        case "Impôt synthétique": return <ImpotSynthetiqueForm data={data} setData={setData} isViewMode={isViewMode} />;
+        case "Droits de timbre": return <DroitsTimbreForm data={data} setData={setData} isViewMode={isViewMode} />;
+        // Other cases will be added here
+        default: return <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50"><p>Formulaire non disponible pour le type '{type}'.</p></div>;
+    }
+}
+
 
 function AutresImpotsMainContent() {
     const [impots, setImpots] = useState(initialAutresImpots);
@@ -61,15 +114,29 @@ function AutresImpotsMainContent() {
         setIsModalOpen(true);
     };
 
-    const handleSave = (formData: Omit<AutreImpot, 'id' | 'statut'>) => {
+    const handleSave = (formData: any) => {
+        let finalAmount = 0;
+        switch(formData.type) {
+            case "Droits de timbre":
+                finalAmount = (formData.data.nombrePages || 0) * (formData.data.valeurTimbreUnitaire || 0);
+                break;
+            case "Impôt synthétique":
+                finalAmount = formData.data.montantImpotSynthetique || 0;
+                break;
+            default:
+                finalAmount = formData.data.montant || 0;
+        }
+
         if (editingImpot) {
-            setImpots(prev => prev.map(d => d.id === editingImpot.id ? { ...editingImpot, ...formData, statut: 'À payer' } : d));
+            setImpots(prev => prev.map(d => d.id === editingImpot.id ? { ...editingImpot, ...formData, statut: 'À payer', montant: finalAmount } : d));
             toast({ title: 'Taxe modifiée', description: 'La taxe a été mise à jour.' });
         } else {
             const newImpot: AutreImpot = {
                 id: `tax_${Date.now()}`,
                 ...formData,
+                montant: finalAmount,
                 statut: 'Brouillon',
+                echeance: formData.echeance || 'À définir',
             };
             setImpots(prev => [newImpot, ...prev]);
             toast({ title: 'Taxe créée', description: 'La nouvelle taxe a été ajoutée en tant que brouillon.' });
@@ -99,20 +166,23 @@ function AutresImpotsMainContent() {
         doc.setFontSize(10);
         doc.text(`Imprimé via UNIKORP ® le ${printDate}`, 105, 28, { align: 'center' });
         
+        const bodyData = Object.entries(impot.data).map(([key, value]) => [key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()), String(value)]);
+
         autoTable(doc, {
             startY: 40,
             head: [['Champ', 'Valeur']],
             body: [
-                ['Impôt / Taxe', impot.nom],
-                ['Description', impot.description],
+                ['Type d\'impôt', impot.type],
+                ['Période', impot.periode],
                 ['Échéance', impot.echeance],
                 ['Montant Dû', `${impot.montant.toLocaleString('fr-FR')} €`],
                 ['Statut', impot.statut],
+                ...bodyData,
             ],
             theme: 'grid'
         });
 
-        doc.save(`declaration_${impot.nom.replace(/\s/g, '_')}.pdf`);
+        doc.save(`declaration_${impot.type.replace(/\s/g, '_')}.pdf`);
     };
 
     const getStatusBadge = (impot: AutreImpot) => {
@@ -142,6 +212,7 @@ function AutresImpotsMainContent() {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead>Période</TableHead>
                         <TableHead>Impôt / Taxe</TableHead>
                         <TableHead className="text-right">Montant Dû</TableHead>
                         <TableHead className="text-center">Statut</TableHead>
@@ -153,7 +224,8 @@ function AutresImpotsMainContent() {
                         const isPaid = impot.statut === 'Payé';
                         return (
                         <TableRow key={impot.id}>
-                            <TableCell className="font-medium">{impot.nom}</TableCell>
+                            <TableCell className="font-medium">{impot.periode}</TableCell>
+                            <TableCell><Badge variant="secondary">{impot.type}</Badge></TableCell>
                             <TableCell className="text-right font-mono">{impot.montant.toLocaleString('fr-FR')} €</TableCell>
                             <TableCell className="text-center">{getStatusBadge(impot)}</TableCell>
                              <TableCell className="text-center">
@@ -194,66 +266,61 @@ function AutresImpotsMainContent() {
   );
 }
 
-function TaxModal({ isOpen, onClose, onSave, taxToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: Omit<AutreImpot, 'id' | 'statut'>) => void, taxToEdit: AutreImpot | null }) {
-    const [formData, setFormData] = useState(defaultFormData);
+function TaxModal({ isOpen, onClose, onSave, taxToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: any) => void, taxToEdit: AutreImpot | null }) {
     const { toast } = useToast();
+    const [type, setType] = useState<TaxType>(taxToEdit?.type || 'Impôt synthétique');
+    const [data, setData] = useState(taxToEdit?.data || getDefaultDataForType(type));
+    const [echeance, setEcheance] = useState(taxToEdit?.echeance || '');
+    const [periode, setPeriode] = useState(taxToEdit?.periode || '');
 
-    React.useEffect(() => {
+
+    useEffect(() => {
         if (isOpen) {
-            if (taxToEdit) {
-                setFormData({
-                    nom: taxToEdit.nom,
-                    description: taxToEdit.description,
-                    montant: taxToEdit.montant,
-                    echeance: taxToEdit.echeance,
-                });
-            } else {
-                setFormData(defaultFormData);
-            }
+            const initialType = taxToEdit?.type || 'Impôt synthétique';
+            setType(initialType);
+            setData(taxToEdit ? taxToEdit.data : getDefaultDataForType(initialType));
+            setEcheance(taxToEdit?.echeance || '');
+            setPeriode(taxToEdit?.periode || '');
         }
     }, [isOpen, taxToEdit]);
     
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setFormData(prev => ({ ...prev, [id]: id === 'montant' ? parseFloat(value) || 0 : value }));
-    };
+    const handleTypeChange = (newType: TaxType) => {
+        if (!taxToEdit) { // Allow type change only for new declarations
+            setType(newType);
+            setData(getDefaultDataForType(newType));
+        }
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.nom || !formData.montant) {
-            toast({ title: 'Champs requis', description: 'Veuillez remplir le nom et le montant.', variant: 'destructive'});
-            return;
-        }
-        onSave(formData);
+        onSave({ type, data, echeance, periode });
     }
     
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent className="max-w-3xl">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle>{taxToEdit ? 'Modifier la' : 'Créer une'} taxe</DialogTitle>
                         <DialogDescription>Renseignez les détails de l'impôt ou de la taxe.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="nom">Nom de l'impôt/taxe</Label>
-                            <Input id="nom" value={formData.nom} onChange={handleChange} placeholder="Ex: Impôt synthétique" />
+                    <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-4">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <FormField label="Type d'impôt" isRequired>
+                                <Select value={type} onValueChange={handleTypeChange} disabled={!!taxToEdit}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>{TaxTypeOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </FormField>
+                            <FormField label="Période" isRequired>
+                                <Input value={periode} onChange={e => setPeriode(e.target.value)} placeholder="Ex: Année 2024, T3 2024..." />
+                            </FormField>
+                             <FormField label="Échéance" isRequired>
+                                <Input value={echeance} onChange={e => setEcheance(e.target.value)} placeholder="Ex: 15/10/2024..." />
+                            </FormField>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Input id="description" value={formData.description} onChange={handleChange} placeholder="Ex: Paiement libératoire" />
-                        </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                               <Label htmlFor="montant">Montant Dû (€)</Label>
-                               <Input id="montant" type="number" value={formData.montant || ''} onChange={handleChange} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="echeance">Échéance</Label>
-                                <Input id="echeance" value={formData.echeance} onChange={handleChange} placeholder="Ex: Annuel, 15/12/2024..." />
-                            </div>
-                        </div>
+                        <Separator />
+                        <TaxFormRenderer type={type} data={data} setData={setData} isViewMode={false} />
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
@@ -269,16 +336,13 @@ function ViewTaxModal({ isOpen, onClose, tax }: { isOpen: boolean, onClose: () =
     if (!tax) return null;
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Détails de la Taxe</DialogTitle>
-                    <DialogDescription>{tax.nom}</DialogDescription>
+                    <DialogTitle>Détails de la Taxe : {tax.type}</DialogTitle>
+                    <DialogDescription>Période: {tax.periode} | Échéance: {tax.echeance}</DialogDescription>
                 </DialogHeader>
-                <div className="py-4 space-y-2">
-                    <p><strong>Description:</strong> {tax.description}</p>
-                    <p><strong>Montant Dû:</strong> {tax.montant.toLocaleString('fr-FR')} €</p>
-                    <p><strong>Échéance:</strong> {tax.echeance}</p>
-                    <p><strong>Statut:</strong> {tax.statut}</p>
+                <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-4">
+                   <TaxFormRenderer type={tax.type} data={tax.data} setData={()=>{}} isViewMode={true} />
                 </div>
                 <DialogFooter>
                     <Button onClick={onClose}>Fermer</Button>
