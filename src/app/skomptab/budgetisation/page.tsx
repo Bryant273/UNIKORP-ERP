@@ -10,13 +10,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, Trash2, Sigma, Eye, Target } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { PlusCircle, Edit, Trash2, Sigma, Target, Printer } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-
-// --- DATA TYPES ---
+// --- DATA TYPES & MOCK DATA ---
 
 type BudgetLineItem = {
   id: string;
@@ -34,8 +34,6 @@ type Budget = {
   budgetLines: BudgetLineItem[];
   realiseLines: BudgetLineItem[];
 };
-
-// --- MOCK DATA ---
 
 const MOCK_ANALYTIC_SECTIONS = [
     { code: 'D-FIN', libelle: 'Finance & Comptabilité' },
@@ -85,23 +83,46 @@ const YEARS = ['2023', '2024', '2025'];
 // --- MAIN COMPONENT ---
 export default function BudgetisationPage() {
     const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+    const [isRealiseModalOpen, setIsRealiseModalOpen] = useState(false);
     const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
     const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
+    const { toast } = useToast();
 
-    const handleOpenModal = (budget: Budget | null) => {
+    const handleOpenBudgetModal = (budget: Budget | null) => {
         setEditingBudget(budget);
-        setIsModalOpen(true);
+        setIsBudgetModalOpen(true);
     };
 
-    const handleSaveBudget = (newOrUpdatedBudget: Omit<Budget, 'id'>) => {
-        if (editingBudget) {
-            setBudgets(budgets.map(b => b.id === editingBudget.id ? { ...editingBudget, ...newOrUpdatedBudget } : b));
-        } else {
+    const handleOpenRealiseModal = (budget: Budget) => {
+        setEditingBudget(budget);
+        setIsRealiseModalOpen(true);
+    };
+
+    const handleSaveBudget = (newOrUpdatedBudget: Partial<Budget>) => {
+        if (editingBudget) { // Editing existing budget
+            setBudgets(budgets.map(b => b.id === editingBudget.id ? { ...b, ...newOrUpdatedBudget } : b));
+            toast({ title: 'Budget prévisionnel mis à jour.' });
+        } else { // Creating new budget
             const newId = Math.max(0, ...budgets.map(b => b.id)) + 1;
-            setBudgets(prev => [...prev, { id: newId, ...newOrUpdatedBudget }]);
+            const fullBudget: Budget = {
+              id: newId,
+              realiseLines: [],
+              ...newOrUpdatedBudget,
+            } as Budget;
+            setBudgets(prev => [...prev, fullBudget]);
+            toast({ title: 'Nouveau budget créé avec succès.' });
         }
-        setIsModalOpen(false);
+        setIsBudgetModalOpen(false);
+        setEditingBudget(null);
+    };
+    
+    const handleSaveRealise = (realiseLines: BudgetLineItem[]) => {
+        if (editingBudget) {
+            setBudgets(budgets.map(b => b.id === editingBudget.id ? { ...b, realiseLines } : b));
+            toast({ title: 'Montants réalisés enregistrés.' });
+        }
+        setIsRealiseModalOpen(false);
         setEditingBudget(null);
     };
 
@@ -109,9 +130,61 @@ export default function BudgetisationPage() {
         if (budgetToDelete) {
             setBudgets(budgets.filter(b => b.id !== budgetToDelete.id));
             setBudgetToDelete(null);
+            toast({ title: 'Fiche de budget supprimée.' });
         }
     };
     
+    const handlePrintReport = (budget: Budget) => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text('Rapport de Suivi Budgétaire', 105, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`Période: ${budget.month} ${budget.year}`, 15, 30);
+        doc.text(`Section Analytique: ${budget.sectionLibelle}`, 15, 36);
+
+        // Budget table
+        autoTable(doc, {
+            head: [['Budget Prévisionnel', 'Qté', 'P.U.', 'Montant']],
+            body: budget.budgetLines.map(l => [l.element, l.quantite, formatCurrency(l.pu), formatCurrency(l.quantite * l.pu)]),
+            startY: 45,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+        });
+
+        const totalBudget = budget.budgetLines.reduce((acc, line) => acc + line.quantite * line.pu, 0);
+        autoTable(doc, {
+            body: [[{ content: 'Total Budget', colSpan: 3, styles: { halign: 'right' } }, { content: formatCurrency(totalBudget), styles: { halign: 'right' } }]],
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid',
+        });
+        
+        // Actuals table
+        autoTable(doc, {
+            head: [['Réalisations', 'Qté', 'P.U.', 'Montant']],
+            body: budget.realiseLines.map(l => [l.element, l.quantite, formatCurrency(l.pu), formatCurrency(l.quantite * l.pu)]),
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            theme: 'striped',
+            headStyles: { fillColor: '#166534' },
+        });
+        
+        const totalRealise = budget.realiseLines.reduce((acc, line) => acc + line.quantite * line.pu, 0);
+         autoTable(doc, {
+            body: [[{ content: 'Total Réalisé', colSpan: 3, styles: { halign: 'right' } }, { content: formatCurrency(totalRealise), styles: { halign: 'right' } }]],
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid',
+        });
+        
+        const ecart = totalRealise - totalBudget;
+        autoTable(doc, {
+            body: [[{ content: 'Écart (Réalisé - Budget)', colSpan: 3, styles: { halign: 'right' } }, { content: formatCurrency(ecart), styles: { halign: 'right', textColor: ecart > 0 ? '#dc2626' : '#16a34a' } }]],
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid',
+        });
+
+        doc.save(`rapport_budget_${budget.sectionCode}_${budget.year}-${budget.month}.pdf`);
+    };
+
     return (
         <>
             <Card className="w-full">
@@ -122,8 +195,8 @@ export default function BudgetisationPage() {
                             <CardDescription>Élaborez vos budgets, suivez les réalisations et analysez les écarts.</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button onClick={() => handleOpenModal(null)}>
-                                <PlusCircle className="mr-2 h-4 w-4"/> Créer un budget
+                            <Button onClick={() => handleOpenBudgetModal(null)}>
+                                <PlusCircle className="mr-2 h-4 w-4"/> Créer une fiche de budget
                             </Button>
                         </div>
                     </div>
@@ -138,7 +211,7 @@ export default function BudgetisationPage() {
                                 <TableHead className="text-right">Réalisé Total</TableHead>
                                 <TableHead className="text-right">Écart</TableHead>
                                 <TableHead className="w-[250px]">Taux de Consommation</TableHead>
-                                <TableHead className="text-center w-[120px]">Actions</TableHead>
+                                <TableHead className="text-center w-[180px]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -161,9 +234,11 @@ export default function BudgetisationPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Button variant="ghost" size="icon" onClick={() => handleOpenModal(budget)}><Eye className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => setBudgetToDelete(budget)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Button variant="ghost" size="icon" onClick={() => handleOpenBudgetModal(budget)} title="Modifier le budget"><Edit className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handleOpenRealiseModal(budget)} title="Saisir les réalisés"><Sigma className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handlePrintReport(budget)} title="Imprimer le rapport"><Printer className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => setBudgetToDelete(budget)} title="Supprimer"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -175,17 +250,24 @@ export default function BudgetisationPage() {
             </Card>
 
             <BudgetModal
-                isOpen={isModalOpen}
-                onClose={() => {setIsModalOpen(false); setEditingBudget(null);}}
+                isOpen={isBudgetModalOpen}
+                onClose={() => setIsBudgetModalOpen(false)}
                 onSave={handleSaveBudget}
+                existingBudget={editingBudget}
+            />
+            
+            <RealiseModal
+                isOpen={isRealiseModalOpen}
+                onClose={() => setIsRealiseModalOpen(false)}
+                onSave={handleSaveRealise}
                 existingBudget={editingBudget}
             />
 
             <AlertDialog open={!!budgetToDelete} onOpenChange={() => setBudgetToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Supprimer ce budget ?</AlertDialogTitle>
-                        <AlertDialogDescription>Cette action est irréversible. Toutes les données prévisionnelles et réalisées pour cette fiche de budget seront supprimées.</AlertDialogDescription>
+                        <AlertDialogTitle>Supprimer cette fiche de budget ?</AlertDialogTitle>
+                        <AlertDialogDescription>Cette action est irréversible. Toutes les données prévisionnelles et réalisées pour cette fiche seront supprimées.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
@@ -202,7 +284,7 @@ export default function BudgetisationPage() {
 interface BudgetModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Omit<Budget, 'id'>) => void;
+    onSave: (data: Partial<Budget>) => void;
     existingBudget: Budget | null;
 }
 
@@ -211,61 +293,87 @@ function BudgetModal({ isOpen, onClose, onSave, existingBudget }: BudgetModalPro
     const [month, setMonth] = useState(existingBudget?.month || MONTHS[new Date().getMonth()]);
     const [sectionCode, setSectionCode] = useState(existingBudget?.sectionCode || '');
     const [budgetLines, setBudgetLines] = useState<BudgetLineItem[]>([]);
-    const [realiseLines, setRealiseLines] = useState<BudgetLineItem[]>([]);
 
     useEffect(() => {
-        if (existingBudget) {
-            setYear(existingBudget.year);
-            setMonth(existingBudget.month);
-            setSectionCode(existingBudget.sectionCode);
-            setBudgetLines(JSON.parse(JSON.stringify(existingBudget.budgetLines)));
-            setRealiseLines(JSON.parse(JSON.stringify(existingBudget.realiseLines)));
-        } else {
-            setYear(new Date().getFullYear().toString());
-            setMonth(MONTHS[new Date().getMonth()]);
-            setSectionCode('');
-            setBudgetLines([{ id: `b-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
-            setRealiseLines([]);
+        if (isOpen) {
+            setYear(existingBudget?.year || new Date().getFullYear().toString());
+            setMonth(existingBudget?.month || MONTHS[new Date().getMonth()]);
+            setSectionCode(existingBudget?.sectionCode || '');
+            setBudgetLines(existingBudget ? JSON.parse(JSON.stringify(existingBudget.budgetLines)) : [{ id: `b-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
         }
     }, [existingBudget, isOpen]);
 
     const handleSave = () => {
         const sectionInfo = MOCK_ANALYTIC_SECTIONS.find(s => s.code === sectionCode);
-        if (!sectionInfo) return; // Should not happen with select
-        onSave({
-            year,
-            month,
-            sectionCode,
-            sectionLibelle: sectionInfo.libelle,
-            budgetLines,
-            realiseLines,
-        });
+        if (!sectionInfo) return;
+        onSave({ year, month, sectionCode, sectionLibelle: sectionInfo.libelle, budgetLines });
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+            <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>{existingBudget ? 'Détails du Budget' : 'Créer un nouveau budget'}</DialogTitle>
-                    <DialogDescription>Sélectionnez une période et une section, puis détaillez le budget prévisionnel et les réalisations.</DialogDescription>
+                    <DialogTitle>{existingBudget ? 'Modifier le Budget Prévisionnel' : 'Créer un nouveau budget'}</DialogTitle>
+                    <DialogDescription>Sélectionnez une période et une section, puis détaillez le budget prévisionnel.</DialogDescription>
                 </DialogHeader>
-                <div className="grid md:grid-cols-3 gap-4 p-4 border-b">
-                    <div className="space-y-1.5"><Label>Année</Label><Select value={year} onValueChange={setYear}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-1.5"><Label>Mois</Label><Select value={month} onValueChange={setMonth}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-1.5"><Label>Section Analytique</Label><Select value={sectionCode} onValueChange={setSectionCode}><SelectTrigger><SelectValue placeholder="Sélectionnez..." /></SelectTrigger><SelectContent>{MOCK_ANALYTIC_SECTIONS.map(s => <SelectItem key={s.code} value={s.code}>{s.libelle}</SelectItem>)}</SelectContent></Select></div>
+                <div className="grid md:grid-cols-3 gap-4 p-4 border-y">
+                    <div className="space-y-1.5"><Label>Année</Label><Select value={year} onValueChange={setYear} disabled={!!existingBudget}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1.5"><Label>Mois</Label><Select value={month} onValueChange={setMonth} disabled={!!existingBudget}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1.5"><Label>Section Analytique</Label><Select value={sectionCode} onValueChange={setSectionCode} disabled={!!existingBudget}><SelectTrigger><SelectValue placeholder="Sélectionnez..." /></SelectTrigger><SelectContent>{MOCK_ANALYTIC_SECTIONS.map(s => <SelectItem key={s.code} value={s.code}>{s.libelle}</SelectItem>)}</SelectContent></Select></div>
                 </div>
-                <div className="flex-1 grid md:grid-cols-2 gap-4 overflow-hidden p-4">
-                    <BudgetDetailTable title="Budget Prévisionnel" icon={Target} lines={budgetLines} setLines={setBudgetLines} />
-                    <BudgetDetailTable title="Réalisations" icon={Sigma} lines={realiseLines} setLines={setRealiseLines} />
+                <div className="flex-1 overflow-hidden p-4">
+                    <BudgetDetailTable title="Détail du Prévisionnel" icon={Target} lines={budgetLines} setLines={setBudgetLines} />
                 </div>
                 <DialogFooter className="p-4 border-t">
                     <Button variant="outline" onClick={onClose}>Annuler</Button>
-                    <Button onClick={handleSave} disabled={!sectionCode}>Enregistrer</Button>
+                    <Button onClick={handleSave} disabled={!sectionCode}>Enregistrer le budget</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+interface RealiseModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (lines: BudgetLineItem[]) => void;
+    existingBudget: Budget | null;
+}
+
+function RealiseModal({ isOpen, onClose, onSave, existingBudget }: RealiseModalProps) {
+    const [realiseLines, setRealiseLines] = useState<BudgetLineItem[]>([]);
+
+    useEffect(() => {
+        if (isOpen && existingBudget) {
+            setRealiseLines(JSON.parse(JSON.stringify(existingBudget.realiseLines)));
+        } else if (isOpen) {
+             setRealiseLines([{ id: `r-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
+        }
+    }, [existingBudget, isOpen]);
+    
+    if (!existingBudget) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>Saisir les Réalisations</DialogTitle>
+                    <DialogDescription>
+                        Pour le budget: {existingBudget.sectionLibelle} - {existingBudget.month} {existingBudget.year}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 overflow-hidden p-4">
+                    <BudgetDetailTable title="Détail des Réalisations" icon={Sigma} lines={realiseLines} setLines={setRealiseLines} />
+                </div>
+                <DialogFooter className="p-4 border-t">
+                    <Button variant="outline" onClick={onClose}>Annuler</Button>
+                    <Button onClick={() => onSave(realiseLines)}>Enregistrer les réalisations</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 
 interface BudgetDetailTableProps {
     title: string;
@@ -325,5 +433,3 @@ function BudgetDetailTable({ title, icon: Icon, lines, setLines }: BudgetDetailT
         </div>
     );
 }
-
-    
