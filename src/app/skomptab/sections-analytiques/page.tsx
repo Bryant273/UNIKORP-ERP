@@ -67,27 +67,6 @@ const MOCK_ANALYTIC_PLAN: Section[] = [
     },
 ];
 
-// --- VENTILATION DATA (Simulated Link) ---
-type DistributionKey = {
-    sectionCode: string;
-    rate: number;
-};
-type VentilationHistory = {
-    id: number;
-    date: string;
-    periode: string;
-    description: string;
-    status: 'Terminée';
-    accounts: string[];
-    keys: DistributionKey[];
-};
-const MOCK_VENTILATION_HISTORY: VentilationHistory[] = [
-    { id: 1, date: '2024-07-28', periode: 'Juillet 2024', description: 'Ventilation mensuelle des charges de personnel', status: 'Terminée', accounts: ['641'], keys: [{sectionCode: '641.01', rate: 60}, {sectionCode: '641.02', rate: 40}] },
-    { id: 2, date: '2024-07-25', periode: 'Juillet 2024', description: 'Répartition des achats de production', status: 'Terminée', accounts: ['601'], keys: [{sectionCode: '601.02', rate: 100}]},
-    { id: 3, date: '2024-06-30', periode: 'Juin 2024', description: 'Ventilation des ventes', status: 'Terminée', accounts: ['701'], keys: [{sectionCode: '701.FR', rate: 80}, {sectionCode: '701.EXP', rate: 20}]},
-];
-
-
 const getMockEntriesForSection = (section: Section): MockEntry[] => {
     if (section.type === 'folder' && section.children) {
         return section.children.flatMap(child => getMockEntriesForSection(child));
@@ -117,7 +96,6 @@ export default function SectionsAnalytiquesPage() {
     
     const [viewingStack, setViewingStack] = useState<Section[]>([]);
     const [mockEntries, setMockEntries] = useState<MockEntry[]>([]);
-    const [appliedVentilations, setAppliedVentilations] = useState<VentilationHistory[]>([]);
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSection, setEditingSection] = useState<Section | null>(null);
@@ -134,14 +112,6 @@ export default function SectionsAnalytiquesPage() {
 
     const updateView = (section: Section) => {
         setMockEntries(getMockEntriesForSection(section));
-        if (section.type === 'item') {
-            const relevantVentilations = MOCK_VENTILATION_HISTORY.filter(v =>
-                v.keys.some(k => k.sectionCode === section.code)
-            );
-            setAppliedVentilations(relevantVentilations);
-        } else {
-            setAppliedVentilations([]);
-        }
     };
 
     const handleViewSection = (section: Section) => {
@@ -353,42 +323,6 @@ export default function SectionsAnalytiquesPage() {
                     )}
 
                     {viewingSection.type === 'item' && (
-                        <>
-                        <Card>
-                            <CardHeader><CardTitle>Historique des Ventilations</CardTitle></CardHeader>
-                            <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Période</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead className="text-right">Taux Appliqué</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {appliedVentilations.length > 0 ? (
-                                            appliedVentilations.map(ventilation => {
-                                                const keyInfo = ventilation.keys.find(k => k.sectionCode === viewingSection.code);
-                                                return (
-                                                    <TableRow key={ventilation.id}>
-                                                        <TableCell>{ventilation.periode}</TableCell>
-                                                        <TableCell>{ventilation.description}</TableCell>
-                                                        <TableCell className="text-right font-mono">{keyInfo ? `${keyInfo.rate}%` : 'N/A'}</TableCell>
-                                                    </TableRow>
-                                                );
-                                            })
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={3} className="text-center text-muted-foreground">
-                                                    Aucune ventilation appliquée à cette section.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                        </Card>
-
                         <Card>
                             <CardHeader><CardTitle>Écritures Rattachées (Exemple)</CardTitle></CardHeader>
                             <CardContent>
@@ -407,7 +341,6 @@ export default function SectionsAnalytiquesPage() {
                                 </Table>
                             </CardContent>
                         </Card>
-                        </>
                     )}
                 </div>
               </ScrollArea>
