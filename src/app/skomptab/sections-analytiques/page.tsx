@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PlusCircle, Eye, Pencil, Trash2, Folder, File, Sigma, ArrowRight, Download } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Folder, File, Sigma, ArrowRight, Download, ArrowLeft } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -105,7 +105,8 @@ const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(
 export default function SectionsAnalytiquesPage() {
     const [sections, setSections] = useState<Section[]>(MOCK_ANALYTIC_PLAN);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [viewingSection, setViewingSection] = useState<Section | null>(null);
+    
+    const [viewingStack, setViewingStack] = useState<Section[]>([]);
     const [mockEntries, setMockEntries] = useState<MockEntry[]>([]);
     
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,10 +115,32 @@ export default function SectionsAnalytiquesPage() {
     const [formData, setFormData] = useState<Omit<Section, 'id' | 'children'>>({ code: '', name: '', type: 'item', compteGeneral: '' });
     const { toast } = useToast();
 
+    const viewingSection = viewingStack.length > 0 ? viewingStack[viewingStack.length - 1] : null;
+
+    const handleSheetClose = () => {
+        setIsSheetOpen(false);
+        setViewingStack([]);
+    };
+
     const handleViewSection = (section: Section) => {
-        setViewingSection(section);
+        setViewingStack([section]);
         setMockEntries(getMockEntriesForSection(section));
         setIsSheetOpen(true);
+    };
+
+    const handleNavigateToChild = (childSection: Section) => {
+        setViewingStack(prev => [...prev, childSection]);
+        setMockEntries(getMockEntriesForSection(childSection));
+    };
+
+    const handleGoBack = () => {
+        const newStack = viewingStack.slice(0, -1);
+        setViewingStack(newStack);
+        if (newStack.length > 0) {
+            setMockEntries(getMockEntriesForSection(newStack[newStack.length - 1]));
+        } else {
+            setIsSheetOpen(false);
+        }
     };
 
     const handleOpenCreateModal = () => {
@@ -134,7 +157,6 @@ export default function SectionsAnalytiquesPage() {
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // In a real app, logic to add/update section in the tree would be complex.
         toast({
             title: editingSection ? "Section modifiée (simulation)" : "Section créée (simulation)",
             description: `Le code de la section est : ${formData.code}`,
@@ -144,7 +166,6 @@ export default function SectionsAnalytiquesPage() {
 
     const handleDelete = () => {
         if (!sectionToDelete) return;
-        // Logic to remove section from tree would be complex.
         toast({
             title: "Section supprimée (simulation)",
             description: `La section ${sectionToDelete.name} a été supprimée.`,
@@ -159,8 +180,9 @@ export default function SectionsAnalytiquesPage() {
         return { debit: totalDebit, credit: totalCredit, solde: totalDebit - totalCredit };
     }, [mockEntries, viewingSection]);
     
-    const handleExportPDF = () => {
-        if (!viewingSection) return;
+    const handleExportPDF = (sectionToExport: Section | null) => {
+        if (!sectionToExport) return;
+        const entriesToExport = getMockEntriesForSection(sectionToExport);
 
         const doc = new jsPDF();
         const companyName = "Votre Société S.A.";
@@ -168,9 +190,8 @@ export default function SectionsAnalytiquesPage() {
         const moduleName = "SKOMPTAB";
         const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
         const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
-        const periodString = `Période en cours`; // placeholder
+        const periodString = `Période en cours`;
 
-        // Header drawing function
         const drawHeader = (data: any) => {
              doc.setFontSize(9);
             doc.setTextColor(150);
@@ -178,15 +199,9 @@ export default function SectionsAnalytiquesPage() {
             doc.setDrawColor(220);
             doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
             doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
-            
-            doc.setFontSize(14);
-            doc.setTextColor(40, 40, 40);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
             doc.text(companyName, data.settings.margin.left + 15, 28);
-            
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(100);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
             const rightX = doc.internal.pageSize.width - data.settings.margin.right;
             doc.text(`Détail Section Analytique`, rightX, 25, { align: 'right' });
             doc.text(`Période : ${periodString}`, rightX, 30, { align: 'right' });
@@ -194,49 +209,27 @@ export default function SectionsAnalytiquesPage() {
             doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
         };
         
-        doc.setFontSize(18);
-        doc.text(`Détail Section Analytique`, 105, 20, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(`Section: ${viewingSection.code} - ${viewingSection.name}`, 15, 30);
+        doc.setFontSize(18); doc.text(`Détail Section Analytique`, 105, 20, { align: 'center' });
+        doc.setFontSize(12); doc.text(`Section: ${sectionToExport.code} - ${sectionToExport.name}`, 15, 30);
         
-        if (viewingSection.type === 'item') {
+        if (sectionToExport.type === 'item') {
             const tableColumn = ["Date", "Journal", "Pièce", "Libellé", "Débit", "Crédit"];
-            const tableRows = mockEntries.map(e => [
+            const tableRows = entriesToExport.map(e => [
                 e.date, e.journal, e.piece, e.libelle, formatCurrency(e.debit), formatCurrency(e.credit)
             ]);
-            autoTable(doc, {
-                head: [tableColumn],
-                body: tableRows,
-                startY: 40,
-                didDrawPage: drawHeader,
-                margin: { top: 50 },
-            });
-        } else if (viewingSection.type === 'folder' && viewingSection.children) {
-            doc.setFontSize(14);
-            doc.text('Sous-sections', 15, 40);
+            autoTable(doc, { head: [tableColumn], body: tableRows, startY: 40, didDrawPage: drawHeader, margin: { top: 50 } });
+        } else if (sectionToExport.type === 'folder' && sectionToExport.children) {
+            doc.setFontSize(14); doc.text('Sous-sections', 15, 40);
             const tableColumn = ["Code", "Nom", "Compte Général"];
-            const tableRows = viewingSection.children.map(child => [
-                child.code, child.name, child.compteGeneral
-            ]);
-            autoTable(doc, {
-                head: [tableColumn],
-                body: tableRows,
-                startY: 45,
-                didDrawPage: drawHeader,
-                margin: { top: 50 },
-            });
+            const tableRows = sectionToExport.children.map(child => [ child.code, child.name, child.compteGeneral ]);
+            autoTable(doc, { head: [tableColumn], body: tableRows, startY: 45, didDrawPage: drawHeader, margin: { top: 50 } });
         }
 
-        doc.save(`details_section_${viewingSection.code}.pdf`);
-        toast({
-            title: "Exportation PDF réussie",
-            description: `Le fichier details_section_${viewingSection.code}.pdf a été généré.`
-        });
+        doc.save(`details_section_${sectionToExport.code}.pdf`);
+        toast({ title: "Exportation PDF réussie" });
     };
 
-    const getIndentLevel = (code: string) => {
-        return (code.split('.').length - 1) * 2;
-    }
+    const getIndentLevel = (code: string) => (code.split('.').length - 1) * 2;
 
   return (
     <>
@@ -271,11 +264,8 @@ export default function SectionsAnalytiquesPage() {
                 {sections.map((section) => (
                   <TableRow key={section.id} className="odd:bg-muted/50">
                     <TableCell className="font-medium">
-                        <div className="flex items-center gap-2" style={{ paddingLeft: `${getIndentLevel(section.code)}rem` }}>
-                           {section.type === 'folder' 
-                             ? <Folder className="h-4 w-4 text-primary" /> 
-                             : <File className="h-4 w-4 text-muted-foreground" />
-                           }
+                        <div className="flex items-center gap-2">
+                           <Folder className="h-4 w-4 text-primary" /> 
                            {section.name}
                         </div>
                     </TableCell>
@@ -299,7 +289,7 @@ export default function SectionsAnalytiquesPage() {
         </CardContent>
       </Card>
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+      <Sheet open={isSheetOpen} onOpenChange={handleSheetClose}>
         <SheetContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col p-0">
           {viewingSection && (
             <>
@@ -312,25 +302,11 @@ export default function SectionsAnalytiquesPage() {
               <ScrollArea className="flex-1">
                 <div className="p-6 space-y-4">
                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Sigma className="h-5 w-5"/>
-                                Synthèse
-                            </CardTitle>
-                        </CardHeader>
+                        <CardHeader><CardTitle className="flex items-center gap-2"><Sigma className="h-5 w-5"/>Synthèse</CardTitle></CardHeader>
                         <CardContent className="grid grid-cols-3 gap-4 text-center">
-                            <div className="p-2 rounded-md bg-muted">
-                                <p className="text-sm text-muted-foreground">Total Débit</p>
-                                <p className="font-bold font-mono text-green-600">{formatCurrency(totals.debit)}</p>
-                            </div>
-                            <div className="p-2 rounded-md bg-muted">
-                                <p className="text-sm text-muted-foreground">Total Crédit</p>
-                                <p className="font-bold font-mono text-red-600">{formatCurrency(totals.credit)}</p>
-                            </div>
-                            <div className="p-2 rounded-md bg-muted">
-                                <p className="text-sm text-muted-foreground">Solde</p>
-                                <p className={cn("font-bold font-mono", totals.solde >= 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p>
-                            </div>
+                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Total Débit</p><p className="font-bold font-mono text-green-600">{formatCurrency(totals.debit)}</p></div>
+                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Total Crédit</p><p className="font-bold font-mono text-red-600">{formatCurrency(totals.credit)}</p></div>
+                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Solde</p><p className={cn("font-bold font-mono", totals.solde >= 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p></div>
                         </CardContent>
                     </Card>
                     
@@ -340,13 +316,13 @@ export default function SectionsAnalytiquesPage() {
                             <CardContent>
                                 <ul className="space-y-2">
                                     {viewingSection.children.map(child => (
-                                        <li key={child.id} className="flex items-center justify-between p-2 rounded-md border">
+                                        <li key={child.id} className="flex items-center justify-between p-2 rounded-md border hover:bg-accent">
                                             <div className="flex items-center gap-2">
                                                 {child.type === 'folder' ? <Folder className="h-4 w-4 text-primary" /> : <File className="h-4 w-4 text-muted-foreground" />}
                                                 <span className="font-medium">{child.name}</span>
                                                 <Badge variant="secondary" className="font-mono">{child.code}</Badge>
                                             </div>
-                                            <Button variant="ghost" size="sm" onClick={() => handleViewSection(child)}>
+                                            <Button variant="ghost" size="sm" onClick={() => handleNavigateToChild(child)}>
                                                 Consulter <ArrowRight className="ml-2 h-4 w-4"/>
                                             </Button>
                                         </li>
@@ -361,14 +337,7 @@ export default function SectionsAnalytiquesPage() {
                             <CardHeader><CardTitle>Écritures Rattachées</CardTitle></CardHeader>
                             <CardContent>
                                 <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Libellé</TableHead>
-                                            <TableHead className="text-right">Débit</TableHead>
-                                            <TableHead className="text-right">Crédit</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
+                                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Libellé</TableHead><TableHead className="text-right">Débit</TableHead><TableHead className="text-right">Crédit</TableHead></TableRow></TableHeader>
                                     <TableBody>
                                         {mockEntries.map(entry => (
                                             <TableRow key={entry.id}>
@@ -385,9 +354,18 @@ export default function SectionsAnalytiquesPage() {
                     )}
                 </div>
               </ScrollArea>
-              <SheetFooter className="p-6 border-t">
-                 <Button variant="outline" onClick={() => setIsSheetOpen(false)}>Fermer</Button>
-                 <Button onClick={handleExportPDF}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+              <SheetFooter className="p-6 border-t flex justify-between">
+                <div>
+                   {viewingStack.length > 1 && (
+                     <Button variant="ghost" onClick={handleGoBack}>
+                       <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
+                     </Button>
+                   )}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleSheetClose}>Fermer</Button>
+                  <Button onClick={() => handleExportPDF(viewingSection)}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
+                </div>
               </SheetFooter>
             </>
           )}
@@ -397,53 +375,28 @@ export default function SectionsAnalytiquesPage() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-md">
           <form onSubmit={handleSubmit}>
-            <DialogHeader>
-                <DialogTitle>{editingSection ? 'Modifier la section' : 'Nouvelle section analytique'}</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>{editingSection ? 'Modifier la section' : 'Nouvelle section analytique'}</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
+                <div className="space-y-2"><Label htmlFor="code">Code</Label><Input id="code" value={formData.code} onChange={e => setFormData(f => ({...f, code: e.target.value}))}/></div>
+                <div className="space-y-2"><Label htmlFor="name">Intitulé</Label><Input id="name" value={formData.name} onChange={e => setFormData(f => ({...f, name: e.target.value}))}/></div>
+                <div className="space-y-2"><Label htmlFor="compteGeneral">Compte Général de rattachement</Label><Input id="compteGeneral" value={formData.compteGeneral} onChange={e => setFormData(f => ({...f, compteGeneral: e.target.value}))}/></div>
                 <div className="space-y-2">
-                    <Label htmlFor="code">Code</Label>
-                    <Input id="code" value={formData.code} onChange={e => setFormData(f => ({...f, code: e.target.value}))}/>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="name">Intitulé</Label>
-                    <Input id="name" value={formData.name} onChange={e => setFormData(f => ({...f, name: e.target.value}))}/>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="compteGeneral">Compte Général de rattachement</Label>
-                    <Input id="compteGeneral" value={formData.compteGeneral} onChange={e => setFormData(f => ({...f, compteGeneral: e.target.value}))}/>
-                </div>
-                 <div className="space-y-2">
                     <Label htmlFor="type">Type</Label>
                     <Select value={formData.type} onValueChange={(v: SectionType) => setFormData(f => ({...f, type: v}))}>
                         <SelectTrigger><SelectValue/></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="folder">Dossier</SelectItem>
-                            <SelectItem value="item">Section</SelectItem>
-                        </SelectContent>
+                        <SelectContent><SelectItem value="folder">Dossier</SelectItem><SelectItem value="item">Section</SelectItem></SelectContent>
                     </Select>
                 </div>
             </div>
-            <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Annuler</Button>
-                <Button type="submit">Enregistrer</Button>
-            </DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Annuler</Button><Button type="submit">Enregistrer</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
       
       <AlertDialog open={!!sectionToDelete} onOpenChange={(open) => !open && setSectionToDelete(null)}>
         <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    Cette action est irréversible. La section sera définitivement supprimée.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setSectionToDelete(null)}>Annuler</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
-            </AlertDialogFooter>
+            <AlertDialogHeader><AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible. La section sera définitivement supprimée.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel onClick={() => setSectionToDelete(null)}>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
