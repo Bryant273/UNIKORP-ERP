@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useCallback } from 'react';
@@ -395,44 +396,46 @@ export default function DigitalisationFacturesPage() {
             </DialogDescription>
           </DialogHeader>
           {viewingInvoice && (
-            <div className="grid md:grid-cols-2 gap-6 py-4">
-              <div className="space-y-4">
-                <div className="flex flex-col space-y-1.5">
-                  <Label className="text-sm text-muted-foreground">N° Pièce</Label>
-                  <p className="font-semibold">{viewingInvoice.numeroPiece}</p>
+            <div className="max-h-[70vh] overflow-y-auto p-1 pr-4">
+                <div className="grid md:grid-cols-2 gap-6 py-4">
+                <div className="space-y-4">
+                    <div className="flex flex-col space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">N° Pièce</Label>
+                    <p className="font-semibold">{viewingInvoice.numeroPiece}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Tiers</Label>
+                    <p className="font-semibold">{viewingInvoice.tiers}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Date de l'opération</Label>
+                    <p className="font-semibold">{new Date(viewingInvoice.dateOperation).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Type</Label>
+                    <p className="font-semibold"><Badge variant={viewingInvoice.type === 'Vente' ? 'default' : 'secondary'}>{viewingInvoice.type}</Badge></p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Montant Total</Label>
+                    <p className="font-bold text-lg">{viewingInvoice.montant.toFixed(2)} FCFA</p>
+                    </div>
                 </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label className="text-sm text-muted-foreground">Tiers</Label>
-                  <p className="font-semibold">{viewingInvoice.tiers}</p>
+                <div className="space-y-2">
+                    <Label>Aperçu du document</Label>
+                    <div className="border rounded-lg overflow-hidden aspect-[1/1.414] bg-muted">
+                    {viewingInvoice.fileUrl && (
+                        <Image
+                            data-ai-hint="invoice document"
+                            src={viewingInvoice.fileUrl}
+                            alt={`Facture ${viewingInvoice.numeroPiece}`}
+                            width={400}
+                            height={565}
+                            className="w-full h-full object-cover"
+                        />
+                    )}
+                    </div>
                 </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label className="text-sm text-muted-foreground">Date de l'opération</Label>
-                  <p className="font-semibold">{new Date(viewingInvoice.dateOperation).toLocaleDateString('fr-FR')}</p>
                 </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label className="text-sm text-muted-foreground">Type</Label>
-                  <p className="font-semibold"><Badge variant={viewingInvoice.type === 'Vente' ? 'default' : 'secondary'}>{viewingInvoice.type}</Badge></p>
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label className="text-sm text-muted-foreground">Montant Total</Label>
-                  <p className="font-bold text-lg">{viewingInvoice.montant.toFixed(2)} FCFA</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Aperçu du document</Label>
-                <div className="border rounded-lg overflow-hidden aspect-[1/1.414] bg-muted">
-                  {viewingInvoice.fileUrl && (
-                      <Image
-                        data-ai-hint="invoice document"
-                        src={viewingInvoice.fileUrl}
-                        alt={`Facture ${viewingInvoice.numeroPiece}`}
-                        width={400}
-                        height={565}
-                        className="w-full h-full object-cover"
-                      />
-                  )}
-                </div>
-              </div>
             </div>
           )}
           <DialogFooter>

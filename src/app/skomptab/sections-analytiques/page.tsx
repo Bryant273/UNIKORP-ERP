@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,12 +9,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PlusCircle, Eye, Pencil, Trash2, Folder, File, Sigma, ArrowRight } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Folder, File, Sigma, ArrowRight, Download } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Logo } from '@/components/logo';
 
 type SectionType = 'folder' | 'item';
 type Section = {
@@ -79,7 +85,7 @@ const getMockEntriesForSection = (section: Section): MockEntry[] => {
     }
     
     return Array.from({ length: Math.floor(Math.random() * 5) + 3 }, (_, i) => {
-        const isDebit = section.code.startsWith('6');
+        const isDebit = section.compteGeneral.startsWith('6');
         const amount = Math.round(Math.random() * 100000) / 100;
         return {
             id: `e${i}-${section.code}`,
@@ -153,6 +159,85 @@ export default function SectionsAnalytiquesPage() {
         return { debit: totalDebit, credit: totalCredit, solde: totalDebit - totalCredit };
     }, [mockEntries, viewingSection]);
     
+    const handleExportPDF = () => {
+        if (!viewingSection) return;
+
+        const doc = new jsPDF();
+        const companyName = "Votre Société S.A.";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SKOMPTAB";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+        const periodString = `Période en cours`; // placeholder
+
+        // Header drawing function
+        const drawHeader = (data: any) => {
+             doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+            doc.setDrawColor(220);
+            doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+            doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.setFont('helvetica', 'bold');
+            doc.text(companyName, data.settings.margin.left + 15, 28);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+            doc.text(`Détail Section Analytique`, rightX, 25, { align: 'right' });
+            doc.text(`Période : ${periodString}`, rightX, 30, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+            doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
+        };
+        
+        doc.setFontSize(18);
+        doc.text(`Détail Section Analytique`, 105, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`Section: ${viewingSection.code} - ${viewingSection.name}`, 15, 30);
+        
+        if (viewingSection.type === 'item') {
+            const tableColumn = ["Date", "Journal", "Pièce", "Libellé", "Débit", "Crédit"];
+            const tableRows = mockEntries.map(e => [
+                e.date, e.journal, e.piece, e.libelle, formatCurrency(e.debit), formatCurrency(e.credit)
+            ]);
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                didDrawPage: drawHeader,
+                margin: { top: 50 },
+            });
+        } else if (viewingSection.type === 'folder' && viewingSection.children) {
+            doc.setFontSize(14);
+            doc.text('Sous-sections', 15, 40);
+            const tableColumn = ["Code", "Nom", "Compte Général"];
+            const tableRows = viewingSection.children.map(child => [
+                child.code, child.name, child.compteGeneral
+            ]);
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 45,
+                didDrawPage: drawHeader,
+                margin: { top: 50 },
+            });
+        }
+
+        doc.save(`details_section_${viewingSection.code}.pdf`);
+        toast({
+            title: "Exportation PDF réussie",
+            description: `Le fichier details_section_${viewingSection.code}.pdf a été généré.`
+        });
+    };
+
+    const getIndentLevel = (code: string) => {
+        return (code.split('.').length - 1) * 2;
+    }
+
   return (
     <>
       <Card className="w-full">
@@ -175,9 +260,9 @@ export default function SectionsAnalytiquesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px]">Code Section</TableHead>
-                  <TableHead>Intitulé</TableHead>
-                  <TableHead>Compte général</TableHead>
+                  <TableHead>Intitulé de la section</TableHead>
+                  <TableHead className="w-[150px]">Code</TableHead>
+                  <TableHead className="w-[150px]">Compte général</TableHead>
                   <TableHead className="w-[120px]">Type</TableHead>
                   <TableHead className="w-[150px] text-center">Actions</TableHead>
                 </TableRow>
@@ -185,11 +270,8 @@ export default function SectionsAnalytiquesPage() {
               <TableBody>
                 {sections.map((section) => (
                   <TableRow key={section.id} className="odd:bg-muted/50">
-                    <TableCell className="font-mono text-xs">
-                        {section.code}
-                    </TableCell>
                     <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2" style={{ paddingLeft: `${getIndentLevel(section.code)}rem` }}>
                            {section.type === 'folder' 
                              ? <Folder className="h-4 w-4 text-primary" /> 
                              : <File className="h-4 w-4 text-muted-foreground" />
@@ -197,6 +279,7 @@ export default function SectionsAnalytiquesPage() {
                            {section.name}
                         </div>
                     </TableCell>
+                    <TableCell className="font-mono text-xs">{section.code}</TableCell>
                     <TableCell className="font-mono text-xs">{section.compteGeneral}</TableCell>
                     <TableCell>
                         <Badge variant="outline">{section.type === 'folder' ? 'Dossier' : 'Section'}</Badge>
@@ -217,93 +300,94 @@ export default function SectionsAnalytiquesPage() {
       </Card>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
+        <SheetContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col p-0">
           {viewingSection && (
             <>
-              <SheetHeader>
+              <SheetHeader className="p-6 border-b">
                 <SheetTitle>Détail de la Section : {viewingSection.name}</SheetTitle>
                 <SheetDescription>
                   Code: <Badge variant="secondary">{viewingSection.code}</Badge> | Type: <Badge variant="outline">{viewingSection.type === 'folder' ? 'Dossier' : 'Section'}</Badge> | Compte Général: <Badge variant="outline">{viewingSection.compteGeneral}</Badge>
                 </SheetDescription>
               </SheetHeader>
-              <div className="py-4 space-y-4">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Sigma className="h-5 w-5"/>
-                            Synthèse
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-3 gap-4 text-center">
-                        <div className="p-2 rounded-md bg-muted">
-                            <p className="text-sm text-muted-foreground">Total Débit</p>
-                            <p className="font-bold font-mono text-green-600">{formatCurrency(totals.debit)}</p>
-                        </div>
-                         <div className="p-2 rounded-md bg-muted">
-                            <p className="text-sm text-muted-foreground">Total Crédit</p>
-                            <p className="font-bold font-mono text-red-600">{formatCurrency(totals.credit)}</p>
-                        </div>
-                         <div className="p-2 rounded-md bg-muted">
-                            <p className="text-sm text-muted-foreground">Solde</p>
-                            <p className={cn("font-bold font-mono", totals.solde >= 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p>
-                        </div>
-                    </CardContent>
-                 </Card>
-                 
-                 {viewingSection.type === 'folder' && viewingSection.children && (
-                     <Card>
-                        <CardHeader><CardTitle>Contenu du Dossier</CardTitle></CardHeader>
-                        <CardContent>
-                             <ul className="space-y-2">
-                                {viewingSection.children.map(child => (
-                                    <li key={child.id} className="flex items-center justify-between p-2 rounded-md border">
-                                        <div className="flex items-center gap-2">
-                                            {child.type === 'folder' ? <Folder className="h-4 w-4 text-primary" /> : <File className="h-4 w-4 text-muted-foreground" />}
-                                            <span className="font-medium">{child.name}</span>
-                                            <Badge variant="secondary" className="font-mono">{child.code}</Badge>
-                                        </div>
-                                        <Button variant="ghost" size="sm" onClick={() => handleViewSection(child)}>
-                                            Consulter <ArrowRight className="ml-2 h-4 w-4"/>
-                                        </Button>
-                                    </li>
-                                ))}
-                            </ul>
+              <ScrollArea className="flex-1">
+                <div className="p-6 space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Sigma className="h-5 w-5"/>
+                                Synthèse
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-3 gap-4 text-center">
+                            <div className="p-2 rounded-md bg-muted">
+                                <p className="text-sm text-muted-foreground">Total Débit</p>
+                                <p className="font-bold font-mono text-green-600">{formatCurrency(totals.debit)}</p>
+                            </div>
+                            <div className="p-2 rounded-md bg-muted">
+                                <p className="text-sm text-muted-foreground">Total Crédit</p>
+                                <p className="font-bold font-mono text-red-600">{formatCurrency(totals.credit)}</p>
+                            </div>
+                            <div className="p-2 rounded-md bg-muted">
+                                <p className="text-sm text-muted-foreground">Solde</p>
+                                <p className={cn("font-bold font-mono", totals.solde >= 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p>
+                            </div>
                         </CardContent>
-                     </Card>
-                 )}
-
-                 {viewingSection.type === 'item' && (
-                     <Card>
-                        <CardHeader><CardTitle>Écritures Rattachées</CardTitle></CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Libellé</TableHead>
-                                        <TableHead className="text-right">Débit</TableHead>
-                                        <TableHead className="text-right">Crédit</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {mockEntries.map(entry => (
-                                        <TableRow key={entry.id}>
-                                            <TableCell>{entry.date}</TableCell>
-                                            <TableCell>{entry.libelle}</TableCell>
-                                            <TableCell className="text-right font-mono text-green-600">{entry.debit > 0 ? formatCurrency(entry.debit) : ''}</TableCell>
-                                            <TableCell className="text-right font-mono text-red-600">{entry.credit > 0 ? formatCurrency(entry.credit) : ''}</TableCell>
-                                        </TableRow>
+                    </Card>
+                    
+                    {viewingSection.type === 'folder' && viewingSection.children && (
+                        <Card>
+                            <CardHeader><CardTitle>Contenu du Dossier</CardTitle></CardHeader>
+                            <CardContent>
+                                <ul className="space-y-2">
+                                    {viewingSection.children.map(child => (
+                                        <li key={child.id} className="flex items-center justify-between p-2 rounded-md border">
+                                            <div className="flex items-center gap-2">
+                                                {child.type === 'folder' ? <Folder className="h-4 w-4 text-primary" /> : <File className="h-4 w-4 text-muted-foreground" />}
+                                                <span className="font-medium">{child.name}</span>
+                                                <Badge variant="secondary" className="font-mono">{child.code}</Badge>
+                                            </div>
+                                            <Button variant="ghost" size="sm" onClick={() => handleViewSection(child)}>
+                                                Consulter <ArrowRight className="ml-2 h-4 w-4"/>
+                                            </Button>
+                                        </li>
                                     ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                     </Card>
-                 )}
-              </div>
-              <SheetFooter>
-                <SheetClose asChild>
-                  <Button variant="outline">Fermer</Button>
-                </SheetClose>
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {viewingSection.type === 'item' && (
+                        <Card>
+                            <CardHeader><CardTitle>Écritures Rattachées</CardTitle></CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Libellé</TableHead>
+                                            <TableHead className="text-right">Débit</TableHead>
+                                            <TableHead className="text-right">Crédit</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {mockEntries.map(entry => (
+                                            <TableRow key={entry.id}>
+                                                <TableCell>{entry.date}</TableCell>
+                                                <TableCell>{entry.libelle}</TableCell>
+                                                <TableCell className="text-right font-mono text-green-600">{entry.debit > 0 ? formatCurrency(entry.debit) : ''}</TableCell>
+                                                <TableCell className="text-right font-mono text-red-600">{entry.credit > 0 ? formatCurrency(entry.credit) : ''}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+              </ScrollArea>
+              <SheetFooter className="p-6 border-t">
+                 <Button variant="outline" onClick={() => setIsSheetOpen(false)}>Fermer</Button>
+                 <Button onClick={handleExportPDF}><Download className="mr-2 h-4 w-4"/>Exporter en PDF</Button>
               </SheetFooter>
             </>
           )}
