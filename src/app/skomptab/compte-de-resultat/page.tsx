@@ -132,6 +132,8 @@ const calculateIncomeStatement = (balances: Record<string, number>): ReportLine[
         { ref: 'RB', label: 'Variation de stocks de marchandises', value: RB, indent: 1 },
         { ref: 'XA', label: 'MARGE COMMERCIALE', value: XA, isSubTotal: true, indent: 0 },
 
+        { ref: '', label: '', value: null }, // Spacer
+        
         { ref: 'TB', label: 'Ventes de produits fabriqués', value: TB, indent: 1 },
         { ref: 'TC', label: 'Travaux, services vendus', value: TC, indent: 1 },
         { ref: 'TD', label: 'Produits accessoires', value: TD, indent: 1 },
@@ -189,8 +191,8 @@ const calculateIncomeStatement = (balances: Record<string, number>): ReportLine[
 };
 
 const formatAmount = (amount: number) => {
-    const formatted = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 });
-    return amount < 0 ? `(${formatted.replace('-', '')})` : formatted;
+    if (amount < 0) return `(${Math.abs(amount).toLocaleString('fr-FR')})`;
+    return amount.toLocaleString('fr-FR');
 };
 
 export default function CompteDeResultatPage() {
@@ -237,7 +239,7 @@ export default function CompteDeResultatPage() {
         const tableBody = reportData.map(line => {
             if (line.value === null) return [{ content: '', colSpan: 3, styles: { minCellHeight: 5 } }];
             return [
-                { content: line.ref, styles: { fontStyle: 'normal', cellWidth: 20 } },
+                { content: line.ref, styles: { fontStyle: 'bold', cellWidth: 20 } },
                 { content: line.label, styles: { fontStyle: (line.isSubTotal || line.isGrandTotal) ? 'bold' : 'normal', cellPadding: { left: 4 + (line.indent || 0) * 4 } } },
                 { content: formatAmount(line.value), styles: { halign: 'right', fontStyle: (line.isSubTotal || line.isGrandTotal) ? 'bold' : 'normal' } }
             ];

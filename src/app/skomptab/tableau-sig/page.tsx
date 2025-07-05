@@ -148,10 +148,8 @@ const calculateSIG = (balances: Record<string, number>): SigLine[] => {
 };
 
 const formatAmount = (amount: number) => {
-    const formatted = amount.toLocaleString('fr-FR');
-    if(amount > 0) return formatted;
-    // For negative values in accounting, we often use parentheses
-    return `(${Math.abs(amount).toLocaleString('fr-FR')})`;
+    if (amount < 0) return `(${Math.abs(amount).toLocaleString('fr-FR')})`;
+    return amount.toLocaleString('fr-FR');
 };
 
 

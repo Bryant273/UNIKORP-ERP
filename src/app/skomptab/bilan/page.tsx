@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -209,6 +210,7 @@ const getBilanData = (year: string, type: BilanType): BilanData | null => {
 
 const formatAmount = (amount?: number | null) => {
     if (amount === null || amount === undefined) return '';
+    if (amount < 0) return `(${Math.abs(amount).toLocaleString('fr-FR')})`;
     return amount.toLocaleString('fr-FR');
 }
 
