@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -226,7 +226,7 @@ export default function BudgetisationPage() {
                                         <TableCell>{budget.sectionLibelle}</TableCell>
                                         <TableCell className="text-right font-mono">{formatCurrency(totalBudget)}</TableCell>
                                         <TableCell className="text-right font-mono">{formatCurrency(totalRealise)}</TableCell>
-                                        <TableCell className={`text-right font-mono ${ecart > 0 ? 'text-red-500' : 'text-green-500'}`}>{formatCurrency(ecart)}</TableCell>
+                                        <TableCell className={cn("text-right font-mono", ecart > 0 ? 'text-red-500' : 'text-green-500')}>{formatCurrency(ecart)}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <Progress value={consommation} className={consommation > 100 ? '[&>div]:bg-red-500' : ''}/>
@@ -289,9 +289,9 @@ interface BudgetModalProps {
 }
 
 function BudgetModal({ isOpen, onClose, onSave, existingBudget }: BudgetModalProps) {
-    const [year, setYear] = useState(existingBudget?.year || new Date().getFullYear().toString());
-    const [month, setMonth] = useState(existingBudget?.month || MONTHS[new Date().getMonth()]);
-    const [sectionCode, setSectionCode] = useState(existingBudget?.sectionCode || '');
+    const [year, setYear] = useState('');
+    const [month, setMonth] = useState('');
+    const [sectionCode, setSectionCode] = useState('');
     const [budgetLines, setBudgetLines] = useState<BudgetLineItem[]>([]);
 
     useEffect(() => {
@@ -303,6 +303,17 @@ function BudgetModal({ isOpen, onClose, onSave, existingBudget }: BudgetModalPro
         }
     }, [existingBudget, isOpen]);
 
+    const handleAddLine = () => setBudgetLines(prev => [...prev, { id: `b-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
+    const handleRemoveLine = (id: string) => setBudgetLines(prev => prev.filter(l => l.id !== id));
+    
+    const handleLineChange = (id: string, field: keyof Omit<BudgetLineItem, 'id'>, value: string) => {
+        setBudgetLines(prev => prev.map(line => 
+            line.id === id ? { ...line, [field]: (field === 'element' ? value : parseFloat(value) || 0) } : line
+        ));
+    };
+
+    const totalBudget = useMemo(() => budgetLines.reduce((acc, line) => acc + line.quantite * line.pu, 0), [budgetLines]);
+
     const handleSave = () => {
         const sectionInfo = MOCK_ANALYTIC_SECTIONS.find(s => s.code === sectionCode);
         if (!sectionInfo) return;
@@ -311,20 +322,32 @@ function BudgetModal({ isOpen, onClose, onSave, existingBudget }: BudgetModalPro
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>{existingBudget ? 'Modifier le Budget Prévisionnel' : 'Créer un nouveau budget'}</DialogTitle>
                     <DialogDescription>Sélectionnez une période et une section, puis détaillez le budget prévisionnel.</DialogDescription>
                 </DialogHeader>
-                <div className="grid md:grid-cols-3 gap-4 p-4 border-y">
+                <div className="grid md:grid-cols-3 gap-4 py-4">
                     <div className="space-y-1.5"><Label>Année</Label><Select value={year} onValueChange={setYear} disabled={!!existingBudget}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-1.5"><Label>Mois</Label><Select value={month} onValueChange={setMonth} disabled={!!existingBudget}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-1.5"><Label>Section Analytique</Label><Select value={sectionCode} onValueChange={setSectionCode} disabled={!!existingBudget}><SelectTrigger><SelectValue placeholder="Sélectionnez..." /></SelectTrigger><SelectContent>{MOCK_ANALYTIC_SECTIONS.map(s => <SelectItem key={s.code} value={s.code}>{s.libelle}</SelectItem>)}</SelectContent></Select></div>
                 </div>
-                <div className="flex-1 overflow-hidden p-4">
-                    <BudgetDetailTable title="Détail du Prévisionnel" icon={Target} lines={budgetLines} setLines={setBudgetLines} />
+                <div className="flex-1 overflow-y-auto pr-4 border-t pt-4">
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><Target className="h-5 w-5"/>Détail du Prévisionnel</h3>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Élément</TableHead><TableHead className="w-24 text-center">Qté</TableHead><TableHead className="w-32 text-center">P.U.</TableHead><TableHead className="w-32 text-center">Montant</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {budgetLines.map(line => (
+                                <TableRow key={line.id}><TableCell><Input value={line.element} onChange={e => handleLineChange(line.id, 'element', e.target.value)} className="h-8"/></TableCell><TableCell><Input type="number" value={line.quantite} onChange={e => handleLineChange(line.id, 'quantite', e.target.value)} className="h-8 text-center"/></TableCell><TableCell><Input type="number" value={line.pu} onChange={e => handleLineChange(line.id, 'pu', e.target.value)} className="h-8 text-center"/></TableCell><TableCell className="text-right font-mono pr-4">{formatCurrency(line.quantite * line.pu)}</TableCell><TableCell><Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleRemoveLine(line.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>
+                            ))}
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow className="font-bold bg-secondary"><TableCell colSpan={3} className="text-right">Total Prévisionnel</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalBudget)}</TableCell><TableCell></TableCell></TableRow>
+                        </TableFooter>
+                    </Table>
                 </div>
-                <DialogFooter className="p-4 border-t">
+                <div className="flex-shrink-0 pt-4"><Button type="button" size="sm" variant="outline" onClick={handleAddLine}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button></div>
+                <DialogFooter className="pt-4 border-t">
                     <Button variant="outline" onClick={onClose}>Annuler</Button>
                     <Button onClick={handleSave} disabled={!sectionCode}>Enregistrer le budget</Button>
                 </DialogFooter>
@@ -351,21 +374,42 @@ function RealiseModal({ isOpen, onClose, onSave, existingBudget }: RealiseModalP
         }
     }, [existingBudget, isOpen]);
     
+    const handleAddLine = () => setRealiseLines(prev => [...prev, { id: `r-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
+    const handleRemoveLine = (id: string) => setRealiseLines(prev => prev.filter(l => l.id !== id));
+    
+    const handleLineChange = (id: string, field: keyof Omit<BudgetLineItem, 'id'>, value: string) => {
+        setRealiseLines(prev => prev.map(line => 
+            line.id === id ? { ...line, [field]: (field === 'element' ? value : parseFloat(value) || 0) } : line
+        ));
+    };
+
+    const totalRealise = useMemo(() => realiseLines.reduce((acc, line) => acc + line.quantite * line.pu, 0), [realiseLines]);
+    
     if (!existingBudget) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Saisir les Réalisations</DialogTitle>
-                    <DialogDescription>
-                        Pour le budget: {existingBudget.sectionLibelle} - {existingBudget.month} {existingBudget.year}
-                    </DialogDescription>
+                    <DialogDescription>Pour le budget: {existingBudget.sectionLibelle} - {existingBudget.month} {existingBudget.year}</DialogDescription>
                 </DialogHeader>
-                <div className="flex-1 overflow-hidden p-4">
-                    <BudgetDetailTable title="Détail des Réalisations" icon={Sigma} lines={realiseLines} setLines={setRealiseLines} />
+                 <div className="flex-1 overflow-y-auto pr-4 pt-4">
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><Sigma className="h-5 w-5"/>Détail des Réalisations</h3>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Élément</TableHead><TableHead className="w-24 text-center">Qté</TableHead><TableHead className="w-32 text-center">P.U.</TableHead><TableHead className="w-32 text-center">Montant</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {realiseLines.map(line => (
+                                <TableRow key={line.id}><TableCell><Input value={line.element} onChange={e => handleLineChange(line.id, 'element', e.target.value)} className="h-8"/></TableCell><TableCell><Input type="number" value={line.quantite} onChange={e => handleLineChange(line.id, 'quantite', e.target.value)} className="h-8 text-center"/></TableCell><TableCell><Input type="number" value={line.pu} onChange={e => handleLineChange(line.id, 'pu', e.target.value)} className="h-8 text-center"/></TableCell><TableCell className="text-right font-mono pr-4">{formatCurrency(line.quantite * line.pu)}</TableCell><TableCell><Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleRemoveLine(line.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>
+                            ))}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow className="font-bold bg-secondary"><TableCell colSpan={3} className="text-right">Total Réalisé</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalRealise)}</TableCell><TableCell></TableCell></TableRow>
+                        </TableFooter>
+                    </Table>
                 </div>
-                <DialogFooter className="p-4 border-t">
+                <div className="flex-shrink-0 pt-4"><Button type="button" size="sm" variant="outline" onClick={handleAddLine}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button></div>
+                <DialogFooter className="pt-4 border-t">
                     <Button variant="outline" onClick={onClose}>Annuler</Button>
                     <Button onClick={() => onSave(realiseLines)}>Enregistrer les réalisations</Button>
                 </DialogFooter>
@@ -374,62 +418,3 @@ function RealiseModal({ isOpen, onClose, onSave, existingBudget }: RealiseModalP
     );
 }
 
-
-interface BudgetDetailTableProps {
-    title: string;
-    icon: React.ElementType;
-    lines: BudgetLineItem[];
-    setLines: React.Dispatch<React.SetStateAction<BudgetLineItem[]>>;
-}
-
-function BudgetDetailTable({ title, icon: Icon, lines, setLines }: BudgetDetailTableProps) {
-    const handleAddLine = () => setLines(prev => [...prev, { id: `item-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
-    const handleRemoveLine = (id: string) => setLines(prev => prev.filter(l => l.id !== id));
-    
-    const handleLineChange = (id: string, field: keyof Omit<BudgetLineItem, 'id'>, value: string) => {
-        setLines(prev => prev.map(line => 
-            line.id === id ? { ...line, [field]: (field === 'element' ? value : parseFloat(value) || 0) } : line
-        ));
-    };
-
-    const total = useMemo(() => lines.reduce((acc, line) => acc + line.quantite * line.pu, 0), [lines]);
-
-    return (
-        <div className="flex flex-col border rounded-lg h-full">
-            <CardHeader className="flex-shrink-0">
-                <CardTitle className="text-xl flex items-center gap-2"><Icon className="h-5 w-5" /> {title}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto px-2">
-                <Table>
-                    <TableHeader className="sticky top-0 bg-background z-10">
-                        <TableRow>
-                            <TableHead>Élément</TableHead>
-                            <TableHead className="w-20 text-center">Qté</TableHead>
-                            <TableHead className="w-28 text-center">P.U.</TableHead>
-                            <TableHead className="w-28 text-center">Montant</TableHead>
-                            <TableHead className="w-10"></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {lines.map(line => (
-                            <TableRow key={line.id}>
-                                <TableCell><Input value={line.element} onChange={e => handleLineChange(line.id, 'element', e.target.value)} className="h-8"/></TableCell>
-                                <TableCell><Input type="number" value={line.quantite} onChange={e => handleLineChange(line.id, 'quantite', e.target.value)} className="h-8 text-center"/></TableCell>
-                                <TableCell><Input type="number" value={line.pu} onChange={e => handleLineChange(line.id, 'pu', e.target.value)} className="h-8 text-center"/></TableCell>
-                                <TableCell className="text-right font-mono pr-4">{formatCurrency(line.quantite * line.pu)}</TableCell>
-                                <TableCell><Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleRemoveLine(line.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-            <CardFooter className="flex-shrink-0 flex items-center justify-between border-t p-4">
-                 <Button type="button" size="sm" variant="outline" onClick={handleAddLine}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter</Button>
-                <div className="flex items-center gap-4">
-                    <span className="font-semibold">Total:</span>
-                    <span className="font-bold text-lg font-mono">{formatCurrency(total)}</span>
-                </div>
-            </CardFooter>
-        </div>
-    );
-}
