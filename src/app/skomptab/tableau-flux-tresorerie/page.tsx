@@ -32,6 +32,7 @@ const MOCK_TFT_DATA = {
 };
 
 type ReportLine = {
+    ref: string;
     label: string;
     value: number | null;
     isTitle?: boolean;
@@ -57,37 +58,37 @@ const calculateTFT = (data: typeof MOCK_TFT_DATA): ReportLine[] => {
     const tresorerieFinale = data.tresorerieInitiale + variationTresorerie;
 
     return [
-        { label: "Flux de trésorerie des activités d'exploitation", value: null, isTitle: true },
-        { label: "Résultat net de l'exercice", value: data.resultatNet, indent: 1 },
-        { label: "Dotations aux amortissements et provisions", value: data.dotationsAmortissements, indent: 1 },
-        { label: "Capacité d'autofinancement (CAF)", value: capaciteAutofinancement, isSubTotal: true, indent: 1 },
-        { label: "Variation du Besoin en Fonds de Roulement (BFR)", value: data.variationBFR, indent: 1 },
-        { label: "Flux de trésorerie généré par l'activité (I)", value: fluxTresorerieActivite, isTotal: true },
+        { ref: '', label: "Flux de trésorerie des activités d'exploitation", value: null, isTitle: true },
+        { ref: 'A', label: "Résultat net de l'exercice", value: data.resultatNet, indent: 1 },
+        { ref: 'B', label: "Dotations aux amortissements et provisions", value: data.dotationsAmortissements, indent: 1 },
+        { ref: '', label: "Capacité d'autofinancement (CAF)", value: capaciteAutofinancement, isSubTotal: true, indent: 1 },
+        { ref: 'C', label: "Variation du Besoin en Fonds de Roulement (BFR)", value: data.variationBFR, indent: 1 },
+        { ref: 'I', label: "Flux de trésorerie généré par l'activité", value: fluxTresorerieActivite, isTotal: true },
 
-        { label: '', value: null }, // Spacer
+        { ref: '', label: '', value: null }, // Spacer
 
-        { label: "Flux de trésorerie des activités d'investissement", value: null, isTitle: true },
-        { label: "Acquisitions d'immobilisations", value: data.acquisitionsImmobilisations, indent: 1 },
-        { label: "Cessions d'immobilisations", value: data.cessionsImmobilisations, indent: 1 },
-        { label: "Flux de trésorerie lié aux opérations d'investissement (II)", value: fluxTresorerieInvestissement, isTotal: true },
+        { ref: '', label: "Flux de trésorerie des activités d'investissement", value: null, isTitle: true },
+        { ref: 'D', label: "Acquisitions d'immobilisations", value: data.acquisitionsImmobilisations, indent: 1 },
+        { ref: 'E', label: "Cessions d'immobilisations", value: data.cessionsImmobilisations, indent: 1 },
+        { ref: 'II', label: "Flux de trésorerie lié aux opérations d'investissement", value: fluxTresorerieInvestissement, isTotal: true },
         
-        { label: '', value: null }, // Spacer
+        { ref: '', label: '', value: null }, // Spacer
 
-        { label: "Flux de trésorerie des activités de financement", value: null, isTitle: true },
-        { label: "Augmentation de capital", value: data.augmentationCapital, indent: 1 },
-        { label: "Dividendes versés", value: data.distributionDividendes, indent: 1 },
-        { label: "Augmentation des dettes financières", value: data.augmentationDettesFinancieres, indent: 1 },
-        { label: "Remboursement des dettes financières", value: data.remboursementDettesFinancieres, indent: 1 },
-        { label: "Flux de trésorerie lié aux opérations de financement (III)", value: fluxTresorerieFinancement, isTotal: true },
+        { ref: '', label: "Flux de trésorerie des activités de financement", value: null, isTitle: true },
+        { ref: 'F', label: "Augmentation de capital", value: data.augmentationCapital, indent: 1 },
+        { ref: 'G', label: "Dividendes versés", value: data.distributionDividendes, indent: 1 },
+        { ref: 'H', label: "Augmentation des dettes financières", value: data.augmentationDettesFinancieres, indent: 1 },
+        { ref: 'I', label: "Remboursement des dettes financières", value: data.remboursementDettesFinancieres, indent: 1 },
+        { ref: 'III', label: "Flux de trésorerie lié aux opérations de financement", value: fluxTresorerieFinancement, isTotal: true },
 
-        { label: '', value: null }, // Spacer
+        { ref: '', label: '', value: null }, // Spacer
         
-        { label: "Variation de la trésorerie nette de la période (I + II + III)", value: variationTresorerie, isEmphasized: true, isTotal: true },
+        { ref: 'IV', label: "Variation de la trésorerie nette de la période (I + II + III)", value: variationTresorerie, isEmphasized: true, isTotal: true },
         
-        { label: '', value: null }, // Spacer
+        { ref: '', label: '', value: null }, // Spacer
         
-        { label: "Trésorerie nette au début de la période", value: data.tresorerieInitiale, isGrandTotal: true, indent: 1 },
-        { label: "Trésorerie nette à la fin de la période", value: tresorerieFinale, isGrandTotal: true, indent: 1 },
+        { ref: 'V', label: "Trésorerie nette au début de la période", value: data.tresorerieInitiale, isGrandTotal: true, indent: 1 },
+        { ref: 'VI', label: "Trésorerie nette à la fin de la période", value: tresorerieFinale, isGrandTotal: true, indent: 1 },
     ];
 };
 
@@ -138,14 +139,16 @@ export default function TableauFluxTresoreriePage() {
         const periodString = `Exercice ${selectedYear}`;
         
         const tableBody = reportData.map(line => {
-            if (line.value === null) return [{ content: line.label, colSpan: 2, styles: { fontStyle: 'bold', fillColor: '#f1f5f9' } }];
+            if (line.value === null) return [{ content: line.label, colSpan: 3, styles: { fontStyle: 'bold', fillColor: '#f1f5f9' } }];
             return [
+                { content: line.ref, styles: { fontStyle: 'bold' } },
                 { content: line.label, styles: { cellPadding: { left: 4 + (line.indent || 0) * 6 } } },
                 { content: formatAmount(line.value), styles: { halign: 'right' } }
             ];
         });
 
         autoTable(doc, {
+            head: [['Ref.', 'Libellé', 'Valeur (FCFA)']],
             body: tableBody,
             theme: 'plain',
             didDrawPage: (data) => {
@@ -233,6 +236,7 @@ export default function TableauFluxTresoreriePage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead className="w-[80px]">Ref.</TableHead>
                                             <TableHead>Libellé</TableHead>
                                             <TableHead className="text-right w-[150px]">Valeur (FCFA)</TableHead>
                                         </TableRow>
@@ -245,9 +249,10 @@ export default function TableauFluxTresoreriePage() {
                                                 line.isGrandTotal && "border-y-2 border-primary/50 bg-primary/10"
                                             )}>
                                                  {line.value === null ? (
-                                                    <TableCell colSpan={2} className="font-bold text-secondary-foreground bg-secondary py-2">{line.label}</TableCell>
+                                                    <TableCell colSpan={3} className="font-bold text-secondary-foreground bg-secondary py-2">{line.label}</TableCell>
                                                 ) : (
                                                     <>
+                                                        <TableCell className="font-mono text-xs">{line.ref}</TableCell>
                                                         <TableCell style={{ paddingLeft: `${1 + (line.indent || 0) * 1.5}rem` }}>
                                                             {line.label}
                                                         </TableCell>
