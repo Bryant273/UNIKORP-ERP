@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tree, Folder, File, PlusCircle, Search, ChevronRight, ChevronDown } from 'lucide-react';
+import { Trees, Folder, File, PlusCircle, Search, ChevronRight, ChevronDown } from 'lucide-react';
 
 type Section = {
   id: string;
@@ -77,7 +77,7 @@ export default function SectionsAnalytiquesPage() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-2xl flex items-center gap-2"><Tree/> Sections Analytiques</CardTitle>
+            <CardTitle className="text-2xl flex items-center gap-2"><Trees/> Sections Analytiques</CardTitle>
             <CardDescription>Gérez la hiérarchie de vos sections pour chaque plan analytique.</CardDescription>
           </div>
           <Button>
