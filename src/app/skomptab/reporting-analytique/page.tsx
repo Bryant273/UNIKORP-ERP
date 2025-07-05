@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Download } from 'lucide-react';
+import { Eye, Download, BookDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import jsPDF from 'jspdf';
@@ -18,6 +18,7 @@ import autoTable from 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 // --- DATA & CONFIGS ---
@@ -109,9 +110,80 @@ const MOCK_GENERATED_REPORTS: MonthlyReportGroup[] = [
     }
 ];
 
+const ReportViewer = ({ report }: { report: GeneratedReport }) => {
+  switch (report.type) {
+    case 'resultatProjet':
+      return (
+        <Card>
+          <CardHeader><CardTitle>Données du Compte de Résultat par Projet</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={projetResultatChartConfig} className="mx-auto aspect-video h-[300px]">
+              <BarChart data={projetResultatData}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="projet" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis />
+                <Tooltip content={<ChartTooltipContent />} />
+                <Legend />
+                <Bar dataKey="produits" fill="var(--color-produits)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="charges" fill="var(--color-charges)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+            <Table className="mt-4"><TableHeader><TableRow><TableHead>Projet</TableHead><TableHead className="text-right">Produits</TableHead><TableHead className="text-right">Charges</TableHead><TableHead className="text-right">Marge</TableHead></TableRow></TableHeader><TableBody>{projetResultatData.map(d => <TableRow key={d.projet}><TableCell>{d.projet}</TableCell><TableCell className="text-right">{d.produits.toLocaleString()}</TableCell><TableCell className="text-right">{d.charges.toLocaleString()}</TableCell><TableCell className="text-right font-bold">{d.marge.toLocaleString()}</TableCell></TableRow>)}</TableBody></Table>
+          </CardContent>
+        </Card>
+      );
+    case 'balanceDepartement':
+      return (
+        <Card>
+          <CardHeader><CardTitle>Données de la Balance Analytique</CardTitle></CardHeader>
+          <CardContent>
+            <Table><TableHeader><TableRow><TableHead>Section / Département</TableHead><TableHead className="text-right">Débit</TableHead><TableHead className="text-right">Crédit</TableHead><TableHead className="text-right">Solde</TableHead></TableRow></TableHeader><TableBody>{balanceAnalytiqueData.map(item => { const solde = item.credit - item.debit; return (<TableRow key={item.section}><TableCell className="font-medium">{item.section}</TableCell><TableCell className="text-right font-mono">{item.debit.toLocaleString('fr-FR')} FCFA</TableCell><TableCell className="text-right font-mono">{item.credit.toLocaleString('fr-FR')} FCFA</TableCell><TableCell className={cn("text-right font-mono font-bold", solde >= 0 ? "text-green-600" : "text-red-600")}>{solde.toLocaleString('fr-FR')} FCFA</TableCell></TableRow>);})}</TableBody></Table>
+          </CardContent>
+        </Card>
+      );
+    case 'repartitionCharges':
+      return (
+        <Card>
+          <CardHeader><CardTitle>Données de Répartition des Charges</CardTitle></CardHeader>
+          <CardContent className="flex flex-col md:flex-row justify-center items-center gap-8">
+            <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
+              <RechartsPieChart><ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} /><Pie data={pieChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}><Legend /></Pie></RechartsPieChart>
+            </ChartContainer>
+            <Table className="w-full md:w-1/2"><TableHeader><TableRow><TableHead>Centre de Coût</TableHead><TableHead className="text-right">Valeur</TableHead></TableRow></TableHeader><TableBody>{pieChartData.map(d => <TableRow key={d.name}><TableCell className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{backgroundColor: d.fill}}/>{d.name}</TableCell><TableCell className="text-right">{d.value.toLocaleString()}</TableCell></TableRow>)}</TableBody></Table>
+          </CardContent>
+        </Card>
+      );
+    case 'margeProduit':
+      return (
+        <Card>
+          <CardHeader><CardTitle>Données d'Évolution de la Marge</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={margeProduitChartConfig} className="mx-auto aspect-video h-[300px]">
+              <LineChart data={margeProduitData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="mois" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis unit="%" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend />
+                <Line type="monotone" dataKey="produitA" stroke="var(--color-produitA)" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="produitB" stroke="var(--color-produitB)" strokeWidth={2} dot={{ r: 4 }} />
+              </LineChart>
+            </ChartContainer>
+            <Table className="mt-4"><TableHeader><TableRow><TableHead>Mois</TableHead><TableHead className="text-right">Marge Produit A (%)</TableHead><TableHead className="text-right">Marge Produit B (%)</TableHead></TableRow></TableHeader><TableBody>{margeProduitData.map(d => <TableRow key={d.mois}><TableCell>{d.mois}</TableCell><TableCell className="text-right">{d.produitA}</TableCell><TableCell className="text-right">{d.produitB}</TableCell></TableRow>)}</TableBody></Table>
+          </CardContent>
+        </Card>
+      );
+    default:
+      return <p>Type de rapport non disponible pour l'aperçu.</p>;
+  }
+};
+
+
 export default function ReportingAnalytiquePage() {
     const [viewingReport, setViewingReport] = useState<GeneratedReport | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isConsolidatedModalOpen, setIsConsolidatedModalOpen] = useState(false);
+    const [selectedMonthData, setSelectedMonthData] = useState<MonthlyReportGroup | null>(null);
     const { toast } = useToast();
 
     const handleViewReport = (report: GeneratedReport) => {
@@ -123,10 +195,15 @@ export default function ReportingAnalytiquePage() {
         setIsModalOpen(false);
         setViewingReport(null);
     };
+
+    const handleViewConsolidatedReport = (group: MonthlyReportGroup) => {
+        setSelectedMonthData(group);
+        setIsConsolidatedModalOpen(true);
+    };
     
     const handleDownloadPDF = (report: GeneratedReport, period: string) => {
         const doc = new jsPDF();
-        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss', { locale: fr });
         const companyName = "Votre Société S.A.";
         
         doc.setFontSize(18);
@@ -174,6 +251,69 @@ export default function ReportingAnalytiquePage() {
         toast({ title: 'Téléchargement lancé', description: `Le rapport ${report.title} est en cours de téléchargement.` });
     };
 
+    const handleExportConsolidatedPDF = (monthData: MonthlyReportGroup | null) => {
+        if (!monthData) return;
+
+        const doc = new jsPDF();
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss', { locale: fr });
+        const companyName = "Votre Société S.A.";
+
+        doc.setFontSize(22);
+        doc.text(`Rapport Mensuel: ${monthData.month}`, 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Édité le ${printDateTime} par UNIKORP pour ${companyName}`, 105, 28, { align: 'center' });
+        
+        let firstPage = true;
+
+        monthData.reports.forEach(report => {
+            if (!firstPage) {
+                doc.addPage();
+            }
+            
+            doc.setFontSize(16);
+            doc.text(report.title, 15, firstPage ? 40 : 20);
+
+            let head: string[][] = [];
+            let body: any[][] = [];
+            let startY = firstPage ? 45 : 25;
+            
+            switch(report.type) {
+                 case 'resultatProjet':
+                    head = [['Projet', 'Produits', 'Charges', 'Marge']];
+                    body = projetResultatData.map(d => [d.projet, d.produits.toLocaleString(), d.charges.toLocaleString(), d.marge.toLocaleString()]);
+                    break;
+                case 'balanceDepartement':
+                    head = [['Section / Département', 'Débit', 'Crédit', 'Solde']];
+                    body = balanceAnalytiqueData.map(d => {
+                        const solde = d.credit - d.debit;
+                        return [d.section, d.debit.toLocaleString(), d.credit.toLocaleString(), solde.toLocaleString()];
+                    });
+                    break;
+                case 'repartitionCharges':
+                    head = [['Centre de Coût', 'Valeur']];
+                    body = pieChartData.map(d => [d.name, d.value.toLocaleString()]);
+                    break;
+                case 'margeProduit':
+                    head = [['Mois', 'Marge Produit A (%)', 'Marge Produit B (%)']];
+                    body = margeProduitData.map(d => [d.mois, d.produitA, d.produitB]);
+                    break;
+            }
+
+            autoTable(doc, {
+                head: head,
+                body: body,
+                startY,
+                theme: 'striped',
+                headStyles: { fillColor: '#1C2039' }
+            });
+
+            firstPage = false;
+        });
+
+        doc.save(`rapport_mensuel_${monthData.month.replace(/\s+/g, '_')}.pdf`);
+        toast({ title: 'Téléchargement lancé', description: `Le rapport consolidé pour ${monthData.month} est en cours de téléchargement.` });
+    };
+
   return (
     <>
       <Card className="w-full">
@@ -189,7 +329,15 @@ export default function ReportingAnalytiquePage() {
             <Accordion type="multiple" defaultValue={[MOCK_GENERATED_REPORTS[0].month]} className="w-full">
                 {MOCK_GENERATED_REPORTS.map((group) => (
                     <AccordionItem value={group.month} key={group.month}>
-                        <AccordionTrigger className="text-lg font-semibold">{group.month}</AccordionTrigger>
+                        <div className="flex items-center justify-between w-full">
+                          <AccordionTrigger className="text-lg font-semibold flex-1 py-4">
+                            {group.month}
+                          </AccordionTrigger>
+                          <Button variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); handleViewConsolidatedReport(group); }}>
+                            <BookDown className="mr-2 h-4 w-4" />
+                            Rapport Mensuel
+                          </Button>
+                        </div>
                         <AccordionContent>
                             <Table>
                                 <TableHeader>
@@ -222,72 +370,39 @@ export default function ReportingAnalytiquePage() {
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-        <DialogContent className="max-w-4xl h-[90vh]">
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
             <DialogHeader>
                 <DialogTitle>Aperçu du Rapport : {viewingReport?.title}</DialogTitle>
                 <DialogDescription>{viewingReport?.description}</DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-y-auto pr-4">
-                {viewingReport?.type === 'resultatProjet' && (
-                    <Card className="mt-4">
-                        <CardHeader><CardTitle>Données du Compte de Résultat par Projet</CardTitle></CardHeader>
-                        <CardContent>
-                            <ChartContainer config={projetResultatChartConfig} className="mx-auto aspect-video h-[300px]">
-                                <BarChart data={projetResultatData}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="projet" tickLine={false} axisLine={false} tickMargin={8} />
-                                    <YAxis />
-                                    <Tooltip content={<ChartTooltipContent />} />
-                                    <Legend />
-                                    <Bar dataKey="produits" fill="var(--color-produits)" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="charges" fill="var(--color-charges)" radius={[4, 4, 0, 0]} />
-                                </BarChart>
-                            </ChartContainer>
-                            <Table className="mt-4"><TableHeader><TableRow><TableHead>Projet</TableHead><TableHead className="text-right">Produits</TableHead><TableHead className="text-right">Charges</TableHead><TableHead className="text-right">Marge</TableHead></TableRow></TableHeader><TableBody>{projetResultatData.map(d => <TableRow key={d.projet}><TableCell>{d.projet}</TableCell><TableCell className="text-right">{d.produits.toLocaleString()}</TableCell><TableCell className="text-right">{d.charges.toLocaleString()}</TableCell><TableCell className="text-right font-bold">{d.marge.toLocaleString()}</TableCell></TableRow>)}</TableBody></Table>
-                        </CardContent>
-                    </Card>
-                )}
-                 {viewingReport?.type === 'balanceDepartement' && (
-                     <Card className="mt-4">
-                        <CardHeader><CardTitle>Données de la Balance Analytique</CardTitle></CardHeader>
-                        <CardContent>
-                            <Table><TableHeader><TableRow><TableHead>Section / Département</TableHead><TableHead className="text-right">Débit</TableHead><TableHead className="text-right">Crédit</TableHead><TableHead className="text-right">Solde</TableHead></TableRow></TableHeader><TableBody>{balanceAnalytiqueData.map(item => { const solde = item.credit - item.debit; return (<TableRow key={item.section}><TableCell className="font-medium">{item.section}</TableCell><TableCell className="text-right font-mono">{item.debit.toLocaleString('fr-FR')} FCFA</TableCell><TableCell className="text-right font-mono">{item.credit.toLocaleString('fr-FR')} FCFA</TableCell><TableCell className={cn("text-right font-mono font-bold", solde >= 0 ? "text-green-600" : "text-red-600")}>{solde.toLocaleString('fr-FR')} FCFA</TableCell></TableRow>);})}</TableBody></Table>
-                        </CardContent>
-                    </Card>
-                )}
-                 {viewingReport?.type === 'repartitionCharges' && (
-                     <Card className="mt-4">
-                        <CardHeader><CardTitle>Données de Répartition des Charges</CardTitle></CardHeader>
-                        <CardContent className="flex justify-center items-center gap-8">
-                             <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
-                                <RechartsPieChart><ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} /><Pie data={pieChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}><Legend /></Pie></RechartsPieChart>
-                             </ChartContainer>
-                             <Table className="w-1/2"><TableHeader><TableRow><TableHead>Centre de Coût</TableHead><TableHead className="text-right">Valeur</TableHead></TableRow></TableHeader><TableBody>{pieChartData.map(d => <TableRow key={d.name}><TableCell className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{backgroundColor: d.fill}}/>{d.name}</TableCell><TableCell className="text-right">{d.value.toLocaleString()}</TableCell></TableRow>)}</TableBody></Table>
-                        </CardContent>
-                    </Card>
-                )}
-                 {viewingReport?.type === 'margeProduit' && (
-                    <Card className="mt-4">
-                        <CardHeader><CardTitle>Données d'Évolution de la Marge</CardTitle></CardHeader>
-                        <CardContent>
-                            <ChartContainer config={margeProduitChartConfig} className="mx-auto aspect-video h-[300px]">
-                                <LineChart data={margeProduitData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="mois" tickLine={false} axisLine={false} tickMargin={8} />
-                                    <YAxis unit="%" />
-                                    <ChartTooltip content={<ChartTooltipContent />} />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="produitA" stroke="var(--color-produitA)" strokeWidth={2} dot={{ r: 4 }} />
-                                    <Line type="monotone" dataKey="produitB" stroke="var(--color-produitB)" strokeWidth={2} dot={{ r: 4 }} />
-                                </LineChart>
-                            </ChartContainer>
-                             <Table className="mt-4"><TableHeader><TableRow><TableHead>Mois</TableHead><TableHead className="text-right">Marge Produit A (%)</TableHead><TableHead className="text-right">Marge Produit B (%)</TableHead></TableRow></TableHeader><TableBody>{margeProduitData.map(d => <TableRow key={d.mois}><TableCell>{d.mois}</TableCell><TableCell className="text-right">{d.produitA}</TableCell><TableCell className="text-right">{d.produitB}</TableCell></TableRow>)}</TableBody></Table>
-                        </CardContent>
-                    </Card>
-                 )}
+               {viewingReport && <ReportViewer report={viewingReport} />}
             </div>
             <DialogFooter className="pt-4 border-t">
                  <Button variant="outline" onClick={handleCloseModal}>Fermer</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isConsolidatedModalOpen} onOpenChange={setIsConsolidatedModalOpen}>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>Rapport Mensuel consolidé : {selectedMonthData?.month}</DialogTitle>
+                <DialogDescription>Aperçu de tous les rapports générés pour cette période.</DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="flex-1 -mx-6 px-6">
+                <div className="space-y-8 py-4">
+                    {selectedMonthData?.reports.map(report => (
+                        <div key={report.id}>
+                            <h3 className="text-xl font-semibold mb-4 pb-2 border-b">{report.title}</h3>
+                            <ReportViewer report={report} />
+                        </div>
+                    ))}
+                </div>
+            </ScrollArea>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsConsolidatedModalOpen(false)}>Fermer</Button>
+                <Button onClick={() => handleExportConsolidatedPDF(selectedMonthData)}><Download className="mr-2 h-4 w-4" /> Exporter en PDF</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
