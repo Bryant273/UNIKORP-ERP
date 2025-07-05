@@ -294,7 +294,13 @@ function DeclarationsSocialesMainContent() {
             case 'Déclaration Mensuelle Salaires': {
                 const data = declaration.data;
                 const { cotisationsPatronales, cotisationsSalariales, total } = calculateCotisations(data);
-                let startY = 50;
+                
+                autoTable(doc, {
+                    didDrawPage: (d) => drawHeader("Déclaration Mensuelle des Salaires", d),
+                    margin: { top: 50 },
+                });
+                
+                let startY = (doc as any).lastAutoTable.finalY || 50;
     
                 startY = addSection("Informations Générales", [
                     ['N° CNPS Employeur', data.numeroCnpEmployeur],
@@ -321,13 +327,16 @@ function DeclarationsSocialesMainContent() {
                      });
                 }
     
-                const firstPageData = { settings: { margin: { left: 14 } } };
-                drawHeader("Déclaration Mensuelle Salaires", firstPageData);
                 break;
             }
              case 'Accident de Travail': {
-                const data = declaration.data;
-                let startY = 50;
+                 const data = declaration.data;
+                 autoTable(doc, {
+                    didDrawPage: (d) => drawHeader("Déclaration d'Accident de Travail", d),
+                    margin: { top: 50 },
+                 });
+                let startY = (doc as any).lastAutoTable.finalY || 50;
+
                 startY = addSection("Identification", [
                     ['N° CNPS Employeur', data.numeroCnpEmployeur],
                     ['Identité de la Victime', data.identiteVictime],
@@ -344,8 +353,6 @@ function DeclarationsSocialesMainContent() {
                     ['Arrêt de travail prescrit', data.arretTravail || 'Non précisé'],
                 ], startY);
     
-                const firstPageData = { settings: { margin: { left: 14 } } };
-                drawHeader("Déclaration d'Accident de Travail", firstPageData);
                 break;
             }
             default:
@@ -402,70 +409,47 @@ function DeclarationsSocialesMainContent() {
 
     return (
         <>
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold tracking-tight">Suivi des Déclarations Sociales</h1>
-                <p className="text-muted-foreground">Gérez et suivez l'état de toutes vos déclarations sociales, organisées par catégorie.</p>
-            </div>
-            
             <Tabs defaultValue="immatriculations" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="immatriculations">Immatriculations</TabsTrigger>
-                    <TabsTrigger value="periodiques">Déclarations Périodiques</TabsTrigger>
-                    <TabsTrigger value="mouvements">Mouvements</TabsTrigger>
-                    <TabsTrigger value="accidents">Accidents & Maladies</TabsTrigger>
-                </TabsList>
-                <TabsContent value="immatriculations" className="mt-4">
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Immatriculations</CardTitle>
-                                <CardDescription>Gérez les immatriculations employeur et salarié.</CardDescription>
-                            </div>
-                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                        </CardHeader>
-                        <CardContent>
-                        {renderTable(immatriculations)}
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-2xl">Déclarations Sociales</CardTitle>
+                            <CardDescription>Gérez et suivez l'état de toutes vos déclarations sociales.</CardDescription>
+                        </div>
+                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                    </div>
+                     <TabsList className="grid w-full grid-cols-4 mt-4">
+                        <TabsTrigger value="immatriculations">Immatriculations</TabsTrigger>
+                        <TabsTrigger value="periodiques">Périodiques</TabsTrigger>
+                        <TabsTrigger value="mouvements">Mouvements</TabsTrigger>
+                        <TabsTrigger value="accidents">Accidents & Maladies</TabsTrigger>
+                    </TabsList>
+                </CardHeader>
+
+                <TabsContent value="immatriculations" className="mt-0">
+                     <Card className="border-t-0 rounded-t-none">
+                        <CardContent className="pt-6">
+                            {renderTable(immatriculations)}
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="periodiques" className="mt-4">
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Déclarations Périodiques</CardTitle>
-                                <CardDescription>Suivi des obligations récurrentes (mensuelles, trimestrielles, annuelles).</CardDescription>
-                            </div>
-                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                        </CardHeader>
-                        <CardContent>
+                <TabsContent value="periodiques" className="mt-0">
+                     <Card className="border-t-0 rounded-t-none">
+                         <CardContent className="pt-6">
                             {renderTable(periodiques)}
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="mouvements" className="mt-4">
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Mouvements de Personnel</CardTitle>
-                                <CardDescription>Déclarations ponctuelles lors des embauches ou départs.</CardDescription>
-                            </div>
-                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                        </CardHeader>
-                        <CardContent>
+                <TabsContent value="mouvements" className="mt-0">
+                     <Card className="border-t-0 rounded-t-none">
+                         <CardContent className="pt-6">
                             {renderTable(mouvements)}
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="accidents" className="mt-4">
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Accidents et Maladies</CardTitle>
-                                <CardDescription>Déclarations d'urgence ou exceptionnelles.</CardDescription>
-                            </div>
-                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                        </CardHeader>
-                        <CardContent>
+                <TabsContent value="accidents" className="mt-0">
+                     <Card className="border-t-0 rounded-t-none">
+                         <CardContent className="pt-6">
                             {renderTable(accidents)}
                         </CardContent>
                     </Card>
