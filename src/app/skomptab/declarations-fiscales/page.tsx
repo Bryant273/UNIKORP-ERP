@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -212,7 +212,7 @@ function DeclarationModal({ isOpen, onClose, onSave, declarationToEdit }: { isOp
     const [formData, setFormData] = useState(defaultFormData);
     const { toast } = useToast();
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isOpen) {
             if (declarationToEdit) {
                 setFormData({
