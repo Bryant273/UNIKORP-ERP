@@ -191,7 +191,6 @@ const calculateIncomeStatement = (balances: Record<string, number>): ReportLine[
 };
 
 const formatAmount = (amount: number) => {
-    if (amount < 0) return `(${Math.abs(amount).toLocaleString('fr-FR')})`;
     return amount.toLocaleString('fr-FR');
 };
 

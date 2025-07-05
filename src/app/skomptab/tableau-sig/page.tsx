@@ -148,7 +148,6 @@ const calculateSIG = (balances: Record<string, number>): SigLine[] => {
 };
 
 const formatAmount = (amount: number) => {
-    if (amount < 0) return `(${Math.abs(amount).toLocaleString('fr-FR')})`;
     return amount.toLocaleString('fr-FR');
 };
 
