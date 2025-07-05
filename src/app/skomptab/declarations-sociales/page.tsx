@@ -2,11 +2,11 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Eye, Pencil, Trash2, Download, CheckCircle } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download, CheckCircle, Upload } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
 // --- TYPES ---
-type DeclarationType = 'Immatriculation Employeur' | 'Immatriculation Salarié' | 'Déclaration Mensuelle Salaires' | 'DAS' | 'Accident de Travail' | 'Maladie Professionnelle' | 'Modification Salarié';
+type DeclarationType = 'Immatriculation Employeur' | 'Immatriculation Salarié' | 'Déclaration Mensuelle Salaires' | 'DAS' | 'Accident de Travail' | 'Maladie Professionnelle' | 'Modification Salarié' | 'Déclaration trimestrielle des cotisations';
 type DeclarationStatus = 'Brouillon' | 'Validée' | 'Déposée' | 'Traitée';
 
 type Declaration = {
@@ -33,7 +33,16 @@ type Declaration = {
     data: any;
 };
 
-const DeclarationTypeOptions: DeclarationType[] = ['Immatriculation Employeur', 'Immatriculation Salarié', 'Déclaration Mensuelle Salaires', 'DAS', 'Accident de Travail', 'Maladie Professionnelle', 'Modification Salarié'];
+const DeclarationTypeOptions: DeclarationType[] = [
+    'Immatriculation Employeur', 
+    'Immatriculation Salarié', 
+    'Déclaration Mensuelle Salaires',
+    'Déclaration trimestrielle des cotisations',
+    'DAS', 
+    'Accident de Travail', 
+    'Maladie Professionnelle', 
+    'Modification Salarié'
+];
 
 // --- MOCK DATA ---
 const initialDeclarations: Declaration[] = [
@@ -41,6 +50,8 @@ const initialDeclarations: Declaration[] = [
     { id: 'dms2', type: 'Déclaration Mensuelle Salaires', periode: 'Juin 2024', statut: 'Traitée', data: { masseSalarialeBrute: 85200 } },
     { id: 'modif1', type: 'Modification Salarié', periode: '01/07/2024', statut: 'Traitée', data: { typeMouvement: 'embauche', identiteSalarie: 'Sophie Martin' } },
     { id: 'das1', type: 'DAS', periode: 'Année 2023', statut: 'Traitée', data: { anneeReference: '2023', masseSalarialeAnnuelle: 1025000 } },
+    { id: 'immat1', type: 'Immatriculation Employeur', periode: '15/05/2024', statut: 'Traitée', data: { denominationSociale: 'Nouvelle Filiale SARL' } },
+    { id: 'trim1', type: 'Déclaration trimestrielle des cotisations', periode: 'T2 2024', statut: 'Traitée', data: { masseSalarialeTrimestrielle: 255600 } },
 ];
 
 const getDefaultDataForType = (type: DeclarationType): any => {
@@ -48,13 +59,14 @@ const getDefaultDataForType = (type: DeclarationType): any => {
         dateDeclaration: format(new Date(), 'yyyy-MM-dd'),
     };
     switch(type) {
-        case 'Immatriculation Employeur': return { ...base, denominationSociale: 'Votre Société S.A.', formeJuridique: 'SARL', adresseSiegeSocial: '', secteurActivite: '', numeroRccm: '', nif: '', nombreEmployesPrevisionnels: 0, dateDebutActivite: '' };
+        case 'Immatriculation Employeur': return { ...base, denominationSociale: 'Votre Société S.A.', formeJuridique: 'SARL', adresseSiegeSocial: '', secteurActivite: '', numeroRccm: '', nif: '', nombreEmployesPrevisionnels: 0, dateDebutActivite: '', coordonneesDirigeant: '' };
         case 'Immatriculation Salarié': return { ...base, nom: '', prenom: '', dateNaissance: '', lieuNaissance: '', sexe: 'Masculin', nationalite: 'Ivoirienne', adresseResidence: '', fonction: '', salaireBase: 0, dateEmbauche: '', numeroCni: '' };
         case 'Déclaration Mensuelle Salaires': return { ...base, numeroCnpEmployeur: 'CNPS-12345', periode: format(new Date(), 'yyyy-MM'), masseSalarialeBrute: 0, detailEmployes: [] };
-        case 'DAS': return { ...base, anneeReference: new Date().getFullYear().toString(), effectifTotal: 0, masseSalarialeAnnuelle: 0, cotisationsVersees: 0, regularisations: '' };
-        case 'Accident de Travail': return { ...base, identiteVictime: '', circonstances: '', dateAccident: '', heureAccident: '', lieuAccident: '', natureBlessures: '', temoins: '', arretTravail: '' };
-        case 'Maladie Professionnelle': return { ...base, identiteTravailleur: '', natureMaladie: '', posteOccupe: '', dureeExposition: '', diagnosticMedical: '', datePremiereConstatation: '' };
-        case 'Modification Salarié': return { ...base, typeMouvement: 'embauche', identiteSalarie: '', dateEffet: '', motifDepart: '', nouveauSalaire: 0 };
+        case 'Déclaration trimestrielle des cotisations': return { ...base, numeroCnpEmployeur: 'CNPS-12345', trimestre: 'T1', annee: new Date().getFullYear().toString(), effectifMoyen: 0, masseSalarialeTrimestrielle: 0, montantVerse: 0 };
+        case 'DAS': return { ...base, numeroCnpEmployeur: 'CNPS-12345', anneeReference: new Date().getFullYear().toString(), effectifTotal: 0, masseSalarialeAnnuelle: 0, cotisationsVersees: 0, regularisations: '' };
+        case 'Accident de Travail': return { ...base, numeroCnpEmployeur: 'CNPS-12345', identiteVictime: '', numeroCnpsVictime: '', circonstances: '', dateAccident: '', heureAccident: '', lieuAccident: '', natureBlessures: '', temoins: '', arretTravail: '' };
+        case 'Maladie Professionnelle': return { ...base, numeroCnpEmployeur: 'CNPS-12345', identiteTravailleur: '', numeroCnpsTravailleur: '', natureMaladie: '', posteOccupe: '', dureeExposition: '', diagnosticMedical: '', datePremiereConstatation: '' };
+        case 'Modification Salarié': return { ...base, numeroCnpEmployeur: 'CNPS-12345', typeMouvement: 'embauche', identiteSalarie: '', numeroCnpsSalarie: '', dateEffet: '', motifDepart: '', nouveauSalaire: 0 };
         default: return { ...base };
     }
 }
@@ -68,22 +80,77 @@ const FormField = ({ label, children, isRequired, fullWidth }: { label: string, 
     </div>
 );
 
-function DeclarationFormRenderer({ type, data, setData, isViewMode }: { type: DeclarationType, data: any, setData: Function, isViewMode: boolean }) {
+function ImmatriculationEmployeurForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
     const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
-    const formatC = (val: number) => val.toLocaleString('fr-FR');
+    return <div className="grid md:grid-cols-2 gap-4"><FormField label="Dénomination sociale" isRequired><Input value={data.denominationSociale} onChange={e => handleChange('denominationSociale', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Forme juridique" isRequired><Input value={data.formeJuridique} onChange={e => handleChange('formeJuridique', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Adresse du siège social" isRequired fullWidth><Input value={data.adresseSiegeSocial} onChange={e => handleChange('adresseSiegeSocial', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Secteur d'activité" isRequired><Input value={data.secteurActivite} onChange={e => handleChange('secteurActivite', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Numéro RCCM" isRequired><Input value={data.numeroRccm} onChange={e => handleChange('numeroRccm', e.target.value)} disabled={isViewMode} /></FormField><FormField label="NIF/NCC" isRequired><Input value={data.nif} onChange={e => handleChange('nif', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Date de début d'activité" isRequired><Input type="date" value={data.dateDebutActivite} onChange={e => handleChange('dateDebutActivite', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Nombre d'employés prévisionnels" isRequired><Input type="number" value={data.nombreEmployesPrevisionnels} onChange={e => handleChange('nombreEmployesPrevisionnels', parseInt(e.target.value))} disabled={isViewMode} /></FormField><FormField label="Coordonnées du dirigeant" isRequired><Input value={data.coordonneesDirigeant} onChange={e => handleChange('coordonneesDirigeant', e.target.value)} disabled={isViewMode} /></FormField></div>;
+}
 
+function ImmatriculationSalarieForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    return <div className="grid md:grid-cols-2 gap-4"><FormField label="Nom" isRequired><Input value={data.nom} onChange={e => handleChange('nom', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Prénoms" isRequired><Input value={data.prenom} onChange={e => handleChange('prenom', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Date de naissance" isRequired><Input type="date" value={data.dateNaissance} onChange={e => handleChange('dateNaissance', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Lieu de naissance" isRequired><Input value={data.lieuNaissance} onChange={e => handleChange('lieuNaissance', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Sexe" isRequired><Select value={data.sexe} onValueChange={v => handleChange('sexe', v)} disabled={isViewMode}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Masculin">Masculin</SelectItem><SelectItem value="Féminin">Féminin</SelectItem></SelectContent></Select></FormField><FormField label="Nationalité" isRequired><Input value={data.nationalite} onChange={e => handleChange('nationalite', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Adresse de résidence" isRequired fullWidth><Input value={data.adresseResidence} onChange={e => handleChange('adresseResidence', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Fonction/Poste occupé" isRequired><Input value={data.fonction} onChange={e => handleChange('fonction', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Salaire de base" isRequired><Input type="number" value={data.salaireBase} onChange={e => handleChange('salaireBase', parseFloat(e.target.value))} disabled={isViewMode} /></FormField><FormField label="Date d'embauche" isRequired><Input type="date" value={data.dateEmbauche} onChange={e => handleChange('dateEmbauche', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Numéro CNI/Passeport" isRequired><Input value={data.numeroCni} onChange={e => handleChange('numeroCni', e.target.value)} disabled={isViewMode} /></FormField></div>;
+}
+
+function DeclarationMensuelleSalairesForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    const { toast } = useToast();
+    const handleImport = () => {
+        toast({ title: 'Simulation', description: "Importation de l'annexe des salaires simulée." });
+        setData((d:any) => ({...d, detailEmployes: [{cnps: 'CNPS-001', nom: 'Jean Dupont', date: '01/01/2024', salaire: 500000}, {cnps: 'CNPS-002', nom: 'Marie Claire', date: '01/03/2024', salaire: 450000}]}));
+    }
+    const { cotisationsPatronales, cotisationsSalariales, total } = useMemo(() => {
+        const masseSalariale = data.masseSalarialeBrute || 0;
+        const cp = masseSalariale * 0.165;
+        const cs = masseSalariale * 0.035;
+        return { cotisationsPatronales: cp, cotisationsSalariales: cs, total: cp + cs };
+    }, [data.masseSalarialeBrute]);
+
+    return <div className="space-y-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Période (mois/année)" isRequired><Input type="month" value={data.periode} onChange={e => handleChange('periode', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Masse Salariale Brute" isRequired><Input type="number" value={data.masseSalarialeBrute} onChange={e => handleChange('masseSalarialeBrute', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><Separator/><div className="grid md:grid-cols-3 gap-4"><div className="space-y-1"><Label>Cotisations Patronales (16.5%)</Label><Input disabled value={cotisationsPatronales.toLocaleString('fr-FR')} /></div><div className="space-y-1"><Label>Cotisations Salariales (3.5%)</Label><Input disabled value={cotisationsSalariales.toLocaleString('fr-FR')} /></div><div className="space-y-1"><Label>Total Cotisations Dues</Label><Input disabled value={total.toLocaleString('fr-FR')} className="font-bold text-primary"/></div></div><Separator/><div className="space-y-2"><div className="flex justify-between items-center"><Label>Détail par employé (Import obligatoire)</Label><Button type="button" variant="outline" size="sm" onClick={handleImport} disabled={isViewMode}><Upload className="mr-2 h-4 w-4" /> Importer Annexe</Button></div><div className="border rounded-md max-h-48 overflow-y-auto"><Table>{!isViewMode && data.detailEmployes.length === 0 ? <div className="p-8 text-center text-sm text-muted-foreground">Importez le fichier pour voir le détail.</div> : <><TableHeader><TableRow><TableHead>N° CNPS</TableHead><TableHead>Nom & Prénoms</TableHead><TableHead>Date Arrivée</TableHead><TableHead className="text-right">Salaire Brut</TableHead></TableRow></TableHeader><TableBody>{data.detailEmployes.map((e:any, i:number) => <TableRow key={i}><TableCell>{e.cnps}</TableCell><TableCell>{e.nom}</TableCell><TableCell>{e.date}</TableCell><TableCell className="text-right">{e.salaire.toLocaleString('fr-FR')}</TableCell></TableRow>)}</TableBody></>}</Table></div></div></div>;
+}
+
+function DeclarationTrimestrielleForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    const { cotisationsDues, solde } = useMemo(() => {
+        const masse = data.masseSalarialeTrimestrielle || 0;
+        const verse = data.montantVerse || 0;
+        const dues = masse * (0.165 + 0.035); // 20% total
+        return { cotisationsDues: dues, solde: dues - verse };
+    }, [data.masseSalarialeTrimestrielle, data.montantVerse]);
+    return <div className="grid md:grid-cols-2 gap-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Trimestre"><Select value={data.trimestre} onValueChange={v => handleChange('trimestre', v)} disabled={isViewMode}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="T1">1er Trimestre</SelectItem><SelectItem value="T2">2ème Trimestre</SelectItem><SelectItem value="T3">3ème Trimestre</SelectItem><SelectItem value="T4">4ème Trimestre</SelectItem></SelectContent></Select></FormField><FormField label="Année"><Input value={data.annee} onChange={e => handleChange('annee', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Effectif moyen du trimestre"><Input type="number" value={data.effectifMoyen} onChange={e => handleChange('effectifMoyen', parseInt(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Masse salariale trimestrielle"><Input type="number" value={data.masseSalarialeTrimestrielle} onChange={e => handleChange('masseSalarialeTrimestrielle', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Montant versé"><Input type="number" value={data.montantVerse} onChange={e => handleChange('montantVerse', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Cotisations dues"><Input value={cotisationsDues.toLocaleString('fr-FR')} disabled/></FormField><FormField label="Solde à régulariser"><Input value={solde.toLocaleString('fr-FR')} disabled/></FormField></div>
+}
+
+function DasForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    return <div className="grid md:grid-cols-2 gap-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Année de référence" isRequired><Input value={data.anneeReference} onChange={e => handleChange('anneeReference', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Effectif total au 31/12" isRequired><Input type="number" value={data.effectifTotal} onChange={e => handleChange('effectifTotal', parseInt(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Masse salariale annuelle" isRequired><Input type="number" value={data.masseSalarialeAnnuelle} onChange={e => handleChange('masseSalarialeAnnuelle', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Cotisations versées dans l'année" isRequired><Input type="number" value={data.cotisationsVersees} onChange={e => handleChange('cotisationsVersees', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Régularisations éventuelles" fullWidth><Textarea value={data.regularisations} onChange={e => handleChange('regularisations', e.target.value)} disabled={isViewMode}/></FormField></div>;
+}
+
+function AccidentTravailForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    return <div className="space-y-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><div className="grid md:grid-cols-2 gap-4"><FormField label="Identité de la victime" isRequired><Input value={data.identiteVictime} onChange={e => handleChange('identiteVictime', e.target.value)} disabled={isViewMode}/></FormField><FormField label="N° CNPS de la victime" isRequired><Input value={data.numeroCnpsVictime} onChange={e => handleChange('numeroCnpsVictime', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Date de l'accident" isRequired><Input type="date" value={data.dateAccident} onChange={e => handleChange('dateAccident', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Heure de l'accident" isRequired><Input type="time" value={data.heureAccident} onChange={e => handleChange('heureAccident', e.target.value)} disabled={isViewMode}/></FormField></div><FormField label="Lieu de l'accident" isRequired><Input value={data.lieuAccident} onChange={e => handleChange('lieuAccident', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Circonstances de l'accident" isRequired><Textarea value={data.circonstances} onChange={e => handleChange('circonstances', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Nature des blessures" isRequired><Input value={data.natureBlessures} onChange={e => handleChange('natureBlessures', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Témoins éventuels"><Input value={data.temoins} onChange={e => handleChange('temoins', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Arrêt de travail prescrit"><Input value={data.arretTravail} onChange={e => handleChange('arretTravail', e.target.value)} disabled={isViewMode}/></FormField></div>;
+}
+
+function MaladieProfessionnelleForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    return <div className="space-y-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><div className="grid md:grid-cols-2 gap-4"><FormField label="Identité du travailleur" isRequired><Input value={data.identiteTravailleur} onChange={e => handleChange('identiteTravailleur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="N° CNPS du travailleur" isRequired><Input value={data.numeroCnpsTravailleur} onChange={e => handleChange('numeroCnpsTravailleur', e.target.value)} disabled={isViewMode}/></FormField></div><FormField label="Nature de la maladie" isRequired><Input value={data.natureMaladie} onChange={e => handleChange('natureMaladie', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Poste occupé" isRequired><Input value={data.posteOccupe} onChange={e => handleChange('posteOccupe', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Durée d'exposition au risque"><Input value={data.dureeExposition} onChange={e => handleChange('dureeExposition', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Diagnostic médical" isRequired><Textarea value={data.diagnosticMedical} onChange={e => handleChange('diagnosticMedical', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Date de première constatation médicale" isRequired><Input type="date" value={data.datePremiereConstatation} onChange={e => handleChange('datePremiereConstatation', e.target.value)} disabled={isViewMode}/></FormField></div>;
+}
+
+function ModificationSalarieForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    return <div className="grid md:grid-cols-2 gap-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Type de mouvement" isRequired><Select value={data.typeMouvement} onValueChange={v => handleChange('typeMouvement', v)} disabled={isViewMode}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="embauche">Embauche</SelectItem><SelectItem value="départ">Départ</SelectItem><SelectItem value="modification">Modification</SelectItem></SelectContent></Select></FormField><FormField label="Identité du salarié" isRequired><Input value={data.identiteSalarie} onChange={e => handleChange('identiteSalarie', e.target.value)} disabled={isViewMode}/></FormField><FormField label="N° CNPS du salarié" isRequired><Input value={data.numeroCnpsSalarie} onChange={e => handleChange('numeroCnpsSalarie', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Date d'effet" isRequired><Input type="date" value={data.dateEffet} onChange={e => handleChange('dateEffet', e.target.value)} disabled={isViewMode}/></FormField>{data.typeMouvement === 'départ' && <FormField label="Motif du départ"><Input value={data.motifDepart} onChange={e => handleChange('motifDepart', e.target.value)} disabled={isViewMode}/></FormField>}{data.typeMouvement === 'modification' && <FormField label="Nouveau salaire"><Input type="number" value={data.nouveauSalaire} onChange={e => handleChange('nouveauSalaire', parseFloat(e.target.value))} disabled={isViewMode}/></FormField>}</div>;
+}
+
+
+function DeclarationFormRenderer({ type, data, setData, isViewMode }: { type: DeclarationType, data: any, setData: Function, isViewMode: boolean }) {
     const renderFormContent = () => {
         switch (type) {
-            case 'Immatriculation Employeur':
-                return <div className="grid md:grid-cols-2 gap-4"><FormField label="Dénomination sociale" isRequired><Input value={data.denominationSociale} onChange={e => handleChange('denominationSociale', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Forme juridique" isRequired><Input value={data.formeJuridique} onChange={e => handleChange('formeJuridique', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Adresse du siège social" isRequired fullWidth><Input value={data.adresseSiegeSocial} onChange={e => handleChange('adresseSiegeSocial', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Secteur d'activité" isRequired><Input value={data.secteurActivite} onChange={e => handleChange('secteurActivite', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Numéro RCCM" isRequired><Input value={data.numeroRccm} onChange={e => handleChange('numeroRccm', e.target.value)} disabled={isViewMode} /></FormField><FormField label="NIF/NCC" isRequired><Input value={data.nif} onChange={e => handleChange('nif', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Date de début d'activité" isRequired><Input type="date" value={data.dateDebutActivite} onChange={e => handleChange('dateDebutActivite', e.target.value)} disabled={isViewMode} /></FormField></div>;
-            case 'Déclaration Mensuelle Salaires': {
-                const cotisationsPatronales = (data.masseSalarialeBrute || 0) * 0.165;
-                const cotisationsSalariales = (data.masseSalarialeBrute || 0) * 0.035;
-                const total = cotisationsPatronales + cotisationsSalariales;
-                return <div className="space-y-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Masse Salariale Brute" isRequired><Input type="number" value={data.masseSalarialeBrute} onChange={e => handleChange('masseSalarialeBrute', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><Separator/><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul des cotisations</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">Cotisations Patronales (16,5%)</span><span className="font-mono">{formatC(cotisationsPatronales)} €</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">Cotisations Salariales (3,5%)</span><span className="font-mono">{formatC(cotisationsSalariales)} €</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span>Total des Cotisations Dues</span><span className="font-mono">{formatC(total)} €</span></div></div></div>;
-            }
-            default:
-                return <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50"><p>Formulaire non disponible pour le type '{type}'.</p></div>;
+            case 'Immatriculation Employeur': return <ImmatriculationEmployeurForm data={data} setData={setData} isViewMode={isViewMode} />;
+            case 'Immatriculation Salarié': return <ImmatriculationSalarieForm data={data} setData={setData} isViewMode={isViewMode} />;
+            case 'Déclaration Mensuelle Salaires': return <DeclarationMensuelleSalairesForm data={data} setData={setData} isViewMode={isViewMode} />;
+            case 'Déclaration trimestrielle des cotisations': return <DeclarationTrimestrielleForm data={data} setData={setData} isViewMode={isViewMode} />;
+            case 'DAS': return <DasForm data={data} setData={setData} isViewMode={isViewMode} />;
+            case 'Accident de Travail': return <AccidentTravailForm data={data} setData={setData} isViewMode={isViewMode} />;
+            case 'Maladie Professionnelle': return <MaladieProfessionnelleForm data={data} setData={setData} isViewMode={isViewMode} />;
+            case 'Modification Salarié': return <ModificationSalarieForm data={data} setData={setData} isViewMode={isViewMode} />;
+            default: return <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50"><p>Formulaire non disponible pour le type '{type}'.</p></div>;
         }
     };
     return (
@@ -102,7 +169,7 @@ function DeclarationsSocialesMainContent() {
 
     const handleOpenCreateModal = () => {
         setEditingDeclaration(null);
-        setSelectedType(null); // Force type selection first
+        setSelectedType(null);
         setIsModalOpen(true);
     };
 
@@ -115,14 +182,6 @@ function DeclarationsSocialesMainContent() {
     const handleSaveDeclaration = (formData: any) => {
         if (!selectedType) return;
         
-        let montant = 0;
-        if (selectedType === 'Déclaration Mensuelle Salaires') {
-            const masseSalariale = formData.masseSalarialeBrute || 0;
-            montant = masseSalariale * 0.165 + masseSalariale * 0.035;
-        } else if (selectedType === 'DAS') {
-            montant = formData.cotisationsVersees || 0;
-        }
-        
         if (editingDeclaration) {
             setDeclarations(prev => prev.map(d => d.id === editingDeclaration.id ? { ...editingDeclaration, type: selectedType, data: formData, statut: 'Validée' } : d));
             toast({ title: 'Déclaration modifiée', description: `La déclaration a été mise à jour.` });
@@ -132,7 +191,7 @@ function DeclarationsSocialesMainContent() {
                 type: selectedType,
                 data: formData,
                 statut: 'Brouillon',
-                periode: formData.periode || formData.anneeReference || formData.dateEffet || format(new Date(), 'dd/MM/yyyy')
+                periode: formData.periode || formData.anneeReference || formData.dateEffet || format(new Date(formData.dateDeclaration), 'dd/MM/yyyy')
             };
             setDeclarations(prev => [newDeclaration, ...prev]);
             toast({ title: 'Déclaration créée', description: 'La nouvelle déclaration a été ajoutée en tant que brouillon.' });
@@ -242,7 +301,7 @@ function DeclarationsSocialesMainContent() {
 // --- MODAL & FORM COMPONENTS ---
 
 function DeclarationModal({ isOpen, onClose, onSave, declarationToEdit, selectedType, setSelectedType }: { isOpen: boolean, onClose: () => void, onSave: (data: any) => void, declarationToEdit: Declaration | null, selectedType: DeclarationType | null, setSelectedType: (type: DeclarationType) => void }) {
-    const [data, setData] = useState(declarationToEdit ? declarationToEdit.data : null);
+    const [data, setData] = useState<any | null>(null);
 
     useEffect(() => {
         if (isOpen) {
