@@ -14,11 +14,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 // --- TYPES ---
 type DeclarationType = 'Immatriculation Employeur' | 'Immatriculation Salarié' | 'Déclaration Mensuelle Salaires' | 'DAS' | 'Accident de Travail' | 'Maladie Professionnelle' | 'Modification Salarié' | 'Déclaration trimestrielle des cotisations';
@@ -190,7 +192,7 @@ function DeclarationsSocialesMainContent() {
                 type: selectedType,
                 data: formData,
                 statut: 'Brouillon',
-                periode: formData.periode || formData.anneeReference || formData.dateEffet || format(new Date(formData.dateDeclaration), 'dd/MM/yyyy')
+                periode: formData.periode || formData.anneeReference || formData.dateEffet || format(parseISO(formData.dateDeclaration), 'dd/MM/yyyy', { locale: fr })
             };
             setDeclarations(prev => [newDeclaration, ...prev]);
             toast({ title: 'Déclaration créée', description: 'La nouvelle déclaration a été ajoutée en tant que brouillon.' });
@@ -275,59 +277,70 @@ function DeclarationsSocialesMainContent() {
                 <p className="text-muted-foreground">Gérez et suivez l'état de toutes vos déclarations sociales, organisées par catégorie.</p>
             </div>
             
-            <div className="space-y-6">
-                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Immatriculations</CardTitle>
-                            <CardDescription>Gérez les immatriculations employeur et salarié.</CardDescription>
-                        </div>
-                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                    </CardHeader>
-                    <CardContent>
-                       {renderTable(immatriculations)}
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Déclarations Périodiques</CardTitle>
-                            <CardDescription>Suivi des obligations récurrentes (mensuelles, trimestrielles, annuelles).</CardDescription>
-                        </div>
-                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                    </CardHeader>
-                    <CardContent>
-                        {renderTable(periodiques)}
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Mouvements de Personnel</CardTitle>
-                            <CardDescription>Déclarations ponctuelles lors des embauches ou départs.</CardDescription>
-                        </div>
-                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                    </CardHeader>
-                    <CardContent>
-                        {renderTable(mouvements)}
-                    </CardContent>
-                </Card>
-
-                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Accidents et Maladies</CardTitle>
-                            <CardDescription>Déclarations d'urgence ou exceptionnelles.</CardDescription>
-                        </div>
-                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
-                    </CardHeader>
-                    <CardContent>
-                        {renderTable(accidents)}
-                    </CardContent>
-                </Card>
-            </div>
+            <Tabs defaultValue="immatriculations" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="immatriculations">Immatriculations</TabsTrigger>
+                    <TabsTrigger value="periodiques">Déclarations Périodiques</TabsTrigger>
+                    <TabsTrigger value="mouvements">Mouvements</TabsTrigger>
+                    <TabsTrigger value="accidents">Accidents & Maladies</TabsTrigger>
+                </TabsList>
+                <TabsContent value="immatriculations" className="mt-4">
+                     <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Immatriculations</CardTitle>
+                                <CardDescription>Gérez les immatriculations employeur et salarié.</CardDescription>
+                            </div>
+                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                        </CardHeader>
+                        <CardContent>
+                        {renderTable(immatriculations)}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="periodiques" className="mt-4">
+                     <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Déclarations Périodiques</CardTitle>
+                                <CardDescription>Suivi des obligations récurrentes (mensuelles, trimestrielles, annuelles).</CardDescription>
+                            </div>
+                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                        </CardHeader>
+                        <CardContent>
+                            {renderTable(periodiques)}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="mouvements" className="mt-4">
+                     <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Mouvements de Personnel</CardTitle>
+                                <CardDescription>Déclarations ponctuelles lors des embauches ou départs.</CardDescription>
+                            </div>
+                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                        </CardHeader>
+                        <CardContent>
+                            {renderTable(mouvements)}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="accidents" className="mt-4">
+                     <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Accidents et Maladies</CardTitle>
+                                <CardDescription>Déclarations d'urgence ou exceptionnelles.</CardDescription>
+                            </div>
+                            <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                        </CardHeader>
+                        <CardContent>
+                            {renderTable(accidents)}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
 
 
             <DeclarationModal
