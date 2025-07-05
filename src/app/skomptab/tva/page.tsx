@@ -120,68 +120,66 @@ function TVAMainContent() {
                     ))}
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                    <Card className="lg:col-span-4">
-                        <CardHeader>
-                            <CardTitle>Évolution de la TVA</CardTitle>
-                            <CardDescription>Évolution mensuelle de la TVA collectée et déductible sur le S1 2024.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                                <BarChart data={barChartData}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                                    <YAxis unit="€" />
-                                    <ChartTooltip content={<ChartTooltipContent />} />
-                                    <Legend />
-                                    <Bar dataKey="collectee" fill="var(--color-collectee)" radius={4} />
-                                    <Bar dataKey="deductible" fill="var(--color-deductible)" radius={4} />
-                                </BarChart>
-                            </ChartContainer>
-                        </CardContent>
-                    </Card>
-                    <Card className="lg:col-span-3">
-                        <CardHeader>
-                            <CardTitle>Historique des déclarations</CardTitle>
-                            <CardDescription>Suivi des dernières déclarations de TVA.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Période</TableHead>
-                                        <TableHead className="text-right">Montant Dû</TableHead>
-                                        <TableHead className="text-center">Statut</TableHead>
-                                        <TableHead className="text-center">Actions</TableHead>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Évolution de la TVA</CardTitle>
+                        <CardDescription>Évolution mensuelle de la TVA collectée et déductible sur le S1 2024.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                            <BarChart data={barChartData}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                                <YAxis unit="€" />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Legend />
+                                <Bar dataKey="collectee" fill="var(--color-collectee)" radius={4} />
+                                <Bar dataKey="deductible" fill="var(--color-deductible)" radius={4} />
+                            </BarChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Historique des déclarations</CardTitle>
+                        <CardDescription>Suivi des dernières déclarations de TVA.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Période</TableHead>
+                                    <TableHead className="text-right">Montant Dû</TableHead>
+                                    <TableHead className="text-center">Statut</TableHead>
+                                    <TableHead className="text-center">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {declarations.map((d, index) => {
+                                    const isPaid = d.statut === 'Payée';
+                                    return (
+                                    <TableRow key={d.id}>
+                                        <TableCell className="font-medium capitalize">{d.periode}</TableCell>
+                                        <TableCell className="text-right font-mono">{d.montant.toLocaleString('fr-FR')} €</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant={d.statut === 'Payée' ? 'secondary' : d.statut === 'Brouillon' ? 'outline' : 'default'} className={d.statut === 'Payée' ? 'bg-green-100 text-green-800' : ''}>
+                                                {d.statut === 'Payée' && <CheckCircle className="mr-1 h-3 w-3" />}
+                                                {d.statut}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <div className="flex justify-center gap-1">
+                                                <Button variant="ghost" size="icon" disabled={isPaid}><Eye className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" disabled={isPaid}><Pencil className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
+                                            </div>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {declarations.map((d, index) => {
-                                        const isPaid = d.statut === 'Payée';
-                                        return (
-                                        <TableRow key={d.id}>
-                                            <TableCell className="font-medium capitalize">{d.periode}</TableCell>
-                                            <TableCell className="text-right font-mono">{d.montant.toLocaleString('fr-FR')} €</TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant={d.statut === 'Payée' ? 'secondary' : d.statut === 'Brouillon' ? 'outline' : 'default'} className={d.statut === 'Payée' ? 'bg-green-100 text-green-800' : ''}>
-                                                    {d.statut === 'Payée' && <CheckCircle className="mr-1 h-3 w-3" />}
-                                                    {d.statut}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex justify-center gap-1">
-                                                    <Button variant="ghost" size="icon" disabled={isPaid}><Eye className="h-4 w-4" /></Button>
-                                                    <Button variant="ghost" size="icon" disabled={isPaid}><Pencil className="h-4 w-4" /></Button>
-                                                    <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    )})}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </div>
+                                )})}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
             </div>
             <TvaDeclarationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveDeclaration} />
         </>
