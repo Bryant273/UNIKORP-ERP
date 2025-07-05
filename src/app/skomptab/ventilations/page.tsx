@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -11,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { GitCompareArrows, Loader2, PlusCircle, Eye, Trash2, Percent, CheckCircle, XCircle } from 'lucide-react';
+import { GitCompareArrows, Loader2, PlusCircle, Eye, Trash2, Percent, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -68,20 +69,54 @@ export default function VentilationsPage() {
     const [isVentilating, setIsVentilating] = useState(false);
     
     // State for the modal logic
+    const [editingVentilation, setEditingVentilation] = useState<VentilationHistory | null>(null);
+    const [isViewMode, setIsViewMode] = useState(false);
     const [selectedAccountForDistribution, setSelectedAccountForDistribution] = useState<string | null>(null);
     const [accountsToVentilate, setAccountsToVentilate] = useState<AccountToVentilate[]>([]);
+
+    const loadVentilationForModal = (ventilation: VentilationHistory, viewMode: boolean) => {
+        setIsViewMode(viewMode);
+        setEditingVentilation(ventilation);
+
+        const accounts = MOCK_COMPTES_GENERAUX.slice(0, ventilation.accountsCount).map(c => c.numero);
+        const sections = MOCK_ANALYTIC_SECTIONS.slice(0, ventilation.sectionsCount);
+        
+        const simulatedData: AccountToVentilate[] = accounts.map(accountNumber => {
+            const totalRate = 100;
+            let remainingRate = totalRate;
+            const keys: DistributionKey[] = sections.map((section, index) => {
+                if (index === sections.length - 1) {
+                    return { sectionCode: section.code, rate: remainingRate };
+                }
+                const rate = Math.floor(Math.random() * (remainingRate / 2)) + 1;
+                remainingRate -= rate;
+                return { sectionCode: section.code, rate };
+            });
+
+             // Ensure total is exactly 100
+            const currentTotal = keys.reduce((sum, key) => sum + key.rate, 0);
+            if(currentTotal !== 100 && keys.length > 0) {
+                keys[keys.length - 1].rate += (100 - currentTotal);
+            }
+            
+            return { accountNumber, keys };
+        });
+        
+        setAccountsToVentilate(simulatedData);
+        setSelectedAccountForDistribution(accounts[0] || null);
+
+        setIsVentilationModalOpen(true);
+    };
 
     const handleAccountToggle = (accountNumber: string) => {
         setAccountsToVentilate(prev => {
             const exists = prev.some(a => a.accountNumber === accountNumber);
             if (exists) {
-                // If the selected account is the one being removed, deselect it
                 if (selectedAccountForDistribution === accountNumber) {
                     setSelectedAccountForDistribution(null);
                 }
                 return prev.filter(a => a.accountNumber !== accountNumber);
             } else {
-                // When adding a new account, select it automatically for configuration
                 setSelectedAccountForDistribution(accountNumber);
                 return [...prev, { accountNumber, keys: [] }];
             }
@@ -92,7 +127,7 @@ export default function VentilationsPage() {
         if (!selectedAccountForDistribution) return;
         setAccountsToVentilate(prev => prev.map(acc => {
             if (acc.accountNumber === selectedAccountForDistribution) {
-                if (acc.keys.some(k => k.sectionCode === sectionCode)) return acc; // Avoid duplicates
+                if (acc.keys.some(k => k.sectionCode === sectionCode)) return acc;
                 return { ...acc, keys: [...acc.keys, { sectionCode, rate: 0 }] };
             }
             return acc;
@@ -141,21 +176,29 @@ export default function VentilationsPage() {
         toast({ title: "Ventilation en cours...", description: `Traitement des répartitions...` });
         
         setTimeout(() => {
+            const description = editingVentilation 
+                ? `Mise à jour : ${editingVentilation.description}`
+                : `Ventilation manuelle de ${accountsToVentilate.length} compte(s)`;
+
             const newHistoryEntry: VentilationHistory = {
-                id: Date.now(),
+                id: editingVentilation?.id || Date.now(),
                 date: format(new Date(), 'yyyy-MM-dd'),
-                description: `Ventilation manuelle de ${accountsToVentilate.length} compte(s)`,
+                description: description,
                 status: 'Terminée',
                 accountsCount: accountsToVentilate.length,
                 sectionsCount: [...new Set(accountsToVentilate.flatMap(a => a.keys.map(k => k.sectionCode)))].length,
             };
-            setHistory(prev => [newHistoryEntry, ...prev]);
+
+            if (editingVentilation) {
+                setHistory(prev => prev.map(h => h.id === editingVentilation.id ? newHistoryEntry : h));
+                toast({ title: "Ventilation modifiée !", description: "Les modifications ont été enregistrées.", className: 'bg-green-100 border-green-300 text-green-800'});
+            } else {
+                setHistory(prev => [newHistoryEntry, ...prev]);
+                toast({ title: "Ventilation réussie !", description: "Les écritures ont été ventilées selon les clés définies.", className: 'bg-green-100 border-green-300 text-green-800'});
+            }
+
             setIsVentilating(false);
-            setIsVentilationModalOpen(false);
-            // Reset state for next time
-            setAccountsToVentilate([]);
-            setSelectedAccountForDistribution(null);
-            toast({ title: "Ventilation réussie !", description: "Les écritures ont été ventilées selon les clés définies.", className: 'bg-green-100 border-green-300 text-green-800'});
+            resetModal();
         }, 2500);
     };
 
@@ -163,7 +206,18 @@ export default function VentilationsPage() {
         setIsVentilationModalOpen(false);
         setAccountsToVentilate([]);
         setSelectedAccountForDistribution(null);
+        setEditingVentilation(null);
+        setIsViewMode(false);
     }
+    
+    const handleDelete = () => {
+        if (!ventilationToDelete) return;
+        setHistory(h => h.filter(item => item.id !== ventilationToDelete!.id));
+        setVentilationToDelete(null);
+        toast({ title: "Ventilation supprimée", description: "L'entrée a été retirée de l'historique." });
+    };
+
+    const modalTitle = isViewMode ? "Détails de la Ventilation" : editingVentilation ? "Modifier la Ventilation" : "Nouvelle Ventilation Analytique";
     
     return (
         <>
@@ -174,7 +228,7 @@ export default function VentilationsPage() {
                             <CardTitle className="text-2xl flex items-center gap-2"><GitCompareArrows /> Ventilations Analytiques</CardTitle>
                             <CardDescription>Définissez des clés de répartition et ventilez les charges/produits vers les sections analytiques.</CardDescription>
                         </div>
-                        <Button onClick={() => setIsVentilationModalOpen(true)}>
+                        <Button onClick={() => { setEditingVentilation(null); setIsViewMode(false); setIsVentilationModalOpen(true); }}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Lancer une ventilation
                         </Button>
@@ -202,7 +256,8 @@ export default function VentilationsPage() {
                                     <TableCell className="text-center"><Badge>{item.status}</Badge></TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-2">
-                                            <Button variant="ghost" size="icon" disabled><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => loadVentilationForModal(item, true)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => loadVentilationForModal(item, false)}><Pencil className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setVentilationToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
                                         </div>
                                     </TableCell>
@@ -216,13 +271,12 @@ export default function VentilationsPage() {
             <Dialog open={isVentilationModalOpen} onOpenChange={resetModal}>
                 <DialogContent className="max-w-6xl h-[85vh]">
                     <DialogHeader>
-                        <DialogTitle>Nouvelle Ventilation Analytique</DialogTitle>
+                        <DialogTitle>{modalTitle}</DialogTitle>
                         <DialogDescription>
                             Sélectionnez les comptes, puis définissez les clés de répartition pour chaque section analytique.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid md:grid-cols-2 gap-6 py-4 flex-1 overflow-y-auto">
-                        {/* Left Panel: Source Accounts & Sections */}
                         <div className="flex flex-col gap-6">
                             <div>
                                 <Label className="font-semibold mb-2 block text-base">1. Comptes généraux à ventiler</Label>
@@ -236,11 +290,12 @@ export default function VentilationsPage() {
                                                         id={`compte-${compte.numero}`}
                                                         checked={status !== 'unchecked'}
                                                         onCheckedChange={() => handleAccountToggle(compte.numero)}
+                                                        disabled={isViewMode}
                                                     />
                                                     <Label
                                                         htmlFor={`compte-${compte.numero}`}
-                                                        className={cn("flex-1 cursor-pointer p-2 rounded-md transition-colors", selectedAccountForDistribution === compte.numero && "bg-accent text-accent-foreground")}
-                                                        onClick={() => { if(status !== 'unchecked') setSelectedAccountForDistribution(compte.numero) }}
+                                                        className={cn("flex-1 p-2 rounded-md transition-colors", !isViewMode && "cursor-pointer", selectedAccountForDistribution === compte.numero && "bg-accent text-accent-foreground")}
+                                                        onClick={() => { if(status !== 'unchecked' && !isViewMode) setSelectedAccountForDistribution(compte.numero) }}
                                                     >
                                                         <div className="flex justify-between items-center">
                                                             <div>
@@ -267,7 +322,7 @@ export default function VentilationsPage() {
                                                     <span className="font-mono text-xs p-1 bg-muted rounded-sm w-24 text-center">{section.code}</span>
                                                     <span className="ml-2">{section.name}</span>
                                                 </div>
-                                                <Button type="button" size="sm" variant="outline" onClick={() => handleAddKey(section.code)} disabled={!selectedAccountForDistribution || activeDistribution?.keys.some(k => k.sectionCode === section.code)}>
+                                                <Button type="button" size="sm" variant="outline" onClick={() => handleAddKey(section.code)} disabled={isViewMode || !selectedAccountForDistribution || activeDistribution?.keys.some(k => k.sectionCode === section.code)}>
                                                     Ajouter
                                                 </Button>
                                             </div>
@@ -276,7 +331,6 @@ export default function VentilationsPage() {
                                 </ScrollArea>
                             </div>
                         </div>
-                        {/* Right Panel: Distribution Keys */}
                         <div>
                              <Label className="font-semibold mb-2 block text-base">3. Clés de Répartition</Label>
                              <Card className="h-[calc(100%-2rem)]">
@@ -295,8 +349,8 @@ export default function VentilationsPage() {
                                                         return (
                                                             <TableRow key={key.sectionCode}>
                                                                 <TableCell>{sectionInfo?.name || key.sectionCode}</TableCell>
-                                                                <TableCell><Input type="number" value={key.rate} onChange={(e) => handleRateChange(key.sectionCode, parseInt(e.target.value))} className="text-center" /></TableCell>
-                                                                <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveKey(key.sectionCode)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                                                                <TableCell><Input type="number" value={key.rate} onChange={(e) => handleRateChange(key.sectionCode, parseInt(e.target.value))} className="text-center" disabled={isViewMode} /></TableCell>
+                                                                <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveKey(key.sectionCode)} disabled={isViewMode}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
                                                             </TableRow>
                                                         )
                                                     })}
@@ -317,11 +371,15 @@ export default function VentilationsPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={resetModal}>Annuler</Button>
-                        <Button onClick={handleVentilation} disabled={isVentilating || !isVentilationReady}>
-                            {isVentilating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <GitCompareArrows className="mr-2 h-4 w-4"/>}
-                            {isVentilating ? 'Ventilation en cours...' : 'Lancer la ventilation'}
+                        <Button variant="outline" onClick={resetModal}>
+                          {isViewMode ? 'Fermer' : 'Annuler'}
                         </Button>
+                        {!isViewMode &&
+                          <Button onClick={handleVentilation} disabled={isVentilating || !isVentilationReady}>
+                              {isVentilating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <GitCompareArrows className="mr-2 h-4 w-4"/>}
+                              {isVentilating ? 'Ventilation en cours...' : 'Lancer la ventilation'}
+                          </Button>
+                        }
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -334,7 +392,7 @@ export default function VentilationsPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => { setHistory(h => h.filter(item => item.id !== ventilationToDelete!.id)); setVentilationToDelete(null); }}>Confirmer</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Confirmer</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
