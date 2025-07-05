@@ -20,6 +20,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Logo } from '@/components/logo';
 
 
 // --- TYPES ---
@@ -47,8 +50,8 @@ const DeclarationTypeOptions: DeclarationType[] = [
 
 // --- MOCK DATA ---
 const initialDeclarations: Declaration[] = [
-    { id: 'dms1', type: 'Déclaration Mensuelle Salaires', periode: 'Juillet 2024', statut: 'Validée', data: { masseSalarialeBrute: 86100 } },
-    { id: 'dms2', type: 'Déclaration Mensuelle Salaires', periode: 'Juin 2024', statut: 'Traitée', data: { masseSalarialeBrute: 85200 } },
+    { id: 'dms1', type: 'Déclaration Mensuelle Salaires', periode: 'Juillet 2024', statut: 'Validée', data: { numeroCnpEmployeur: 'CNPS-12345', periode: '2024-07', masseSalarialeBrute: 86100, detailEmployes: [] } },
+    { id: 'dms2', type: 'Déclaration Mensuelle Salaires', periode: 'Juin 2024', statut: 'Traitée', data: { numeroCnpEmployeur: 'CNPS-12345', periode: '2024-06', masseSalarialeBrute: 85200, detailEmployes: [] } },
     { id: 'modif1', type: 'Modification Salarié', periode: '01/07/2024', statut: 'Traitée', data: { typeMouvement: 'embauche', identiteSalarie: 'Sophie Martin' } },
     { id: 'das1', type: 'DAS', periode: 'Année 2023', statut: 'Traitée', data: { anneeReference: '2023', masseSalarialeAnnuelle: 1025000 } },
     { id: 'immat1', type: 'Immatriculation Employeur', periode: '15/05/2024', statut: 'Traitée', data: { denominationSociale: 'Nouvelle Filiale SARL' } },
@@ -71,6 +74,21 @@ const getDefaultDataForType = (type: DeclarationType): any => {
         default: return { ...base };
     }
 }
+
+const calculateCotisations = (data: any) => {
+    const masseSalariale = data.masseSalarialeBrute || 0;
+    const cp = masseSalariale * 0.165;
+    const cs = masseSalariale * 0.035;
+    return { cotisationsPatronales: cp, cotisationsSalariales: cs, total: cp + cs };
+};
+
+const calculateCotisationsTrimestrielles = (data: any) => {
+    const masse = data.masseSalarialeTrimestrielle || 0;
+    const verse = data.montantVerse || 0;
+    const dues = masse * (0.165 + 0.035); // 20% total
+    return { cotisationsDues: dues, solde: dues - verse };
+};
+
 
 // --- FORM COMPONENTS ---
 
@@ -98,24 +116,14 @@ function DeclarationMensuelleSalairesForm({ data, setData, isViewMode }: { data:
         toast({ title: 'Simulation', description: "Importation de l'annexe des salaires simulée." });
         setData((d:any) => ({...d, detailEmployes: [{cnps: 'CNPS-001', nom: 'Jean Dupont', date: '01/01/2024', salaire: 500000}, {cnps: 'CNPS-002', nom: 'Marie Claire', date: '01/03/2024', salaire: 450000}]}));
     }
-    const { cotisationsPatronales, cotisationsSalariales, total } = useMemo(() => {
-        const masseSalariale = data.masseSalarialeBrute || 0;
-        const cp = masseSalariale * 0.165;
-        const cs = masseSalariale * 0.035;
-        return { cotisationsPatronales: cp, cotisationsSalariales: cs, total: cp + cs };
-    }, [data.masseSalarialeBrute]);
+    const { cotisationsPatronales, cotisationsSalariales, total } = useMemo(() => calculateCotisations(data), [data]);
 
     return <div className="space-y-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Période (mois/année)" isRequired><Input type="month" value={data.periode} onChange={e => handleChange('periode', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Masse Salariale Brute" isRequired><Input type="number" value={data.masseSalarialeBrute} onChange={e => handleChange('masseSalarialeBrute', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><Separator/><div className="grid md:grid-cols-3 gap-4"><div className="space-y-1"><Label>Cotisations Patronales (16.5%)</Label><Input disabled value={cotisationsPatronales.toLocaleString('fr-FR')} /></div><div className="space-y-1"><Label>Cotisations Salariales (3.5%)</Label><Input disabled value={cotisationsSalariales.toLocaleString('fr-FR')} /></div><div className="space-y-1"><Label>Total Cotisations Dues</Label><Input disabled value={total.toLocaleString('fr-FR')} className="font-bold text-primary"/></div></div><Separator/><div className="space-y-2"><div className="flex justify-between items-center"><Label>Détail par employé (Import obligatoire)</Label><Button type="button" variant="outline" size="sm" onClick={handleImport} disabled={isViewMode}><Upload className="mr-2 h-4 w-4" /> Importer Annexe</Button></div><div className="border rounded-md max-h-48 overflow-y-auto"><Table>{!isViewMode && data.detailEmployes.length === 0 ? <div className="p-8 text-center text-sm text-muted-foreground">Importez le fichier pour voir le détail.</div> : <><TableHeader><TableRow><TableHead>N° CNPS</TableHead><TableHead>Nom & Prénoms</TableHead><TableHead>Date Arrivée</TableHead><TableHead className="text-right">Salaire Brut</TableHead></TableRow></TableHeader><TableBody>{data.detailEmployes.map((e:any, i:number) => <TableRow key={i}><TableCell>{e.cnps}</TableCell><TableCell>{e.nom}</TableCell><TableCell>{e.date}</TableCell><TableCell className="text-right">{e.salaire.toLocaleString('fr-FR')}</TableCell></TableRow>)}</TableBody></>}</Table></div></div></div>;
 }
 
 function DeclarationTrimestrielleForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
     const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
-    const { cotisationsDues, solde } = useMemo(() => {
-        const masse = data.masseSalarialeTrimestrielle || 0;
-        const verse = data.montantVerse || 0;
-        const dues = masse * (0.165 + 0.035); // 20% total
-        return { cotisationsDues: dues, solde: dues - verse };
-    }, [data.masseSalarialeTrimestrielle, data.montantVerse]);
+    const { cotisationsDues, solde } = useMemo(() => calculateCotisationsTrimestrielles(data), [data]);
     return <div className="grid md:grid-cols-2 gap-4"><FormField label="N° CNPS Employeur" isRequired><Input value={data.numeroCnpEmployeur} onChange={e => handleChange('numeroCnpEmployeur', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Trimestre"><Select value={data.trimestre} onValueChange={v => handleChange('trimestre', v)} disabled={isViewMode}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="T1">1er Trimestre</SelectItem><SelectItem value="T2">2ème Trimestre</SelectItem><SelectItem value="T3">3ème Trimestre</SelectItem><SelectItem value="T4">4ème Trimestre</SelectItem></SelectContent></Select></FormField><FormField label="Année"><Input value={data.annee} onChange={e => handleChange('annee', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Effectif moyen du trimestre"><Input type="number" value={data.effectifMoyen} onChange={e => handleChange('effectifMoyen', parseInt(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Masse salariale trimestrielle"><Input type="number" value={data.masseSalarialeTrimestrielle} onChange={e => handleChange('masseSalarialeTrimestrielle', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Montant versé"><Input type="number" value={data.montantVerse} onChange={e => handleChange('montantVerse', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><FormField label="Cotisations dues"><Input value={cotisationsDues.toLocaleString('fr-FR')} disabled/></FormField><FormField label="Solde à régulariser"><Input value={solde.toLocaleString('fr-FR')} disabled/></FormField></div>
 }
 
@@ -222,8 +230,130 @@ function DeclarationsSocialesMainContent() {
         }
     };
 
-     const handlePrintDeclaration = (declaration: Declaration) => {
-        toast({ title: "Fonctionnalité d'impression en développement" });
+    const handlePrintDeclaration = (declaration: Declaration) => {
+        const doc = new jsPDF();
+        const printDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss', { locale: fr });
+        const companyName = "Votre Société S.A.";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SOCIX";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        
+        const drawHeader = (pageTitle: string, data: any) => {
+            doc.setFontSize(9); doc.setTextColor(150);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+            doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+            doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+            doc.text(companyName, data.settings.margin.left + 15, 28);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+            const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+            doc.text(`État : ${pageTitle}`, rightX, 25, { align: 'right' });
+            doc.text(`Période : ${declaration.periode}`, rightX, 30, { align: 'right' });
+            doc.text(`Imprimé le : ${printDate}`, rightX, 35, { align: 'right' });
+            doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
+        };
+    
+        const addSection = (title: string, body: any[][], startY: number) => {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(title, 14, startY);
+            autoTable(doc, {
+                startY: startY + 5,
+                body: body,
+                theme: 'grid',
+                styles: { fontSize: 9 },
+                columnStyles: { 0: { cellWidth: 70, fontStyle: 'bold' } },
+            });
+            return (doc as any).lastAutoTable.finalY + 10;
+        };
+
+        const generateSimpleTable = (title: string, bodyData: any[][]) => {
+            autoTable(doc, {
+                head: [[{content: title, styles: {halign: 'center', fillColor: [226, 232, 240]}}]],
+                body: bodyData,
+                theme: 'grid',
+                columnStyles: { 0: { cellWidth: 70, fontStyle: 'bold' } },
+                didDrawPage: (d) => drawHeader(declaration.type, d),
+                margin: { top: 50 },
+            });
+        };
+        
+        switch (declaration.type) {
+            case 'Immatriculation Employeur': {
+                generateSimpleTable("Demande d'Immatriculation Employeur", Object.entries(declaration.data)
+                    .filter(([key]) => key !== 'dateDeclaration')
+                    .map(([key, value]) => [key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()), String(value)]));
+                break;
+            }
+             case 'Immatriculation Salarié': {
+                generateSimpleTable("Demande d'Immatriculation Salarié", Object.entries(declaration.data)
+                    .filter(([key]) => key !== 'dateDeclaration')
+                    .map(([key, value]) => [key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()), String(value)]));
+                break;
+            }
+            case 'Déclaration Mensuelle Salaires': {
+                const data = declaration.data;
+                const { cotisationsPatronales, cotisationsSalariales, total } = calculateCotisations(data);
+                let startY = 50;
+    
+                startY = addSection("Informations Générales", [
+                    ['N° CNPS Employeur', data.numeroCnpEmployeur],
+                    ['Période', data.periode],
+                    ['Masse Salariale Brute', `${(data.masseSalarialeBrute || 0).toLocaleString('fr-FR')} FCFA`],
+                ], startY);
+                
+                startY = addSection("Calcul des Cotisations", [
+                    ['Cotisations Patronales (16.5%)', `${cotisationsPatronales.toLocaleString('fr-FR')} FCFA`],
+                    ['Cotisations Salariales (3.5%)', `${cotisationsSalariales.toLocaleString('fr-FR')} FCFA`],
+                    ['Total Cotisations Dues', `${total.toLocaleString('fr-FR')} FCFA`],
+                ], startY);
+    
+                if (data.detailEmployes && data.detailEmployes.length > 0) {
+                     doc.setFontSize(12);
+                     doc.setFont('helvetica', 'bold');
+                     doc.text("Annexe - Détail des Salaires", 14, startY);
+                     autoTable(doc, {
+                        startY: startY + 5,
+                        head: [['N° CNPS', 'Nom & Prénoms', 'Date Arrivée', 'Salaire Brut']],
+                        body: data.detailEmployes.map((e: any) => [e.cnps, e.nom, e.date, `${e.salaire.toLocaleString('fr-FR')} FCFA`]),
+                        theme: 'striped',
+                        headStyles: { fillColor: '#e2e8f0' },
+                     });
+                }
+    
+                const firstPageData = { settings: { margin: { left: 14 } } };
+                drawHeader("Déclaration Mensuelle Salaires", firstPageData);
+                break;
+            }
+             case 'Accident de Travail': {
+                const data = declaration.data;
+                let startY = 50;
+                startY = addSection("Identification", [
+                    ['N° CNPS Employeur', data.numeroCnpEmployeur],
+                    ['Identité de la Victime', data.identiteVictime],
+                    ['N° CNPS de la Victime', data.numeroCnpsVictime],
+                ], startY);
+                startY = addSection("Circonstances", [
+                    ['Date et Heure', `${data.dateAccident} à ${data.heureAccident}`],
+                    ['Lieu', data.lieuAccident],
+                    ['Circonstances', data.circonstances],
+                    ['Témoins', data.temoins || 'Aucun'],
+                ], startY);
+                startY = addSection("Conséquences", [
+                    ['Nature des Blessures', data.natureBlessures],
+                    ['Arrêt de travail prescrit', data.arretTravail || 'Non précisé'],
+                ], startY);
+    
+                const firstPageData = { settings: { margin: { left: 14 } } };
+                drawHeader("Déclaration d'Accident de Travail", firstPageData);
+                break;
+            }
+            default:
+                doc.text("Modèle d'impression non disponible pour ce type de déclaration.", 15, 20);
+        }
+        
+        doc.save(`declaration_${declaration.type.replace(/\s+/g, '_')}_${declaration.periode}.pdf`);
+        toast({ title: "Téléchargement lancé" });
     };
 
     const immatriculationTypes: DeclarationType[] = ['Immatriculation Employeur', 'Immatriculation Salarié'];
