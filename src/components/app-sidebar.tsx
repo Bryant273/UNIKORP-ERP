@@ -97,8 +97,8 @@ const skomptabNav = [
     icon: ClipboardList,
     subItems: [
       { title: 'Plan analytiques', href: '/skomptab/plan-analytiques', icon: ClipboardList },
-      { title: 'Sections analytiques', href: '/skomptab/sections-analytiques', icon: Columns },
       { title: 'Ventilations', href: '/skomptab/ventilations', icon: Spline },
+      { title: 'Sections analytiques', href: '/skomptab/sections-analytiques', icon: Columns },
       { title: 'Reporting analytique', href: '/skomptab/reporting-analytique', icon: FilePieChart },
       { title: 'Budgétisation', href: '/skomptab/budgetisation', icon: Target },
     ]

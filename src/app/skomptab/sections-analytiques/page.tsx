@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PlusCircle, Eye, Pencil, Trash2, Folder, File, Sigma, ArrowRight, Download, ArrowLeft, GitCompareArrows, Loader2 } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Folder, File, Sigma, ArrowRight, Download, ArrowLeft } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -20,7 +19,6 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
-import { Checkbox } from '@/components/ui/checkbox';
 
 type SectionType = 'folder' | 'item';
 type Section = {
@@ -67,16 +65,6 @@ const MOCK_ANALYTIC_PLAN: Section[] = [
     },
 ];
 
-const MOCK_COMPTES_GENERAUX = [
-    { numero: '601', intitule: 'Achats stockés' },
-    { numero: '606', intitule: 'Achats non stockés' },
-    { numero: '613', intitule: 'Locations' },
-    { numero: '622', intitule: 'Rémunérations et honoraires' },
-    { numero: '641', intitule: 'Rémunérations du personnel' },
-    { numero: '701', intitule: 'Ventes de produits finis' },
-    { numero: '706', intitule: 'Prestations de services' },
-];
-
 const getMockEntriesForSection = (section: Section): MockEntry[] => {
     if (section.type === 'folder' && section.children) {
         return section.children.flatMap(child => getMockEntriesForSection(child));
@@ -112,14 +100,6 @@ export default function SectionsAnalytiquesPage() {
     const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
     const [formData, setFormData] = useState<Omit<Section, 'id' | 'children'>>({ code: '', name: '', type: 'item', compteGeneral: '' });
     const { toast } = useToast();
-
-    const [isVentilationModalOpen, setIsVentilationModalOpen] = useState(false);
-    const [selectedComptes, setSelectedComptes] = useState<string[]>([]);
-    const [selectedSectionsToVentilate, setSelectedSectionsToVentilate] = useState<string[]>([]);
-    const [isVentilating, setIsVentilating] = useState(false);
-
-    const allAnalyticItems = useMemo(() => MOCK_ANALYTIC_PLAN.flatMap(folder => folder.children || []).filter(section => section.type === 'item'), []);
-
 
     const viewingSection = viewingStack.length > 0 ? viewingStack[viewingStack.length - 1] : null;
 
@@ -235,33 +215,6 @@ export default function SectionsAnalytiquesPage() {
         toast({ title: "Exportation PDF réussie" });
     };
 
-    const handleVentilation = () => {
-        if (selectedComptes.length === 0 || selectedSectionsToVentilate.length === 0) {
-            toast({
-                title: "Sélection requise",
-                description: "Veuillez sélectionner au moins un compte général et une section analytique de destination.",
-                variant: "destructive",
-            });
-            return;
-        }
-        setIsVentilating(true);
-        toast({
-            title: "Ventilation en cours...",
-            description: `Transfert de ${selectedComptes.length} compte(s) vers ${selectedSectionsToVentilate.length} section(s).`,
-        });
-        setTimeout(() => {
-            setIsVentilating(false);
-            setIsVentilationModalOpen(false);
-            setSelectedComptes([]);
-            setSelectedSectionsToVentilate([]);
-            toast({
-                title: "Ventilation réussie !",
-                description: "Les écritures ont été ventilées dans les sections analytiques sélectionnées.",
-                className: 'bg-green-100 border-green-300 text-green-800'
-            });
-        }, 2500);
-    };
-
   return (
     <>
       <Card className="w-full">
@@ -273,15 +226,10 @@ export default function SectionsAnalytiquesPage() {
                 Consultez, modifiez et explorez les sections de votre plan analytique.
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => setIsVentilationModalOpen(true)}>
-                    <GitCompareArrows className="mr-2 h-4 w-4" /> Ventiler les comptes
-                </Button>
-                <Button onClick={handleOpenCreateModal}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Créer une section
-                </Button>
-            </div>
+            <Button onClick={handleOpenCreateModal}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Créer une section
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -435,70 +383,6 @@ export default function SectionsAnalytiquesPage() {
             <AlertDialogFooter><AlertDialogCancel onClick={() => setSectionToDelete(null)}>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={isVentilationModalOpen} onOpenChange={setIsVentilationModalOpen}>
-        <DialogContent className="max-w-4xl">
-            <DialogHeader>
-                <DialogTitle>Ventilation des Comptes Généraux</DialogTitle>
-                <DialogDescription>
-                    Sélectionnez les comptes à ventiler et les sections analytiques de destination.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid md:grid-cols-2 gap-6 py-4">
-                <div>
-                    <Label className="font-semibold mb-2 block">1. Comptes généraux à ventiler</Label>
-                    <ScrollArea className="h-72 mt-2 rounded-md border p-4">
-                        <div className="space-y-2">
-                        {MOCK_COMPTES_GENERAUX.map(compte => (
-                            <div key={compte.numero} className="flex items-center space-x-2">
-                                <Checkbox
-                                    id={`compte-${compte.numero}`}
-                                    checked={selectedComptes.includes(compte.numero)}
-                                    onCheckedChange={(checked) => {
-                                        setSelectedComptes(prev => checked ? [...prev, compte.numero] : prev.filter(c => c !== compte.numero));
-                                    }}
-                                />
-                                <Label htmlFor={`compte-${compte.numero}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
-                                    <span className="font-mono text-xs p-1 bg-muted rounded-sm w-16 text-center">{compte.numero}</span>
-                                    <span>{compte.intitule}</span>
-                                </Label>
-                            </div>
-                        ))}
-                        </div>
-                    </ScrollArea>
-                </div>
-                 <div>
-                    <Label className="font-semibold mb-2 block">2. Sections analytiques de destination</Label>
-                    <ScrollArea className="h-72 mt-2 rounded-md border p-4">
-                        <div className="space-y-2">
-                        {allAnalyticItems.map(section => (
-                             <div key={section.id} className="flex items-center space-x-2">
-                                <Checkbox
-                                    id={`section-${section.id}`}
-                                    checked={selectedSectionsToVentilate.includes(section.code)}
-                                    onCheckedChange={(checked) => {
-                                        setSelectedSectionsToVentilate(prev => checked ? [...prev, section.code] : prev.filter(c => c !== section.code));
-                                    }}
-                                />
-                                <Label htmlFor={`section-${section.id}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
-                                    <span className="font-mono text-xs p-1 bg-muted rounded-sm w-24 text-center">{section.code}</span>
-                                    <span>{section.name}</span>
-                                </Label>
-                            </div>
-                        ))}
-                        </div>
-                    </ScrollArea>
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsVentilationModalOpen(false)}>Annuler</Button>
-                <Button onClick={handleVentilation} disabled={isVentilating}>
-                    {isVentilating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <GitCompareArrows className="mr-2 h-4 w-4"/>}
-                    {isVentilating ? 'Ventilation en cours...' : 'Lancer la ventilation'}
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
