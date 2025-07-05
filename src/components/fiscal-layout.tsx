@@ -50,16 +50,16 @@ function FiscalCalendarWidget() {
                 <CardTitle>Calendrier Fiscal</CardTitle>
                 <CardDescription>Vos prochaines échéances.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col items-center">
                 <Calendar
                     mode="single"
                     onDayClick={handleDateClick}
-                    className="rounded-md border flex justify-center"
+                    className="rounded-md border p-0 [&_td]:w-10 [&_td]:h-10 [&_th]:w-10"
                     locale={fr}
                     modifiers={{ deadlines: deadlines.map(d => d.date) }}
                     modifiersClassNames={{ deadlines: 'border-2 border-primary rounded-full cursor-pointer' }}
                 />
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 space-y-2 w-full">
                     <h3 className="font-semibold text-sm">À venir :</h3>
                     {deadlines
                         .filter(d => d.date >= new Date())
@@ -103,8 +103,8 @@ function FiscalCalendarWidget() {
 
 export default function FiscalPageLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <div className="lg:col-span-2">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            <div className="lg:col-span-3">
                 {children}
             </div>
             <div className="lg:sticky lg:top-24">
