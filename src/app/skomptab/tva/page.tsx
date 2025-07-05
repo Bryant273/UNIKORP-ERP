@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts";
-import { TrendingUp, TrendingDown, Scale, FilePlus, CheckCircle, Eye, Pencil, Download, Loader2, Upload } from "lucide-react";
+import { TrendingUp, TrendingDown, Scale, FilePlus, CheckCircle, Eye, Download, Upload, Loader2 } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +22,7 @@ import autoTable from 'jspdf-autotable';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import FiscalPageLayout from '@/components/fiscal-layout';
+import { Logo } from '@/components/logo';
 
 const kpiData = [
     { title: "TVA Collectée (Mois)", value: "18 500 €", Icon: TrendingUp, color: "text-blue-500" },
@@ -29,17 +30,29 @@ const kpiData = [
     { title: "TVA à décaisser (Mois)", value: "6 300 €", Icon: Scale, color: "text-destructive" },
 ];
 
-const barChartData = [
+const barChartDataS1 = [
   { month: "Jan", collectee: 4500, deductible: 3200 },
   { month: "Fev", collectee: 5200, deductible: 3800 },
   { month: "Mar", collectee: 6100, deductible: 4100 },
   { month: "Avr", collectee: 5800, deductible: 4500 },
   { month: "Mai", collectee: 6500, deductible: 4800 },
   { month: "Juin", collectee: 7200, deductible: 5100 },
-];
+].map(d => ({ ...d, tvaAPayer: d.collectee - d.deductible }));
+
+const barChartDataS2 = [
+  { month: "Juil", collectee: 18500, deductible: 12200 },
+  { month: "Août", collectee: 19200, deductible: 13500 },
+  { month: "Sep", collectee: 21000, deductible: 14000 },
+  { month: "Oct", collectee: 22500, deductible: 15100 },
+  { month: "Nov", collectee: 24000, deductible: 16800 },
+  { month: "Déc", collectee: 28000, deductible: 18500 },
+].map(d => ({ ...d, tvaAPayer: d.collectee - d.deductible }));
+
+
 const chartConfig = {
   collectee: { label: "TVA Collectée", color: "hsl(var(--chart-2))" },
   deductible: { label: "TVA Déductible", color: "hsl(var(--chart-1))" },
+  tvaAPayer: { label: "TVA à Payer", color: "hsl(var(--primary))" },
 } satisfies ChartConfig;
 
 type Declaration = {
@@ -48,13 +61,14 @@ type Declaration = {
     montant: number;
     statut: 'Brouillon' | 'Validée' | 'Payée';
     echeance: string;
+    data: any;
 };
 
 const initialDeclarations: Declaration[] = [
-    { id: 'tva_jul24', periode: 'Juillet 2024', montant: 6300, statut: 'Brouillon', echeance: '20/08/2024' },
-    { id: 'tva_jun24', periode: 'Juin 2024', montant: 4850, statut: 'Payée', echeance: '20/07/2024' },
-    { id: 'tva_mai24', periode: 'Mai 2024', montant: 1700, statut: 'Payée', echeance: '20/06/2024' },
-    { id: 'tva_avr24', periode: 'Avril 2024', montant: 1300, statut: 'Payée', echeance: '20/05/2024' },
+    { id: 'tva_jul24', periode: 'Juillet 2024', montant: 6300, statut: 'Brouillon', echeance: '20/08/2024', data: {} },
+    { id: 'tva_jun24', periode: 'Juin 2024', montant: 4850, statut: 'Payée', echeance: '20/07/2024', data: {} },
+    { id: 'tva_mai24', periode: 'Mai 2024', montant: 1700, statut: 'Payée', echeance: '20/06/2024', data: {} },
+    { id: 'tva_avr24', periode: 'Avril 2024', montant: 1300, statut: 'Payée', echeance: '20/05/2024', data: {} },
 ];
 
 const initialFormData = {
@@ -80,33 +94,63 @@ const initialFormData = {
     interetsRetard: 0,
 };
 
+const ITEMS_PER_PAGE = 10;
+
 function TVAMainContent() {
     const [declarations, setDeclarations] = useState(initialDeclarations);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewingDeclaration, setViewingDeclaration] = useState<Declaration | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const handleSaveDeclaration = (montant: number, periode: string) => {
+    const totalPages = Math.ceil(declarations.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const currentDeclarations = declarations.slice(startIndex, endIndex);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    const handleSaveDeclaration = (montant: number, periode: string, data: any) => {
         const newDeclaration: Declaration = {
             id: `tva_${Date.now()}`,
             periode,
             montant,
             statut: 'Validée',
-            echeance: 'À déterminer'
+            echeance: 'À déterminer',
+            data: data
         };
         setDeclarations(prev => [newDeclaration, ...prev]);
     }
+    
+    const handleViewDeclaration = (declaration: Declaration) => {
+        setViewingDeclaration(declaration);
+        setIsViewModalOpen(true);
+    };
+
+    const handlePrintDeclaration = (declaration: Declaration) => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Déclaration de TVA", 105, 20, { align: 'center' });
+        // ... more pdf generation logic ...
+        doc.save(`declaration_tva_${declaration.periode}.pdf`);
+    };
 
     return (
         <>
-            <div className="flex flex-1 flex-col gap-6">
+            <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold tracking-tight">Gestion de la TVA</h1>
                     <Button onClick={() => setIsModalOpen(true)}>
                         <FilePlus className="mr-2 h-4 w-4"/>
-                        Nouvelle déclaration de TVA
+                        Nouvelle déclaration
                     </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {kpiData.map(kpi => (
                         <Card key={kpi.title}>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -123,20 +167,43 @@ function TVAMainContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Évolution de la TVA</CardTitle>
-                        <CardDescription>Évolution mensuelle de la TVA collectée et déductible sur le S1 2024.</CardDescription>
+                        <CardDescription>Évolution mensuelle sur les deux semestres.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                            <BarChart data={barChartData}>
-                                <CartesianGrid vertical={false} />
-                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                                <YAxis unit="€" />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Legend />
-                                <Bar dataKey="collectee" fill="var(--color-collectee)" radius={4} />
-                                <Bar dataKey="deductible" fill="var(--color-deductible)" radius={4} />
-                            </BarChart>
-                        </ChartContainer>
+                        <Tabs defaultValue="s2">
+                            <TabsList className="mb-4">
+                                <TabsTrigger value="s1">Semestre 1</TabsTrigger>
+                                <TabsTrigger value="s2">Semestre 2</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="s1">
+                                <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                                    <BarChart data={barChartDataS1}>
+                                        <CartesianGrid vertical={false} />
+                                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                                        <YAxis unit="€" />
+                                        <ChartTooltip content={<ChartTooltipContent />} />
+                                        <Legend />
+                                        <Bar dataKey="collectee" fill="var(--color-collectee)" radius={4} />
+                                        <Bar dataKey="deductible" fill="var(--color-deductible)" radius={4} />
+                                        <Bar dataKey="tvaAPayer" fill="var(--color-tvaAPayer)" radius={4} />
+                                    </BarChart>
+                                </ChartContainer>
+                            </TabsContent>
+                             <TabsContent value="s2">
+                                <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                                    <BarChart data={barChartDataS2}>
+                                        <CartesianGrid vertical={false} />
+                                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                                        <YAxis unit="€" />
+                                        <ChartTooltip content={<ChartTooltipContent />} />
+                                        <Legend />
+                                        <Bar dataKey="collectee" fill="var(--color-collectee)" radius={4} />
+                                        <Bar dataKey="deductible" fill="var(--color-deductible)" radius={4} />
+                                        <Bar dataKey="tvaAPayer" fill="var(--color-tvaAPayer)" radius={4} />
+                                    </BarChart>
+                                </ChartContainer>
+                            </TabsContent>
+                        </Tabs>
                     </CardContent>
                 </Card>
                 <Card>
@@ -155,7 +222,7 @@ function TVAMainContent() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {declarations.map((d, index) => {
+                                {currentDeclarations.map((d) => {
                                     const isPaid = d.statut === 'Payée';
                                     return (
                                     <TableRow key={d.id}>
@@ -169,9 +236,8 @@ function TVAMainContent() {
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="flex justify-center gap-1">
-                                                <Button variant="ghost" size="icon" disabled={isPaid}><Eye className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" disabled={isPaid}><Pencil className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handleViewDeclaration(d)}><Eye className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handlePrintDeclaration(d)}><Download className="h-4 w-4" /></Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -179,9 +245,36 @@ function TVAMainContent() {
                             </TableBody>
                         </Table>
                     </CardContent>
+                    <CardFooter className="flex items-center justify-between">
+                        <div className="text-sm text-muted-foreground">
+                            Total de {declarations.length} déclarations.
+                        </div>
+                        {totalPages > 1 && (
+                            <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Précédent
+                            </Button>
+                            <span className="text-sm">Page {currentPage} sur {totalPages}</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Suivant
+                            </Button>
+                            </div>
+                        )}
+                    </CardFooter>
                 </Card>
             </div>
             <TvaDeclarationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveDeclaration} />
+            <ViewDeclarationModal declaration={viewingDeclaration} isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} />
         </>
     );
 }
@@ -194,30 +287,18 @@ export default function TvaPage() {
     );
 }
 
-function TvaDeclarationModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: () => void, onSave: (montant: number, periode: string) => void }) {
+function TvaDeclarationModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: () => void, onSave: (montant: number, periode: string, data: any) => void }) {
     const { toast } = useToast();
     const [formData, setFormData] = useState(initialFormData);
     const [isImporting, setIsImporting] = useState(false);
 
-    useEffect(() => {
-        if (isOpen) {
-            setFormData(initialFormData);
-        }
-    }, [isOpen]);
-
+    useEffect(() => { if (isOpen) { setFormData(initialFormData); } }, [isOpen]);
     useEffect(() => {
         const caNormal = formData.caHtNormal || 0;
         const caReduit = formData.caHtReduit || 0;
-        
-        // Assuming 18% for normal rate and 10% for reduced rate
         const tvaCollectee18 = caNormal * 0.18;
         const tvaCollecteeReduit = caReduit * 0.10;
-
-        setFormData(prev => ({
-            ...prev,
-            tvaCollectee18: parseFloat(tvaCollectee18.toFixed(2)),
-            tvaCollecteeReduit: parseFloat(tvaCollecteeReduit.toFixed(2)),
-        }));
+        setFormData(prev => ({...prev, tvaCollectee18: parseFloat(tvaCollectee18.toFixed(2)), tvaCollecteeReduit: parseFloat(tvaCollecteeReduit.toFixed(2))}));
     }, [formData.caHtNormal, formData.caHtReduit]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -229,17 +310,10 @@ function TvaDeclarationModal({ isOpen, onClose, onSave }: { isOpen: boolean, onC
         const totalTvaCollectee = formData.tvaCollectee18 + formData.tvaCollecteeReduit + formData.tvaLasem;
         const totalTvaDeductible = formData.tvaDeductibleAchats + formData.tvaDeductibleServices + formData.tvaDeductibleImmo + formData.tvaDeductibleImport;
         const tvaDue = totalTvaCollectee - totalTvaDeductible - formData.creditTvaAnterieur;
-        return {
-            totalTvaCollectee,
-            totalTvaDeductible,
-            tvaNetteDue: tvaDue > 0 ? tvaDue : 0,
-            creditAReporter: tvaDue < 0 ? -tvaDue : 0,
-        };
+        return { totalTvaCollectee, totalTvaDeductible, tvaNetteDue: tvaDue > 0 ? tvaDue : 0, creditAReporter: tvaDue < 0 ? -tvaDue : 0 };
     }, [formData]);
 
-    const isFormValid = useMemo(() => {
-        return formData.ncc && formData.raisonSociale && formData.tvaCollectee18 >= 0 && formData.tvaDeductibleAchats >= 0 && formData.tvaDeductibleServices >= 0 && formData.dateDeclaration;
-    }, [formData]);
+    const isFormValid = useMemo(() => formData.ncc && formData.raisonSociale && formData.tvaCollectee18 >= 0 && formData.tvaDeductibleAchats >= 0 && formData.tvaDeductibleServices >= 0 && formData.dateDeclaration, [formData]);
     
     const handleSubmit = () => {
         if (!isFormValid) {
@@ -248,7 +322,7 @@ function TvaDeclarationModal({ isOpen, onClose, onSave }: { isOpen: boolean, onC
         }
         const periodeDate = parseISO(`${formData.periode}-01`);
         const periode = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(periodeDate);
-        onSave(tvaNetteDue, periode);
+        onSave(tvaNetteDue, periode, formData);
         toast({ title: 'Déclaration Validée', description: `La déclaration de TVA pour ${periode} a été enregistrée.` });
         onClose();
     };
@@ -257,144 +331,155 @@ function TvaDeclarationModal({ isOpen, onClose, onSave }: { isOpen: boolean, onC
         setIsImporting(true);
         toast({ title: "Importation simulée...", description: "Analyse du fichier d'annexe EDI en cours." });
         setTimeout(() => {
-            setFormData(prev => ({
-                ...prev,
-                tvaDeductibleAchats: 8500,
-                tvaDeductibleServices: 3200,
-                tvaDeductibleImmo: 500,
-                tvaDeductibleImport: 0
-            }));
+            setFormData(prev => ({...prev, tvaDeductibleAchats: 8500, tvaDeductibleServices: 3200, tvaDeductibleImmo: 500, tvaDeductibleImport: 0}));
             setIsImporting(false);
             toast({ title: "Importation réussie", description: "La TVA déductible a été mise à jour.", className: 'bg-green-100 text-green-800' });
         }, 2500);
     };
-    
-    const handlePrint = () => {
-        const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text("Déclaration de TVA", 105, 20, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(`Période: ${formData.periode}`, 15, 30);
-        doc.text(`Raison Sociale: ${formData.raisonSociale}`, 15, 36);
-        doc.text(`NCC: ${formData.ncc}`, 15, 42);
-
-        autoTable(doc, {
-            startY: 50,
-            head: [['Description', 'Montant (€)']],
-            body: [
-                ['Total TVA Collectée', totalTvaCollectee.toLocaleString('fr-FR')],
-                ['Total TVA Déductible', totalTvaDeductible.toLocaleString('fr-FR')],
-                ['Crédit de TVA antérieur', formData.creditTvaAnterieur.toLocaleString('fr-FR')],
-                [{ content: 'TVA Nette Due', styles: { fontStyle: 'bold' } }, { content: tvaNetteDue.toLocaleString('fr-FR'), styles: { fontStyle: 'bold' } }],
-                ['Crédit à reporter', creditAReporter.toLocaleString('fr-FR')],
-            ],
-            theme: 'striped',
-        });
-        
-        doc.save(`declaration_tva_${formData.periode}.pdf`);
-    };
 
     const Field = ({ label, id, isRequired, ...props }: any) => (
-        <div className="space-y-2">
-            <Label htmlFor={id}>
-                {label}
-                {isRequired && <span className="text-destructive"> *</span>}
-            </Label>
-            <Input id={id} onChange={handleChange} {...props} />
-        </div>
+        <div className="space-y-2"><Label htmlFor={id}>{label}{isRequired && <span className="text-destructive"> *</span>}</Label><Input id={id} onChange={handleChange} {...props} /></div>
     );
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                <DialogHeader>
-                    <DialogTitle>Nouvelle Déclaration de TVA</DialogTitle>
-                    <DialogDescription>Remplissez les informations ci-dessous pour générer la déclaration de TVA.</DialogDescription>
-                </DialogHeader>
+                <DialogHeader><DialogTitle>Nouvelle Déclaration de TVA</DialogTitle><DialogDescription>Remplissez les informations ci-dessous pour générer la déclaration de TVA.</DialogDescription></DialogHeader>
                 <div className="flex-1 overflow-y-auto pr-4">
                     <Tabs defaultValue="identification">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="identification">Identification & CA</TabsTrigger>
-                            <TabsTrigger value="collectee">TVA Collectée</TabsTrigger>
-                            <TabsTrigger value="deductible">TVA Déductible</TabsTrigger>
-                            <TabsTrigger value="liquidation">Liquidation</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="identification" className="mt-4">
-                            <Card><CardHeader><CardTitle>Informations Générales</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid md:grid-cols-3 gap-4">
-                                        <Field label="NCC" id="ncc" value={formData.ncc} isRequired />
-                                        <Field label="Raison Sociale" id="raisonSociale" value={formData.raisonSociale} isRequired />
-                                        <div className="space-y-2"><Label htmlFor="periode">Période (mois/année)</Label><Input id="periode" type="month" value={formData.periode} onChange={handleChange} /></div>
-                                    </div>
-                                    <Field label="Régime fiscal" id="regimeFiscal" value={formData.regimeFiscal} />
-                                    <Separator />
-                                    <CardTitle>Chiffres d'Affaires HT</CardTitle>
-                                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <Field label="CA Taux Normal (18%)" id="caHtNormal" type="number" value={formData.caHtNormal} />
-                                        <Field label="CA Taux Réduit (10%)" id="caHtReduit" type="number" value={formData.caHtReduit} />
-                                        <Field label="CA Exonéré" id="caExonere" type="number" value={formData.caExonere} />
-                                        <Field label="Exportations" id="exportations" type="number" value={formData.exportations} />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                        <TabsContent value="collectee" className="mt-4">
-                             <Card><CardHeader><CardTitle>Détail de la TVA Collectée</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid md:grid-cols-3 gap-4">
-                                        <Field label="TVA sur CA à 18%" id="tvaCollectee18" type="number" value={formData.tvaCollectee18} isRequired disabled />
-                                        <Field label="TVA sur CA à taux réduit" id="tvaCollecteeReduit" type="number" value={formData.tvaCollecteeReduit} disabled />
-                                        <Field label="TVA sur livraisons à soi-même" id="tvaLasem" type="number" value={formData.tvaLasem} />
-                                    </div>
-                                </CardContent>
-                             </Card>
-                        </TabsContent>
-                        <TabsContent value="deductible" className="mt-4">
-                             <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Détail de la TVA Déductible</CardTitle> <Button variant="outline" onClick={handleSimulatedImport} disabled={isImporting}>{isImporting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Upload className="h-4 w-4"/>}<span className="ml-2">Importer Annexe EDI</span></Button></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <Field label="TVA sur achats" id="tvaDeductibleAchats" type="number" value={formData.tvaDeductibleAchats} isRequired/>
-                                        <Field label="TVA sur services" id="tvaDeductibleServices" type="number" value={formData.tvaDeductibleServices} isRequired/>
-                                        <Field label="TVA sur immobilisations" id="tvaDeductibleImmo" type="number" value={formData.tvaDeductibleImmo}/>
-                                        <Field label="TVA sur importations" id="tvaDeductibleImport" type="number" value={formData.tvaDeductibleImport}/>
-                                    </div>
-                                </CardContent>
-                             </Card>
-                        </TabsContent>
-                        <TabsContent value="liquidation" className="mt-4">
-                             <Card><CardHeader><CardTitle>Liquidation et Validation</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid md:grid-cols-3 gap-4">
-                                        <div className="space-y-2"><Label>Total TVA Collectée</Label><Input value={totalTvaCollectee.toLocaleString('fr-FR')} disabled className="font-bold"/></div>
-                                        <div className="space-y-2"><Label>Total TVA Déductible</Label><Input value={totalTvaDeductible.toLocaleString('fr-FR')} disabled className="font-bold"/></div>
-                                        <Field label="Crédit de TVA antérieur" id="creditTvaAnterieur" type="number" value={formData.creditTvaAnterieur}/>
-                                    </div>
-                                    <Separator />
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div className="space-y-2"><Label>TVA Nette Due</Label><Input value={`${tvaNetteDue.toLocaleString('fr-FR')} €`} disabled className="font-bold text-lg text-destructive"/></div>
-                                        <div className="space-y-2"><Label>Crédit à Reporter</Label><Input value={`${creditAReporter.toLocaleString('fr-FR')} €`} disabled className="font-bold text-lg text-green-600"/></div>
-                                    </div>
-                                    <Separator />
-                                    <CardTitle className="pt-4">Finalisation</CardTitle>
-                                    <div className="grid md:grid-cols-3 gap-4">
-                                        <Field label="Date de déclaration" id="dateDeclaration" type="date" value={formData.dateDeclaration} isRequired/>
-                                        <Field label="Pénalités (si applicable)" id="penalites" type="number" value={formData.penalites} />
-                                        <Field label="Intérêts de retard (si applicable)" id="interetsRetard" type="number" value={formData.interetsRetard} />
-                                    </div>
-                                     <div className="space-y-2"><Label htmlFor="observations">Observations</Label><Textarea id="observations" value={formData.observations} onChange={handleChange} /></div>
-                                </CardContent>
-                             </Card>
-                        </TabsContent>
+                        <TabsList className="grid w-full grid-cols-4"><TabsTrigger value="identification">Identification & CA</TabsTrigger><TabsTrigger value="collectee">TVA Collectée</TabsTrigger><TabsTrigger value="deductible">TVA Déductible</TabsTrigger><TabsTrigger value="liquidation">Liquidation</TabsTrigger></TabsList>
+                        <TabsContent value="identification" className="mt-4"><Card><CardHeader><CardTitle>Informations Générales</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-3 gap-4"><Field label="NCC" id="ncc" value={formData.ncc} isRequired /><Field label="Raison Sociale" id="raisonSociale" value={formData.raisonSociale} isRequired /><div className="space-y-2"><Label htmlFor="periode">Période (mois/année)</Label><Input id="periode" type="month" value={formData.periode} onChange={handleChange} /></div></div><Field label="Régime fiscal" id="regimeFiscal" value={formData.regimeFiscal} /><Separator /><CardTitle>Chiffres d'Affaires HT</CardTitle><div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"><Field label="CA Taux Normal (18%)" id="caHtNormal" type="number" value={formData.caHtNormal} /><Field label="CA Taux Réduit (10%)" id="caHtReduit" type="number" value={formData.caHtReduit} /><Field label="CA Exonéré" id="caExonere" type="number" value={formData.caExonere} /><Field label="Exportations" id="exportations" type="number" value={formData.exportations} /></div></CardContent></Card></TabsContent>
+                        <TabsContent value="collectee" className="mt-4"><Card><CardHeader><CardTitle>Détail de la TVA Collectée</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-3 gap-4"><Field label="TVA sur CA à 18%" id="tvaCollectee18" type="number" value={formData.tvaCollectee18} isRequired disabled /><Field label="TVA sur CA à taux réduit" id="tvaCollecteeReduit" type="number" value={formData.tvaCollecteeReduit} disabled /><Field label="TVA sur livraisons à soi-même" id="tvaLasem" type="number" value={formData.tvaLasem} /></div></CardContent></Card></TabsContent>
+                        <TabsContent value="deductible" className="mt-4"><Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Détail de la TVA Déductible</CardTitle> <Button variant="outline" onClick={handleSimulatedImport} disabled={isImporting}>{isImporting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Upload className="h-4 w-4"/>}<span className="ml-2">Importer Annexe EDI</span></Button></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"><Field label="TVA sur achats" id="tvaDeductibleAchats" type="number" value={formData.tvaDeductibleAchats} isRequired/><Field label="TVA sur services" id="tvaDeductibleServices" type="number" value={formData.tvaDeductibleServices} isRequired/><Field label="TVA sur immobilisations" id="tvaDeductibleImmo" type="number" value={formData.tvaDeductibleImmo}/><Field label="TVA sur importations" id="tvaDeductibleImport" type="number" value={formData.tvaDeductibleImport}/></div></CardContent></Card></TabsContent>
+                        <TabsContent value="liquidation" className="mt-4"><Card><CardHeader><CardTitle>Liquidation et Validation</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-3 gap-4"><div className="space-y-2"><Label>Total TVA Collectée</Label><Input value={totalTvaCollectee.toLocaleString('fr-FR')} disabled className="font-bold"/></div><div className="space-y-2"><Label>Total TVA Déductible</Label><Input value={totalTvaDeductible.toLocaleString('fr-FR')} disabled className="font-bold"/></div><Field label="Crédit de TVA antérieur" id="creditTvaAnterieur" type="number" value={formData.creditTvaAnterieur}/></div><Separator /><div className="grid md:grid-cols-2 gap-4"><div className="space-y-2"><Label>TVA Nette Due</Label><Input value={`${tvaNetteDue.toLocaleString('fr-FR')} €`} disabled className="font-bold text-lg text-destructive"/></div><div className="space-y-2"><Label>Crédit à Reporter</Label><Input value={`${creditAReporter.toLocaleString('fr-FR')} €`} disabled className="font-bold text-lg text-green-600"/></div></div><Separator /><CardTitle className="pt-4">Finalisation</CardTitle><div className="grid md:grid-cols-3 gap-4"><Field label="Date de déclaration" id="dateDeclaration" type="date" value={formData.dateDeclaration} isRequired/><Field label="Pénalités (si applicable)" id="penalites" type="number" value={formData.penalites} /><Field label="Intérêts de retard (si applicable)" id="interetsRetard" type="number" value={formData.interetsRetard} /></div><div className="space-y-2"><Label htmlFor="observations">Observations</Label><Textarea id="observations" value={formData.observations} onChange={handleChange} /></div></CardContent></Card></TabsContent>
                     </Tabs>
                 </div>
-                <DialogFooter className="pt-4 border-t gap-2">
-                    <Button variant="secondary" onClick={handlePrint} disabled={!isFormValid}>Imprimer la Fiche</Button>
-                    <div className="flex-grow" />
-                    <Button variant="outline" onClick={onClose}>Annuler</Button>
-                    <Button onClick={handleSubmit} disabled={!isFormValid}>Valider la déclaration</Button>
-                </DialogFooter>
+                <DialogFooter className="pt-4 border-t gap-2"><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={handleSubmit} disabled={!isFormValid}>Valider la déclaration</Button></DialogFooter>
             </DialogContent>
         </Dialog>
     )
+}
+
+function ViewDeclarationModal({ declaration, isOpen, onClose }: { declaration: Declaration | null; isOpen: boolean; onClose: () => void }) {
+    if (!declaration) return null;
+
+    const { totalTvaCollectee, totalTvaDeductible, tvaNetteDue, creditAReporter } = useMemo(() => {
+        if (!declaration.data || Object.keys(declaration.data).length === 0) return { totalTvaCollectee: 0, totalTvaDeductible: 0, tvaNetteDue: declaration.montant, creditAReporter: 0 };
+        const data = declaration.data;
+        const totalTvaCollectee = data.tvaCollectee18 + data.tvaCollecteeReduit + data.tvaLasem;
+        const totalTvaDeductible = data.tvaDeductibleAchats + data.tvaDeductibleServices + data.tvaDeductibleImmo + data.tvaDeductibleImport;
+        const tvaDue = totalTvaCollectee - totalTvaDeductible - data.creditTvaAnterieur;
+        return {
+            totalTvaCollectee,
+            totalTvaDeductible,
+            tvaNetteDue: tvaDue > 0 ? tvaDue : 0,
+            creditAReporter: tvaDue < 0 ? -tvaDue : 0,
+        };
+    }, [declaration]);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>Détail de la Déclaration de TVA</DialogTitle>
+                    <DialogDescription>Période de {declaration.periode}.</DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto pr-4 space-y-6">
+                    <DeclarationFormView data={{...initialFormData, ...declaration.data, totalTvaCollectee, totalTvaDeductible, tvaNetteDue, creditAReporter}} />
+                    <AnnexEdiView />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function DeclarationFormView({ data }: { data: any }) {
+    const Field = ({ label, value }: { label: string, value: string | number }) => (
+        <div>
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="font-semibold">{typeof value === 'number' ? value.toLocaleString('fr-FR') : value}</p>
+        </div>
+    );
+
+    return (
+        <Card>
+            <CardContent className="p-4 space-y-4 border rounded-lg">
+                <div className="p-2 bg-primary/10 rounded-md text-center font-bold text-primary">DECLARATION DE TAXE SUR LA VALEUR AJOUTEE</div>
+                <div className="grid grid-cols-2 gap-4 border p-2 rounded">
+                    <Field label="RAISON SOCIALE" value={data.raisonSociale} />
+                    <Field label="N° COMPTE CONTRIBUABLE" value={data.ncc} />
+                </div>
+                <div className="grid grid-cols-3 gap-4 border p-2 rounded">
+                    <Field label="PÉRIODE D'IMPOSITION" value={data.periode} />
+                    <Field label="RÉGIME FISCAL" value={data.regimeFiscal} />
+                    <Field label="DATE DE DÉCLARATION" value={data.dateDeclaration} />
+                </div>
+                <div className="space-y-2 border p-2 rounded">
+                    <h3 className="font-semibold">CADRE I - CA HT</h3>
+                    <div className="grid grid-cols-4 gap-2">
+                        <Field label="Taux Normal" value={data.caHtNormal} />
+                        <Field label="Taux Réduit" value={data.caHtReduit} />
+                        <Field label="Exonéré" value={data.caExonere} />
+                        <Field label="Exportations" value={data.exportations} />
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-2 border p-2 rounded">
+                        <h3 className="font-semibold">CADRE II - TVA COLLECTÉE</h3>
+                         <Field label="TVA sur CA à 18%" value={data.tvaCollectee18} />
+                         <Field label="TVA sur CA à taux réduit" value={data.tvaCollecteeReduit} />
+                         <Field label="TVA sur LASM" value={data.tvaLasem} />
+                         <Separator className="my-1"/>
+                         <Field label="TOTAL TVA COLLECTÉE" value={data.totalTvaCollectee} />
+                    </div>
+                     <div className="space-y-2 border p-2 rounded">
+                        <h3 className="font-semibold">CADRE III - TVA DÉDUCTIBLE</h3>
+                         <Field label="Sur Achats" value={data.tvaDeductibleAchats} />
+                         <Field label="Sur Services" value={data.tvaDeductibleServices} />
+                         <Field label="Sur Immobilisations" value={data.tvaDeductibleImmo} />
+                         <Separator className="my-1"/>
+                         <Field label="TOTAL TVA DÉDUCTIBLE" value={data.totalTvaDeductible} />
+                    </div>
+                </div>
+                <div className="space-y-2 border p-2 rounded bg-muted/50">
+                    <h3 className="font-semibold">CADRE IV - LIQUIDATION</h3>
+                    <Field label="Crédit de TVA antérieur" value={data.creditTvaAnterieur} />
+                    <Separator className="my-1" />
+                    <div className="text-destructive font-bold"><Field label="TVA Nette Due" value={`${data.tvaNetteDue.toLocaleString('fr-FR')} €`} /></div>
+                    <div className="text-green-600 font-bold"><Field label="Crédit à Reporter" value={`${data.creditAReporter.toLocaleString('fr-FR')} €`} /></div>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+function AnnexEdiView() {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Annexe EDI - TVA Déductible (Exemple)</CardTitle>
+                <CardDescription>Format simplifié de l'annexe importée.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>N° Facture</TableHead>
+                            <TableHead>Fournisseur</TableHead>
+                            <TableHead className="text-right">Montant HT</TableHead>
+                            <TableHead className="text-right">Montant TVA</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow><TableCell>F2024-A150</TableCell><TableCell>Fournisseur Alpha</TableCell><TableCell className="text-right">5 000 €</TableCell><TableCell className="text-right">1 000 €</TableCell></TableRow>
+                        <TableRow><TableCell>F2024-B088</TableCell><TableCell>Fournisseur Beta</TableCell><TableCell className="text-right">8 500 €</TableCell><TableCell className="text-right">1 700 €</TableCell></TableRow>
+                        <TableRow><TableCell>F2024-C212</TableCell><TableCell>Fournisseur Gamma</TableCell><TableCell className="text-right">2 500 €</TableCell><TableCell className="text-right">500 €</TableCell></TableRow>
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
 }

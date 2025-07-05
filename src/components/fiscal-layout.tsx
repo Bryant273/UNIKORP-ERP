@@ -54,7 +54,7 @@ function FiscalCalendarWidget() {
                 <Calendar
                     mode="single"
                     onDayClick={handleDateClick}
-                    className="rounded-md border p-0 flex justify-center"
+                    className="rounded-md border p-2 flex justify-center"
                     locale={fr}
                     modifiers={{ deadlines: deadlines.map(d => d.date) }}
                     modifiersClassNames={{ deadlines: 'border-2 border-primary rounded-full cursor-pointer' }}
