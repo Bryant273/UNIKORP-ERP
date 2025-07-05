@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -53,30 +52,43 @@ import { cn } from '@/lib/utils';
 import { handleParseAccountingPlan } from '@/app/actions';
 import type { NatureCompte } from '@/ai/flows/parse-accounting-plan';
 
-type SectionType = 'Centre de coût' | 'Centre de profit' | 'Projet';
+type SectionType = 'Charges' | 'Centre de coût' | 'Produits' | 'Centre de profit' | 'Projet';
 
 type SectionAnalytique = {
   id: number;
   code: string;
   intitule: string;
+  compteGeneral: string;
   type: SectionType;
 };
 
 const initialSections: SectionAnalytique[] = [
-  { id: 1, code: '01', intitule: 'Direction Générale', type: 'Centre de coût' },
-  { id: 2, code: '01.01', intitule: 'Administration', type: 'Centre de coût' },
-  { id: 3, code: '01.02', intitule: 'Comptabilité', type: 'Centre de coût' },
-  { id: 4, code: '02', intitule: 'Production', type: 'Centre de profit' },
-  { id: 5, code: '02.01', intitule: 'Atelier 1', type: 'Centre de coût' },
-  { id: 6, code: '02.02', intitule: 'Atelier 2', type: 'Centre de coût' },
-  { id: 7, code: '03', intitule: 'Commercial', type: 'Centre de profit' },
-  { id: 8, code: '03.01', intitule: 'Ventes France', type: 'Centre de profit' },
-  { id: 9, code: '03.02', intitule: 'Ventes Export', type: 'Centre de profit' },
+    { id: 1, code: '60', intitule: 'Achats', compteGeneral: '60x', type: 'Charges' },
+    { id: 2, code: '601.01', intitule: 'Achats - Direction', compteGeneral: '601', type: 'Centre de coût' },
+    { id: 3, code: '601.02', intitule: 'Achats - Production', compteGeneral: '601', type: 'Centre de coût' },
+    { id: 4, code: '601.03', intitule: 'Achats - Commercial', compteGeneral: '601', type: 'Centre de coût' },
+    { id: 5, code: '606.01', intitule: 'Fournitures - Direction', compteGeneral: '6061', type: 'Centre de coût' },
+    { id: 6, code: '606.02', intitule: 'Fournitures - Production', compteGeneral: '6061', type: 'Centre de coût' },
+    { id: 7, code: '606.03', intitule: 'Fournitures - Commercial', compteGeneral: '6061', type: 'Centre de coût' },
+    { id: 8, code: '64', intitule: 'Charges de personnel', compteGeneral: '64x', type: 'Charges' },
+    { id: 9, code: '641.01', intitule: 'Salaires - Direction', compteGeneral: '641', type: 'Centre de coût' },
+    { id: 10, code: '641.02', intitule: 'Salaires - Production', compteGeneral: '641', type: 'Centre de coût' },
+    { id: 11, code: '641.03', intitule: 'Salaires - Commercial', compteGeneral: '641', type: 'Centre de coût' },
+    { id: 12, code: '70', intitule: 'Ventes', compteGeneral: '70x', type: 'Produits' },
+    { id: 13, code: '701.FR', intitule: 'Ventes - France', compteGeneral: '701', type: 'Centre de profit' },
+    { id: 14, code: '701.EXP', intitule: 'Ventes - Export', compteGeneral: '701', type: 'Centre de profit' },
+    { id: 15, code: '701.PRJ001', intitule: 'Ventes - Projet Alpha', compteGeneral: '701', type: 'Projet' },
+    { id: 16, code: '701.PRJ002', intitule: 'Ventes - Projet Beta', compteGeneral: '701', type: 'Projet' },
+    { id: 17, code: '61', intitule: 'Services extérieurs', compteGeneral: '61x', type: 'Charges' },
+    { id: 18, code: '613.01', intitule: 'Location - Direction', compteGeneral: '613', type: 'Centre de coût' },
+    { id: 19, code: '613.02', intitule: 'Location - Production', compteGeneral: '613', type: 'Centre de coût' },
 ];
+
 
 const defaultFormData: Omit<SectionAnalytique, 'id'> = {
   code: '',
   intitule: '',
+  compteGeneral: '',
   type: 'Centre de coût',
 };
 
@@ -116,6 +128,7 @@ export default function PlanAnalytiquesPage() {
     setFormData({
       code: section.code,
       intitule: section.intitule,
+      compteGeneral: section.compteGeneral,
       type: section.type,
     });
     setIsModalOpen(true);
@@ -132,7 +145,7 @@ export default function PlanAnalytiquesPage() {
       setSections(
         sections.map((s) =>
           s.id === editingSection.id ? { ...editingSection, ...formData } : s
-        )
+        ).sort((a,b) => a.code.localeCompare(b.code))
       );
       toast({ title: "Section modifiée avec succès." });
     } else {
@@ -239,6 +252,7 @@ export default function PlanAnalytiquesPage() {
             code: item.numero,
             intitule: item.intitule,
             type: mapNatureToType(item.nature),
+            compteGeneral: item.numero.substring(0, 3) // Simple guess for mapping
         }));
 
         if (importOption === 'replace') {
@@ -314,6 +328,7 @@ export default function PlanAnalytiquesPage() {
               <TableRow>
                 <TableHead className="w-[150px]">Code</TableHead>
                 <TableHead>Intitulé</TableHead>
+                <TableHead className="w-[150px]">Compte général</TableHead>
                 <TableHead className="w-[200px]">Type</TableHead>
                 <TableHead className="w-[100px] text-center">Actions</TableHead>
               </TableRow>
@@ -323,6 +338,7 @@ export default function PlanAnalytiquesPage() {
                 <TableRow key={section.id} className="odd:bg-muted/50">
                   <TableCell className="font-mono" style={{ paddingLeft: `${getIndentLevel(section.code) + 1}rem` }}>{section.code}</TableCell>
                   <TableCell className="font-medium">{section.intitule}</TableCell>
+                  <TableCell className="font-mono">{section.compteGeneral}</TableCell>
                   <TableCell>{section.type}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">
@@ -362,13 +378,19 @@ export default function PlanAnalytiquesPage() {
                 <Input id="intitule" value={formData.intitule} onChange={handleInputChange} className="col-span-3" required />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="compteGeneral" className="text-right">Compte général</Label>
+                <Input id="compteGeneral" value={formData.compteGeneral} onChange={handleInputChange} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="type" className="text-right">Type</Label>
                 <Select value={formData.type} onValueChange={handleSelectChange}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Sélectionnez un type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Charges">Charges</SelectItem>
                     <SelectItem value="Centre de coût">Centre de coût</SelectItem>
+                    <SelectItem value="Produits">Produits</SelectItem>
                     <SelectItem value="Centre de profit">Centre de profit</SelectItem>
                     <SelectItem value="Projet">Projet</SelectItem>
                   </SelectContent>
