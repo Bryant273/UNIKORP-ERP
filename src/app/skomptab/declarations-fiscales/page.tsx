@@ -10,21 +10,29 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import FiscalPageLayout from '@/components/fiscal-layout';
 
+// New types based on user feedback
+type DeclarationType = 'IS' | 'IMF' | 'ITS' | 'Patente' | 'BNC' | 'BIC' | 'BA' | 'TSE' | 'TPS';
+type DeclarationStatus = 'Brouillon' | 'Validée' | 'Télédéclarée' | 'Payée';
+
 type Declaration = {
     id: string;
     periode: string;
-    type: 'TVA' | 'IS' | 'CVAE' | 'Liasse Fiscale';
+    type: DeclarationType;
     montant: number;
     echeance: string;
-    statut: 'Brouillon' | 'Validée' | 'Télédéclarée' | 'Payée';
+    statut: DeclarationStatus;
 };
 
+// New mock data, excluding TVA, including new tax types
 const initialDeclarations: Declaration[] = [
-    { id: 'd1', periode: 'Juillet 2024', type: 'TVA', montant: 6300, echeance: '20/08/2024', statut: 'Brouillon' },
-    { id: 'd2', periode: 'Juin 2024', type: 'TVA', montant: 4850, echeance: '20/07/2024', statut: 'Payée' },
-    { id: 'd3', periode: 'T2 2024', type: 'IS', montant: 15200, echeance: '15/06/2024', statut: 'Payée' },
-    { id: 'd4', periode: 'Année 2023', type: 'Liasse Fiscale', montant: 0, echeance: '03/05/2024', statut: 'Télédéclarée' },
+    { id: 'd1', periode: 'Année 2023', type: 'BIC', montant: 4500000, echeance: '30/04/2024', statut: 'Payée' },
+    { id: 'd2', periode: 'Juillet 2024', type: 'ITS', montant: 1250000, echeance: '15/08/2024', statut: 'Validée' },
+    { id: 'd3', periode: 'T3 2024', type: 'IMF', montant: 750000, echeance: '15/10/2024', statut: 'Brouillon' },
+    { id: 'd4', periode: 'Année 2024', type: 'Patente', montant: 350000, echeance: '15/01/2025', statut: 'Brouillon' },
+    { id: 'd5', periode: 'Juin 2024', type: 'ITS', montant: 1230000, echeance: '15/07/2024', statut: 'Payée' },
+    { id: 'd6', periode: 'Année 2023', type: 'TPS', montant: 850000, echeance: '20/01/2024', statut: 'Télédéclarée' },
 ];
+
 
 function DeclarationsFiscalesMainContent() {
     const [declarations, setDeclarations] = useState(initialDeclarations);
@@ -55,7 +63,7 @@ function DeclarationsFiscalesMainContent() {
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle className="text-2xl">Suivi des Déclarations Fiscales</CardTitle>
-                            <CardDescription>Gérez et suivez l'état de toutes vos déclarations fiscales.</CardDescription>
+                            <CardDescription>Gérez et suivez l'état de toutes vos déclarations fiscales (hors TVA).</CardDescription>
                         </div>
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -69,6 +77,7 @@ function DeclarationsFiscalesMainContent() {
                             <TableRow>
                                 <TableHead className="w-10">#</TableHead>
                                 <TableHead>Période</TableHead>
+                                <TableHead>Impôt</TableHead>
                                 <TableHead className="text-right">Montant Dû</TableHead>
                                 <TableHead className="text-center">Statut</TableHead>
                                 <TableHead className="text-center w-[150px]">Actions</TableHead>
@@ -80,7 +89,10 @@ function DeclarationsFiscalesMainContent() {
                                 return (
                                 <TableRow key={d.id}>
                                     <TableCell className="text-muted-foreground">{index + 1}</TableCell>
-                                    <TableCell className="font-medium">{d.periode} ({d.type})</TableCell>
+                                    <TableCell className="font-medium">{d.periode}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary">{d.type}</Badge>
+                                    </TableCell>
                                     <TableCell className="text-right font-mono">{d.montant.toLocaleString('fr-FR')} €</TableCell>
                                     <TableCell className="text-center">{getStatusBadge(d.statut)}</TableCell>
                                     <TableCell className="text-center">
@@ -119,5 +131,5 @@ export default function DeclarationsFiscalesPage() {
         <FiscalPageLayout>
             <DeclarationsFiscalesMainContent />
         </FiscalPageLayout>
-    );
+    )
 }
