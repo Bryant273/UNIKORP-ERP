@@ -1,127 +1,199 @@
+
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, PlusCircle, Network } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Pencil, Trash2, PlusCircle, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type PlanAnalytique = {
+type SectionType = 'Centre de coût' | 'Centre de profit' | 'Projet';
+
+type SectionAnalytique = {
   id: number;
   code: string;
-  nom: string;
-  type: 'Projet' | 'Département' | 'Produit' | 'Région';
-  statut: 'Actif' | 'Inactif';
-  description: string;
+  intitule: string;
+  type: SectionType;
 };
 
-const initialPlans: PlanAnalytique[] = [
-  { id: 1, code: 'PROJ', nom: 'Analyse par Projet', type: 'Projet', statut: 'Actif', description: 'Suivi des coûts et revenus par projet individuel.' },
-  { id: 2, code: 'DEPT', nom: 'Analyse par Département', type: 'Département', statut: 'Actif', description: 'Analyse des charges par centre de coût interne.' },
-  { id: 3, code: 'PROD', nom: 'Analyse par Ligne de Produit', type: 'Produit', statut: 'Inactif', description: 'Suivi de la rentabilité par gamme de produits.' },
-  { id: 4, code: 'REG', nom: 'Analyse par Région', type: 'Région', statut: 'Actif', description: 'Performance commerciale par zone géographique.' },
+const initialSections: SectionAnalytique[] = [
+  { id: 1, code: '01', intitule: 'Direction Générale', type: 'Centre de coût' },
+  { id: 2, code: '01.01', intitule: 'Administration', type: 'Centre de coût' },
+  { id: 3, code: '01.02', intitule: 'Comptabilité', type: 'Centre de coût' },
+  { id: 4, code: '02', intitule: 'Production', type: 'Centre de profit' },
+  { id: 5, code: '02.01', intitule: 'Atelier 1', type: 'Centre de coût' },
+  { id: 6, code: '02.02', intitule: 'Atelier 2', type: 'Centre de coût' },
+  { id: 7, code: '03', intitule: 'Commercial', type: 'Centre de profit' },
+  { id: 8, code: '03.01', intitule: 'Ventes France', type: 'Centre de profit' },
+  { id: 9, code: '03.02', intitule: 'Ventes Export', type: 'Centre de profit' },
 ];
 
-const defaultFormData: Omit<PlanAnalytique, 'id'> = {
+const defaultFormData: Omit<SectionAnalytique, 'id'> = {
   code: '',
-  nom: '',
-  description: '',
-  type: 'Projet',
-  statut: 'Actif',
+  intitule: '',
+  type: 'Centre de coût',
 };
 
 export default function PlanAnalytiquesPage() {
-  const [plans, setPlans] = useState<PlanAnalytique[]>(initialPlans);
+  const [sections, setSections] = useState<SectionAnalytique[]>(initialSections);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<PlanAnalytique | null>(null);
-  const [planToDelete, setPlanToDelete] = useState<PlanAnalytique | null>(null);
+  const [editingSection, setEditingSection] = useState<SectionAnalytique | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
+  const [sectionToDelete, setSectionToDelete] = useState<SectionAnalytique | null>(null);
   const { toast } = useToast();
 
-  const handleOpenModal = (plan: PlanAnalytique | null) => {
-    setEditingPlan(plan);
-    setFormData(plan ? { ...plan } : defaultFormData);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, type: value as SectionType }));
+  };
+  
+  const handleOpenCreateModal = () => {
+    setEditingSection(null);
+    setFormData(defaultFormData);
+    setIsModalOpen(true);
+  };
+  
+  const handleOpenEditModal = (section: SectionAnalytique) => {
+    setEditingSection(section);
+    setFormData({
+      code: section.code,
+      intitule: section.intitule,
+      type: section.type,
+    });
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (editingPlan) {
-      setPlans(plans.map(p => (p.id === editingPlan.id ? { ...p, ...formData } : p)));
-      toast({ title: 'Plan mis à jour avec succès.' });
-    } else {
-      const newPlan = { id: Date.now(), ...formData };
-      setPlans([...plans, newPlan]);
-      toast({ title: 'Nouveau plan créé avec succès.' });
-    }
+  const handleCloseModal = () => {
     setIsModalOpen(false);
-  };
-  
-  const handleDelete = () => {
-      if(planToDelete) {
-          setPlans(plans.filter(p => p.id !== planToDelete.id));
-          setPlanToDelete(null);
-          toast({ title: 'Plan supprimé.' });
-      }
+    setEditingSection(null);
   }
 
-  const toggleStatut = (plan: PlanAnalytique) => {
-      const newStatut = plan.statut === 'Actif' ? 'Inactif' : 'Actif';
-      setPlans(plans.map(p => p.id === plan.id ? {...p, statut: newStatut} : p));
-      toast({ title: `Le plan "${plan.nom}" est maintenant ${newStatut.toLowerCase()}.` });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingSection) {
+      setSections(
+        sections.map((s) =>
+          s.id === editingSection.id ? { ...editingSection, ...formData } : s
+        )
+      );
+      toast({ title: "Section modifiée avec succès." });
+    } else {
+      const newSection: SectionAnalytique = {
+        id: Date.now(),
+        ...formData,
+      };
+      setSections([...sections, newSection].sort((a,b) => a.code.localeCompare(b.code)));
+      toast({ title: "Section créée avec succès." });
+    }
+    handleCloseModal();
+  };
+
+  const handleDeleteSection = () => {
+    if (sectionToDelete) {
+      setSections(sections.filter((c) => c.id !== sectionToDelete.id));
+      setSectionToDelete(null);
+      toast({ title: "Section supprimée." });
+    }
+  };
+  
+  const getIndentLevel = (code: string) => {
+      return (code.split('.').length - 1) * 2; // 2rem padding for each level
   }
 
   return (
     <>
-      <Card className="w-full">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl flex items-center gap-2"><Network /> Plan Analytique</CardTitle>
-              <CardDescription>Créez et gérez vos axes d'analyse pour un suivi financier détaillé.</CardDescription>
+              <CardTitle className="text-2xl">Plan analytique</CardTitle>
+              <CardDescription>
+                Consultez et personnalisez le plan analytique de votre organisation.
+              </CardDescription>
             </div>
-            <Button onClick={() => handleOpenModal(null)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Créer un plan
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Importer
+              </Button>
+              <Button onClick={handleOpenCreateModal}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Nouvelle section
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Nom du plan</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-center">Statut</TableHead>
-                <TableHead className="w-[120px] text-center">Actions</TableHead>
+                <TableHead className="w-[150px]">Code</TableHead>
+                <TableHead>Intitulé</TableHead>
+                <TableHead className="w-[200px]">Type</TableHead>
+                <TableHead className="w-[100px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {plans.map(plan => (
-                <TableRow key={plan.id}>
-                  <TableCell className="font-mono">{plan.code}</TableCell>
-                  <TableCell className="font-medium">{plan.nom}</TableCell>
-                  <TableCell>{plan.type}</TableCell>
-                  <TableCell className="text-muted-foreground">{plan.description}</TableCell>
+              {sections.map((section) => (
+                <TableRow key={section.id} className="odd:bg-muted/50">
+                  <TableCell className="font-mono" style={{ paddingLeft: `${getIndentLevel(section.code) + 1}rem` }}>{section.code}</TableCell>
+                  <TableCell className="font-medium">{section.intitule}</TableCell>
+                  <TableCell>{section.type}</TableCell>
                   <TableCell className="text-center">
-                    <Switch
-                      checked={plan.statut === 'Actif'}
-                      onCheckedChange={() => toggleStatut(plan)}
-                      aria-label="Toggle plan status"
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                     <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(plan)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setPlanToDelete(plan)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                    <div className="flex items-center justify-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(section)}>
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setSectionToDelete(section)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Supprimer</span>
+                        </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -130,43 +202,58 @@ export default function PlanAnalytiquesPage() {
           </Table>
         </CardContent>
       </Card>
-      
+
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <form onSubmit={handleSubmit}>
             <DialogHeader>
-                <DialogTitle>{editingPlan ? 'Modifier le plan analytique' : 'Créer un nouveau plan analytique'}</DialogTitle>
-                <DialogDescription>Définissez les paramètres de votre axe d'analyse.</DialogDescription>
+              <DialogTitle>{editingSection ? 'Modifier la section' : 'Nouvelle section'}</DialogTitle>
+              <DialogDescription>
+                {editingSection ? 'Mettez à jour les informations de la section.' : 'Remplissez les informations pour créer une nouvelle section.'}
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="code" className="text-right">Code</Label>
-                    <Input id="code" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="nom" className="text-right">Nom</Label>
-                    <Input id="nom" value={formData.nom} onChange={(e) => setFormData({...formData, nom: e.target.value})} className="col-span-3" />
-                </div>
-                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="description" className="text-right">Description</Label>
-                    <Input id="description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="col-span-3" />
-                </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="code" className="text-right">Code</Label>
+                <Input id="code" value={formData.code} onChange={handleInputChange} className="col-span-3" required />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="intitule" className="text-right">Intitulé</Label>
+                <Input id="intitule" value={formData.intitule} onChange={handleInputChange} className="col-span-3" required />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="type" className="text-right">Type</Label>
+                <Select value={formData.type} onValueChange={handleSelectChange}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Sélectionnez un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Centre de coût">Centre de coût</SelectItem>
+                    <SelectItem value="Centre de profit">Centre de profit</SelectItem>
+                    <SelectItem value="Projet">Projet</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Annuler</Button>
-                <Button onClick={handleSave}>Enregistrer</Button>
+              <Button type="button" variant="outline" onClick={handleCloseModal}>Annuler</Button>
+              <Button type="submit">Enregistrer</Button>
             </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       
-       <AlertDialog open={!!planToDelete} onOpenChange={() => setPlanToDelete(null)}>
+      <AlertDialog open={!!sectionToDelete} onOpenChange={(open) => !open && setSectionToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce plan ?</AlertDialogTitle>
-                <AlertDialogDescription>Cette action est irréversible et supprimera le plan et toutes ses sections associées.</AlertDialogDescription>
+                <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Cette action est irréversible. La section sera définitivement supprimée.
+                </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                <AlertDialogCancel onClick={() => setSectionToDelete(null)}>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteSection} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
