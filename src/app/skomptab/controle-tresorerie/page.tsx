@@ -101,9 +101,14 @@ const defaultNewAccountData: Omit<TreasuryAccount, 'id'> = {
     balance: 0,
 }
 
+const formatIban = (iban?: string) => {
+    if (!iban) return '';
+    return iban.replace(/(.{4})/g, '$1 ').trim();
+}
+
 const maskAccountNumber = (number?: string) => {
     if (!number) return '';
-    return `**** **** **** ${number.slice(-4)}`;
+    return `${number.substring(0, 4)} ... ${number.slice(-4)}`;
 }
 
 // --- MAIN COMPONENT ---
@@ -220,46 +225,58 @@ export default function ControleTresoreriePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card 
-        className={cn(
-            "text-white overflow-hidden relative transition-all duration-300", 
-            selectedAccount.type === 'bank' 
-                ? 'bg-gradient-to-br from-blue-900 to-gray-900' 
-                : 'bg-gradient-to-br from-green-800 to-gray-800'
-        )}
-      >
-        <CardContent className="p-6 flex flex-col justify-between h-56">
-          <div className="flex justify-between items-start">
-             <div>
-                <p className="text-sm opacity-80">{selectedAccount.type === 'bank' ? 'Compte Bancaire' : 'Caisse'}</p>
-                <p className="text-xl font-semibold">{selectedAccount.name}</p>
+      <Card className="relative overflow-hidden rounded-xl shadow-lg">
+        <div
+          className={cn(
+            "text-primary-foreground p-6 h-56 flex flex-col justify-between",
+            selectedAccount.type === 'bank'
+              ? 'bg-gradient-to-br from-indigo-700 via-purple-700 to-blue-800'
+              : 'bg-gradient-to-br from-emerald-600 to-teal-700'
+          )}
+        >
+          {/* Decorative elements */}
+          <div className="absolute -top-12 -right-12 w-36 h-36 bg-white/10 rounded-full opacity-80" />
+          <div className="absolute top-0 -right-20 w-40 h-40 bg-white/5 rounded-full" />
+
+          {/* Top section */}
+          <div className="flex justify-between items-start z-10">
+            <div>
+              <p className="font-semibold text-lg">{selectedAccount.name}</p>
+              {selectedAccount.type === 'bank' && <p className="text-sm opacity-80">Compte courant</p>}
             </div>
-            {selectedAccount.type === 'bank' 
-                ? <Landmark className="h-8 w-8 opacity-70" />
-                : <Wallet className="h-8 w-8 opacity-70" />
+            {selectedAccount.type === 'bank'
+              ? <Landmark className="h-6 w-6 opacity-80" />
+              : <Wallet className="h-6 w-6 opacity-80" />
             }
           </div>
-          <div className="space-y-2">
-            {selectedAccount.type === 'bank' && (
+
+          {/* Middle section (Account number for bank) */}
+          <div className="z-10">
+            {selectedAccount.type === 'bank' ? (
                 <div className="flex items-center gap-2">
-                    <div className="w-10 h-8 bg-yellow-400 rounded-md grid place-content-center">
-                        <div className="w-6 h-4 bg-yellow-600 rounded-sm"></div>
-                    </div>
-                    <p className="font-mono text-lg tracking-widest flex-1">
-                        {isAccountNumberVisible ? selectedAccount.accountNumber : maskAccountNumber(selectedAccount.accountNumber)}
+                    <p className="font-mono text-xl md:text-2xl">
+                        {isAccountNumberVisible ? formatIban(selectedAccount.accountNumber) : maskAccountNumber(selectedAccount.accountNumber)}
                     </p>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10" onClick={() => setIsAccountNumberVisible(!isAccountNumberVisible)}>
                         {isAccountNumberVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         <span className="sr-only">Toggle visibility</span>
                     </Button>
                 </div>
+            ) : (
+                <div className="text-center">
+                    <p className="text-sm opacity-80">Solde Caisse</p>
+                </div>
             )}
-            <div>
-              <p className="text-sm opacity-80">Solde actuel</p>
-              <p className="text-3xl font-bold tracking-tight">{selectedAccount.balance.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</p>
-            </div>
           </div>
-        </CardContent>
+
+          {/* Bottom section */}
+          <div className="flex justify-between items-end z-10">
+            <p className="text-3xl lg:text-4xl font-bold tracking-tight">
+                {selectedAccount.balance.toLocaleString('fr-FR')}
+            </p>
+            <span className="font-semibold">FCFA</span>
+          </div>
+        </div>
       </Card>
       
       <Card>
@@ -458,7 +475,7 @@ export default function ControleTresoreriePage() {
             <DialogTitle>Détails du Mouvement</DialogTitle>
             <DialogDescription>
                 Consultez les informations détaillées de la transaction.
-            </dialogDescription>
+            </DialogDescription>
             </DialogHeader>
             {viewingTransaction && (
             <div className="grid gap-3 py-4 text-sm">
