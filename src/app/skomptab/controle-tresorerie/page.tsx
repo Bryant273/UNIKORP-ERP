@@ -459,7 +459,7 @@ export default function ControleTresoreriePage() {
             <DialogTitle>Détails du Mouvement</DialogTitle>
             <DialogDescription>
                 Consultez les informations détaillées de la transaction.
-            </DialogDescription>
+            </dialogDescription>
             </DialogHeader>
             {viewingTransaction && (
             <div className="grid gap-3 py-4 text-sm">
