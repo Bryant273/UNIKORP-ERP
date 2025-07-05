@@ -402,7 +402,7 @@ export default function ControleTresoreriePage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="amount">Montant (XOF)</Label>
-                            <Input id="amount" type="number" step="0.01" min="0" value={transactionFormData.amount} onChange={handleTransactionInputChange} required />
+                            <Input id="amount" type="number" step="0.01" min="0" value={isNaN(transactionFormData.amount) ? '' : transactionFormData.amount} onChange={handleTransactionInputChange} required />
                         </div>
                     </div>
                 </div>
@@ -443,7 +443,7 @@ export default function ControleTresoreriePage() {
                     )}
                     <div className="space-y-2">
                         <Label htmlFor="balance">Solde initial (XOF)</Label>
-                        <Input id="balance" type="number" value={newAccountFormData.balance} onChange={handleNewAccountInputChange} required/>
+                        <Input id="balance" type="number" value={isNaN(newAccountFormData.balance) ? '' : newAccountFormData.balance} onChange={handleNewAccountInputChange} required/>
                     </div>
                 </div>
                 <DialogFooter>
