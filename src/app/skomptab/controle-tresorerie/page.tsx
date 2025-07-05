@@ -218,7 +218,6 @@ export default function ControleTresoreriePage() {
     setNewAccountFormData(prev => ({...prev, [id]: id === 'balance' ? parseFloat(value) : value }));
   };
 
-
   return (
     <div className="flex flex-col gap-6">
       <Card 
