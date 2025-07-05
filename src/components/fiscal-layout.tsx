@@ -54,7 +54,7 @@ function FiscalCalendarWidget() {
                 <Calendar
                     mode="single"
                     onDayClick={handleDateClick}
-                    className="rounded-md border p-2 flex justify-center"
+                    className="rounded-md border flex justify-center"
                     locale={fr}
                     modifiers={{ deadlines: deadlines.map(d => d.date) }}
                     modifiersClassNames={{ deadlines: 'border-2 border-primary rounded-full cursor-pointer' }}
@@ -103,8 +103,8 @@ function FiscalCalendarWidget() {
 
 export default function FiscalPageLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-            <div className="lg:col-span-3">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-2">
                 {children}
             </div>
             <div className="lg:sticky lg:top-24">
