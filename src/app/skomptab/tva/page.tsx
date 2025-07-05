@@ -435,7 +435,7 @@ function TvaDeclarationModal({ isOpen, onClose, onSave, declarationToEdit }: { i
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value, type } = e.target;
-        setFormData(prev => ({ ...prev, [id]: type === 'number' ? parseFloat(value) : value }));
+        setFormData(prev => ({ ...prev, [id]: type === 'number' ? parseFloat(value) || 0 : value }));
     }
 
     const { tvaCollectee18, tvaCollecteeReduit, totalTvaCollectee, totalTvaDeductible, tvaNetteDue, creditAReporter } = useMemo(() => {
@@ -498,7 +498,7 @@ function ViewDeclarationModal({ declaration, isOpen, onClose }: { declaration: D
                     <DialogDescription>Période de {declaration.periode}.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 overflow-y-auto pr-4 space-y-6">
-                    <DeclarationFormView data={{...initialFormData, ...declaration.data}} />
+                    <DeclarationFormView data={{...defaultFormData, ...declaration.data}} />
                     <AnnexEdiView />
                 </div>
                 <DialogFooter>
