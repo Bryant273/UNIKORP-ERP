@@ -1,11 +1,12 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import React, { useState, useMemo, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Eye, Pencil, Trash2, Download, CheckCircle } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download, CheckCircle, Calculator } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
@@ -16,10 +17,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
 
-// Types
+// --- TYPES ---
 type DeclarationType = 'IS' | 'IMF' | 'ITS' | 'Patente' | 'BNC' | 'BIC' | 'BA' | 'TSE' | 'TPS';
 type DeclarationStatus = 'Brouillon' | 'Validée' | 'Télédéclarée' | 'Payée';
+
+type BicData = {
+    ncc: string;
+    raisonSociale: string;
+    periode: string;
+    caHt: number;
+    caTtc: number;
+    chargesDeductibles: number;
+    amortissements: number;
+    resultatFiscal: number;
+};
+type ItsData = {
+    nccEmployeur: string,
+    periode: string,
+    nombreEmployes: number,
+    masseSalarialeBrute: number,
+    abattementsAppliques: number,
+    retenuesEffectuees: number,
+}
+// Add other data types as needed
+// ...
 
 type Declaration = {
     id: string;
@@ -28,25 +51,122 @@ type Declaration = {
     montant: number;
     echeance: string;
     statut: DeclarationStatus;
+    data: any;
 };
 
-// Mock Data
+// --- MOCK DATA ---
 const initialDeclarations: Declaration[] = [
-    { id: 'd1', periode: 'Année 2023', type: 'BIC', montant: 4500000, echeance: '30/04/2024', statut: 'Payée' },
-    { id: 'd2', periode: 'Juillet 2024', type: 'ITS', montant: 1250000, echeance: '15/08/2024', statut: 'Validée' },
-    { id: 'd3', periode: 'T3 2024', type: 'IMF', montant: 750000, echeance: '15/10/2024', statut: 'Brouillon' },
-    { id: 'd4', periode: 'Année 2024', type: 'Patente', montant: 350000, echeance: '15/01/2025', statut: 'Brouillon' },
-    { id: 'd5', periode: 'Juin 2024', type: 'ITS', montant: 1230000, echeance: '15/07/2024', statut: 'Payée' },
-    { id: 'd6', periode: 'Année 2023', type: 'TPS', montant: 850000, echeance: '20/01/2024', statut: 'Télédéclarée' },
+    { id: 'd1', periode: 'Année 2023', type: 'BIC', montant: 4500000, echeance: '30/04/2024', statut: 'Payée', data: { caTtc: 20000000, resultatFiscal: 16666667 } },
+    { id: 'd2', periode: 'Juillet 2024', type: 'ITS', montant: 1250000, echeance: '15/08/2024', statut: 'Validée', data: { masseSalarialeBrute: 10000000 } },
+    { id: 'd3', periode: 'T3 2024', type: 'IMF', montant: 750000, echeance: '15/10/2024', statut: 'Brouillon', data: { caTtc: 37500000 } },
+    { id: 'd4', periode: 'Année 2024', type: 'Patente', montant: 350000, echeance: '15/01/2025', statut: 'Brouillon', data: {} },
+    { id: 'd5', periode: 'Juin 2024', type: 'ITS', montant: 1230000, echeance: '15/07/2024', statut: 'Payée', data: { masseSalarialeBrute: 9800000 } },
 ];
 
-const DeclarationTypeOptions: DeclarationType[] = ['IS', 'IMF', 'ITS', 'Patente', 'BNC', 'BIC', 'BA', 'TSE', 'TPS'];
+const DeclarationTypeOptions: DeclarationType[] = ['BIC', 'ITS', 'Patente', 'Licence', 'TSE', 'TPS', 'BNC', 'BA', 'IMF'];
 
-const defaultFormData: Omit<Declaration, 'id' | 'statut' | 'echeance'> = {
-    periode: '',
-    type: 'BIC',
-    montant: 0,
-};
+const getDefaultDataForType = (type: DeclarationType) => {
+    const base = {
+        ncc: '1234567A',
+        raisonSociale: 'Votre Société S.A.',
+        periode: format(new Date(), 'MMMM yyyy'),
+    }
+    switch(type) {
+        case 'BIC': return { ...base, caHt: 0, caTtc: 0, chargesDeductibles: 0, amortissements: 0, resultatFiscal: 0 };
+        case 'ITS': return { ...base, nccEmployeur: base.ncc, nombreEmployes: 0, masseSalarialeBrute: 0, abattementsAppliques: 0, retenuesEffectuees: 0 };
+        case 'Patente': return { ...base, activiteExercee: '', adresseLocal: '', superficieLocal: 0, caAnneePrecedente: 0, valeurLocative: 0, classePatente: '', montantPatente: 0 };
+        case 'Licence': return { ...base, typeLicence: '', activiteConcernee: '', caPrevisionnel: 0, dureeValidite: '', montantLicence: 0 };
+        case 'TSE': return { ...base, caImposable: 0, tauxTseApplicable: 0, exonerationsEventuelles: 0 };
+        case 'TPS': return { ...base, montantPrestationsHt: 0, tauxTpsApplicable: 0, lieuPrestation: '' };
+        default: return { ...base, montant: 0 };
+    }
+}
+
+// --- FORM COMPONENTS ---
+
+const FormField = ({ label, children, isRequired }: { label: string, children: React.ReactNode, isRequired?: boolean }) => (
+    <div className="space-y-1">
+        <Label>{label}{isRequired && <span className="text-destructive"> *</span>}</Label>
+        {children}
+    </div>
+);
+
+function BicForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: string) => {
+        setData((prev: any) => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    }
+    
+    const { bicCalcule, imf, impotDu } = useMemo(() => {
+        const resultatFiscal = data.resultatFiscal || 0;
+        const caTtc = data.caTtc || 0;
+        const bic = resultatFiscal > 0 ? resultatFiscal * 0.27 : 0;
+        const imfCalc = caTtc * 0.02;
+        return { bicCalcule: bic, imf: imfCalc, impotDu: Math.max(bic, imfCalc) };
+    }, [data.resultatFiscal, data.caTtc]);
+
+    return (
+        <Card className="bg-muted/30"><CardContent className="p-4 space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+                <FormField label="Chiffre d'affaires HT" isRequired><Input type="number" value={data.caHt || ''} onChange={e => handleChange('caHt', e.target.value)} disabled={isViewMode} /></FormField>
+                <FormField label="Chiffre d'affaires TTC" isRequired><Input type="number" value={data.caTtc || ''} onChange={e => handleChange('caTtc', e.target.value)} disabled={isViewMode} /></FormField>
+            </div>
+             <div className="grid md:grid-cols-2 gap-4">
+                <FormField label="Charges déductibles"><Input type="number" value={data.chargesDeductibles || ''} onChange={e => handleChange('chargesDeductibles', e.target.value)} disabled={isViewMode} /></FormField>
+                <FormField label="Amortissements"><Input type="number" value={data.amortissements || ''} onChange={e => handleChange('amortissements', e.target.value)} disabled={isViewMode} /></FormField>
+            </div>
+             <FormField label="Résultat fiscal" isRequired><Input type="number" value={data.resultatFiscal || ''} onChange={e => handleChange('resultatFiscal', e.target.value)} disabled={isViewMode} /></FormField>
+             <Separator />
+            <div className="p-4 border rounded-lg bg-background space-y-2">
+                 <h4 className="font-semibold text-center">Calcul de l'impôt</h4>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span className="font-mono">{bicCalcule.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span className="font-mono">{imf.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span className="font-mono">{impotDu.toLocaleString('fr-FR')} €</span></div>
+            </div>
+        </CardContent></Card>
+    );
+}
+
+function ItsForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+     const handleChange = (field: string, value: string) => {
+        setData((prev: any) => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    }
+    const { baseImposable, itsCalcule, itsNetAPayer } = useMemo(() => {
+        const masseSalariale = data.masseSalarialeBrute || 0;
+        const abattements = data.abattementsAppliques || 0;
+        const retenues = data.retenuesEffectuees || 0;
+        const base = masseSalariale - abattements;
+        const its = base * 0.15; // Simplified rate
+        return { baseImposable: base, itsCalcule: its, itsNetAPayer: its - retenues };
+    }, [data.masseSalarialeBrute, data.abattementsAppliques, data.retenuesEffectuees]);
+
+    return (
+        <Card className="bg-muted/30"><CardContent className="p-4 space-y-4">
+            <FormField label="Nombre d'employés" isRequired><Input type="number" value={data.nombreEmployes || ''} onChange={e => handleChange('nombreEmployes', e.target.value)} disabled={isViewMode}/></FormField>
+            <FormField label="Masse salariale brute" isRequired><Input type="number" value={data.masseSalarialeBrute || ''} onChange={e => handleChange('masseSalarialeBrute', e.target.value)} disabled={isViewMode}/></FormField>
+            <FormField label="Abattements appliqués"><Input type="number" value={data.abattementsAppliques || ''} onChange={e => handleChange('abattementsAppliques', e.target.value)} disabled={isViewMode}/></FormField>
+            <FormField label="Retenues effectuées"><Input type="number" value={data.retenuesEffectuees || ''} onChange={e => handleChange('retenuesEffectuees', e.target.value)} disabled={isViewMode}/></FormField>
+            <Separator />
+             <div className="p-4 border rounded-lg bg-background space-y-2">
+                 <h4 className="font-semibold text-center">Calcul de l'impôt</h4>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span className="font-mono">{baseImposable.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span className="font-mono">{itsCalcule.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span className="font-mono">{itsNetAPayer.toLocaleString('fr-FR')} €</span></div>
+            </div>
+        </CardContent></Card>
+    );
+}
+
+// ... other forms would be defined here ...
+
+function DeclarationFormRenderer({ type, data, setData, isViewMode }: { type: DeclarationType, data: any, setData: Function, isViewMode: boolean }) {
+    switch (type) {
+        case 'BIC': return <BicForm data={data} setData={setData} isViewMode={isViewMode} />;
+        case 'ITS': return <ItsForm data={data} setData={setData} isViewMode={isViewMode} />;
+        // Add cases for other forms
+        default: return <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50"><p>Formulaire non disponible pour le type '{type}'.</p></div>;
+    }
+}
+
 
 function DeclarationsFiscalesMainContent() {
     const [declarations, setDeclarations] = useState(initialDeclarations);
@@ -66,14 +186,35 @@ function DeclarationsFiscalesMainContent() {
         setIsModalOpen(true);
     };
 
-    const handleSaveDeclaration = (formData: Omit<Declaration, 'id' | 'statut' | 'echeance'>) => {
+    const handleSaveDeclaration = (formData: any) => {
+        let finalAmount = 0;
+        switch(formData.type) {
+            case 'BIC': {
+                const { resultatFiscal = 0, caTtc = 0 } = formData.data;
+                const bic = resultatFiscal > 0 ? resultatFiscal * 0.27 : 0;
+                const imf = caTtc * 0.02;
+                finalAmount = Math.max(bic, imf);
+                break;
+            }
+            case 'ITS': {
+                const { masseSalarialeBrute = 0, abattementsAppliques = 0, retenuesEffectuees = 0 } = formData.data;
+                const base = masseSalarialeBrute - abattementsAppliques;
+                const its = base * 0.15;
+                finalAmount = its - retenuesEffectuees;
+                break;
+            }
+            default:
+                finalAmount = formData.data.montant || 0;
+        }
+
         if (editingDeclaration) {
-            setDeclarations(prev => prev.map(d => d.id === editingDeclaration.id ? { ...editingDeclaration, ...formData, statut: 'Validée' } : d));
+            setDeclarations(prev => prev.map(d => d.id === editingDeclaration.id ? { ...editingDeclaration, ...formData, statut: 'Validée', montant: finalAmount } : d));
             toast({ title: 'Déclaration modifiée', description: `La déclaration a été mise à jour.` });
         } else {
             const newDeclaration: Declaration = {
                 id: `d_${Date.now()}`,
                 ...formData,
+                montant: finalAmount,
                 statut: 'Brouillon',
                 echeance: 'À définir',
             };
@@ -150,7 +291,6 @@ function DeclarationsFiscalesMainContent() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-10">#</TableHead>
                                 <TableHead>Période</TableHead>
                                 <TableHead>Impôt</TableHead>
                                 <TableHead className="text-right">Montant Dû</TableHead>
@@ -159,15 +299,12 @@ function DeclarationsFiscalesMainContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {declarations.map((d, index) => {
+                            {declarations.map((d) => {
                                 const isFinalized = d.statut === 'Payée' || d.statut === 'Télédéclarée';
                                 return (
                                 <TableRow key={d.id}>
-                                    <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell className="font-medium">{d.periode}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary">{d.type}</Badge>
-                                    </TableCell>
+                                    <TableCell><Badge variant="secondary">{d.type}</Badge></TableCell>
                                     <TableCell className="text-right font-mono">{d.montant.toLocaleString('fr-FR')} €</TableCell>
                                     <TableCell className="text-center">{getStatusBadge(d)}</TableCell>
                                     <TableCell className="text-center">
@@ -208,61 +345,53 @@ function DeclarationsFiscalesMainContent() {
     );
 }
 
-function DeclarationModal({ isOpen, onClose, onSave, declarationToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: Omit<Declaration, 'id' | 'statut' | 'echeance'>) => void, declarationToEdit: Declaration | null }) {
-    const [formData, setFormData] = useState(defaultFormData);
+function DeclarationModal({ isOpen, onClose, onSave, declarationToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: any) => void, declarationToEdit: Declaration | null }) {
     const { toast } = useToast();
+    const [type, setType] = useState<DeclarationType>(declarationToEdit?.type || 'BIC');
+    const [data, setData] = useState(declarationToEdit?.data || getDefaultDataForType(type));
 
     useEffect(() => {
         if (isOpen) {
-            if (declarationToEdit) {
-                setFormData({
-                    periode: declarationToEdit.periode,
-                    type: declarationToEdit.type,
-                    montant: declarationToEdit.montant
-                });
-            } else {
-                setFormData(defaultFormData);
-            }
+            const initialType = declarationToEdit?.type || 'BIC';
+            setType(initialType);
+            setData(declarationToEdit ? declarationToEdit.data : getDefaultDataForType(initialType));
         }
     }, [isOpen, declarationToEdit]);
-    
-    const handleChange = (id: string, value: string | number) => {
-        setFormData(prev => ({ ...prev, [id]: value }));
-    };
 
+    const handleTypeChange = (newType: DeclarationType) => {
+        if (!declarationToEdit) { // Allow type change only for new declarations
+            setType(newType);
+            setData(getDefaultDataForType(newType));
+        }
+    }
+    
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.periode || !formData.montant) {
-            toast({ title: 'Champs requis', description: 'Veuillez remplir la période et le montant.', variant: 'destructive'});
-            return;
-        }
-        onSave(formData);
+        // Basic validation can be added here
+        onSave({ type, data, periode: data.periode });
     }
     
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent className="max-w-3xl">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle>{declarationToEdit ? 'Modifier la' : 'Créer une'} déclaration fiscale</DialogTitle>
                         <DialogDescription>Renseignez les détails de la déclaration fiscale.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="type">Type d'impôt</Label>
-                            <Select value={formData.type} onValueChange={(value) => handleChange('type', value)}>
-                                <SelectTrigger id="type"><SelectValue /></SelectTrigger>
-                                <SelectContent>{DeclarationTypeOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                            </Select>
+                    <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <FormField label="Type d'impôt" isRequired>
+                                <Select value={type} onValueChange={handleTypeChange} disabled={!!declarationToEdit}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>{DeclarationTypeOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </FormField>
+                            <FormField label="Période" isRequired>
+                                <Input value={data.periode || ''} onChange={(e) => setData((d: any) => ({...d, periode: e.target.value}))} placeholder="Ex: Année 2024, T3 2024..." />
+                            </FormField>
                         </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="periode">Période</Label>
-                            <Input id="periode" value={formData.periode} onChange={(e) => handleChange('periode', e.target.value)} placeholder="Ex: Année 2024, T3 2024..." />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="montant">Montant Dû (€)</Label>
-                            <Input id="montant" type="number" value={formData.montant || ''} onChange={(e) => handleChange('montant', Number(e.target.value))} />
-                        </div>
+                        <DeclarationFormRenderer type={type} data={data} setData={setData} isViewMode={false} />
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
@@ -279,17 +408,13 @@ function ViewDeclarationModal({ isOpen, onClose, declaration }: { isOpen: boolea
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Détails de la Déclaration</DialogTitle>
                     <DialogDescription>Déclaration {declaration.type} pour la période {declaration.periode}.</DialogDescription>
                 </DialogHeader>
-                <div className="py-4 space-y-2">
-                    <p><strong>Type:</strong> <Badge variant="secondary">{declaration.type}</Badge></p>
-                    <p><strong>Période:</strong> {declaration.periode}</p>
-                    <p><strong>Montant Dû:</strong> {declaration.montant.toLocaleString('fr-FR')} €</p>
-                    <p><strong>Échéance:</strong> {declaration.echeance}</p>
-                    <p><strong>Statut:</strong> {declaration.statut}</p>
+                <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-4">
+                   <DeclarationFormRenderer type={declaration.type} data={declaration.data} setData={()=>{}} isViewMode={true} />
                 </div>
                 <DialogFooter>
                     <Button onClick={onClose}>Fermer</Button>
