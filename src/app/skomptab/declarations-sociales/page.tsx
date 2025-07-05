@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Eye, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download } from 'lucide-react';
+import FiscalPageLayout from '@/components/fiscal-layout';
 
 type DeclarationSociale = {
     id: string;
@@ -23,7 +24,7 @@ const initialDeclarations: DeclarationSociale[] = [
     { id: 'prev1', periode: 'T2 2024', type: 'Prévoyance', masseSalariale: 255000, montantDu: 5100, statut: 'Payée' },
 ];
 
-export default function DeclarationsSocialesPage() {
+function DeclarationsSocialesMainContent() {
     return (
         <Card className="w-full">
             <CardHeader>
@@ -42,20 +43,20 @@ export default function DeclarationsSocialesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-10">#</TableHead>
                             <TableHead>Période</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead className="text-right">Masse salariale</TableHead>
-                            <TableHead className="text-right">Montant dû</TableHead>
+                            <TableHead className="text-right">Montant Dû</TableHead>
                             <TableHead className="text-center">Statut</TableHead>
-                            <TableHead className="text-center w-[120px]">Actions</TableHead>
+                            <TableHead className="text-center w-[150px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {initialDeclarations.map(d => (
+                        {initialDeclarations.map((d, index) => {
+                            const isPaid = d.statut === 'Payée';
+                            return (
                             <TableRow key={d.id}>
-                                <TableCell className="font-medium">{d.periode}</TableCell>
-                                <TableCell>{d.type}</TableCell>
-                                <TableCell className="text-right font-mono">{d.masseSalariale.toLocaleString('fr-FR')} €</TableCell>
+                                <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                                <TableCell className="font-medium">{d.periode} ({d.type})</TableCell>
                                 <TableCell className="text-right font-mono">{d.montantDu.toLocaleString('fr-FR')} €</TableCell>
                                 <TableCell className="text-center">
                                     <Badge variant="outline">{d.statut}</Badge>
@@ -63,15 +64,24 @@ export default function DeclarationsSocialesPage() {
                                 <TableCell className="text-center">
                                     <div className="flex items-center justify-center gap-1">
                                         <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" disabled={isPaid}><Pencil className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" disabled={isPaid}><Trash2 className="h-4 w-4" /></Button>
                                     </div>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )})}
                     </TableBody>
                 </Table>
             </CardContent>
         </Card>
+    );
+}
+
+export default function DeclarationsSocialesPage() {
+    return (
+        <FiscalPageLayout>
+            <DeclarationsSocialesMainContent />
+        </FiscalPageLayout>
     );
 }

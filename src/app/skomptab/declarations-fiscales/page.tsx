@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Eye, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import FiscalPageLayout from '@/components/fiscal-layout';
 
 type Declaration = {
     id: string;
@@ -25,7 +26,7 @@ const initialDeclarations: Declaration[] = [
     { id: 'd4', periode: 'Année 2023', type: 'Liasse Fiscale', montant: 0, echeance: '03/05/2024', statut: 'Télédéclarée' },
 ];
 
-export default function DeclarationsFiscalesPage() {
+function DeclarationsFiscalesMainContent() {
     const [declarations, setDeclarations] = useState(initialDeclarations);
     const [declarationToDelete, setDeclarationToDelete] = useState<Declaration | null>(null);
     const { toast } = useToast();
@@ -66,31 +67,32 @@ export default function DeclarationsFiscalesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-10">#</TableHead>
                                 <TableHead>Période</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead className="text-right">Montant</TableHead>
-                                <TableHead className="text-center">Échéance</TableHead>
+                                <TableHead className="text-right">Montant Dû</TableHead>
                                 <TableHead className="text-center">Statut</TableHead>
-                                <TableHead className="text-center w-[120px]">Actions</TableHead>
+                                <TableHead className="text-center w-[150px]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {declarations.map(d => (
+                            {declarations.map((d, index) => {
+                                const isFinalized = d.statut === 'Payée' || d.statut === 'Télédéclarée';
+                                return (
                                 <TableRow key={d.id}>
-                                    <TableCell className="font-medium">{d.periode}</TableCell>
-                                    <TableCell>{d.type}</TableCell>
+                                    <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                                    <TableCell className="font-medium">{d.periode} ({d.type})</TableCell>
                                     <TableCell className="text-right font-mono">{d.montant.toLocaleString('fr-FR')} €</TableCell>
-                                    <TableCell className="text-center">{d.echeance}</TableCell>
                                     <TableCell className="text-center">{getStatusBadge(d.statut)}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-1">
                                             <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeclarationToDelete(d)}><Trash2 className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" disabled={isFinalized}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" disabled={isFinalized}><Download className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeclarationToDelete(d)} disabled={isFinalized}><Trash2 className="h-4 w-4" /></Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )})}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -109,5 +111,13 @@ export default function DeclarationsFiscalesPage() {
                 </AlertDialogContent>
             </AlertDialog>
         </>
+    );
+}
+
+export default function DeclarationsFiscalesPage() {
+    return (
+        <FiscalPageLayout>
+            <DeclarationsFiscalesMainContent />
+        </FiscalPageLayout>
     );
 }

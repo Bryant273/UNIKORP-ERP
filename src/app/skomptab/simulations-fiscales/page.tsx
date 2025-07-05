@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calculator } from "lucide-react";
+import FiscalPageLayout from '@/components/fiscal-layout';
 
 function ISSimulator() {
     const [resultat, setResultat] = useState(250000);
@@ -95,7 +96,7 @@ function TVASimulator() {
 }
 
 
-export default function SimulationsFiscalesPage() {
+function SimulationsFiscalesMainContent() {
   return (
     <div className="flex-1 flex flex-col">
         <div className="mb-6">
@@ -116,4 +117,12 @@ export default function SimulationsFiscalesPage() {
         </Tabs>
     </div>
   );
+}
+
+export default function SimulationsFiscalesPage() {
+    return (
+        <FiscalPageLayout>
+            <SimulationsFiscalesMainContent />
+        </FiscalPageLayout>
+    )
 }

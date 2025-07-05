@@ -192,35 +192,33 @@ export default function CreationJournauxPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Code</TableHead>
-                <TableHead className="text-center">Intitulé</TableHead>
-                <TableHead className="text-center">Type</TableHead>
-                <TableHead className="text-center">Compte rattaché</TableHead>
-                <TableHead className="text-center">Statut</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Intitulé</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Compte rattaché</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {journals.map((journal) => (
-                <TableRow key={journal.id} className="odd:bg-muted/50">
-                  <TableCell className="font-medium text-center">{journal.code}</TableCell>
-                  <TableCell className="text-center">{journal.intitule}</TableCell>
-                  <TableCell className="text-center">{journal.type}</TableCell>
-                  <TableCell className="text-center">{journal.compteRattache || 'N/A'}</TableCell>
-                  <TableCell className="flex justify-center">
+                <TableRow key={journal.id}>
+                  <TableCell className="font-medium">{journal.code}</TableCell>
+                  <TableCell>{journal.intitule}</TableCell>
+                  <TableCell>{journal.type}</TableCell>
+                  <TableCell>{journal.compteRattache || 'N/A'}</TableCell>
+                  <TableCell>
                     <Badge variant={journal.statut === 'Actif' ? 'default' : 'secondary'}>
                       {journal.statut}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-2">
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(journal)}>
                           <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Modifier</span>
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => setJournalToDelete(journal)} className="text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Supprimer</span>
                         </Button>
                     </div>
                   </TableCell>
