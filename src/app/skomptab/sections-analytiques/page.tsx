@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -74,16 +73,20 @@ const MOCK_ANALYTIC_PLAN: Section[] = [
     }
 ];
 
-const getMockEntriesForSection = (sectionCode: string): MockEntry[] => {
+const getMockEntriesForSection = (section: Section): MockEntry[] => {
+    if (section.type === 'folder' && section.children) {
+        return section.children.flatMap(child => getMockEntriesForSection(child));
+    }
+    
     return Array.from({ length: Math.floor(Math.random() * 5) + 3 }, (_, i) => {
-        const isDebit = Math.random() > 0.5;
+        const isDebit = section.code.startsWith('6');
         const amount = Math.round(Math.random() * 100000) / 100;
         return {
-            id: `e${i}-${sectionCode}`,
+            id: `e${i}-${section.code}`,
             date: `2024-07-${String(10 + i).padStart(2, '0')}`,
             journal: ['AC', 'VE', 'OD'][Math.floor(Math.random() * 3)],
-            piece: `F24-${sectionCode}-${i}`,
-            libelle: `${isDebit ? 'Charge' : 'Produit'} imputé(e) à ${sectionCode} #${i+1}`,
+            piece: `F24-${section.code}-${i}`,
+            libelle: `${isDebit ? 'Charge' : 'Produit'} imputé(e) à ${section.name} #${i+1}`,
             debit: isDebit ? amount : 0,
             credit: !isDebit ? amount : 0,
         };
@@ -105,23 +108,9 @@ export default function SectionsAnalytiquesPage() {
     const [formData, setFormData] = useState<Omit<Section, 'id' | 'children'>>({ code: '', name: '', type: 'item', compteGeneral: '' });
     const { toast } = useToast();
 
-    const flattenedSections = useMemo(() => {
-        const flatten = (items: Section[], level = 0): (Section & { indent: number })[] => {
-            let result: (Section & { indent: number })[] = [];
-            for (const section of items) {
-                result.push({ ...section, indent: level });
-                if (section.children) {
-                    result = result.concat(flatten(section.children, level + 1));
-                }
-            }
-            return result;
-        };
-        return flatten(sections);
-    }, [sections]);
-
     const handleViewSection = (section: Section) => {
         setViewingSection(section);
-        setMockEntries(getMockEntriesForSection(section.code));
+        setMockEntries(getMockEntriesForSection(section));
         setIsSheetOpen(true);
     };
 
@@ -194,12 +183,9 @@ export default function SectionsAnalytiquesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {flattenedSections.map((section) => (
+                {sections.map((section) => (
                   <TableRow key={section.id} className="odd:bg-muted/50">
-                    <TableCell 
-                        className="font-mono text-xs"
-                        style={{ paddingLeft: `${section.indent * 1.5 + 1}rem` }}
-                    >
+                    <TableCell className="font-mono text-xs">
                         {section.code}
                     </TableCell>
                     <TableCell className="font-medium">
@@ -259,7 +245,7 @@ export default function SectionsAnalytiquesPage() {
                         </div>
                          <div className="p-2 rounded-md bg-muted">
                             <p className="text-sm text-muted-foreground">Solde</p>
-                            <p className={cn("font-bold font-mono", totals.solde > 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p>
+                            <p className={cn("font-bold font-mono", totals.solde >= 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p>
                         </div>
                     </CardContent>
                  </Card>
@@ -379,5 +365,3 @@ export default function SectionsAnalytiquesPage() {
     </>
   );
 }
-
-    
