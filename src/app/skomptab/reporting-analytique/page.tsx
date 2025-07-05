@@ -5,13 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PlusCircle, FileText, BarChart2, PieChart as PieChartIcon, LineChart, Eye, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, FileText, BarChart2, PieChart as PieChartIcon, LineChart as LineChartIcon, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import type { ChartConfig } from '@/components/ui/chart';
+
 
 type Report = {
     id: string;
@@ -25,11 +28,34 @@ const INITIAL_REPORTS: Report[] = [
     { id: 'rep1', title: "Compte de Résultat par Projet", description: "Analyse de la rentabilité de chaque projet.", type: 'predefined', icon: BarChart2 },
     { id: 'rep2', title: "Balance Analytique par Département", description: "Consultez le solde de chaque section analytique de type département.", type: 'predefined', icon: FileText },
     { id: 'rep3', title: "Répartition des Charges", description: "Visualisez la distribution des charges sur les centres de coûts.", type: 'predefined', icon: PieChartIcon },
-    { id: 'rep4', title: "Marge par Ligne de Produit", description: "Suivez l'évolution mensuelle de la marge pour chaque produit.", type: 'predefined', icon: LineChart },
+    { id: 'rep4', title: "Marge par Ligne de Produit", description: "Suivez l'évolution mensuelle de la marge pour chaque produit.", type: 'predefined', icon: LineChartIcon },
     { id: 'rep5', title: "Rapport Personnalisé - Ventes Régionales", description: "Analyse trimestrielle des ventes par région.", type: 'custom', icon: BarChart2 },
 ];
 
-// Mock data for the pie chart
+// --- MOCK DATA FOR REPORTS ---
+
+// Data for Rep1: Compte de Résultat par Projet (Bar Chart)
+const projetResultatData = [
+  { projet: 'Projet Alpha', produits: 450000, charges: 320000 },
+  { projet: 'Projet Beta', produits: 680000, charges: 510000 },
+  { projet: 'Maintenance', produits: 250000, charges: 180000 },
+  { projet: 'R&D', produits: 50000, charges: 150000 },
+];
+const projetResultatChartConfig = {
+  produits: { label: "Produits", color: "hsl(var(--chart-2))" },
+  charges: { label: "Charges", color: "hsl(var(--chart-1))" },
+} satisfies ChartConfig;
+
+// Data for Rep2: Balance Analytique par Département (Table)
+const balanceAnalytiqueData = [
+  { section: 'Direction Générale', debit: 150000, credit: 0 },
+  { section: 'Production Atelier 1', debit: 450000, credit: 1200000 },
+  { section: 'Production Atelier 2', debit: 380000, credit: 950000 },
+  { section: 'Commercial France', debit: 220000, credit: 0 },
+  { section: 'Commercial Export', debit: 180000, credit: 0 },
+];
+
+// Data for Rep3: Répartition des Charges (Pie Chart)
 const pieChartData = [
   { name: 'Achats - Production', value: 400, fill: 'hsl(var(--chart-1))' },
   { name: 'Salaires - Production', value: 300, fill: 'hsl(var(--chart-2))' },
@@ -37,41 +63,81 @@ const pieChartData = [
   { name: 'Achats - Commercial', value: 200, fill: 'hsl(var(--chart-4))' },
   { name: 'Fournitures - Direction', value: 278, fill: 'hsl(var(--chart-5))' },
 ];
+const pieChartConfig = {
+  charges: { label: "Charges" },
+  "Achats - Production": { label: "Achats - Production", color: "hsl(var(--chart-1))" },
+  "Salaires - Production": { label: "Salaires - Production", color: "hsl(var(--chart-2))" },
+  "Salaires - Direction": { label: "Salaires - Direction", color: "hsl(var(--chart-3))" },
+  "Achats - Commercial": { label: "Achats - Commercial", color: "hsl(var(--chart-4))" },
+  "Fournitures - Direction": { label: "Fournitures - Direction", color: "hsl(var(--chart-5))" },
+} satisfies ChartConfig;
 
-const chartConfig = {
-  charges: {
-    label: "Charges",
-  },
-  "Achats - Production": {
-    label: "Achats - Production",
-    color: "hsl(var(--chart-1))",
-  },
-  "Salaires - Production": {
-    label: "Salaires - Production",
-    color: "hsl(var(--chart-2))",
-  },
-  "Salaires - Direction": {
-    label: "Salaires - Direction",
-    color: "hsl(var(--chart-3))",
-  },
-  "Achats - Commercial": {
-    label: "Achats - Commercial",
-    color: "hsl(var(--chart-4))",
-  },
-  "Fournitures - Direction": {
-    label: "Fournitures - Direction",
-    color: "hsl(var(--chart-5))",
-  },
-};
+// Data for Rep4: Marge par Ligne de Produit (Line Chart)
+const margeProduitData = [
+  { mois: 'Jan', produitA: 25.5, produitB: 35.2 },
+  { mois: 'Fév', produitA: 26.1, produitB: 34.8 },
+  { mois: 'Mar', produitA: 27.3, produitB: 36.1 },
+  { mois: 'Avr', produitA: 26.8, produitB: 37.5 },
+  { mois: 'Mai', produitA: 28.2, produitB: 38.0 },
+  { mois: 'Juin', produitA: 29.0, produitB: 37.2 },
+];
+const margeProduitChartConfig = {
+  produitA: { label: "Produit A", color: "hsl(var(--chart-1))" },
+  produitB: { label: "Produit B", color: "hsl(var(--chart-2))" },
+} satisfies ChartConfig;
 
 
 function ReportPreview({ report }: { report: Report | null }) {
     if (!report) return null;
 
+    if (report.id === 'rep1') {
+        return (
+            <ChartContainer config={projetResultatChartConfig} className="mx-auto aspect-video h-[400px]">
+                <BarChart data={projetResultatData}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="projet" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Bar dataKey="produits" fill="var(--color-produits)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="charges" fill="var(--color-charges)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+            </ChartContainer>
+        );
+    }
+    
+    if (report.id === 'rep2') {
+        return (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Section / Département</TableHead>
+                        <TableHead className="text-right">Débit</TableHead>
+                        <TableHead className="text-right">Crédit</TableHead>
+                        <TableHead className="text-right">Solde</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {balanceAnalytiqueData.map(item => {
+                        const solde = item.debit - item.credit;
+                        return (
+                            <TableRow key={item.section}>
+                                <TableCell className="font-medium">{item.section}</TableCell>
+                                <TableCell className="text-right font-mono">{item.debit.toLocaleString('fr-FR')} FCFA</TableCell>
+                                <TableCell className="text-right font-mono">{item.credit.toLocaleString('fr-FR')} FCFA</TableCell>
+                                <TableCell className={cn("text-right font-mono font-bold", solde >= 0 ? "text-green-600" : "text-red-600")}>{solde.toLocaleString('fr-FR')} FCFA</TableCell>
+                            </TableRow>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+        );
+    }
+
     if (report.id === 'rep3') {
         return (
             <div className="flex flex-col items-center gap-4 py-4">
-                 <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[300px]">
+                 <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
                     <RechartsPieChart>
                         <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                         <Pie data={pieChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
@@ -90,6 +156,22 @@ function ReportPreview({ report }: { report: Report | null }) {
                     ))}
                 </div>
             </div>
+        );
+    }
+    
+    if (report.id === 'rep4') {
+        return (
+            <ChartContainer config={margeProduitChartConfig} className="mx-auto aspect-video h-[400px]">
+                <LineChart data={margeProduitData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="mois" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis unit="%" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Line type="monotone" dataKey="produitA" stroke="var(--color-produitA)" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="produitB" stroke="var(--color-produitB)" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+            </ChartContainer>
         );
     }
     
