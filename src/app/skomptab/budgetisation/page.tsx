@@ -94,8 +94,7 @@ export default function BudgetisationPage() {
         setIsBudgetModalOpen(true);
     };
 
-    const handleOpenRealiseModal = (budget: Budget) => {
-        setEditingBudget(budget);
+    const handleOpenRealiseModal = () => {
         setIsRealiseModalOpen(true);
     };
 
@@ -117,13 +116,12 @@ export default function BudgetisationPage() {
         setEditingBudget(null);
     };
     
-    const handleSaveRealise = (realiseLines: BudgetLineItem[]) => {
-        if (editingBudget) {
-            setBudgets(budgets.map(b => b.id === editingBudget.id ? { ...b, realiseLines } : b));
-            toast({ title: 'Montants réalisés enregistrés.' });
-        }
+    const handleSaveRealise = (budgetId: number, realiseLines: BudgetLineItem[]) => {
+        setBudgets(budgets.map(b => 
+            b.id === budgetId ? { ...b, realiseLines } : b
+        ));
+        toast({ title: 'Montants réalisés enregistrés.' });
         setIsRealiseModalOpen(false);
-        setEditingBudget(null);
     };
 
     const handleDeleteBudget = () => {
@@ -195,6 +193,9 @@ export default function BudgetisationPage() {
                             <CardDescription>Élaborez vos budgets, suivez les réalisations et analysez les écarts.</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
+                            <Button variant="outline" onClick={handleOpenRealiseModal}>
+                                <Sigma className="mr-2 h-4 w-4"/> Saisir les réalisations
+                            </Button>
                             <Button onClick={() => handleOpenBudgetModal(null)}>
                                 <PlusCircle className="mr-2 h-4 w-4"/> Créer une fiche de budget
                             </Button>
@@ -236,7 +237,6 @@ export default function BudgetisationPage() {
                                         <TableCell className="text-center">
                                             <div className="flex items-center justify-center gap-1">
                                                 <Button variant="ghost" size="icon" onClick={() => handleOpenBudgetModal(budget)} title="Modifier le budget"><Edit className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleOpenRealiseModal(budget)} title="Saisir les réalisés"><Sigma className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" onClick={() => handlePrintReport(budget)} title="Imprimer le rapport"><Printer className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" onClick={() => setBudgetToDelete(budget)} title="Supprimer"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                             </div>
@@ -260,7 +260,7 @@ export default function BudgetisationPage() {
                 isOpen={isRealiseModalOpen}
                 onClose={() => setIsRealiseModalOpen(false)}
                 onSave={handleSaveRealise}
-                existingBudget={editingBudget}
+                budgets={budgets}
             />
 
             <AlertDialog open={!!budgetToDelete} onOpenChange={() => setBudgetToDelete(null)}>
@@ -359,20 +359,32 @@ function BudgetModal({ isOpen, onClose, onSave, existingBudget }: BudgetModalPro
 interface RealiseModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (lines: BudgetLineItem[]) => void;
-    existingBudget: Budget | null;
+    onSave: (budgetId: number, lines: BudgetLineItem[]) => void;
+    budgets: Budget[];
 }
 
-function RealiseModal({ isOpen, onClose, onSave, existingBudget }: RealiseModalProps) {
+function RealiseModal({ isOpen, onClose, onSave, budgets }: RealiseModalProps) {
+    const [selectedBudgetId, setSelectedBudgetId] = useState<string | undefined>(undefined);
     const [realiseLines, setRealiseLines] = useState<BudgetLineItem[]>([]);
+    const { toast } = useToast();
+
+    const selectedBudget = useMemo(() => budgets.find(b => String(b.id) === selectedBudgetId), [budgets, selectedBudgetId]);
 
     useEffect(() => {
-        if (isOpen && existingBudget) {
-            setRealiseLines(JSON.parse(JSON.stringify(existingBudget.realiseLines)));
-        } else if (isOpen) {
-             setRealiseLines([{ id: `r-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
+        if (isOpen) {
+             // Reset state when modal opens
+            setSelectedBudgetId(undefined);
+            setRealiseLines([]);
         }
-    }, [existingBudget, isOpen]);
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (selectedBudget) {
+            setRealiseLines(JSON.parse(JSON.stringify(selectedBudget.realiseLines)));
+        } else {
+            setRealiseLines([]);
+        }
+    }, [selectedBudget]);
     
     const handleAddLine = () => setRealiseLines(prev => [...prev, { id: `r-${Date.now()}`, element: '', quantite: 1, pu: 0 }]);
     const handleRemoveLine = (id: string) => setRealiseLines(prev => prev.filter(l => l.id !== id));
@@ -385,16 +397,37 @@ function RealiseModal({ isOpen, onClose, onSave, existingBudget }: RealiseModalP
 
     const totalRealise = useMemo(() => realiseLines.reduce((acc, line) => acc + line.quantite * line.pu, 0), [realiseLines]);
     
-    if (!existingBudget) return null;
-
+    const handleSave = () => {
+        if (!selectedBudgetId) {
+            toast({ title: 'Erreur', description: 'Veuillez sélectionner une fiche de budget.', variant: 'destructive'});
+            return;
+        }
+        onSave(Number(selectedBudgetId), realiseLines);
+    }
+    
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Saisir les Réalisations</DialogTitle>
-                    <DialogDescription>Pour le budget: {existingBudget.sectionLibelle} - {existingBudget.month} {existingBudget.year}</DialogDescription>
+                    <DialogDescription>Sélectionnez une fiche de budget et enregistrez les montants réalisés.</DialogDescription>
                 </DialogHeader>
-                 <div className="flex-1 overflow-y-auto pr-4 pt-4">
+                 <div className="py-4">
+                    <Label htmlFor="budget-select">Fiche de Budget</Label>
+                    <Select value={selectedBudgetId} onValueChange={setSelectedBudgetId}>
+                        <SelectTrigger id="budget-select">
+                            <SelectValue placeholder="Sélectionnez une fiche de budget..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {budgets.map(b => (
+                                <SelectItem key={b.id} value={String(b.id)}>
+                                    {b.sectionLibelle} - {b.month} {b.year}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
+                 <div className={cn("flex-1 overflow-y-auto pr-4 border-t pt-4", !selectedBudgetId && "opacity-50 pointer-events-none")}>
                     <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><Sigma className="h-5 w-5"/>Détail des Réalisations</h3>
                     <Table>
                         <TableHeader><TableRow><TableHead>Élément</TableHead><TableHead className="w-24 text-center">Qté</TableHead><TableHead className="w-32 text-center">P.U.</TableHead><TableHead className="w-32 text-center">Montant</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
@@ -408,14 +441,14 @@ function RealiseModal({ isOpen, onClose, onSave, existingBudget }: RealiseModalP
                         </TableFooter>
                     </Table>
                 </div>
-                <div className="flex-shrink-0 pt-4"><Button type="button" size="sm" variant="outline" onClick={handleAddLine}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button></div>
+                <div className={cn("flex-shrink-0 pt-4", !selectedBudgetId && "opacity-50 pointer-events-none")}>
+                    <Button type="button" size="sm" variant="outline" onClick={handleAddLine}><PlusCircle className="mr-2 h-4 w-4"/> Ajouter une ligne</Button>
+                </div>
                 <DialogFooter className="pt-4 border-t">
                     <Button variant="outline" onClick={onClose}>Annuler</Button>
-                    <Button onClick={() => onSave(realiseLines)}>Enregistrer les réalisations</Button>
+                    <Button onClick={handleSave} disabled={!selectedBudgetId}>Enregistrer les réalisations</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
-
-    
