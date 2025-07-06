@@ -181,14 +181,51 @@ function SimulationsFiscalesMainContent() {
         const doc = new jsPDF();
         const config = declarationConfigs[selectedDeclarationType];
 
-        doc.setFontSize(22);
-        doc.text(`Simulation - ${config.label}`, 105, 20, { align: 'center' });
+        const companyName = "Votre Société S.A.";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SKOMPTAB";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+        const periodeSimulee = simulationData.periode 
+            ? simulationData.periode.length > 4 
+                ? format(parseISO(simulationData.periode + '-01'), 'MMMM yyyy', { locale: fr }) 
+                : simulationData.periode
+            : "N/A";
         
         autoTable(doc, {
-            startY: 40,
+            startY: 50,
             head: [['Champ', 'Valeur']],
             body: Object.entries(simulationData).map(([key, value]) => [key, String(value)]),
             theme: 'grid',
+            didDrawPage: (data) => {
+                // Header
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+                doc.setDrawColor(220);
+                doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+                doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(40, 40, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text(companyName, data.settings.margin.left + 15, 28);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100);
+                const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+                doc.text(`État : Simulation - ${config.label}`, rightX, 25, { align: 'right' });
+                doc.text(`Période : ${periodeSimulee}`, rightX, 30, { align: 'right' });
+                doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+                doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
+    
+                // Footer
+                const pageCountTotal = (doc as any).internal.getNumberOfPages();
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
+            }
         });
         
         addWatermarkToPdf(doc);
