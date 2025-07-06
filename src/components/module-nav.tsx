@@ -10,7 +10,6 @@ import {
   Truck,
   UsersRound,
   MessageSquare,
-  Bell,
 } from 'lucide-react';
 
 const navLinks = [
@@ -65,8 +64,7 @@ export function ModuleNav() {
               className={cn(
                 'flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground',
                 isActive(link.href) &&
-                  'rounded-t-md bg-background text-primary shadow-sm',
-                link.hiddenOnMobile && (pathname.startsWith(link.href)) && 'hidden' 
+                  'rounded-t-md bg-background text-primary shadow-sm'
               )}
             >
               <link.icon className="h-4 w-4" />
