@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calculator, FileText, Download, Eye, FilePlus } from 'lucide-react';
 import FiscalPageLayout from '@/components/fiscal-layout';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
