@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -51,7 +51,8 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Pencil, Trash2, PlusCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
-type DeclarationType = 'TVA' | 'IS' | 'CVAE' | 'DSN' | 'Autre';
+// --- TYPES ---
+type DeclarationType = 'TVA' | 'BIC' | 'ITS' | 'ImpotSynthetique' | 'DMS';
 
 type ModeleDeclaration = {
   id: number;
@@ -61,43 +62,45 @@ type ModeleDeclaration = {
   formContent: any;
 };
 
+const declarationConfigs: Record<DeclarationType, { label: string; description: string; }> = {
+    TVA: { label: 'TVA (CA3)', description: "Déclaration mensuelle de TVA." },
+    BIC: { label: 'BIC - Impôt sur les Sociétés', description: "Déclaration des bénéfices industriels et commerciaux." },
+    ITS: { label: 'ITS - Impôt sur les Salaires', description: "Déclaration de l'impôt sur les traitements et salaires." },
+    ImpotSynthetique: { label: 'Impôt Synthétique', description: 'Déclaration pour le régime de l\'impôt synthétique.' },
+    DMS: { label: 'Déclaration Mensuelle Salaires (CNPS)', description: 'Déclaration mensuelle des salaires à la CNPS.' },
+};
+
 const initialModeles: ModeleDeclaration[] = [
   {
     id: 1,
-    libelle: 'Déclaration de TVA (CA3)',
-    description: 'Modèle mensuel pour la Taxe sur la Valeur Ajoutée.',
+    libelle: 'TVA Mensuelle - Standard',
+    description: 'Modèle de base pour la déclaration de TVA CA3.',
     type: 'TVA',
-    formContent: { tvaCollectee: 25000, tvaDeductible: 18500 },
+    formContent: { caHtNormal: 15000000, caHtReduit: 2000000, tvaDeductibleAchats: 1200000, creditTvaAnterieur: 50000 },
   },
   {
     id: 2,
-    libelle: 'Acompte Impôt sur les Sociétés',
+    libelle: 'Acompte IS Trimestriel',
     description: 'Calcul et déclaration des acomptes IS trimestriels.',
-    type: 'IS',
-    formContent: { resultatFiscal: 120000, tauxIS: 25 },
+    type: 'BIC',
+    formContent: { resultatFiscal: 12000000, caTtc: 80000000 },
   },
   {
     id: 3,
-    libelle: 'Déclaration Sociale Nominative (Simplifiée)',
-    description: 'Modèle simplifié pour le calcul des cotisations sociales.',
-    type: 'DSN',
-    formContent: { masseSalariale: 75000, tauxPatronales: 42, tauxSalariales: 22 },
-  },
-    {
-    id: 4,
-    libelle: 'Cotisation sur la Valeur Ajoutée (CVAE)',
-    description: 'Modèle pour la déclaration de la CVAE.',
-    type: 'CVAE',
-    formContent: { chiffreAffaires: 1500000, valeurAjoutee: 450000 },
+    libelle: 'Déclaration Sociale (Standard)',
+    description: 'Modèle pour le calcul des cotisations sociales mensuelles.',
+    type: 'DMS',
+    formContent: { masseSalarialeBrute: 75000000 },
   },
 ];
 
 const getDefaultFormContent = (type: DeclarationType) => {
     switch (type) {
-        case 'TVA': return { tvaCollectee: 0, tvaDeductible: 0 };
-        case 'IS': return { resultatFiscal: 0, tauxIS: 25 };
-        case 'DSN': return { masseSalariale: 0, tauxPatronales: 42, tauxSalariales: 22 };
-        case 'CVAE': return { chiffreAffaires: 0, valeurAjoutee: 0 };
+        case 'TVA': return { caHtNormal: '0', caHtReduit: '0', caExonere: '0', exportations: '0', tvaLasem: '0', tvaDeductibleAchats: '0', tvaDeductibleServices: '0', tvaDeductibleImmo: '0', creditTvaAnterieur: '0' };
+        case 'BIC': return { caHt: 0, caTtc: 0, chargesDeductibles: 0, amortissements: 0, resultatFiscal: 0 };
+        case 'ITS': return { nombreEmployes: 0, masseSalarialeBrute: 0, abattementsAppliques: 0, retenuesEffectuees: 0 };
+        case 'ImpotSynthetique': return { natureActivite: '', caPrevisionnel: 0, montantImpotSynthetique: 0 };
+        case 'DMS': return { periode: new Date().toISOString().substring(0, 7), masseSalarialeBrute: 0 };
         default: return {};
     }
 }
@@ -105,175 +108,84 @@ const getDefaultFormContent = (type: DeclarationType) => {
 const defaultFormData: Omit<ModeleDeclaration, 'id'> = {
   libelle: '',
   description: '',
-  type: 'Autre',
-  formContent: {},
+  type: 'TVA',
+  formContent: getDefaultFormContent('TVA'),
 };
 
+const FormField = ({ label, children, isRequired }: { label: string, children: React.ReactNode, isRequired?: boolean }) => (
+    <div className="space-y-1"><Label>{label}{isRequired && <span className="text-destructive"> *</span>}</Label>{children}</div>
+);
+
+function TvaForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: string) => setData((d:any) => ({...d, formContent: {...d.formContent, [field]: value}}));
+    
+    const { totalTvaCollectee, totalTvaDeductible, tvaNetteDue, creditAReporter } = useMemo(() => {
+        const caNormal = parseFloat(data.formContent.caHtNormal) || 0;
+        const caReduit = parseFloat(data.formContent.caHtReduit) || 0;
+        const tvaCollectee18 = caNormal * 0.18;
+        const tvaCollecteeReduit = caReduit * 0.10;
+        const totalTvaCollectee = tvaCollectee18 + tvaCollecteeReduit + (parseFloat(data.formContent.tvaLasem) || 0);
+        const totalTvaDeductible = (parseFloat(data.formContent.tvaDeductibleAchats) || 0) + (parseFloat(data.formContent.tvaDeductibleServices) || 0) + (parseFloat(data.formContent.tvaDeductibleImmo) || 0);
+        const tvaDue = totalTvaCollectee - totalTvaDeductible - (parseFloat(data.formContent.creditTvaAnterieur) || 0);
+        return { totalTvaCollectee, totalTvaDeductible, tvaNetteDue: tvaDue > 0 ? tvaDue : 0, creditAReporter: tvaDue < 0 ? -tvaDue : 0 };
+    }, [data.formContent]);
+    
+    return (<Card><CardHeader><CardTitle>Déclaration de TVA</CardTitle><CardDescription>Renseignez les montants de TVA collectée et déductible.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"><FormField label="CA Taux Normal (18%)" isRequired><Input type="number" value={data.formContent.caHtNormal || ''} onChange={e => handleChange('caHtNormal', e.target.value)} disabled={isViewMode}/></FormField><FormField label="CA Taux Réduit (10%)"><Input type="number" value={data.formContent.caHtReduit || ''} onChange={e => handleChange('caHtReduit', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Total Achats HT (Déductible)" isRequired><Input type="number" value={data.formContent.tvaDeductibleAchats || ''} onChange={e => handleChange('tvaDeductibleAchats', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Crédit de TVA antérieur"><Input type="number" value={data.formContent.creditTvaAnterieur || ''} onChange={e => handleChange('creditTvaAnterieur', e.target.value)} disabled={isViewMode}/></FormField></div><Separator /><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Résultats de la Simulation</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Collectée</span><span className="font-mono">{totalTvaCollectee.toLocaleString('fr-FR')} FCFA</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Déductible</span><span className="font-mono">{totalTvaDeductible.toLocaleString('fr-FR')} FCFA</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >{tvaNetteDue > 0 ? 'TVA à Décaisser' : 'Crédit à Reporter'}</span><span className="font-mono">{(tvaNetteDue > 0 ? tvaNetteDue : creditAReporter).toLocaleString('fr-FR')} FCFA</span></div></div></CardContent></Card>);
+}
+
+function BicForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: string) => setData((d:any) => ({...d, formContent: {...d.formContent, [field]: parseFloat(value) || 0}}));
+    const { bicCalcule, imf, impotDu } = useMemo(() => {
+        const resultatFiscal = data.formContent.resultatFiscal || 0;
+        const caTtc = data.formContent.caTtc || 0;
+        const bic = resultatFiscal > 0 ? resultatFiscal * 0.27 : 0;
+        const imfCalc = caTtc * 0.02;
+        return { bicCalcule: bic, imf: imfCalc, impotDu: Math.max(bic, imfCalc) };
+    }, [data.formContent.resultatFiscal, data.formContent.caTtc]);
+    return (<Card><CardHeader><CardTitle>Impôt sur les Sociétés (BIC)</CardTitle><CardDescription>Estimez le montant de votre impôt.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-2 gap-4"><FormField label="Chiffre d'affaires HT"><Input type="number" value={data.formContent.caHt || ''} onChange={e => handleChange('caHt', e.target.value)} disabled={isViewMode} /></FormField><FormField label="Chiffre d'affaires TTC" isRequired><Input type="number" value={data.formContent.caTtc || ''} onChange={e => handleChange('caTtc', e.target.value)} disabled={isViewMode} /></FormField></div><FormField label="Résultat fiscal" isRequired><Input type="number" value={data.formContent.resultatFiscal || ''} onChange={e => handleChange('resultatFiscal', e.target.value)} disabled={isViewMode} /></FormField><Separator /><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span className="font-mono">{bicCalcule.toLocaleString('fr-FR')} FCFA</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span className="font-mono">{imf.toLocaleString('fr-FR')} FCFA</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span className="font-mono">{impotDu.toLocaleString('fr-FR')} FCFA</span></div></div></CardContent></Card>);
+}
+
+function ItsForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: string) => setData((d:any) => ({...d, formContent: {...d.formContent, [field]: parseFloat(value) || 0}}));
+    const { baseImposable, itsCalcule, itsNetAPayer } = useMemo(() => {
+        const masseSalariale = data.formContent.masseSalarialeBrute || 0;
+        const abattements = data.formContent.abattementsAppliques || 0;
+        const retenues = data.formContent.retenuesEffectuees || 0;
+        const base = masseSalariale - abattements;
+        const its = base * 0.15; // Simplified rate
+        return { baseImposable: base, itsCalcule: its, itsNetAPayer: its - retenues };
+    }, [data.formContent.masseSalarialeBrute, data.formContent.abattementsAppliques, data.formContent.retenuesEffectuees]);
+    return (<Card><CardHeader><CardTitle>Impôt sur les Salaires (ITS)</CardTitle></CardHeader><CardContent className="space-y-4"><FormField label="Masse salariale brute" isRequired><Input type="number" value={data.formContent.masseSalarialeBrute || ''} onChange={e => handleChange('masseSalarialeBrute', e.target.value)} disabled={isViewMode}/></FormField><Separator /><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span className="font-mono">{baseImposable.toLocaleString('fr-FR')} FCFA</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span className="font-mono">{itsCalcule.toLocaleString('fr-FR')} FCFA</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span className="font-mono">{itsNetAPayer.toLocaleString('fr-FR')} FCFA</span></div></div></CardContent></Card>);
+}
+
+function ImpotSynthetiqueForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((d:any) => ({...d, formContent: {...d.formContent, [field]: value}}));
+    return (<Card><CardHeader><CardTitle>Impôt Synthétique</CardTitle></CardHeader><CardContent className="space-y-4"><FormField label="Nature de l'activité" isRequired><Input value={data.formContent.natureActivite || ''} onChange={e => handleChange('natureActivite', e.target.value)} disabled={isViewMode}/></FormField><div className="grid md:grid-cols-2 gap-4"><FormField label="CA Prévisionnel" isRequired><Input type="number" value={data.formContent.caPrevisionnel || ''} onChange={e => handleChange('caPrevisionnel', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Montant de l'impôt" isRequired><Input type="number" value={data.formContent.montantImpotSynthetique || ''} onChange={e => handleChange('montantImpotSynthetique', e.target.value)} disabled={isViewMode}/></FormField></div></CardContent></Card>);
+}
+
+function DeclarationMensuelleSalairesForm({ data, setData, isViewMode }: { data: any, setData: Function, isViewMode: boolean }) {
+    const handleChange = (field: string, value: any) => setData((d:any) => ({...d, formContent: {...d.formContent, [field]: value}}));
+    const { cotisationsPatronales, cotisationsSalariales, total } = useMemo(() => {
+        const masseSalariale = data.formContent.masseSalarialeBrute || 0;
+        const cp = masseSalariale * 0.165;
+        const cs = masseSalariale * 0.035;
+        return { cotisationsPatronales: cp, cotisationsSalariales: cs, total: cp + cs };
+    }, [data.formContent.masseSalarialeBrute]);
+    return (<Card><CardHeader><CardTitle>Déclaration Mensuelle des Salaires (CNPS)</CardTitle></CardHeader><CardContent className="space-y-4"><FormField label="Période (mois/année)" isRequired><Input type="month" value={data.formContent.periode || ''} onChange={e => handleChange('periode', e.target.value)} disabled={isViewMode}/></FormField><FormField label="Masse Salariale Brute" isRequired><Input type="number" value={data.formContent.masseSalarialeBrute || ''} onChange={e => handleChange('masseSalarialeBrute', parseFloat(e.target.value))} disabled={isViewMode}/></FormField><Separator /><div className="grid md:grid-cols-3 gap-4"><div className="space-y-1"><Label>Cotisations Patronales (16.5%)</Label><Input disabled value={cotisationsPatronales.toLocaleString('fr-FR')}/></div><div className="space-y-1"><Label>Cotisations Salariales (3.5%)</Label><Input disabled value={cotisationsSalariales.toLocaleString('fr-FR')}/></div><div className="space-y-1"><Label>Total Cotisations Dues</Label><Input disabled value={total.toLocaleString('fr-FR')} className="font-bold text-primary"/></div></div></CardContent></Card>);
+}
+
+function DefaultForm({data}: any) {
+    return <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50"><p>Ce modèle ne contient pas de formulaire de calcul spécifique.</p></div>;
+}
+
 const DeclarationFormRenderer = ({ type, formData, setFormData, isViewMode }: { type: DeclarationType, formData: any, setFormData: Function, isViewMode: boolean }) => {
-    
-    const handleFormContentChange = (field: string, value: any) => {
-        setFormData((prev: any) => ({
-            ...prev,
-            formContent: {
-                ...prev.formContent,
-                [field]: value
-            }
-        }));
-    };
-    
-    const [tvaDue, setTvaDue] = useState(0);
-    const [isCredit, setIsCredit] = useState(false);
-    
-    useEffect(() => {
-        if(type === 'TVA') {
-            const collectee = Number(formData.formContent.tvaCollectee) || 0;
-            const deductible = Number(formData.formContent.tvaDeductible) || 0;
-            const diff = collectee - deductible;
-            setTvaDue(Math.abs(diff));
-            setIsCredit(diff < 0);
-        }
-    }, [formData.formContent, type]);
-
-    const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(value) + ' FCFA';
-
     switch (type) {
-        case 'TVA':
-            return (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Déclaration de TVA</CardTitle>
-                        <CardDescription>Renseignez les montants de TVA collectée et déductible pour la période.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="tvaCollectee">TVA Collectée</Label>
-                                <Input id="tvaCollectee" type="number" placeholder="0" value={formData.formContent.tvaCollectee || ''} onChange={(e) => handleFormContentChange('tvaCollectee', e.target.value)} disabled={isViewMode}/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="tvaDeductible">TVA Déductible</Label>
-                                <Input id="tvaDeductible" type="number" placeholder="0" value={formData.formContent.tvaDeductible || ''} onChange={(e) => handleFormContentChange('tvaDeductible', e.target.value)} disabled={isViewMode}/>
-                            </div>
-                        </div>
-                        <Separator />
-                         <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>{isCredit ? 'Crédit de TVA' : 'TVA Nette Due'}</Label>
-                                <Input value={formatCurrency(tvaDue)} disabled className={isCredit ? 'text-green-600 font-bold' : 'font-bold'} />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            );
-        case 'IS':
-             const resultatFiscal = Number(formData.formContent.resultatFiscal) || 0;
-             const tauxIS = Number(formData.formContent.tauxIS) || 0;
-             const acompte = (resultatFiscal * (tauxIS / 100)) / 4;
-            return (
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Acompte d'Impôt sur les Sociétés (IS)</CardTitle>
-                        <CardDescription>Calculez le montant de votre acompte trimestriel.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                         <div className="grid md:grid-cols-3 gap-4">
-                             <div className="space-y-2">
-                                <Label htmlFor="resultatFiscal">Résultat Fiscal N-1</Label>
-                                <Input id="resultatFiscal" type="number" placeholder="0" value={formData.formContent.resultatFiscal || ''} onChange={(e) => handleFormContentChange('resultatFiscal', e.target.value)} disabled={isViewMode}/>
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="tauxIS">Taux d'IS (%)</Label>
-                                <Input id="tauxIS" type="number" placeholder="25" value={formData.formContent.tauxIS || ''} onChange={(e) => handleFormContentChange('tauxIS', e.target.value)} disabled={isViewMode}/>
-                            </div>
-                             <div className="space-y-2">
-                                <Label>Montant de l'acompte</Label>
-                                <Input value={formatCurrency(acompte)} disabled className="font-bold"/>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            );
-         case 'DSN':
-            const masseSalariale = Number(formData.formContent.masseSalariale) || 0;
-            const tauxPatronales = Number(formData.formContent.tauxPatronales) || 0;
-            const tauxSalariales = Number(formData.formContent.tauxSalariales) || 0;
-            const cotisationsPatronales = masseSalariale * (tauxPatronales / 100);
-            const cotisationsSalariales = masseSalariale * (tauxSalariales / 100);
-            const totalCotisations = cotisationsPatronales + cotisationsSalariales;
-            return (
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Déclaration Sociale Nominative (Simplifiée)</CardTitle>
-                        <CardDescription>Estimez les cotisations sociales sur la base de la masse salariale.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                           <Label htmlFor="masseSalariale">Masse Salariale Brute</Label>
-                           <Input id="masseSalariale" type="number" placeholder="0" value={formData.formContent.masseSalariale || ''} onChange={(e) => handleFormContentChange('masseSalariale', e.target.value)} disabled={isViewMode}/>
-                        </div>
-                        <Separator/>
-                        <div className="grid md:grid-cols-2 gap-4">
-                             <div className="space-y-2">
-                                <Label htmlFor="cotisationsPatronales">Cotisations Patronales</Label>
-                                <Input value={formatCurrency(cotisationsPatronales)} disabled className="font-bold"/>
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="cotisationsSalariales">Cotisations Salariales</Label>
-                                <Input value={formatCurrency(cotisationsSalariales)} disabled className="font-bold"/>
-                            </div>
-                        </div>
-                        <CardFooter className="p-0 pt-4">
-                            <div className="space-y-2 w-full">
-                               <Label>Total des cotisations à verser</Label>
-                               <Input value={formatCurrency(totalCotisations)} disabled className="font-bold text-lg h-12"/>
-                            </div>
-                        </CardFooter>
-                    </CardContent>
-                </Card>
-            );
-        case 'CVAE':
-            const chiffreAffaires = Number(formData.formContent.chiffreAffaires) || 1;
-            const valeurAjoutee = Number(formData.formContent.valeurAjoutee) || 0;
-            // Simplified CVAE logic for demonstration
-            const tauxEffectif = Math.min(1.5, (valeurAjoutee / chiffreAffaires) * 100);
-            const montantCVAE = valeurAjoutee > 500000 ? valeurAjoutee * 0.0025 : 0; // Extremely simplified
-            return (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Cotisation sur la Valeur Ajoutée (CVAE)</CardTitle>
-                        <CardDescription>Estimez le montant de votre CVAE. (Logique de calcul simplifiée)</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="chiffreAffaires">Chiffre d'Affaires</Label>
-                                <Input id="chiffreAffaires" type="number" placeholder="0" value={formData.formContent.chiffreAffaires || ''} onChange={(e) => handleFormContentChange('chiffreAffaires', e.target.value)} disabled={isViewMode}/>
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="valeurAjoutee">Valeur Ajoutée Produite</Label>
-                                <Input id="valeurAjoutee" type="number" placeholder="0" value={formData.formContent.valeurAjoutee || ''} onChange={(e) => handleFormContentChange('valeurAjoutee', e.target.value)} disabled={isViewMode}/>
-                            </div>
-                        </div>
-                        <Separator/>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Taux Effectif (Plafonné)</Label>
-                                <Input value={`${tauxEffectif.toFixed(2)} %`} disabled className="font-bold"/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Montant CVAE (Estimation)</Label>
-                                <Input value={formatCurrency(montantCVAE)} disabled className="font-bold"/>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )
-        default:
-            return (
-                <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50">
-                    <p>Aucun formulaire de modèle disponible pour le type 'Autre'.<br/>La personnalisation sera disponible dans une future version.</p>
-                </div>
-            );
+        case 'TVA': return <TvaForm data={formData} setData={setFormData} isViewMode={isViewMode} />;
+        case 'BIC': return <BicForm data={formData} setData={setFormData} isViewMode={isViewMode} />;
+        case 'ITS': return <ItsForm data={formData} setData={setFormData} isViewMode={isViewMode} />;
+        case 'ImpotSynthetique': return <ImpotSynthetiqueForm data={formData} setData={setFormData} isViewMode={isViewMode} />;
+        case 'DMS': return <DeclarationMensuelleSalairesForm data={formData} setData={setFormData} isViewMode={isViewMode} />;
+        default: return <DefaultForm data={formData} setData={setFormData} />;
     }
 };
 
@@ -394,7 +306,7 @@ export default function ModeleDeclarationPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="font-semibold">Libellé</TableHead>
-                <TableHead className="w-[180px] text-center font-semibold">Type de déclaration</TableHead>
+                <TableHead className="w-[220px] text-center font-semibold">Type de déclaration</TableHead>
                 <TableHead className="font-semibold">Description</TableHead>
                 <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
               </TableRow>
@@ -404,7 +316,7 @@ export default function ModeleDeclarationPage() {
                 <TableRow key={modele.id} className="odd:bg-muted/50">
                   <TableCell className="font-medium">{modele.libelle}</TableCell>
                   <TableCell className="text-center">
-                    <Badge variant="outline">{modele.type}</Badge>
+                    <Badge variant="outline">{declarationConfigs[modele.type]?.label || modele.type}</Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{modele.description}</TableCell>
                   <TableCell className="text-center">
@@ -479,11 +391,9 @@ export default function ModeleDeclarationPage() {
                       <SelectValue placeholder="Sélectionnez un type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="TVA">TVA</SelectItem>
-                      <SelectItem value="IS">IS (Impôt sur les Sociétés)</SelectItem>
-                      <SelectItem value="CVAE">CVAE</SelectItem>
-                      <SelectItem value="DSN">DSN (Social)</SelectItem>
-                      <SelectItem value="Autre">Autre</SelectItem>
+                      {Object.entries(declarationConfigs).map(([key, config]) => (
+                          <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
