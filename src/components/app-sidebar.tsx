@@ -188,7 +188,7 @@ function SidebarNavContent() {
     >
       {items.map((item) => (
         <AccordionItem value={item.title} key={item.title} className="border-b-0">
-          <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline">
+          <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline font-roboto">
             {item.title}
           </AccordionTrigger>
           <AccordionContent className="pl-4">
@@ -198,7 +198,7 @@ function SidebarNavContent() {
                   <Link
                     href={subItem.href}
                     className={cn(
-                      'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                      'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                       pathname === subItem.href && 'bg-accent text-accent-foreground'
                     )}
                   >
