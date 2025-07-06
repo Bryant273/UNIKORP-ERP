@@ -19,6 +19,7 @@ import autoTable from 'jspdf-autotable';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Logo } from '@/components/logo';
+import { cn } from '@/lib/utils';
 
 // Mock data
 const MOCK_ECRITURES_LIVRE = [
@@ -228,7 +229,7 @@ export default function GrandLivreGeneralPage() {
                                                         onCheckedChange={() => handleCompteToggle(compte.numero)}
                                                     />
                                                     <Label htmlFor={`compte-${compte.numero}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
-                                                        <span className="font-mono text-xs p-1 bg-muted rounded-sm w-20 text-center">{compte.numero}</span>
+                                                        <span className="p-1 bg-muted rounded-sm w-20 text-center">{compte.numero}</span>
                                                         <span>{compte.intitule}</span>
                                                     </Label>
                                                 </div>
@@ -322,7 +323,7 @@ export default function GrandLivreGeneralPage() {
                                                 </TableHeader>
                                                 <TableBody>
                                                     {ecritures.map((ecriture: any, rowIndex) => (
-                                                        <TableRow key={ecriture.id} className={rowIndex % 2 !== 0 ? 'bg-muted' : ''}>
+                                                        <TableRow key={ecriture.id} className={cn("odd:bg-muted/50")}>
                                                             <TableCell>{format(new Date(ecriture.dateOperation), 'dd/MM/yyyy')}</TableCell>
                                                             <TableCell>{ecriture.journal}</TableCell>
                                                             <TableCell>{ecriture.numeroPiece}</TableCell>

@@ -241,7 +241,7 @@ export default function AmortissementsPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {reportData.map((line, index) => (
-                                            <TableRow key={line.codeImmo} className={index % 2 !== 0 ? 'bg-muted' : ''}>
+                                            <TableRow key={line.codeImmo} className={cn("odd:bg-muted/50")}>
                                                 <TableCell>{line.codeImmo}</TableCell>
                                                 <TableCell>{line.libelle}</TableCell>
                                                 <TableCell>{format(new Date(line.dateAcquisition), 'dd/MM/yyyy')}</TableCell>

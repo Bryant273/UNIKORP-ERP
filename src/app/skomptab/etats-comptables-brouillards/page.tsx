@@ -46,6 +46,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
+import { cn } from '@/lib/utils';
 
 // --- TYPES & MOCK DATA ---
 

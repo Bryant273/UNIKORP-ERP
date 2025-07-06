@@ -45,6 +45,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
+import { cn } from '@/lib/utils';
 
 
 // MOCK DATA
@@ -343,8 +344,8 @@ export default function EtatsComptablesJournauxPage() {
                                             <TableCell className="text-center">{ligne.numeroCompte}</TableCell>
                                             <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
                                             <TableCell className="text-center">{ligne.libelleEcriture}</TableCell>
-                                            <TableCell className="text-center text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
-                                            <TableCell className="text-center text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
+                                            <TableCell className="text-right text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                            <TableCell className="text-right text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
                                         </TableRow>
                                     ))}
                                 </React.Fragment>
@@ -356,10 +357,10 @@ export default function EtatsComptablesJournauxPage() {
                         </TableBody>
                         {journalData.length > 0 &&
                           <TableFooter>
-                              <TableRow className="bg-secondary">
-                                  <TableCell colSpan={5} className="text-center font-bold">Totaux</TableCell>
-                                  <TableCell className="text-center font-bold">{totalDebit.toLocaleString('fr-FR')}</TableCell>
-                                  <TableCell className="text-center font-bold">{totalCredit.toLocaleString('fr-FR')}</TableCell>
+                              <TableRow className="bg-secondary font-bold">
+                                  <TableCell colSpan={5} className="text-center">Totaux</TableCell>
+                                  <TableCell className="text-right">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                  <TableCell className="text-right">{totalCredit.toLocaleString('fr-FR')}</TableCell>
                               </TableRow>
                               <TableRow>
                                   <TableCell colSpan={5}></TableCell>

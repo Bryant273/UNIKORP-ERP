@@ -19,6 +19,7 @@ import autoTable from 'jspdf-autotable';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Logo } from '@/components/logo';
+import { cn } from '@/lib/utils';
 
 // Mock data
 type EcritureLivreTiers = {
@@ -238,7 +239,7 @@ export default function GrandLivreTiersPage() {
                                                         onCheckedChange={() => handleTierToggle(tier.code)}
                                                     />
                                                     <Label htmlFor={`tier-${tier.code}`} className="font-normal flex items-center gap-2 cursor-pointer w-full">
-                                                        <span className="font-mono text-xs w-24 text-center">{tier.code}</span>
+                                                        <span className="w-24 text-center">{tier.code}</span>
                                                         <span>{tier.intitule} ({tier.type.toLowerCase()})</span>
                                                     </Label>
                                                 </div>
@@ -337,7 +338,7 @@ export default function GrandLivreTiersPage() {
                                                 </TableHeader>
                                                 <TableBody>
                                                     {ecritures.map((ecriture: EcritureLivreTiers, rowIndex) => (
-                                                        <TableRow key={ecriture.id} className={rowIndex % 2 !== 0 ? 'bg-muted' : ''}>
+                                                        <TableRow key={ecriture.id} className={cn("odd:bg-muted/50")}>
                                                             <TableCell>{ecriture.numeroCompta}</TableCell>
                                                             <TableCell>{ecriture.journal}</TableCell>
                                                             <TableCell>{format(new Date(ecriture.date), 'dd/MM/yyyy')}</TableCell>

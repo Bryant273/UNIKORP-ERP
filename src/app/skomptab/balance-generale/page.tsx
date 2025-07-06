@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
+import { cn } from '@/lib/utils';
 
 // --- MOCK DATA ---
 const MOCK_ECRITURES = [
@@ -257,10 +258,10 @@ export default function BalanceGeneralePage() {
                                     </TableRow></TableHeader>
                                     <TableBody>
                                         {reportData.map((row, index) => (
-                                            <TableRow key={row.numero} className={index % 2 !== 0 ? 'bg-muted' : ''}>
+                                            <TableRow key={row.numero} className={cn("odd:bg-muted/50")}>
                                                 {tableConfig.keys.map(key => (
                                                     <TableCell key={key} className={key.includes('numero') || key.includes('intitule') ? 'text-left font-medium' : 'text-right'}>
-                                                        {typeof row[key] === 'number' && (row[key] as number) === 0 ? '' : typeof row[key] === 'number' ? (row[key] as number).toLocaleString('fr-FR') : row[key]}
+                                                        {typeof row[key as keyof BalanceRow] === 'number' && (row[key as keyof BalanceRow] as number) === 0 ? '' : typeof row[key as keyof BalanceRow] === 'number' ? (row[key as keyof BalanceRow] as number).toLocaleString('fr-FR') : row[key as keyof BalanceRow]}
                                                     </TableCell>
                                                 ))}
                                             </TableRow>
