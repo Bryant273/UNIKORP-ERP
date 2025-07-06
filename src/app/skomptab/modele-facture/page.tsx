@@ -10,6 +10,19 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   Sheet,
   SheetContent,
@@ -19,10 +32,6 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,24 +43,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { PlusCircle, Eye, Pencil, Palette, Building, Milestone, Trash2 } from 'lucide-react';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Trash2, PlusCircle, Palette, Eye, Pencil, FileText } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
 
 // --- DATA TYPES & MOCK DATA ---
 
@@ -224,7 +227,7 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                 </div>
                 <div className="text-right">
                     <h2 className="text-2xl font-bold uppercase" style={{ color: invoice.primaryColor }}>FACTURE</h2>
-                    <p className="text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
+                    <p className="font-mono text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
                     <p className="text-sm text-muted-foreground mt-1">{invoice.invoiceTitle}</p>
                 </div>
             </div>
@@ -473,7 +476,7 @@ export default function ModeleFacturePage() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl">Modèles de Facture</CardTitle>
+                        <CardTitle className="font-sans text-2xl">Modèles de Facture</CardTitle>
                         <CardDescription>
                             Créez, consultez et gérez toutes vos factures de vente.
                         </CardDescription>
@@ -494,9 +497,9 @@ export default function ModeleFacturePage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px] font-semibold">Date d'émission</TableHead>
-                            <TableHead className="font-semibold">Tiers</TableHead>
-                            <TableHead className="font-semibold">Libellé</TableHead>
+                            <TableHead className="w-[120px] font-semibold text-center">Date d'émission</TableHead>
+                            <TableHead className="font-semibold text-center">Tiers</TableHead>
+                            <TableHead className="font-semibold text-center">Libellé</TableHead>
                             <TableHead className="w-[150px] text-right font-semibold">Montant TTC</TableHead>
                             <TableHead className="w-[200px] text-center font-semibold">Actions</TableHead>
                         </TableRow>
@@ -506,15 +509,15 @@ export default function ModeleFacturePage() {
                             const { total } = calculateTotals(invoice);
                             return (
                                 <TableRow key={invoice.id} className="odd:bg-muted/50">
-                                    <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
-                                    <TableCell className="font-medium">{invoice.clientName}</TableCell>
-                                    <TableCell>{invoice.invoiceTitle}</TableCell>
-                                    <TableCell className="text-right">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
+                                    <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
+                                    <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
+                                    <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
+                                    <TableCell className="font-sans text-right">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(invoice)}><Pencil className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><Milestone className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><FileText className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setInvoiceToDelete(invoice)}><Trash2 className="h-4 w-4" /></Button>
                                         </div>
                                     </TableCell>
@@ -563,7 +566,7 @@ export default function ModeleFacturePage() {
                                 <CardHeader><CardTitle>Lignes de la facture</CardTitle></CardHeader>
                                 <CardContent>
                                     <Table>
-                                        <TableHeader><TableRow><TableHead className="font-semibold">Description</TableHead><TableHead className="w-[100px] font-semibold text-center">Qté</TableHead><TableHead className="w-[150px] font-semibold text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] font-semibold text-center"></TableHead></TableRow></TableHeader>
+                                        <TableHeader><TableRow><TableHead className="font-semibold text-center">Description</TableHead><TableHead className="w-[100px] font-semibold text-center">Qté</TableHead><TableHead className="w-[150px] font-semibold text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] font-semibold text-center"></TableHead></TableRow></TableHeader>
                                         <TableBody>
                                             {formData.lineItems.map(item => (
                                                 <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell className="text-center">{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
