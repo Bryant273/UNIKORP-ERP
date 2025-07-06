@@ -187,7 +187,7 @@ function EmployesMainContent() {
                                 {visibleColumns.contractType && <TableHead>Type contrat</TableHead>}
                                 {visibleColumns.dateEmbauche && <TableHead>Date d'embauche</TableHead>}
                                 {visibleColumns.statut && <TableHead className="text-center">Statut</TableHead>}
-                                <TableHead className="w-[100px] text-right">Actions</TableHead>
+                                <TableHead className="w-[150px] text-right">Actions</TableHead>
                             </TableRow></TableHeader>
                             <TableBody>
                                 {filteredEmployees.map(e => (
@@ -205,15 +205,20 @@ function EmployesMainContent() {
                                         {visibleColumns.dateEmbauche && <TableCell>{new Date(e.dateEmbauche).toLocaleDateString('fr-FR')}</TableCell>}
                                         {visibleColumns.statut && <TableCell className="text-center"><Badge className={getStatusBadgeStyles(e.statut)}><span className={`h-2 w-2 rounded-full mr-2 ${getStatusIndicatorStyles(e.statut)}`}/>{e.statut}</Badge></TableCell>}
                                         <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => openViewSheet(e)}><Eye className="mr-2"/>Voir détails</DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => openEditModal(e)}><Pencil className="mr-2"/>Modifier</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setEmployeeToDelete(e)}><Trash2 className="mr-2"/>Supprimer</DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button variant="ghost" size="icon" onClick={() => openViewSheet(e)}>
+                                                    <Eye className="h-4 w-4" />
+                                                    <span className="sr-only">Voir détails</span>
+                                                </Button>
+                                                <Button variant="ghost" size="icon" onClick={() => openEditModal(e)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                    <span className="sr-only">Modifier</span>
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setEmployeeToDelete(e)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="sr-only">Supprimer</span>
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -283,5 +288,3 @@ export default function EmployesPage() {
         <EmployesMainContent />
     )
 }
-
-    
