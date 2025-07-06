@@ -244,12 +244,6 @@ export function AppSidebar() {
           <div className="p-4 text-sm text-muted-foreground">{placeholder}</div>
         )}
       </div>
-       <div className="p-4 border-t">
-          <Button variant="ghost" className="w-full justify-start gap-2">
-            <Cog className="h-4 w-4" />
-            <span>Paramètres du module</span>
-          </Button>
-       </div>
     </aside>
   );
 }
