@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Logo } from '@/components/logo';
 
 
 // --- TYPES & MOCK DATA ---
@@ -142,8 +143,8 @@ function EmployesMainContent() {
         }
     };
 
-    const handleExport = (format: 'pdf' | 'excel') => {
-        if (format === 'pdf') {
+    const handleExport = (formatType: 'pdf' | 'excel') => {
+        if (formatType === 'pdf') {
             const doc = new jsPDF();
             const companyName = "UNIKORP";
             const userName = "Utilisateur Unikorp";
@@ -615,15 +616,40 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         let y = 15;
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 15;
+        const pageContentWidth = doc.internal.pageSize.getWidth() - margin * 2;
+    
+        const companyName = "UNIKORP";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SOCIX";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const printDateTime = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        const drawHeader = () => {
+            doc.setFontSize(9); doc.setTextColor(150);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, margin, 15);
+            doc.setDrawColor(220); doc.line(margin, 18, doc.internal.pageSize.width - margin, 18);
+            doc.addImage(logoDataUri, 'PNG', margin, 22, 12, 12);
+            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+            doc.text(companyName, margin + 15, 28);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+            const rightX = doc.internal.pageSize.width - margin;
+            doc.text(`Document : Contrat de travail`, rightX, 25, { align: 'right' });
+            doc.text(`Employé : ${employee.prenom} ${employee.nom}`, rightX, 30, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+            y = 50; // Reset Y position for content after header
+        }
+
+        drawHeader();
 
         const addText = (text: string, options: any = {}) => {
-            if (y > pageHeight - margin) {
+            const splitText = doc.splitTextToSize(text, pageContentWidth);
+            const textHeight = doc.getTextDimensions(splitText).h;
+            if (y + textHeight > pageHeight - margin) {
                 doc.addPage();
-                y = margin;
+                drawHeader();
             }
-            const splitText = doc.splitTextToSize(text, doc.internal.pageSize.getWidth() - margin * 2);
             doc.text(splitText, margin, y, options);
-            y += (doc.getTextDimensions(splitText).h) + 4;
+            y += textHeight + 4;
         };
 
         const addTitle = (text: string) => {
@@ -648,50 +674,58 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         
         addText(`L'EMPLOYÉ :\n- Nom : ${mockContractData.EMPLOYE_NOM}\n- Prénom : ${mockContractData.EMPLOYE_PRENOM}\n- Date de naissance : ${mockContractData.EMPLOYE_DATE_NAISSANCE}\n- Adresse : ${mockContractData.EMPLOYE_ADRESSE}\n- Numéro de sécurité sociale : ${mockContractData.EMPLOYE_NUM_SECU}`);
         
-        doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
         y += 5;
+        doc.setDrawColor(200);
+        doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+        y += 10;
 
         addTitle('ARTICLE 1 - NATURE DU CONTRAT');
         addText(`Il est conclu entre les parties un contrat de travail à durée ${mockContractData.TYPE_CONTRAT} sous le régime de la convention collective ${mockContractData.CONVENTION_COLLECTIVE}.`);
-        if (mockContractData.SI_CDD) {
-            addText(`Durée du contrat : Du ${mockContractData.DATE_DEBUT} au ${mockContractData.DATE_FIN}.\nMotif de recours : ${mockContractData.MOTIF_CDD}`);
-        }
-        if (mockContractData.SI_PERIODE_ESSAI) {
-            addText(`Période d'essai : ${mockContractData.DUREE_ESSAI} renouvelable une fois pour une durée de ${mockContractData.DUREE_RENOUVELLEMENT_ESSAI}.`);
-        }
+        if (mockContractData.SI_CDD) addText(`Durée du contrat : Du ${mockContractData.DATE_DEBUT} au ${mockContractData.DATE_FIN}.\nMotif de recours : ${mockContractData.MOTIF_CDD}`);
+        if (mockContractData.SI_PERIODE_ESSAI) addText(`Période d'essai : ${mockContractData.DUREE_ESSAI} renouvelable une fois pour une durée de ${mockContractData.DUREE_RENOUVELLEMENT_ESSAI}.`);
 
         addTitle('ARTICLE 2 - FONCTION ET QUALIFICATION');
         addText(`Le salarié est engagé en qualité de ${mockContractData.FONCTION} - ${mockContractData.QUALIFICATION_PROFESSIONNELLE}.`);
-
+        
         addTitle('ARTICLE 3 - LIEU DE TRAVAIL');
         addText(`Le salarié exercera ses fonctions à l'adresse suivante : ${mockContractData.LIEU_TRAVAIL}.`);
         
         addTitle('ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL');
-        addText(`Durée hebdomadaire : ${mockContractData.DUREE_HEBDOMADAIRE} heures.`);
-
+        addText(`La durée hebdomadaire du travail est de ${mockContractData.DUREE_HEBDOMADAIRE} heures.`);
+        
         addTitle('ARTICLE 5 - RÉMUNÉRATION');
-        addText(`Salaire de base : ${mockContractData.SALAIRE_BASE} € ${mockContractData.PERIODICITE_SALAIRE}.`);
-
+        addText(`Le salaire de base est fixé à ${mockContractData.SALAIRE_BASE} € ${mockContractData.PERIODICITE_SALAIRE}.`);
+        
         addTitle('ARTICLE 6 - CONGÉS PAYÉS');
         addText(`Le salarié bénéficie de ${mockContractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.`);
         
+        addTitle('ARTICLE 7 - FORMATION PROFESSIONNELLE');
+        addText(`Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.`);
+
+        addTitle('ARTICLE 8 - OBLIGATIONS DU SALARIÉ');
+        addText(`Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté et à ne pas divulguer d'informations confidentielles.`);
+        
+        addTitle('ARTICLE 9 - CONFIDENTIALITÉ');
+        addText(`Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.`);
+        
+        addTitle('ARTICLE 10 - CLAUSE DE NON-CONCURRENCE');
+        addText(`Non applicable.`);
+
+        addTitle('ARTICLE 11 - RUPTURE DU CONTRAT');
+        addText(`Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis et d'indemnités.`);
+        
+        addTitle('ARTICLE 12 - DISPOSITIONS DIVERSES');
+        addText(`Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.`);
+
         y += 15;
         addText(`Fait à ${mockContractData.LIEU_SIGNATURE}, le ${mockContractData.DATE_SIGNATURE}, en deux exemplaires.`);
         y += 15;
         doc.text("L'EMPLOYEUR", margin, y);
         doc.text("L'EMPLOYÉ", doc.internal.pageSize.getWidth() / 2 + margin, y);
-        y += 10;
-        doc.text(`( ${mockContractData.SIGNATURE_EMPLOYEUR} )`, margin, y);
-        doc.text(`( ${mockContractData.SIGNATURE_EMPLOYE} )`, doc.internal.pageSize.getWidth() / 2 + margin, y);
         
-
         doc.save(`contrat_${employee.nom}.pdf`);
         toast({ title: 'PDF du contrat généré.' });
     };
-
-    const ContractField = ({ label, value }: { label: string, value: string }) => (
-        <p><span className="font-semibold">{label} :</span> {value}</p>
-    );
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -724,14 +758,27 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {mockContractData.LIEU_TRAVAIL}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL</h3><p>La durée hebdomadaire du travail est de {mockContractData.DUREE_HEBDOMADAIRE} heures.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {mockContractData.SALAIRE_BASE} € {mockContractData.PERIODICITE_SALAIRE}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 6 - CONGÉS PAYÉS</h3><p>Le salarié bénéficie de {mockContractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 7 - FORMATION PROFESSIONNELLE</h3><p>Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 8 - OBLIGATIONS DU SALARIÉ</h3><p>Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté et à ne pas divulguer d'informations confidentielles.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 9 - CONFIDENTIALITÉ</h3><p>Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 10 - CLAUSE DE NON-CONCURRENCE</h3><p>Non applicable.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 11 - RUPTURE DU CONTRAT</h3><p>Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis et d'indemnités.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 12 - DISPOSITIONS DIVERSES</h3><p>Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.</p></div>
                         </div>
                          <Separator className="my-6" />
                          <div className="mt-12 text-center">
-                            <p>Fait à {mockContractData.LIEU_SIGNATURE}, le {mockContractData.DATE_SIGNATURE}.</p>
+                            <p>Fait à {mockContractData.LIEU_SIGNATURE}, le {mockContractData.DATE_SIGNATURE}, en deux exemplaires.</p>
                             <div className="flex justify-around mt-12 pt-8">
                                 <div><p className="border-t pt-2">L'EMPLOYEUR</p><p>({mockContractData.SIGNATURE_EMPLOYEUR})</p></div>
                                 <div><p className="border-t pt-2">L'EMPLOYÉ</p><p>({mockContractData.SIGNATURE_EMPLOYE})</p></div>
                             </div>
+                        </div>
+                        <Separator className="my-6" />
+                        <div className="text-xs text-muted-foreground space-y-1">
+                            <p><em>Exemplaire remis au salarié le : {mockContractData.DATE_REMISE}</em></p>
+                            <p><em>Déclaration préalable à l'embauche effectuée le : {mockContractData.DATE_DPAE}</em></p>
+                            <p><em>Visite médicale d'embauche : {mockContractData.DATE_VISITE_MEDICALE}</em></p>
                         </div>
                     </div>
                 </ScrollArea>
