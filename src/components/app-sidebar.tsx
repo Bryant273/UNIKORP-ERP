@@ -59,7 +59,6 @@ import {
   Repeat,
   AreaChart,
   BookHeart,
-  Settings,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -139,27 +138,27 @@ const skomptabNav = [
 
 const socixNav = [
   {
-    title: 'Personnel',
+    title: 'PERSONNEL',
     icon: Contact,
     subItems: [
       { title: 'Employés', href: '/socix/employes', icon: Contact },
-      { title: 'Dossiers administratifs', href: '/socix/dossiers-administratifs', icon: FolderKanban },
       { title: 'Contrats', href: '/socix/contrats', icon: FileSignature },
+      { title: 'Dossiers administratifs', href: '/socix/dossiers-administratifs', icon: FolderKanban },
       { title: 'Organigramme', href: '/socix/organigramme', icon: Network },
     ]
   },
   {
-    title: 'Présences',
+    title: 'PRÉSENCES',
     icon: CalendarDays,
     subItems: [
-      { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
       { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
       { title: 'Absences et arrêts', href: '/socix/absences-arrets', icon: UserX },
+      { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
       { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
     ]
   },
   {
-    title: 'Paie',
+    title: 'PAIE',
     icon: Wallet,
     subItems: [
       { title: 'Traitement de la paie', href: '/socix/traitement-paie', icon: HandCoins },
@@ -169,7 +168,7 @@ const socixNav = [
     ]
   },
   {
-    title: 'Talents',
+    title: 'TALENTS',
     icon: Star,
     subItems: [
       { title: 'Recrutement', href: '/socix/recrutement', icon: UserPlus },
@@ -179,12 +178,12 @@ const socixNav = [
     ]
   },
   {
-    title: 'Analyse',
+    title: 'ANALYSE',
     icon: BarChart3,
     subItems: [
       { title: 'KPI sociaux', href: '/socix/kpi-sociaux', icon: TrendingUp },
-      { title: 'Rapports et analyses', href: '/socix/rapports-analyses', icon: AreaChart },
       { title: 'Alternance des équipes', href: '/socix/alternance-equipes', icon: Repeat },
+      { title: 'Rapports et analyses', href: '/socix/rapports-analyses', icon: AreaChart },
       { title: 'Bilan social', href: '/socix/bilan-social', icon: BookHeart },
     ]
   },
