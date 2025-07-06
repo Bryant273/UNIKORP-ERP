@@ -12,7 +12,6 @@ import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
 
 type Notification = {
@@ -57,7 +56,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-[#1C2039] px-4 text-primary-foreground sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-indigo-500 px-4 text-primary-foreground sm:px-6">
       <div className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-primary" />
         <Button variant="ghost" className="hover:bg-white/10 hover:text-primary-foreground">

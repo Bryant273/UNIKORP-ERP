@@ -55,7 +55,7 @@ export function ModuleNav() {
   };
 
   return (
-    <nav className="bg-[#1C2039] px-4 sm:px-6">
+    <nav className="bg-indigo-500 px-4 sm:px-6">
       <div className="flex items-center gap-4">
         {navLinks.map((link) => (
           <Link href={link.href} key={link.href}>
