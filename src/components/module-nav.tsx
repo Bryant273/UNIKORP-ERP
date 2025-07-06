@@ -49,15 +49,15 @@ export function ModuleNav() {
   };
 
   return (
-    <nav className="bg-card px-4 sm:px-6 border-b">
+    <nav className="bg-indigo-500 px-4 sm:px-6">
       <div className="flex items-center gap-4">
         {navLinks.map((link) => (
           <Link href={link.href} key={link.href}>
             <div
               className={cn(
-                'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary',
+                'flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-100 transition-colors hover:bg-indigo-400 hover:text-white rounded-t-md',
                 isActive(link.href) &&
-                  'rounded-t-md bg-primary text-primary-foreground hover:text-primary-foreground'
+                  'bg-background text-primary hover:bg-background'
               )}
             >
               <link.icon className="h-4 w-4" />
