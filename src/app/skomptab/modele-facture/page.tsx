@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -47,6 +48,18 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { PlusCircle, Eye, Pencil, Palette, Building, Milestone, Trash2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+// --- DATA TYPES & MOCK DATA ---
+
+type LineItem = {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+};
 
 type InvoiceTemplate = {
   id: string;
@@ -100,336 +113,532 @@ const initialTemplates: InvoiceTemplate[] = [
   },
 ];
 
-const dummyInvoiceData = {
-  invoiceNumber: 'FACT-2024-00123',
-  issueDate: '15/07/2024',
-  dueDate: '14/08/2024',
-  client: {
-    name: 'Client Fidèle SARL',
-    address: '10 Rue du Commerce, 33000 Bordeaux',
-  },
-  items: [
-    { description: 'Développement de site web', quantity: 1, unitPrice: 2500000, tax: 20, total: 3000000 },
-    { description: 'Hébergement annuel', quantity: 1, unitPrice: 300000, tax: 20, total: 360000 },
-    { description: 'Conception de logo', quantity: 1, unitPrice: 800000, tax: 20, total: 960000 },
-  ],
-  subtotal: 3600000,
-  taxAmount: 720000,
-  total: 4320000,
+
+type InvoiceData = {
+  id: string;
+  invoiceTitle: string;
+  clientName: string;
+  clientAddress: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate: string;
+  lineItems: LineItem[];
+  isVatEnabled: boolean;
+  vatRate: number;
+  notes: string;
+  // From template
+  companyName: string;
+  companyAddress: string;
+  companyLogoUrl: string;
+  primaryColor: string;
 };
 
-// Component for the invoice preview
-const InvoicePreview = React.forwardRef<HTMLDivElement, { template: InvoiceTemplate }>(({ template }, ref) => {
-    const { primaryColor, companyName, companyAddress, companyLogoUrl, showQuantity, showUnitPrice, showTax, footerText } = template;
-    const { invoiceNumber, issueDate, dueDate, client, items, subtotal, taxAmount, total } = dummyInvoiceData;
+const calculateTotals = (invoice: Omit<InvoiceData, 'id'>) => {
+    const subTotal = invoice.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
+    const vatAmount = invoice.isVatEnabled ? subTotal * (invoice.vatRate / 100) : 0;
+    const total = subTotal + vatAmount;
+    return { subTotal, vatAmount, total };
+};
+
+const initialInvoices: InvoiceData[] = [
+  {
+    id: 'inv_1',
+    invoiceTitle: 'Prestation de développement web',
+    clientName: 'Client Alpha SARL',
+    clientAddress: '10 Rue du Commerce, 33000 Bordeaux',
+    invoiceNumber: 'FACT-2024-00123',
+    invoiceDate: '2024-07-15',
+    dueDate: '2024-08-14',
+    lineItems: [
+      { id: 'l1', description: 'Développement de site web', quantity: 1, unitPrice: 2500000 },
+      { id: 'l2', description: 'Hébergement annuel', quantity: 1, unitPrice: 300000 },
+    ],
+    isVatEnabled: true,
+    vatRate: 20,
+    notes: 'Merci de votre confiance.',
+    companyName: 'Votre Société S.A.',
+    companyAddress: '123 Rue de la Facture, 75001 Paris',
+    companyLogoUrl: '',
+    primaryColor: '#3b82f6',
+  },
+  {
+    id: 'inv_2',
+    invoiceTitle: 'Consulting SEO - Juillet 2024',
+    clientName: 'Tech Innovante Inc.',
+    clientAddress: '456 Avenue du Futur, Lyon',
+    invoiceNumber: 'FACT-2024-00124',
+    invoiceDate: '2024-07-18',
+    dueDate: '2024-08-17',
+    lineItems: [{ id: 'l3', description: 'Consulting SEO', quantity: 10, unitPrice: 150000 }],
+    isVatEnabled: true,
+    vatRate: 20,
+    notes: 'Paiement à réception.',
+    companyName: 'Tech Innovante Inc.',
+    companyAddress: '456 Avenue du Futur, Lyon',
+    companyLogoUrl: '',
+    primaryColor: '#10b981',
+  },
+];
+
+const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id'> => {
+    const today = new Date();
+    const dueDate = new Date();
+    dueDate.setDate(today.getDate() + 30);
+
+    const nextInvoiceNumber = `FACT-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-001`;
+
+    return {
+        invoiceTitle: '',
+        clientName: '',
+        clientAddress: '',
+        invoiceNumber: nextInvoiceNumber,
+        invoiceDate: today.toISOString().split('T')[0],
+        dueDate: dueDate.toISOString().split('T')[0],
+        lineItems: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
+        vatRate: 18,
+        // From template
+        isVatEnabled: template.showTax,
+        notes: template.footerText,
+        companyName: template.companyName,
+        companyAddress: template.companyAddress,
+        companyLogoUrl: template.companyLogoUrl,
+        primaryColor: template.primaryColor
+    };
+};
+
+
+// --- INVOICE PREVIEW COMPONENT ---
+
+const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) => {
+    const { subTotal, vatAmount, total } = calculateTotals(invoice);
     const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
     return (
-        <div ref={ref} className="bg-white rounded-lg shadow-lg p-8 w-full max-w-4xl mx-auto text-black font-sans text-sm">
-            {/* Header */}
+        <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black text-sm border">
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    {companyLogoUrl ? <img src={companyLogoUrl} alt="Logo" className="h-12" data-ai-hint="company logo" /> : <Logo className="h-12 w-12" style={{ color: primaryColor }} />}
-                    <h1 className="font-bold text-lg mt-2">{companyName}</h1>
-                    <p className="text-xs whitespace-pre-line">{companyAddress}</p>
+                     {invoice.companyLogoUrl ? <img src={invoice.companyLogoUrl} alt="Logo" className="h-12" data-ai-hint="company logo" /> : <Logo className="h-12 w-12" style={{ color: invoice.primaryColor }} />}
+                    <h1 className="font-bold text-lg mt-2">{invoice.companyName}</h1>
+                    <p className="text-xs whitespace-pre-line">{invoice.companyAddress}</p>
                 </div>
                 <div className="text-right">
-                    <h2 className="text-2xl font-bold uppercase" style={{ color: primaryColor }}>FACTURE</h2>
-                    <p className="font-mono text-xs">{invoiceNumber}</p>
+                    <h2 className="text-2xl font-bold uppercase" style={{ color: invoice.primaryColor }}>FACTURE</h2>
+                    <p className="text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{invoice.invoiceTitle}</p>
                 </div>
             </div>
-
-            {/* Bill to & Dates */}
             <div className="flex justify-between mb-8">
                 <div className="text-xs">
                     <p className="font-bold text-gray-500 mb-1">FACTURÉ À</p>
-                    <p className="font-bold">{client.name}</p>
-                    <p>{client.address}</p>
+                    <p className="font-bold">{invoice.clientName || 'Nom du Client'}</p>
+                    <p className="whitespace-pre-line">{invoice.clientAddress || 'Adresse du client'}</p>
                 </div>
                 <div className="text-right text-xs">
                     <div className="flex items-center justify-end gap-4">
-                        <p className="font-bold text-gray-500">Date d'émission :</p>
-                        <p>{issueDate}</p>
+                        <p className="font-bold text-gray-500">Date :</p>
+                        <p>{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString('fr-FR') : ''}</p>
                     </div>
                      <div className="flex items-center justify-end gap-4 mt-1">
-                        <p className="font-bold text-gray-500">Date d'échéance :</p>
-                        <p>{dueDate}</p>
+                        <p className="font-bold text-gray-500">Échéance :</p>
+                        <p>{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('fr-FR') : ''}</p>
                     </div>
                 </div>
             </div>
-
-            {/* Items Table */}
             <table className="w-full text-left mb-8 text-xs">
-                <thead style={{ backgroundColor: primaryColor }} className="text-white">
+                <thead style={{ backgroundColor: invoice.primaryColor }} className="text-white">
                     <tr>
-                        <th className="p-2 text-center rounded-l-md font-semibold">Description</th>
-                        {showQuantity && <th className="p-2 text-center font-semibold">Quantité</th>}
-                        {showUnitPrice && <th className="p-2 text-center font-semibold">Prix Unitaire</th>}
-                        {showTax && <th className="p-2 text-center font-semibold">TVA (%)</th>}
-                        <th className="p-2 text-center rounded-r-md font-semibold">Total HT</th>
+                        <th className="p-2 rounded-l-md font-semibold text-center">Description</th>
+                        <th className="p-2 font-semibold text-center">Qté</th>
+                        <th className="p-2 font-semibold text-center">Prix U. HT</th>
+                        <th className="p-2 font-semibold text-center rounded-r-md">Total HT</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {items.map((item, i) => (
-                         <tr key={i} className="border-b odd:bg-muted/50">
-                            <td className="p-2 font-medium">{item.description}</td>
-                             {showQuantity && <td className="p-2 text-center">{item.quantity}</td>}
-                             {showUnitPrice && <td className="p-2 text-right">{formatFr(item.unitPrice)} FCFA</td>}
-                             {showTax && <td className="p-2 text-right">{item.tax} %</td>}
-                            <td className="p-2 text-right">{formatFr(item.unitPrice * item.quantity)} FCFA</td>
+                    {invoice.lineItems.map((item) => (
+                         <tr key={item.id} className="border-b odd:bg-muted/50">
+                            <td className="p-2 font-medium text-center">{item.description || 'Service ou produit'}</td>
+                            <td className="p-2 text-center">{item.quantity}</td>
+                            <td className="p-2 text-center">{formatFr(item.unitPrice)} FCFA</td>
+                            <td className="p-2 text-center">{formatFr(item.quantity * item.unitPrice)} FCFA</td>
                         </tr>
                     ))}
+                    {invoice.lineItems.length === 0 && (
+                        <tr><td colSpan={4} className="p-4 text-center text-gray-400">Aucun article</td></tr>
+                    )}
                 </tbody>
             </table>
-
-            {/* Totals */}
             <div className="flex justify-end mb-8">
                 <div className="w-1/2 max-w-xs text-xs space-y-2">
                     <div className="flex justify-between">
-                        <p className="text-gray-500">Sous-total :</p>
-                        <p>{formatFr(subtotal)} FCFA</p>
+                        <p className="text-gray-500">Sous-total HT :</p>
+                        <p>{formatFr(subTotal)} FCFA</p>
                     </div>
-                    <div className="flex justify-between">
-                        <p className="text-gray-500">TVA (20%) :</p>
-                        <p>{formatFr(taxAmount)} FCFA</p>
-                    </div>
+                    {invoice.isVatEnabled && (
+                        <div className="flex justify-between">
+                            <p className="text-gray-500">TVA ({invoice.vatRate}%) :</p>
+                            <p>{formatFr(vatAmount)} FCFA</p>
+                        </div>
+                    )}
                      <Separator />
-                    <div className="flex justify-between font-bold text-base" style={{ color: primaryColor }}>
+                    <div className="flex justify-between font-bold text-base" style={{ color: invoice.primaryColor }}>
                         <p>TOTAL TTC :</p>
                         <p>{formatFr(total)} FCFA</p>
                     </div>
                 </div>
             </div>
-            
-            {/* Footer */}
             <Separator />
-            <div className="mt-4 text-center text-xs text-gray-500 whitespace-pre-line">
-                {footerText}
+            <div className="mt-4 text-xs text-gray-500 whitespace-pre-line">
+                {invoice.notes}
             </div>
         </div>
     );
-});
-InvoicePreview.displayName = 'InvoicePreview';
+};
+LiveInvoicePreview.displayName = 'LiveInvoicePreview';
 
+// --- MAIN PAGE COMPONENT ---
+export default function ElaborationFacturesPage() {
+  const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<InvoiceData | null>(null);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<InvoiceData | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  
+  const [formData, setFormData] = useState<Omit<InvoiceData, 'id'>>(getDefaultInvoiceData(initialTemplates[0]));
+  const { toast } = useToast();
 
-export default function ModeleFacturePage() {
-    const [templates, setTemplates] = useState<InvoiceTemplate[]>(initialTemplates);
-    const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | null>(null);
-    const [formData, setFormData] = useState<InvoiceTemplate | null>(null);
-    const [viewingTemplate, setViewingTemplate] = useState<InvoiceTemplate | null>(null);
-    const [templateToDelete, setTemplateToDelete] = useState<InvoiceTemplate | null>(null);
+  const handleOpenCreateSheet = (template: InvoiceTemplate) => {
+    setEditingInvoice(null);
+    setIsViewMode(false);
+    setFormData(getDefaultInvoiceData(template));
+    setIsSheetOpen(true);
+  };
+  
+  const handleOpenEditSheet = (invoice: InvoiceData) => {
+    setEditingInvoice(invoice);
+    setIsViewMode(false);
+    setFormData(JSON.parse(JSON.stringify(invoice)));
+    setIsSheetOpen(true);
+  };
 
-    const handleOpenSheet = (template: InvoiceTemplate | null) => {
-        if (template) {
-            setEditingTemplate(template);
-            setFormData({ ...template });
-        } else {
-            const newId = `tpl_custom_${Date.now()}`;
-            const newTemplate = {
-                id: newId,
-                name: 'Nouveau Modèle',
-                primaryColor: '#8b5cf6', // violet-500
-                companyName: 'Ma Super Entreprise',
-                companyAddress: 'Votre adresse ici',
-                companyLogoUrl: '',
-                showQuantity: true,
-                showUnitPrice: true,
-                showTax: true,
-                footerText: 'Merci pour votre achat.',
-            };
-            setEditingTemplate(newTemplate);
-            setFormData(newTemplate);
-        }
-        setIsSheetOpen(true);
-    };
+  const handleOpenViewSheet = (invoice: InvoiceData) => {
+    setEditingInvoice(invoice);
+    setIsViewMode(true);
+    setFormData(JSON.parse(JSON.stringify(invoice)));
+    setIsSheetOpen(true);
+  };
 
-    const handleFormChange = (field: keyof InvoiceTemplate, value: any) => {
-        if (formData) {
-            setFormData(prev => prev ? { ...prev, [field]: value } : null);
-        }
-    };
+  const handleFormChange = (field: keyof Omit<InvoiceData, 'id' | 'lineItems'>, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleLineItemChange = (id: string, field: keyof Omit<LineItem, 'id'>, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      lineItems: prev.lineItems.map(item =>
+        item.id === id ? { ...item, [field]: value } : item
+      ),
+    }));
+  };
+
+  const addLineItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      lineItems: [...prev.lineItems, { id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
+    }));
+  };
+
+  const removeLineItem = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      lineItems: prev.lineItems.filter(item => item.id !== id),
+    }));
+  };
+
+  const handleSave = () => {
+    if (editingInvoice) {
+      setInvoices(invoices.map(inv => inv.id === editingInvoice.id ? { id: inv.id, ...formData } : inv));
+      toast({ title: "Facture mise à jour." });
+    } else {
+      const newInvoice = { id: `inv_${Date.now()}`, ...formData };
+      setInvoices(prev => [newInvoice, ...prev]);
+      toast({ title: "Facture créée avec succès." });
+    }
+    setIsSheetOpen(false);
+  };
+
+  const handleDelete = () => {
+      if (invoiceToDelete) {
+          setInvoices(invoices.filter(inv => inv.id !== invoiceToDelete.id));
+          setInvoiceToDelete(null);
+          toast({ title: "Facture supprimée." });
+      }
+  };
+
+  const handleSelectTemplate = (template: InvoiceTemplate) => {
+    setIsTemplateModalOpen(false);
+    handleOpenCreateSheet(template);
+  };
+
+  const generatePDF = (invoice: InvoiceData) => {
+    const doc = new jsPDF();
+    const { subTotal, vatAmount, total } = calculateTotals(invoice);
+    const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
     
-    const handleSave = () => {
-        if(formData) {
-            const index = templates.findIndex(t => t.id === formData.id);
-            if (index !== -1) {
-                setTemplates(prev => {
-                    const newTemplates = [...prev];
-                    newTemplates[index] = formData;
-                    return newTemplates;
-                });
-            } else {
-                setTemplates(prev => [...prev, formData]);
-            }
-        }
-        setIsSheetOpen(false);
-        setEditingTemplate(null);
-        setFormData(null);
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text("FACTURE", 150, 20);
+    doc.setFontSize(10);
+    doc.text(invoice.invoiceNumber, 150, 26);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(invoice.invoiceTitle, 150, 32, {align: 'right'});
+    doc.setTextColor(40, 40, 40);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(invoice.companyName, 20, 20);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(invoice.companyAddress.replace(/\n/g, '\n'), 20, 26);
+    
+    // Client Info & Dates
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("FACTURÉ À:", 20, 50);
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.clientName, 20, 56);
+    doc.text(invoice.clientAddress.replace(/\n/g, '\n'), 20, 62);
+    
+    doc.text(`Date de facture: ${new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}`, 150, 50);
+    doc.text(`Date d'échéance: ${new Date(invoice.dueDate).toLocaleDateString('fr-FR')}`, 150, 56);
+    
+    // Table
+    const tableColumn = ["Description", "Qté", "P.U. HT", "Total HT"];
+    const tableRows = invoice.lineItems.map(item => [
+      item.description,
+      item.quantity,
+      `${formatFr(item.unitPrice)} FCFA`,
+      `${formatFr(item.quantity * item.unitPrice)} FCFA`,
+    ]);
+
+    autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 75,
+        headStyles: { fillColor: invoice.primaryColor }, 
+        styles: { halign: 'center' },
+    });
+
+    // Totals
+    const finalY = (doc as any).lastAutoTable.finalY;
+    doc.setFontSize(10);
+    let currentY = finalY + 10;
+
+    doc.text(`Sous-total HT:`, 140, currentY);
+    doc.text(`${formatFr(subTotal)} FCFA`, 190, currentY, { align: 'right' });
+    currentY += 7;
+
+    if (invoice.isVatEnabled) {
+        doc.text(`TVA (${invoice.vatRate}%):`, 140, currentY);
+        doc.text(`${formatFr(vatAmount)} FCFA`, 190, currentY, { align: 'right' });
+        currentY += 7;
     }
 
-    const handleDelete = () => {
-        if (templateToDelete) {
-            setTemplates(templates.filter(t => t.id !== templateToDelete.id));
-            setTemplateToDelete(null);
-        }
-    };
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTAL TTC:`, 140, currentY);
+    doc.text(`${formatFr(total)} FCFA`, 190, currentY, { align: 'right' });
     
+    // Footer
+    currentY += 20;
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+    doc.text(invoice.notes.replace(/\n/g, '\n'), 20, currentY, { maxWidth: 170 });
+
+    doc.save(`facture-${invoice.invoiceNumber}.pdf`);
+
+    toast({
+        title: "Facture générée",
+        description: `Le fichier facture-${invoice.invoiceNumber}.pdf a été téléchargé.`,
+    })
+  };
+
+
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">Modèles de Facture</CardTitle>
-              <CardDescription>Créez et personnalisez des modèles pour vos factures.</CardDescription>
-            </div>
-            <Button onClick={() => handleOpenSheet(null)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nouveau modèle
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-semibold text-center">Nom du modèle</TableHead>
-                <TableHead className="font-semibold text-center">Couleur principale</TableHead>
-                <TableHead className="w-[150px] font-semibold text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {templates.map(template => (
-                <TableRow key={template.id} className="odd:bg-muted/50">
-                  <TableCell className="font-medium">{template.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: template.primaryColor }} />
-                        <span>{template.primaryColor}</span>
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-2xl">Gestion des Factures</CardTitle>
+                        <CardDescription>
+                            Créez, consultez et gérez toutes vos factures de vente.
+                        </CardDescription>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setViewingTemplate(template)}>
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">Aperçu</span>
+                     <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setIsTemplateModalOpen(true)}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Utiliser un modèle
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenSheet(template)}>
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Modifier</span>
+                        <Button onClick={() => handleOpenCreateSheet(initialTemplates[0])}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Créer une facture
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setTemplateToDelete(template)} className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Supprimer</span>
-                        </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent className="w-full sm:max-w-full md:w-[90vw] lg:w-[80vw] xl:w-[70vw] p-0 flex flex-col">
-              <SheetHeader className="p-6 border-b">
-                  <SheetTitle>{editingTemplate?.id.startsWith('tpl_custom') ? 'Nouveau Modèle de Facture' : 'Modifier le Modèle de Facture'}</SheetTitle>
-                  <SheetDescription>Personnalisez les éléments et le style de votre facture. Les modifications sont visibles en direct.</SheetDescription>
-              </SheetHeader>
-              {formData && (
-                <div className="flex-1 grid grid-cols-12 overflow-hidden">
-                    {/* Controls Panel */}
-                    <div className="col-span-4 lg:col-span-3 border-r overflow-y-auto p-6 space-y-6">
-                       <div className="space-y-2">
-                           <Label htmlFor="name">Nom du modèle</Label>
-                           <Input id="name" value={formData.name} onChange={(e) => handleFormChange('name', e.target.value)} />
-                       </div>
-                       <Separator />
-                       <div className="space-y-4">
-                            <h3 className="font-semibold text-sm flex items-center gap-2"><Building className="h-4 w-4"/>Votre entreprise</h3>
-                            <div className="space-y-2">
-                               <Label htmlFor="companyName">Nom de l'entreprise</Label>
-                               <Input id="companyName" value={formData.companyName} onChange={(e) => handleFormChange('companyName', e.target.value)} />
-                           </div>
-                           <div className="space-y-2">
-                               <Label htmlFor="companyAddress">Adresse</Label>
-                               <Textarea id="companyAddress" value={formData.companyAddress} onChange={(e) => handleFormChange('companyAddress', e.target.value)} rows={3}/>
-                           </div>
-                           <div className="space-y-2">
-                               <Label htmlFor="companyLogoUrl">URL du Logo (optionnel)</Label>
-                               <Input id="companyLogoUrl" placeholder="https://..." value={formData.companyLogoUrl} onChange={(e) => handleFormChange('companyLogoUrl', e.target.value)} />
-                           </div>
-                       </div>
-                       <Separator />
-                       <div className="space-y-4">
-                            <h3 className="font-semibold text-sm flex items-center gap-2"><Palette className="h-4 w-4"/>Apparence</h3>
-                             <div className="space-y-2">
-                               <Label htmlFor="primaryColor">Couleur principale</Label>
-                               <div className="relative">
-                                    <Input id="primaryColor" value={formData.primaryColor} onChange={(e) => handleFormChange('primaryColor', e.target.value)} className="pr-10"/>
-                                    <Input type="color" value={formData.primaryColor} onChange={(e) => handleFormChange('primaryColor', e.target.value)} className="absolute right-1 top-1 h-8 w-8 p-1 bg-transparent border-none cursor-pointer"/>
-                               </div>
-                           </div>
-                       </div>
-                       <Separator />
-                        <div className="space-y-4">
-                           <h3 className="font-semibold text-sm flex items-center gap-2"><Milestone className="h-4 w-4"/>Colonnes</h3>
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="showQuantity">Afficher "Quantité"</Label>
-                                <Switch id="showQuantity" checked={formData.showQuantity} onCheckedChange={(checked) => handleFormChange('showQuantity', checked)} />
-                            </div>
-                             <div className="flex items-center justify-between">
-                                <Label htmlFor="showUnitPrice">Afficher "Prix Unitaire"</Label>
-                                <Switch id="showUnitPrice" checked={formData.showUnitPrice} onCheckedChange={(checked) => handleFormChange('showUnitPrice', checked)} />
-                            </div>
-                             <div className="flex items-center justify-between">
-                                <Label htmlFor="showTax">Afficher "TVA"</Label>
-                                <Switch id="showTax" checked={formData.showTax} onCheckedChange={(checked) => handleFormChange('showTax', checked)} />
-                            </div>
-                        </div>
-                         <Separator />
-                        <div className="space-y-2">
-                            <h3 className="font-semibold text-sm">Pied de page</h3>
-                           <Textarea value={formData.footerText} onChange={(e) => handleFormChange('footerText', e.target.value)} rows={4} placeholder="Ex: Coordonnées bancaires, mentions légales..."/>
-                       </div>
-                    </div>
-                    {/* Live Preview */}
-                    <div className="col-span-8 lg:col-span-9 bg-muted overflow-y-auto p-8">
-                       <InvoicePreview template={formData} />
                     </div>
                 </div>
-              )}
-              <SheetFooter className="p-6 border-t">
-                  <SheetClose asChild>
-                      <Button variant="outline">Annuler</Button>
-                  </SheetClose>
-                  <Button onClick={handleSave}>Enregistrer le modèle</Button>
-              </SheetFooter>
-          </SheetContent>
-      </Sheet>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[120px] text-center font-semibold">Date d'émission</TableHead>
+                            <TableHead className="text-center font-semibold">Tiers</TableHead>
+                            <TableHead className="text-center font-semibold">Libellé</TableHead>
+                            <TableHead className="w-[150px] text-center font-semibold">Montant TTC</TableHead>
+                            <TableHead className="w-[200px] text-center font-semibold">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {invoices.map((invoice) => {
+                            const { total } = calculateTotals(invoice);
+                            return (
+                                <TableRow key={invoice.id} className="odd:bg-muted/50">
+                                    <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
+                                    <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
+                                    <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
+                                    <TableCell className="text-center">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(invoice)}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><Printer className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setInvoiceToDelete(invoice)}><Trash2 className="h-4 w-4" /></Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
 
-      <Dialog open={!!viewingTemplate} onOpenChange={() => setViewingTemplate(null)}>
-        <DialogContent className="max-w-4xl p-0 border-0 bg-transparent shadow-none">
-          {viewingTemplate && <div className="bg-muted p-8"><InvoicePreview template={viewingTemplate} /></div>}
-        </DialogContent>
-      </Dialog>
-      
-      <AlertDialog open={!!templateToDelete} onOpenChange={() => setTemplateToDelete(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    Cette action est irréversible. Le modèle de facture sera définitivement supprimé.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setTemplateToDelete(null)}>Annuler</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetContent className="w-full sm:max-w-full md:w-[90vw] lg:w-[80vw] xl:w-[70vw] p-0 flex flex-col">
+                <SheetHeader className="p-6 border-b">
+                    <SheetTitle>{editingInvoice ? (isViewMode ? 'Détails de la facture' : 'Modifier la facture') : 'Créer une nouvelle facture'}</SheetTitle>
+                    <SheetDescription>
+                        {isViewMode ? 'Consultez les informations de la facture.' : 'Remplissez les informations ci-dessous. Les modifications sont visibles en direct.'}
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+                    {/* Form Panel */}
+                    <ScrollArea className="md:col-span-1 h-full">
+                        <div className="p-6 space-y-6">
+                            <Card>
+                                <CardHeader><CardTitle>Informations sur la facture</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                     <div className="space-y-2">
+                                        <Label htmlFor="invoiceTitle">Libellé de la facture</Label>
+                                        <Input id="invoiceTitle" value={formData.invoiceTitle} onChange={(e) => handleFormChange('invoiceTitle', e.target.value)} placeholder="Ex: Prestation de service" disabled={isViewMode} />
+                                    </div>
+                                    <div className="grid sm:grid-cols-3 gap-4">
+                                        <div className="space-y-2"><Label htmlFor="invoiceNumber">N° de facture</Label><Input id="invoiceNumber" value={formData.invoiceNumber} onChange={(e) => handleFormChange('invoiceNumber', e.target.value)} disabled={isViewMode} /></div>
+                                        <div className="space-y-2"><Label htmlFor="invoiceDate">Date de facturation</Label><Input id="invoiceDate" type="date" value={formData.invoiceDate} onChange={(e) => handleFormChange('invoiceDate', e.target.value)} disabled={isViewMode} /></div>
+                                        <div className="space-y-2"><Label htmlFor="dueDate">Date d'échéance</Label><Input id="dueDate" type="date" value={formData.dueDate} onChange={(e) => handleFormChange('dueDate', e.target.value)} disabled={isViewMode} /></div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle>Informations sur le client</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2"><Label htmlFor="clientName">Nom du client</Label><Input id="clientName" value={formData.clientName} onChange={(e) => handleFormChange('clientName', e.target.value)} placeholder="Nom ou raison sociale" disabled={isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="clientAddress">Adresse du client</Label><Textarea id="clientAddress" value={formData.clientAddress} onChange={(e) => handleFormChange('clientAddress', e.target.value)} placeholder="Adresse complète" disabled={isViewMode} /></div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle>Lignes de la facture</CardTitle></CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader><TableRow><TableHead className="font-semibold text-center">Description</TableHead><TableHead className="w-[100px] font-semibold text-center">Qté</TableHead><TableHead className="w-[150px] font-semibold text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] font-semibold text-center"></TableHead></TableRow></TableHeader>
+                                        <TableBody>
+                                            {formData.lineItems.map(item => (
+                                                <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell className="text-center">{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    {!isViewMode && <Button onClick={addLineItem} variant="outline" className="mt-4"><PlusCircle className="mr-2 h-4 w-4" />Ajouter une ligne</Button>}
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle>TVA et Notes</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center space-x-2 rounded-lg border p-4"><div className="flex-1 space-y-1"><Label htmlFor="isVatEnabled">Activer la TVA</Label><p className="text-xs text-muted-foreground">Appliquer la TVA sur le total HT.</p></div><Switch id="isVatEnabled" checked={formData.isVatEnabled} onCheckedChange={(checked) => handleFormChange('isVatEnabled', checked)} disabled={isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="vatRate">Taux de TVA (%)</Label><Input id="vatRate" type="number" value={formData.vatRate} onChange={(e) => handleFormChange('vatRate', Number(e.target.value))} disabled={!formData.isVatEnabled || isViewMode} /></div>
+                                    <div className="space-y-2"><Label htmlFor="notes">Notes / Pied de page</Label><Textarea id="notes" value={formData.notes} onChange={(e) => handleFormChange('notes', e.target.value)} disabled={isViewMode} /></div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </ScrollArea>
+                    {/* Preview Panel */}
+                    <ScrollArea className="md:col-span-1 h-full bg-muted">
+                       <div className="p-8">
+                            <LiveInvoicePreview invoice={formData} />
+                       </div>
+                    </ScrollArea>
+                </div>
+                <SheetFooter className="p-6 border-t">
+                    <SheetClose asChild><Button variant="outline">Annuler</Button></SheetClose>
+                    {!isViewMode && <Button onClick={handleSave}>Enregistrer</Button>}
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
+        
+        <AlertDialog open={!!invoiceToDelete} onOpenChange={() => setInvoiceToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Cette action est irréversible. La facture sera définitivement supprimée.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setInvoiceToDelete(null)}>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+            <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Utiliser un modèle de facture</DialogTitle>
+                  <DialogDescription>
+                    Sélectionnez un modèle pour pré-remplir la facture.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                    {initialTemplates.map(template => (
+                      <Card key={template.id} className="hover:bg-accent transition-colors">
+                        <CardHeader className="flex flex-row justify-between items-center p-4">
+                            <div>
+                               <CardTitle className="text-base font-semibold">{template.name}</CardTitle>
+                               <CardDescription className="flex items-center gap-2">
+                                   <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: template.primaryColor }} />
+                                   {template.companyName}
+                               </CardDescription>
+                            </div>
+                            <Button size="sm" onClick={() => handleSelectTemplate(template)}>
+                               Sélectionner
+                            </Button>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                </div>
+            </DialogContent>
+        </Dialog>
     </>
   );
 }

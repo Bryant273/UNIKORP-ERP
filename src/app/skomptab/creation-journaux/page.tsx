@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -203,7 +204,7 @@ export default function CreationJournauxPage() {
             <TableBody>
               {journals.map((journal) => (
                 <TableRow key={journal.id}>
-                  <TableCell className="font-mono">{journal.code}</TableCell>
+                  <TableCell>{journal.code}</TableCell>
                   <TableCell>{journal.intitule}</TableCell>
                   <TableCell>{journal.type}</TableCell>
                   <TableCell>{journal.compteRattache || 'N/A'}</TableCell>

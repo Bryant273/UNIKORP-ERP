@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -250,7 +251,7 @@ export default function ComptesTiersPage() {
       <TableBody>
         {data.map((compte) => (
           <TableRow key={compte.id} className="odd:bg-muted/50">
-            <TableCell className="font-mono text-center">{compte.numero}</TableCell>
+            <TableCell className="text-center">{compte.numero}</TableCell>
             <TableCell className="font-medium text-center">{compte.intitule}</TableCell>
             <TableCell className="text-center">{compte.telephone}</TableCell>
             <TableCell className="text-center">
