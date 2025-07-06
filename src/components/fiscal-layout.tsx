@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -54,7 +55,7 @@ function FiscalCalendarWidget() {
                 <Calendar
                     mode="single"
                     onDayClick={handleDateClick}
-                    className="rounded-md border p-0 [&_td]:w-10 [&_td]:h-10 [&_th]:w-10"
+                    className="rounded-md p-0"
                     locale={fr}
                     modifiers={{ deadlines: deadlines.map(d => d.date) }}
                     modifiersClassNames={{ deadlines: 'border-2 border-primary rounded-full cursor-pointer' }}

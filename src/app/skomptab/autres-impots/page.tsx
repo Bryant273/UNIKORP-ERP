@@ -176,7 +176,7 @@ function AutresImpotsMainContent() {
                 ['Type d\'impôt', impot.type],
                 ['Période', impot.periode],
                 ['Échéance', impot.echeance],
-                ['Montant Dû', `${impot.montant.toLocaleString('fr-FR')} €`],
+                ['Montant Dû', `${impot.montant.toLocaleString('fr-FR')} FCFA`],
                 ['Statut', impot.statut],
                 ...bodyData,
             ],
@@ -227,7 +227,7 @@ function AutresImpotsMainContent() {
                         <TableRow key={impot.id}>
                             <TableCell className="font-medium">{impot.periode}</TableCell>
                             <TableCell><Badge variant="secondary">{impot.type}</Badge></TableCell>
-                            <TableCell className="text-right">{impot.montant.toLocaleString('fr-FR')} €</TableCell>
+                            <TableCell className="text-right">{impot.montant.toLocaleString('fr-FR')} FCFA</TableCell>
                             <TableCell className="text-center">{getStatusBadge(impot)}</TableCell>
                              <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-1">

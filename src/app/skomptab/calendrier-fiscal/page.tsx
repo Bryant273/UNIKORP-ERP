@@ -56,11 +56,11 @@ function CalendrierFiscalMainContent() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 flex justify-center">
                      <Calendar
                         mode="single"
                         onDayClick={handleDateClick}
-                        className="rounded-md border p-4"
+                        className="rounded-md"
                         locale={fr}
                         modifiers={{ deadlines: deadlines.map(d => d.date) }}
                         modifiersClassNames={{ deadlines: 'border-2 border-primary rounded-full cursor-pointer' }}
@@ -116,4 +116,3 @@ export default function CalendrierFiscalPage() {
         <CalendrierFiscalMainContent />
     );
 }
-

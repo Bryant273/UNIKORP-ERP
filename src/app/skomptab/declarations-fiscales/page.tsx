@@ -117,9 +117,9 @@ function BicForm({ data, setData, isViewMode }: { data: any, setData: Function, 
              <Separator />
             <div className="p-4 border rounded-lg bg-background space-y-2">
                  <h4 className="font-semibold text-center">Calcul de l'impôt</h4>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span>{bicCalcule.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span>{imf.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span>{impotDu.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span>{bicCalcule.toLocaleString('fr-FR')} FCFA</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span>{imf.toLocaleString('fr-FR')} FCFA</span></div>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span>{impotDu.toLocaleString('fr-FR')} FCFA</span></div>
             </div>
         </CardContent></Card>
     );
@@ -147,9 +147,9 @@ function ItsForm({ data, setData, isViewMode }: { data: any, setData: Function, 
             <Separator />
              <div className="p-4 border rounded-lg bg-background space-y-2">
                  <h4 className="font-semibold text-center">Calcul de l'impôt</h4>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span>{baseImposable.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span>{itsCalcule.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span>{itsNetAPayer.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span>{baseImposable.toLocaleString('fr-FR')} FCFA</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span>{itsCalcule.toLocaleString('fr-FR')} FCFA</span></div>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span>{itsNetAPayer.toLocaleString('fr-FR')} FCFA</span></div>
             </div>
         </CardContent></Card>
     );
@@ -252,7 +252,7 @@ function DeclarationsFiscalesMainContent() {
                 ['Type d\'impôt', declaration.type],
                 ['Période', declaration.periode],
                 ['Échéance', declaration.echeance],
-                ['Montant Dû', `${declaration.montant.toLocaleString('fr-FR')} €`],
+                ['Montant Dû', `${declaration.montant.toLocaleString('fr-FR')} FCFA`],
                 ['Statut', declaration.statut],
             ],
             theme: 'grid'
@@ -304,7 +304,7 @@ function DeclarationsFiscalesMainContent() {
                                 <TableRow key={d.id}>
                                     <TableCell className="font-medium">{d.periode}</TableCell>
                                     <TableCell><Badge variant="secondary">{d.type}</Badge></TableCell>
-                                    <TableCell className="text-right">{d.montant.toLocaleString('fr-FR')} €</TableCell>
+                                    <TableCell className="text-right">{d.montant.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-center">{getStatusBadge(d)}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-1">
