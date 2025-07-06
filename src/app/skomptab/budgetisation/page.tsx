@@ -225,13 +225,13 @@ export default function BudgetisationPage() {
                                     <TableRow key={budget.id}>
                                         <TableCell className="font-medium">{budget.month} {budget.year}</TableCell>
                                         <TableCell>{budget.sectionLibelle}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(totalBudget)}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(totalRealise)}</TableCell>
-                                        <TableCell className={cn("text-right font-mono", ecart > 0 ? 'text-red-500' : 'text-green-500')}>{formatCurrency(ecart)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(totalBudget)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(totalRealise)}</TableCell>
+                                        <TableCell className={cn("text-right", ecart > 0 ? 'text-red-500' : 'text-green-500')}>{formatCurrency(ecart)}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <Progress value={consommation} className={consommation > 100 ? '[&>div]:bg-red-500' : ''}/>
-                                                <span className="text-xs font-mono">{consommation.toFixed(1)}%</span>
+                                                <span className="text-xs">{consommation.toFixed(1)}%</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">
@@ -338,11 +338,11 @@ function BudgetModal({ isOpen, onClose, onSave, existingBudget }: BudgetModalPro
                         <TableHeader><TableRow><TableHead>Élément</TableHead><TableHead className="w-24 text-center">Qté</TableHead><TableHead className="w-32 text-center">P.U.</TableHead><TableHead className="w-32 text-center">Montant</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
                         <TableBody>
                             {budgetLines.map(line => (
-                                <TableRow key={line.id}><TableCell><Input value={line.element} onChange={e => handleLineChange(line.id, 'element', e.target.value)} className="h-8"/></TableCell><TableCell><Input type="number" value={line.quantite} onChange={e => handleLineChange(line.id, 'quantite', e.target.value)} className="h-8 text-center"/></TableCell><TableCell><Input type="number" value={line.pu} onChange={e => handleLineChange(line.id, 'pu', e.target.value)} className="h-8 text-center"/></TableCell><TableCell className="text-right font-mono pr-4">{formatCurrency(line.quantite * line.pu)}</TableCell><TableCell><Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleRemoveLine(line.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>
+                                <TableRow key={line.id}><TableCell><Input value={line.element} onChange={e => handleLineChange(line.id, 'element', e.target.value)} className="h-8"/></TableCell><TableCell><Input type="number" value={line.quantite} onChange={e => handleLineChange(line.id, 'quantite', e.target.value)} className="h-8 text-center"/></TableCell><TableCell><Input type="number" value={line.pu} onChange={e => handleLineChange(line.id, 'pu', e.target.value)} className="h-8 text-center"/></TableCell><TableCell className="text-right pr-4">{formatCurrency(line.quantite * line.pu)}</TableCell><TableCell><Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleRemoveLine(line.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>
                             ))}
                         </TableBody>
                         <TableFooter>
-                            <TableRow className="font-bold bg-secondary"><TableCell colSpan={3} className="text-right">Total Prévisionnel</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalBudget)}</TableCell><TableCell></TableCell></TableRow>
+                            <TableRow className="font-bold bg-secondary"><TableCell colSpan={3} className="text-right">Total Prévisionnel</TableCell><TableCell className="text-right">{formatCurrency(totalBudget)}</TableCell><TableCell></TableCell></TableRow>
                         </TableFooter>
                     </Table>
                 </div>
@@ -433,11 +433,11 @@ function RealiseModal({ isOpen, onClose, onSave, budgets }: RealiseModalProps) {
                         <TableHeader><TableRow><TableHead>Élément</TableHead><TableHead className="w-24 text-center">Qté</TableHead><TableHead className="w-32 text-center">P.U.</TableHead><TableHead className="w-32 text-center">Montant</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
                         <TableBody>
                             {realiseLines.map(line => (
-                                <TableRow key={line.id}><TableCell><Input value={line.element} onChange={e => handleLineChange(line.id, 'element', e.target.value)} className="h-8"/></TableCell><TableCell><Input type="number" value={line.quantite} onChange={e => handleLineChange(line.id, 'quantite', e.target.value)} className="h-8 text-center"/></TableCell><TableCell><Input type="number" value={line.pu} onChange={e => handleLineChange(line.id, 'pu', e.target.value)} className="h-8 text-center"/></TableCell><TableCell className="text-right font-mono pr-4">{formatCurrency(line.quantite * line.pu)}</TableCell><TableCell><Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleRemoveLine(line.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>
+                                <TableRow key={line.id}><TableCell><Input value={line.element} onChange={e => handleLineChange(line.id, 'element', e.target.value)} className="h-8"/></TableCell><TableCell><Input type="number" value={line.quantite} onChange={e => handleLineChange(line.id, 'quantite', e.target.value)} className="h-8 text-center"/></TableCell><TableCell><Input type="number" value={line.pu} onChange={e => handleLineChange(line.id, 'pu', e.target.value)} className="h-8 text-center"/></TableCell><TableCell className="text-right pr-4">{formatCurrency(line.quantite * line.pu)}</TableCell><TableCell><Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleRemoveLine(line.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>
                             ))}
                         </TableBody>
                          <TableFooter>
-                            <TableRow className="font-bold bg-secondary"><TableCell colSpan={3} className="text-right">Total Réalisé</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalRealise)}</TableCell><TableCell></TableCell></TableRow>
+                            <TableRow className="font-bold bg-secondary"><TableCell colSpan={3} className="text-right">Total Réalisé</TableCell><TableCell className="text-right">{formatCurrency(totalRealise)}</TableCell><TableCell></TableCell></TableRow>
                         </TableFooter>
                     </Table>
                 </div>

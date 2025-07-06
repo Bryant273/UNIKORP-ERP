@@ -369,9 +369,9 @@ export default function PlanAnalytiquesPage() {
             <TableBody>
               {paginatedSections.map((section) => (
                 <TableRow key={section.id} className="odd:bg-muted/50">
-                  <TableCell className="font-mono" style={{ paddingLeft: `${getIndentLevel(section.code) + 1}rem` }}>{section.code}</TableCell>
+                  <TableCell style={{ paddingLeft: `${getIndentLevel(section.code) + 1}rem` }}>{section.code}</TableCell>
                   <TableCell className="font-medium">{section.intitule}</TableCell>
-                  <TableCell className="font-mono">{section.compteGeneral}</TableCell>
+                  <TableCell>{section.compteGeneral}</TableCell>
                   <TableCell>{section.type}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">

@@ -259,8 +259,8 @@ export default function SectionsAnalytiquesPage() {
                            {section.name}
                         </div>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{section.code}</TableCell>
-                    <TableCell className="font-mono text-xs">{section.compteGeneral}</TableCell>
+                    <TableCell className="text-xs">{section.code}</TableCell>
+                    <TableCell className="text-xs">{section.compteGeneral}</TableCell>
                     <TableCell>
                         <Badge variant="outline">{section.type === 'folder' ? 'Dossier' : 'Section'}</Badge>
                     </TableCell>
@@ -294,9 +294,9 @@ export default function SectionsAnalytiquesPage() {
                     <Card>
                         <CardHeader><CardTitle className="flex items-center gap-2"><Sigma className="h-5 w-5"/>Synthèse</CardTitle></CardHeader>
                         <CardContent className="grid grid-cols-3 gap-4 text-center">
-                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Total Débit</p><p className="font-bold font-mono text-green-600">{formatCurrency(totals.debit)}</p></div>
-                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Total Crédit</p><p className="font-bold font-mono text-red-600">{formatCurrency(totals.credit)}</p></div>
-                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Solde</p><p className={cn("font-bold font-mono", totals.solde >= 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p></div>
+                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Total Débit</p><p className="font-bold text-green-600">{formatCurrency(totals.debit)}</p></div>
+                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Total Crédit</p><p className="font-bold text-red-600">{formatCurrency(totals.credit)}</p></div>
+                            <div className="p-2 rounded-md bg-muted"><p className="text-sm text-muted-foreground">Solde</p><p className={cn("font-bold", totals.solde >= 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(totals.solde)}</p></div>
                         </CardContent>
                     </Card>
                     
@@ -310,7 +310,7 @@ export default function SectionsAnalytiquesPage() {
                                             <div className="flex items-center gap-2">
                                                 {child.type === 'folder' ? <Folder className="h-4 w-4 text-primary" /> : <File className="h-4 w-4 text-muted-foreground" />}
                                                 <span className="font-medium">{child.name}</span>
-                                                <Badge variant="secondary" className="font-mono">{child.code}</Badge>
+                                                <Badge variant="secondary">{child.code}</Badge>
                                             </div>
                                             <Button variant="ghost" size="sm" onClick={() => handleNavigateToChild(child)}>
                                                 Consulter <ArrowRight className="ml-2 h-4 w-4"/>
@@ -333,8 +333,8 @@ export default function SectionsAnalytiquesPage() {
                                             <TableRow key={entry.id}>
                                                 <TableCell>{entry.date}</TableCell>
                                                 <TableCell>{entry.libelle}</TableCell>
-                                                <TableCell className="text-right font-mono text-green-600">{entry.debit > 0 ? formatCurrency(entry.debit) : ''}</TableCell>
-                                                <TableCell className="text-right font-mono text-red-600">{entry.credit > 0 ? formatCurrency(entry.credit) : ''}</TableCell>
+                                                <TableCell className="text-right text-green-600">{entry.debit > 0 ? formatCurrency(entry.debit) : ''}</TableCell>
+                                                <TableCell className="text-right text-red-600">{entry.credit > 0 ? formatCurrency(entry.credit) : ''}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -386,7 +386,7 @@ export default function SectionsAnalytiquesPage() {
       <AlertDialog open={!!sectionToDelete} onOpenChange={(open) => !open && setSectionToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader><AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible. La section sera définitivement supprimée.</AlertDialogDescription></AlertDialogHeader>
-            <AlertDialogFooter><AlertDialogCancel onClick={() => setSectionToDelete(null)}>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
+            <AlertDialogFooter><AlertDialogCancel onClick={() => setSectionToDelete(null)}>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Confirmer</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>

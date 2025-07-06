@@ -237,7 +237,7 @@ export default function VentilationsPage() {
                                                     disabled={isViewMode}
                                                 />
                                                 <Label htmlFor={`compte-${compte.numero}`} className="flex-1 p-2 rounded-md transition-colors cursor-pointer">
-                                                    <span className="font-mono text-xs p-1 bg-muted rounded-sm w-16 text-center">{compte.numero}</span>
+                                                    <span className="text-xs p-1 bg-muted rounded-sm w-16 text-center">{compte.numero}</span>
                                                     <span className="ml-2">{compte.intitule}</span>
                                                 </Label>
                                             </div>
@@ -252,7 +252,7 @@ export default function VentilationsPage() {
                                         {MOCK_ANALYTIC_SECTIONS.map(section => (
                                             <div key={section.code} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
                                                 <div>
-                                                    <span className="font-mono text-xs p-1 bg-muted rounded-sm w-24 text-center">{section.code}</span>
+                                                    <span className="text-xs p-1 bg-muted rounded-sm w-24 text-center">{section.code}</span>
                                                     <span className="ml-2">{section.name}</span>
                                                 </div>
                                                 <Button type="button" size="sm" variant="outline" onClick={() => handleAddKey(section.code)} disabled={isViewMode || distributionKeys.some(k => k.sectionCode === section.code)}>
