@@ -356,7 +356,7 @@ export default function CompteDeResultatPage() {
                                                     <TableCell colSpan={3} className="h-4"></TableCell>
                                                 ) : (
                                                     <>
-                                                        <TableCell className="font-mono text-xs">{line.ref}</TableCell>
+                                                        <TableCell className="text-xs">{line.ref}</TableCell>
                                                         <TableCell style={{ paddingLeft: `${1 + (line.indent || 0) * 1.5}rem` }}>
                                                             {line.label}
                                                         </TableCell>

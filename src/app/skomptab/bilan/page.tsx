@@ -416,13 +416,18 @@ export default function BilanPage() {
                                             </thead>
                                             <tbody>
                                                 {reportData.actif.map((ligne, idx) => (
-                                                    <tr key={`actif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.brut)}</td>
-                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.amortissement)}</td>
-                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
-                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
+                                                    <tr key={`actif-${idx}`} className={cn(
+                                                        ligne.isHeader && "bg-secondary font-bold uppercase",
+                                                        ligne.isTotal && "bg-muted/50 font-bold border-t",
+                                                        ligne.isGrandTotal && "bg-primary/10 font-extrabold text-sm border-t-2 border-primary/20",
+                                                        !ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed"
+                                                    )}>
+                                                        <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
+                                                        <td className="text-right py-1">{formatAmount(ligne.brut)}</td>
+                                                        <td className="text-right py-1">{formatAmount(ligne.amortissement)}</td>
+                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                        <td className="text-right py-1">{formatAmount(ligne.netN1)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -446,10 +451,15 @@ export default function BilanPage() {
                                             </thead>
                                              <tbody>
                                                 {reportData.actif.map((ligne, idx) => (
-                                                    <tr key={`actif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                    <tr key={`actif-fonc-${idx}`} className={cn(
+                                                        ligne.isHeader && "bg-secondary font-bold uppercase",
+                                                        ligne.isTotal && "bg-muted/50 font-bold border-t",
+                                                        ligne.isGrandTotal && "bg-primary/10 font-extrabold text-sm border-t-2 border-primary/20",
+                                                        !ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed"
+                                                    )}>
+                                                        <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
+                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -478,11 +488,16 @@ export default function BilanPage() {
                                             </thead>
                                              <tbody>
                                                 {reportData.passif.map((ligne, idx) => (
-                                                    <tr key={`passif-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
-                                                        <td className="text-right font-mono py-1">{formatAmount(ligne.netN1)}</td>
+                                                    <tr key={`passif-${idx}`} className={cn(
+                                                        ligne.isHeader && "bg-secondary font-bold uppercase",
+                                                        ligne.isTotal && "bg-muted/50 font-bold border-t",
+                                                        ligne.isGrandTotal && "bg-primary/10 font-extrabold text-sm border-t-2 border-primary/20",
+                                                        !ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed"
+                                                    )}>
+                                                        <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
+                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                        <td className="text-right py-1">{formatAmount(ligne.netN1)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -506,10 +521,15 @@ export default function BilanPage() {
                                             </thead>
                                             <tbody>
                                                 {reportData.passif.map((ligne, idx) => (
-                                                    <tr key={`passif-fonc-${idx}`} className={cn(!ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed")}>
-                                                        <td className="font-mono text-xs text-center py-1">{ligne.numeroCompte}</td>
-                                                        <td className={cn("py-1", ligne.isHeader && "font-bold uppercase pt-2", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4", ligne.isTotal && "font-bold pt-2 border-t", ligne.isGrandTotal && "font-extrabold text-sm pt-2 border-t-2")}>{ligne.libelle}</td>
-                                                        <td className={cn("text-right font-mono py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                    <tr key={`passif-fonc-${idx}`} className={cn(
+                                                        ligne.isHeader && "bg-secondary font-bold uppercase",
+                                                        ligne.isTotal && "bg-muted/50 font-bold border-t",
+                                                        ligne.isGrandTotal && "bg-primary/10 font-extrabold text-sm border-t-2 border-primary/20",
+                                                        !ligne.isHeader && !ligne.isTotal && !ligne.isGrandTotal && "border-b border-dashed"
+                                                    )}>
+                                                        <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
+                                                        <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
+                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>

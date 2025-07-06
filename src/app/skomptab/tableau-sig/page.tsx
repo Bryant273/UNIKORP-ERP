@@ -315,12 +315,12 @@ export default function TableauSigPage() {
                                                     <TableCell colSpan={4} className="h-4"></TableCell>
                                                 ) : (
                                                     <>
-                                                        <TableCell className="font-mono text-xs">{line.ref}</TableCell>
+                                                        <TableCell className="text-xs">{line.ref}</TableCell>
                                                         <TableCell className={cn(line.isIntermediate && "pl-6 text-muted-foreground")}>
                                                             {line.label}
                                                         </TableCell>
                                                         <TableCell className="text-xs text-muted-foreground italic">{line.formule}</TableCell>
-                                                        <TableCell className={cn("text-right font-mono", line.value < 0 && "text-red-600")}>
+                                                        <TableCell className={cn("text-right", line.value < 0 && "text-red-600")}>
                                                             {formatAmount(line.value)}
                                                         </TableCell>
                                                     </>

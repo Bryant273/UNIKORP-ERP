@@ -278,11 +278,11 @@ export default function TableauFluxTresoreriePage() {
                                                     <TableCell colSpan={3} className="font-bold text-secondary-foreground bg-secondary py-2">{line.label}</TableCell>
                                                 ) : (
                                                     <>
-                                                        <TableCell className="font-mono text-xs">{line.ref}</TableCell>
+                                                        <TableCell className="text-xs">{line.ref}</TableCell>
                                                         <TableCell style={{ paddingLeft: `${1 + (line.indent || 0) * 1.5}rem` }} className={cn(line.isSubTotal && "italic text-muted-foreground")}>
                                                             {line.label}
                                                         </TableCell>
-                                                        <TableCell className={cn("text-right font-mono", line.value < 0 && "text-red-600")}>
+                                                        <TableCell className={cn("text-right", line.value < 0 && "text-red-600")}>
                                                             {formatAmount(line.value)}
                                                         </TableCell>
                                                     </>
