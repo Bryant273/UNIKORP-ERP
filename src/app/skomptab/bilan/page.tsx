@@ -76,10 +76,10 @@ const MOCK_BILAN_COMPTABLE_2025: BilanData = {
         { libelle: 'Total Capitaux Propres (I)', isTotal: true, net: 430000, netN1: 390000 },
         
         { libelle: 'DETTES FINANCIÈRES', isHeader: true },
-        { libelle: 'Emprunts et dettes assimilées', numeroCompte: '164000', isSubTitle: true, net: 150000, netN1: 180000 },
-        { libelle: 'Total Dettes Financières (II)', isTotal: true, net: 150000, netN1: 180000 },
+        { libelle: 'Emprunts et dettes assimilées', numeroCompte: '164000', isSubTitle: true, net: 150000, netN1: 145000 },
+        { libelle: 'Total Dettes Financières (II)', isTotal: true, net: 150000, netN1: 145000 },
 
-        { libelle: 'CAPITAUX PERMANENTS (I + II)', isTotal: true, net: 580000, netN1: 570000 },
+        { libelle: 'CAPITAUX PERMANENTS (I + II)', isTotal: true, net: 580000, netN1: 535000 },
         
         { libelle: 'PASSIF CIRCULANT', isHeader: true },
         { libelle: 'Dettes fournisseurs', numeroCompte: '401000', isSubTitle: true, net: 110000, netN1: 105000 },
@@ -90,7 +90,7 @@ const MOCK_BILAN_COMPTABLE_2025: BilanData = {
         { libelle: 'Concours bancaires courants', numeroCompte: '519000', isSubTitle: true, net: 5000, netN1: 10000 },
         { libelle: 'Total Trésorerie - Passif (IV)', isTotal: true, net: 5000, netN1: 10000 },
         
-        { libelle: 'TOTAL PASSIF (I + II + III + IV)', isGrandTotal: true, net: 715000, netN1: 700000 },
+        { libelle: 'TOTAL PASSIF (I + II + III + IV)', isGrandTotal: true, net: 715000, netN1: 665000 },
     ],
     totalActif: 715000,
     totalPassif: 715000,
@@ -183,8 +183,8 @@ const MOCK_BILAN_FINANCIER_2025: BilanData = {
         { libelle: 'Total Capitaux Propres', isTotal: true, net: 430000, netN1: 390000 },
         
         { libelle: 'Dettes à long terme', isHeader: true },
-        { libelle: 'Emprunts et dettes assimilées (> 1 an)', numeroCompte: '164000', isSubItem: true, net: 150000, netN1: 180000 },
-        { libelle: 'Total Dettes à long terme', isTotal: true, net: 150000, netN1: 180000 },
+        { libelle: 'Emprunts et dettes assimilées (> 1 an)', numeroCompte: '164000', isSubItem: true, net: 150000, netN1: 145000 },
+        { libelle: 'Total Dettes à long terme', isTotal: true, net: 150000, netN1: 145000 },
         
         { libelle: 'Dettes à court terme', isHeader: true },
         { libelle: 'Dettes fournisseurs', numeroCompte: '401000', isSubItem: true, net: 110000, netN1: 105000 },
@@ -192,7 +192,7 @@ const MOCK_BILAN_FINANCIER_2025: BilanData = {
         { libelle: 'Concours bancaires courants', numeroCompte: '519000', isSubItem: true, net: 5000, netN1: 10000 },
         { libelle: 'Total Dettes à court terme', isTotal: true, net: 135000, netN1: 130000 },
         
-        { libelle: 'TOTAL PASSIF', isGrandTotal: true, net: 715000, netN1: 700000 },
+        { libelle: 'TOTAL PASSIF', isGrandTotal: true, net: 715000, netN1: 665000 },
     ],
     totalActif: 715000,
     totalPassif: 715000,
@@ -390,7 +390,7 @@ export default function BilanPage() {
                                     Aperçu du bilan. Vous pouvez l'exporter en PDF ou revenir en arrière pour modifier les paramètres.
                                 </DialogDescription>
                             </DialogHeader>
-                             <div className="max-h-[70vh] overflow-y-auto p-2 border rounded-md bg-muted/20">
+                             <div className="max-h-[70vh] overflow-y-auto p-2 border rounded-md">
                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
                                     {/* Actif Column */}
                                     {selectedType === 'comptable' && (
@@ -425,7 +425,7 @@ export default function BilanPage() {
                                                         <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
                                                         <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
                                                         <td className="text-right py-1">{formatAmount(ligne.brut)}</td>
-                                                        <td className="text-right py-1">{formatAmount(ligne.amortissement)}</td>
+                                                        <td className={cn("text-right py-1", (ligne.amortissement ?? 0) < 0 ? 'text-red-600' : '')}>{formatAmount(ligne.amortissement)}</td>
                                                         <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
                                                         <td className="text-right py-1">{formatAmount(ligne.netN1)}</td>
                                                     </tr>
@@ -459,7 +459,7 @@ export default function BilanPage() {
                                                     )}>
                                                         <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
                                                         <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
-                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold", (ligne.net ?? 0) < 0 ? 'text-red-600' : '')}>{formatAmount(ligne.net)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -496,7 +496,7 @@ export default function BilanPage() {
                                                     )}>
                                                         <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
                                                         <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
-                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold", (ligne.net ?? 0) < 0 ? 'text-red-600' : '')}>{formatAmount(ligne.net)}</td>
                                                         <td className="text-right py-1">{formatAmount(ligne.netN1)}</td>
                                                     </tr>
                                                 ))}
@@ -529,7 +529,7 @@ export default function BilanPage() {
                                                     )}>
                                                         <td className="text-xs text-center py-1">{ligne.numeroCompte}</td>
                                                         <td className={cn("py-1", ligne.isSubTitle && "pl-2 font-semibold", ligne.isSubItem && "pl-4")}>{ligne.libelle}</td>
-                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold")}>{formatAmount(ligne.net)}</td>
+                                                        <td className={cn("text-right py-1", (ligne.isTotal || ligne.isGrandTotal) ? "font-bold" : "font-semibold", (ligne.net ?? 0) < 0 ? 'text-red-600' : '')}>{formatAmount(ligne.net)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
