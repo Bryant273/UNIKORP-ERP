@@ -55,7 +55,7 @@ export function ModuleNav() {
           <Link href={link.href} key={link.href}>
             <div
               className={cn(
-                'flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-100 transition-colors hover:bg-indigo-400 hover:text-white rounded-t-md',
+                'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-indigo-100 transition-colors hover:bg-white/10 hover:text-white rounded-t-md',
                 isActive(link.href) &&
                   'bg-background text-primary hover:bg-background'
               )}

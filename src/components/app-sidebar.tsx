@@ -198,7 +198,7 @@ function SidebarNavContent() {
                   <Link
                     href={subItem.href}
                     className={cn(
-                      'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                      'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                       pathname === subItem.href && 'bg-accent text-accent-foreground'
                     )}
                   >
@@ -226,13 +226,13 @@ export function AppSidebar() {
   const { dashboardLink, placeholder } = getNavForPath(pathname);
 
   return (
-    <aside className="hidden w-72 flex-col border-r bg-card sm:flex">
+    <aside className="hidden w-72 flex-col border-r bg-card font-roboto sm:flex">
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
           <Link href={dashboardLink}>
             <Button
               variant={pathname === dashboardLink ? 'secondary' : 'ghost'}
-              className="w-full justify-start gap-2"
+              className="w-full justify-start gap-2 font-semibold"
             >
               <LayoutDashboard className="h-4 w-4" />
               Tableau de bord

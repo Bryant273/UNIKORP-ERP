@@ -56,7 +56,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-slate-800 bg-slate-900 px-4 text-primary-foreground sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/10 bg-header-bg px-4 text-primary-foreground sm:px-6">
       <div className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-white" />
         <Button variant="ghost" className="hover:bg-white/10 hover:text-primary-foreground">

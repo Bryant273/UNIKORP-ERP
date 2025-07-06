@@ -10,12 +10,12 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
-        sans: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
-        headline: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Roboto', 'Segoe UI', 'sans-serif'],
+        roboto: ['var(--font-roboto)', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
+        'header-bg': '#1A202C',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
