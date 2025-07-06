@@ -227,7 +227,7 @@ function AutresImpotsMainContent() {
                         <TableRow key={impot.id}>
                             <TableCell className="font-medium">{impot.periode}</TableCell>
                             <TableCell><Badge variant="secondary">{impot.type}</Badge></TableCell>
-                            <TableCell className="text-right font-mono">{impot.montant.toLocaleString('fr-FR')} €</TableCell>
+                            <TableCell className="text-right">{impot.montant.toLocaleString('fr-FR')} €</TableCell>
                             <TableCell className="text-center">{getStatusBadge(impot)}</TableCell>
                              <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-1">

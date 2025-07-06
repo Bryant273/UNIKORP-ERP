@@ -63,7 +63,7 @@ const initialDeclarations: Declaration[] = [
     { id: 'd5', periode: 'Juin 2024', type: 'ITS', montant: 1230000, echeance: '15/07/2024', statut: 'Payée', data: { masseSalarialeBrute: 9800000 } },
 ];
 
-const DeclarationTypeOptions: DeclarationType[] = ['BIC', 'ITS', 'Patente', 'Licence', 'TSE', 'TPS', 'BNC', 'BA', 'IMF'];
+const DeclarationTypeOptions: DeclarationType[] = ['BIC', 'ITS', 'Patente', 'IMF', 'TSE', 'TPS', 'BNC', 'BA'];
 
 const getDefaultDataForType = (type: DeclarationType) => {
     const base = {
@@ -75,7 +75,6 @@ const getDefaultDataForType = (type: DeclarationType) => {
         case 'BIC': return { ...base, caHt: 0, caTtc: 0, chargesDeductibles: 0, amortissements: 0, resultatFiscal: 0 };
         case 'ITS': return { ...base, nccEmployeur: base.ncc, nombreEmployes: 0, masseSalarialeBrute: 0, abattementsAppliques: 0, retenuesEffectuees: 0 };
         case 'Patente': return { ...base, activiteExercee: '', adresseLocal: '', superficieLocal: 0, caAnneePrecedente: 0, valeurLocative: 0, classePatente: '', montantPatente: 0 };
-        case 'Licence': return { ...base, typeLicence: '', activiteConcernee: '', caPrevisionnel: 0, dureeValidite: '', montantLicence: 0 };
         case 'TSE': return { ...base, caImposable: 0, tauxTseApplicable: 0, exonerationsEventuelles: 0 };
         case 'TPS': return { ...base, montantPrestationsHt: 0, tauxTpsApplicable: 0, lieuPrestation: '' };
         default: return { ...base, montant: 0 };
@@ -118,9 +117,9 @@ function BicForm({ data, setData, isViewMode }: { data: any, setData: Function, 
              <Separator />
             <div className="p-4 border rounded-lg bg-background space-y-2">
                  <h4 className="font-semibold text-center">Calcul de l'impôt</h4>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span className="font-mono">{bicCalcule.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span className="font-mono">{imf.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span className="font-mono">{impotDu.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span>{bicCalcule.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span>{imf.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span>{impotDu.toLocaleString('fr-FR')} €</span></div>
             </div>
         </CardContent></Card>
     );
@@ -148,9 +147,9 @@ function ItsForm({ data, setData, isViewMode }: { data: any, setData: Function, 
             <Separator />
              <div className="p-4 border rounded-lg bg-background space-y-2">
                  <h4 className="font-semibold text-center">Calcul de l'impôt</h4>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span className="font-mono">{baseImposable.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span className="font-mono">{itsCalcule.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span className="font-mono">{itsNetAPayer.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span>{baseImposable.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span>{itsCalcule.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span>{itsNetAPayer.toLocaleString('fr-FR')} €</span></div>
             </div>
         </CardContent></Card>
     );
@@ -305,7 +304,7 @@ function DeclarationsFiscalesMainContent() {
                                 <TableRow key={d.id}>
                                     <TableCell className="font-medium">{d.periode}</TableCell>
                                     <TableCell><Badge variant="secondary">{d.type}</Badge></TableCell>
-                                    <TableCell className="text-right font-mono">{d.montant.toLocaleString('fr-FR')} €</TableCell>
+                                    <TableCell className="text-right">{d.montant.toLocaleString('fr-FR')} €</TableCell>
                                     <TableCell className="text-center">{getStatusBadge(d)}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-1">

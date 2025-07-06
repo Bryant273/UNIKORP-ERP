@@ -25,7 +25,7 @@ type DeclarationType =
     | 'TVA'
     | 'BIC' | 'ITS' // From declarations-fiscales
     | 'ImpotSynthetique' | 'DroitsEnregistrement' // From autres-impots
-    | 'ImmatriculationEmployeur' | 'DMS'; // From declarations-sociales
+    | 'DMS'; // From declarations-sociales
 
 type DeclarationConfig = {
     label: string;
@@ -38,7 +38,6 @@ const declarationConfigs: Record<DeclarationType, DeclarationConfig> = {
     BIC: { label: 'BIC - Impôt sur les Sociétés', description: "Déclaration des bénéfices industriels et commerciaux.", formComponent: BicForm },
     ITS: { label: 'ITS - Impôt sur les Salaires', description: "Déclaration de l'impôt sur les traitements et salaires.", formComponent: ItsForm },
     ImpotSynthetique: { label: 'Impôt Synthétique', description: 'Déclaration pour le régime de l\'impôt synthétique.', formComponent: ImpotSynthetiqueForm },
-    ImmatriculationEmployeur: { label: 'Immatriculation Employeur (CNPS)', description: 'Première immatriculation d\'un employeur.', formComponent: ImmatriculationEmployeurForm },
     DMS: { label: 'Déclaration Mensuelle Salaires (CNPS)', description: 'Déclaration mensuelle des salaires à la CNPS.', formComponent: DeclarationMensuelleSalairesForm },
     DroitsEnregistrement: { label: 'Droits d\'Enregistrement', description: 'Pour les actes juridiques.', formComponent: DefaultForm },
 };
@@ -96,11 +95,11 @@ function TvaForm({ data, setData }: { data: any, setData: Function }) {
              <Separator/>
             <div className="p-4 border rounded-lg bg-background space-y-2">
                  <h4 className="font-semibold text-center">Résultats de la Simulation</h4>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Collectée (18%)</span><span className="font-mono">{totalTvaCollectee.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Déductible</span><span className="font-mono">{totalTvaDeductible.toLocaleString('fr-FR')} €</span></div>
-                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Crédit Antérieur</span><span className="font-mono">{(parseFloat(data.creditTvaAnterieur) || 0).toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Collectée (18%)</span><span>{totalTvaCollectee.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Déductible</span><span>{totalTvaDeductible.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Crédit Antérieur</span><span>{(parseFloat(data.creditTvaAnterieur) || 0).toLocaleString('fr-FR')} €</span></div>
                  <Separator/>
-                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >{tvaNetteDue > 0 ? 'TVA à Décaisser' : 'Crédit à Reporter'}</span><span className="font-mono">{tvaNetteDue > 0 ? tvaNetteDue.toLocaleString('fr-FR') : creditAReporter.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >{tvaNetteDue > 0 ? 'TVA à Décaisser' : 'Crédit à Reporter'}</span><span>{tvaNetteDue > 0 ? tvaNetteDue.toLocaleString('fr-FR') : creditAReporter.toLocaleString('fr-FR')} €</span></div>
             </div>
         </div>
     );
@@ -115,7 +114,7 @@ function BicForm({ data, setData }: { data: any, setData: Function }) {
         const imfCalc = caTtc * 0.02;
         return { bicCalcule: bic, imf: imfCalc, impotDu: Math.max(bic, imfCalc) };
     }, [data.resultatFiscal, data.caTtc]);
-    return (<div className="space-y-4"><div className="grid md:grid-cols-2 gap-4"><FormField label="Chiffre d'affaires HT" isRequired><Input type="number" value={data.caHt || ''} onChange={e => handleChange('caHt', e.target.value)}/></FormField><FormField label="Chiffre d'affaires TTC" isRequired><Input type="number" value={data.caTtc || ''} onChange={e => handleChange('caTtc', e.target.value)}/></FormField></div><div className="grid md:grid-cols-2 gap-4"><FormField label="Charges déductibles"><Input type="number" value={data.chargesDeductibles || ''} onChange={e => handleChange('chargesDeductibles', e.target.value)}/></FormField><FormField label="Amortissements"><Input type="number" value={data.amortissements || ''} onChange={e => handleChange('amortissements', e.target.value)}/></FormField></div><FormField label="Résultat fiscal" isRequired><Input type="number" value={data.resultatFiscal || ''} onChange={e => handleChange('resultatFiscal', e.target.value)}/></FormField><Separator/><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span className="font-mono">{bicCalcule.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span className="font-mono">{imf.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span className="font-mono">{impotDu.toLocaleString('fr-FR')} €</span></div></div></div>);
+    return (<div className="space-y-4"><div className="grid md:grid-cols-2 gap-4"><FormField label="Chiffre d'affaires HT" isRequired><Input type="number" value={data.caHt || ''} onChange={e => handleChange('caHt', e.target.value)}/></FormField><FormField label="Chiffre d'affaires TTC" isRequired><Input type="number" value={data.caTtc || ''} onChange={e => handleChange('caTtc', e.target.value)}/></FormField></div><div className="grid md:grid-cols-2 gap-4"><FormField label="Charges déductibles"><Input type="number" value={data.chargesDeductibles || ''} onChange={e => handleChange('chargesDeductibles', e.target.value)}/></FormField><FormField label="Amortissements"><Input type="number" value={data.amortissements || ''} onChange={e => handleChange('amortissements', e.target.value)}/></FormField></div><FormField label="Résultat fiscal" isRequired><Input type="number" value={data.resultatFiscal || ''} onChange={e => handleChange('resultatFiscal', e.target.value)}/></FormField><Separator/><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span>{bicCalcule.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span>{imf.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span>{impotDu.toLocaleString('fr-FR')} €</span></div></div></div>);
 }
 function ItsForm({ data, setData }: { data: any, setData: Function }) {
     const handleChange = (field: string, value: string) => setData((prev: any) => ({ ...prev, [field]: parseFloat(value) || 0 }));
@@ -127,7 +126,7 @@ function ItsForm({ data, setData }: { data: any, setData: Function }) {
         const its = base * 0.15; // Simplified rate
         return { baseImposable: base, itsCalcule: its, itsNetAPayer: its - retenues };
     }, [data.masseSalarialeBrute, data.abattementsAppliques, data.retenuesEffectuees]);
-    return (<div className="space-y-4"><FormField label="Nombre d'employés" isRequired><Input type="number" value={data.nombreEmployes || ''} onChange={e => handleChange('nombreEmployes', e.target.value)}/></FormField><FormField label="Masse salariale brute" isRequired><Input type="number" value={data.masseSalarialeBrute || ''} onChange={e => handleChange('masseSalarialeBrute', e.target.value)}/></FormField><FormField label="Abattements appliqués"><Input type="number" value={data.abattementsAppliques || ''} onChange={e => handleChange('abattementsAppliques', e.target.value)}/></FormField><FormField label="Retenues effectuées"><Input type="number" value={data.retenuesEffectuees || ''} onChange={e => handleChange('retenuesEffectuees', e.target.value)}/></FormField><Separator/><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span className="font-mono">{baseImposable.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span className="font-mono">{itsCalcule.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span className="font-mono">{itsNetAPayer.toLocaleString('fr-FR')} €</span></div></div></div>);
+    return (<div className="space-y-4"><FormField label="Nombre d'employés" isRequired><Input type="number" value={data.nombreEmployes || ''} onChange={e => handleChange('nombreEmployes', e.target.value)}/></FormField><FormField label="Masse salariale brute" isRequired><Input type="number" value={data.masseSalarialeBrute || ''} onChange={e => handleChange('masseSalarialeBrute', e.target.value)}/></FormField><FormField label="Abattements appliqués"><Input type="number" value={data.abattementsAppliques || ''} onChange={e => handleChange('abattementsAppliques', e.target.value)}/></FormField><FormField label="Retenues effectuées"><Input type="number" value={data.retenuesEffectuees || ''} onChange={e => handleChange('retenuesEffectuees', e.target.value)}/></FormField><Separator/><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span>{baseImposable.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span>{itsCalcule.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span>{itsNetAPayer.toLocaleString('fr-FR')} €</span></div></div></div>);
 }
 function ImpotSynthetiqueForm({ data, setData }: { data: any, setData: Function }) {
     const handleChange = (field: string, value: any) => setData((d: any) => ({ ...d, [field]: value }));
@@ -325,8 +324,8 @@ function SimulationSelectionModal({ isOpen, onClose, onSelect }: { isOpen: boole
                         <AccordionContent>
                              <div className="grid grid-cols-2 gap-2">
                                 <Button variant="ghost" className="justify-start" onClick={() => onSelect('ITS')}>ITS - Impôt sur les Salaires</Button>
-                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('ImmatriculationEmployeur')}>Immatriculation Employeur (CNPS)</Button>
                                 <Button variant="ghost" className="justify-start" onClick={() => onSelect('DMS')}>Déclaration Mensuelle Salaires (CNPS)</Button>
+                                <Button variant="ghost" className="justify-start" disabled>Immatriculation Employeur</Button>
                             </div>
                         </AccordionContent>
                     </AccordionItem>
