@@ -1,122 +1,302 @@
+
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import React, { useState, useMemo, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { Calculator, FileText, Download, Eye, FilePlus } from 'lucide-react';
 import FiscalPageLayout from '@/components/fiscal-layout';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-function ISSimulator() {
-    const [resultat, setResultat] = useState(250000);
-    const [impot, setImpot] = useState(0);
+// --- TYPES ---
+// Combining all declaration types for the selection modal
+type DeclarationType = 
+    | 'TVA'
+    | 'BIC' | 'ITS' // From declarations-fiscales
+    | 'ImpotSynthetique' | 'DroitsEnregistrement' // From autres-impots
+    | 'ImmatriculationEmployeur' | 'DMS'; // From declarations-sociales
 
-    const handleSimulate = () => {
-        let calculatedImpot = 0;
-        if (resultat > 0) {
-            if (resultat <= 42500) { // Taux réduit de 15% en France sur la première tranche
-                calculatedImpot = resultat * 0.15;
-            } else {
-                calculatedImpot = (42500 * 0.15) + ((resultat - 42500) * 0.25);
-            }
-        }
-        setImpot(calculatedImpot);
+type DeclarationConfig = {
+    label: string;
+    description: string;
+    formComponent: React.FC<any>;
+};
+
+const declarationConfigs: Record<DeclarationType, DeclarationConfig> = {
+    TVA: { label: 'TVA (CA3)', description: "Déclaration mensuelle de TVA.", formComponent: TvaForm },
+    BIC: { label: 'BIC - Impôt sur les Sociétés', description: "Déclaration des bénéfices industriels et commerciaux.", formComponent: BicForm },
+    ITS: { label: 'ITS - Impôt sur les Salaires', description: "Déclaration de l'impôt sur les traitements et salaires.", formComponent: ItsForm },
+    ImpotSynthetique: { label: 'Impôt Synthétique', description: 'Déclaration pour le régime de l\'impôt synthétique.', formComponent: ImpotSynthetiqueForm },
+    ImmatriculationEmployeur: { label: 'Immatriculation Employeur (CNPS)', description: 'Première immatriculation d\'un employeur.', formComponent: ImmatriculationEmployeurForm },
+    DMS: { label: 'Déclaration Mensuelle Salaires (CNPS)', description: 'Déclaration mensuelle des salaires à la CNPS.', formComponent: DeclarationMensuelleSalairesForm },
+    DroitsEnregistrement: { label: 'Droits d\'Enregistrement', description: 'Pour les actes juridiques.', formComponent: DefaultForm },
+};
+
+// --- SIMULATED DATA & HELPERS ---
+const calculateTvaTotals = (data: any) => {
+    const caNormal = parseFloat(data.caHtNormal) || 0;
+    const tvaCollectee18 = caNormal * 0.18;
+    const totalTvaCollectee = tvaCollectee18;
+    const totalTvaDeductible = (parseFloat(data.tvaDeductibleAchats) || 0) + (parseFloat(data.tvaDeductibleServices) || 0);
+    const tvaDue = totalTvaCollectee - totalTvaDeductible - (parseFloat(data.creditTvaAnterieur) || 0);
+    return {
+        totalTvaCollectee,
+        totalTvaDeductible,
+        tvaNetteDue: tvaDue > 0 ? tvaDue : 0,
+        creditAReporter: tvaDue < 0 ? -tvaDue : 0,
+    };
+};
+
+const addWatermarkToPdf = (doc: jsPDF) => {
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(60);
+        doc.setTextColor(150, 150, 150);
+        doc.saveState();
+        doc.setGState(new (doc as any).GState({opacity: 0.2}));
+        doc.text('SPECIMEN', doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() / 2, {
+            angle: -45,
+            align: 'center'
+        });
+        doc.restoreState();
     }
-    
+}
+
+// --- FORM COMPONENTS (Adapted from other pages) ---
+function DefaultForm({data, setData}: any) {
+    return <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50"><p>Formulaire de simulation non implémenté pour ce type.</p></div>;
+}
+const FormField = ({ label, children, isRequired }: { label: string, children: React.ReactNode, isRequired?: boolean }) => (
+    <div className="space-y-1"><Label>{label}{isRequired && <span className="text-destructive"> *</span>}</Label>{children}</div>
+);
+
+function TvaForm({ data, setData }: { data: any, setData: Function }) {
+    const { totalTvaCollectee, totalTvaDeductible, tvaNetteDue, creditAReporter } = useMemo(() => calculateTvaTotals(data), [data]);
+    const handleChange = (field: string, value: string) => setData((d:any) => ({...d, [field]: value}));
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Simulateur d'Impôt sur les Sociétés (IS)</CardTitle>
-                <CardDescription>Estimez le montant de votre IS en fonction de votre résultat fiscal.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="resultat">Résultat fiscal prévisionnel (€)</Label>
-                    <Input id="resultat" type="number" value={resultat} onChange={e => setResultat(Number(e.target.value))}/>
-                </div>
-                <Button onClick={handleSimulate}>
-                    <Calculator className="mr-2 h-4 w-4" />
-                    Simuler
-                </Button>
-                <Separator />
-                <div className="space-y-2">
-                    <Label>Montant estimé de l'IS</Label>
-                    <Input value={`${impot.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`} disabled className="text-lg font-bold" />
-                    <p className="text-xs text-muted-foreground">Simulation basée sur les taux standards (15% jusqu'à 42 500 €, puis 25%).</p>
-                </div>
-            </CardContent>
-        </Card>
+        <div className="space-y-4">
+            <FormField label="Période (mois/année)"><Input type="month" value={data.periode || ''} onChange={e => handleChange('periode', e.target.value)} /></FormField>
+            <div className="grid md:grid-cols-2 gap-4">
+                 <FormField label="Total Ventes HT (Taux Normal)" isRequired><Input type="number" value={data.caHtNormal || ''} onChange={e => handleChange('caHtNormal', e.target.value)}/></FormField>
+                 <FormField label="Total Achats HT (Déductible)" isRequired><Input type="number" value={data.tvaDeductibleAchats || ''} onChange={e => handleChange('tvaDeductibleAchats', e.target.value)}/></FormField>
+                 <FormField label="Crédit de TVA antérieur"><Input type="number" value={data.creditTvaAnterieur || ''} onChange={e => handleChange('creditTvaAnterieur', e.target.value)}/></FormField>
+            </div>
+             <Separator/>
+            <div className="p-4 border rounded-lg bg-background space-y-2">
+                 <h4 className="font-semibold text-center">Résultats de la Simulation</h4>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Collectée (18%)</span><span className="font-mono">{totalTvaCollectee.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA Déductible</span><span className="font-mono">{totalTvaDeductible.toLocaleString('fr-FR')} €</span></div>
+                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Crédit Antérieur</span><span className="font-mono">{(parseFloat(data.creditTvaAnterieur) || 0).toLocaleString('fr-FR')} €</span></div>
+                 <Separator/>
+                 <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >{tvaNetteDue > 0 ? 'TVA à Décaisser' : 'Crédit à Reporter'}</span><span className="font-mono">{tvaNetteDue > 0 ? tvaNetteDue.toLocaleString('fr-FR') : creditAReporter.toLocaleString('fr-FR')} €</span></div>
+            </div>
+        </div>
     );
 }
 
-function TVASimulator() {
-    const [ventes, setVentes] = useState(100000);
-    const [achats, setAchats] = useState(60000);
-    const [tvaDue, setTvaDue] = useState(0);
-
-    const handleSimulate = () => {
-        const tvaCollectee = ventes * 0.20; // Assuming 20%
-        const tvaDeductible = achats * 0.20;
-        setTvaDue(tvaCollectee - tvaDeductible);
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Simulateur de TVA</CardTitle>
-                <CardDescription>Estimez rapidement votre TVA à décaisser ou votre crédit de TVA.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="ventes">Total Ventes HT (€)</Label>
-                        <Input id="ventes" type="number" value={ventes} onChange={e => setVentes(Number(e.target.value))} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="achats">Total Achats HT (€)</Label>
-                        <Input id="achats" type="number" value={achats} onChange={e => setAchats(Number(e.target.value))} />
-                    </div>
-                </div>
-                <Button onClick={handleSimulate}>
-                    <Calculator className="mr-2 h-4 w-4" />
-                    Simuler
-                </Button>
-                 <Separator />
-                <div className="space-y-2">
-                    <Label>{tvaDue >= 0 ? 'TVA à décaisser' : 'Crédit de TVA'}</Label>
-                    <Input value={`${Math.abs(tvaDue).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`} disabled className="text-lg font-bold" />
-                    <p className="text-xs text-muted-foreground">Simulation basée sur un taux unique de 20%.</p>
-                </div>
-            </CardContent>
-        </Card>
-    );
+function BicForm({ data, setData }: { data: any, setData: Function }) {
+    const handleChange = (field: string, value: string) => setData((prev: any) => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    const { bicCalcule, imf, impotDu } = useMemo(() => {
+        const resultatFiscal = data.resultatFiscal || 0;
+        const caTtc = data.caTtc || 0;
+        const bic = resultatFiscal > 0 ? resultatFiscal * 0.27 : 0;
+        const imfCalc = caTtc * 0.02;
+        return { bicCalcule: bic, imf: imfCalc, impotDu: Math.max(bic, imfCalc) };
+    }, [data.resultatFiscal, data.caTtc]);
+    return (<div className="space-y-4"><div className="grid md:grid-cols-2 gap-4"><FormField label="Chiffre d'affaires HT" isRequired><Input type="number" value={data.caHt || ''} onChange={e => handleChange('caHt', e.target.value)}/></FormField><FormField label="Chiffre d'affaires TTC" isRequired><Input type="number" value={data.caTtc || ''} onChange={e => handleChange('caTtc', e.target.value)}/></FormField></div><div className="grid md:grid-cols-2 gap-4"><FormField label="Charges déductibles"><Input type="number" value={data.chargesDeductibles || ''} onChange={e => handleChange('chargesDeductibles', e.target.value)}/></FormField><FormField label="Amortissements"><Input type="number" value={data.amortissements || ''} onChange={e => handleChange('amortissements', e.target.value)}/></FormField></div><FormField label="Résultat fiscal" isRequired><Input type="number" value={data.resultatFiscal || ''} onChange={e => handleChange('resultatFiscal', e.target.value)}/></FormField><Separator/><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">BIC calculé (27%)</span><span className="font-mono">{bicCalcule.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">IMF (2% du CA TTC)</span><span className="font-mono">{imf.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >Impôt Dû (le plus élevé)</span><span className="font-mono">{impotDu.toLocaleString('fr-FR')} €</span></div></div></div>);
+}
+function ItsForm({ data, setData }: { data: any, setData: Function }) {
+    const handleChange = (field: string, value: string) => setData((prev: any) => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    const { baseImposable, itsCalcule, itsNetAPayer } = useMemo(() => {
+        const masseSalariale = data.masseSalarialeBrute || 0;
+        const abattements = data.abattementsAppliques || 0;
+        const retenues = data.retenuesEffectuees || 0;
+        const base = masseSalariale - abattements;
+        const its = base * 0.15; // Simplified rate
+        return { baseImposable: base, itsCalcule: its, itsNetAPayer: its - retenues };
+    }, [data.masseSalarialeBrute, data.abattementsAppliques, data.retenuesEffectuees]);
+    return (<div className="space-y-4"><FormField label="Nombre d'employés" isRequired><Input type="number" value={data.nombreEmployes || ''} onChange={e => handleChange('nombreEmployes', e.target.value)}/></FormField><FormField label="Masse salariale brute" isRequired><Input type="number" value={data.masseSalarialeBrute || ''} onChange={e => handleChange('masseSalarialeBrute', e.target.value)}/></FormField><FormField label="Abattements appliqués"><Input type="number" value={data.abattementsAppliques || ''} onChange={e => handleChange('abattementsAppliques', e.target.value)}/></FormField><FormField label="Retenues effectuées"><Input type="number" value={data.retenuesEffectuees || ''} onChange={e => handleChange('retenuesEffectuees', e.target.value)}/></FormField><Separator/><div className="p-4 border rounded-lg bg-background space-y-2"><h4 className="font-semibold text-center">Calcul de l'impôt</h4><div className="flex justify-between text-sm"><span className="text-muted-foreground">Base imposable</span><span className="font-mono">{baseImposable.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-sm"><span className="text-muted-foreground">ITS calculé</span><span className="font-mono">{itsCalcule.toLocaleString('fr-FR')} €</span></div><div className="flex justify-between text-lg font-bold text-primary pt-2 border-t"><span >ITS net à payer</span><span className="font-mono">{itsNetAPayer.toLocaleString('fr-FR')} €</span></div></div></div>);
+}
+function ImpotSynthetiqueForm({ data, setData }: { data: any, setData: Function }) {
+    const handleChange = (field: string, value: any) => setData((d: any) => ({ ...d, [field]: value }));
+    return <div className="space-y-4"><FormField label="Nature de l'activité" isRequired><Input value={data.natureActivite || ''} onChange={e => handleChange('natureActivite', e.target.value)}/></FormField><div className="grid md:grid-cols-2 gap-4"><FormField label="CA Prévisionnel" isRequired><Input type="number" value={data.caPrevisionnel || ''} onChange={e => handleChange('caPrevisionnel', e.target.value)}/></FormField><FormField label="Montant de l'impôt" isRequired><Input type="number" value={data.montantImpotSynthetique || ''} onChange={e => handleChange('montantImpotSynthetique', e.target.value)}/></FormField></div></div>;
+}
+function ImmatriculationEmployeurForm({ data, setData }: { data: any, setData: Function }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    return <div className="grid md:grid-cols-2 gap-4"><FormField label="Dénomination sociale" isRequired><Input value={data.denominationSociale} onChange={e => handleChange('denominationSociale', e.target.value)}/></FormField><FormField label="Forme juridique" isRequired><Input value={data.formeJuridique} onChange={e => handleChange('formeJuridique', e.target.value)}/></FormField><FormField label="Secteur d'activité" isRequired><Input value={data.secteurActivite} onChange={e => handleChange('secteurActivite', e.target.value)}/></FormField><FormField label="Date de début d'activité" isRequired><Input type="date" value={data.dateDebutActivite} onChange={e => handleChange('dateDebutActivite', e.target.value)}/></FormField></div>;
+}
+function DeclarationMensuelleSalairesForm({ data, setData }: { data: any, setData: Function }) {
+    const handleChange = (field: string, value: any) => setData((prev: any) => ({ ...prev, [field]: value }));
+    const {cotisationsPatronales, cotisationsSalariales, total} = useMemo(() => {
+        const masseSalariale = data.masseSalarialeBrute || 0;
+        const cp = masseSalariale * 0.165;
+        const cs = masseSalariale * 0.035;
+        return { cotisationsPatronales: cp, cotisationsSalariales: cs, total: cp + cs };
+    }, [data]);
+    return <div className="space-y-4"><FormField label="Période (mois/année)" isRequired><Input type="month" value={data.periode} onChange={e => handleChange('periode', e.target.value)}/></FormField><FormField label="Masse Salariale Brute" isRequired><Input type="number" value={data.masseSalarialeBrute} onChange={e => handleChange('masseSalarialeBrute', parseFloat(e.target.value))}/></FormField><Separator/><div className="grid md:grid-cols-3 gap-4"><div className="space-y-1"><Label>Cotisations Patronales (16.5%)</Label><Input disabled value={cotisationsPatronales.toLocaleString('fr-FR')}/></div><div className="space-y-1"><Label>Cotisations Salariales (3.5%)</Label><Input disabled value={cotisationsSalariales.toLocaleString('fr-FR')}/></div><div className="space-y-1"><Label>Total Cotisations Dues</Label><Input disabled value={total.toLocaleString('fr-FR')} className="font-bold text-primary"/></div></div></div>;
 }
 
+// --- MAIN COMPONENTS ---
 
 function SimulationsFiscalesMainContent() {
-  return (
-    <div className="flex-1 flex flex-col">
-        <div className="mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Simulations Fiscales</h1>
-            <p className="text-muted-foreground">Outils pour estimer vos impôts et taxes.</p>
+    const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+    const [selectedDeclarationType, setSelectedDeclarationType] = useState<DeclarationType | null>(null);
+    const [simulationData, setSimulationData] = useState<any | null>(null);
+    const { toast } = useToast();
+
+    const handleSelectDeclaration = (type: DeclarationType) => {
+        setSelectedDeclarationType(type);
+        setSimulationData({}); // Reset data for new simulation
+        setIsSelectionModalOpen(false);
+        setIsSheetOpen(true);
+    };
+
+    const handleGeneratePreview = () => {
+        if (!simulationData) {
+            toast({ title: 'Données manquantes', description: 'Veuillez remplir le formulaire.', variant: 'destructive'});
+            return;
+        }
+        setIsSheetOpen(false);
+        setIsPreviewModalOpen(true);
+    };
+
+    const handleExportPDF = () => {
+        if (!selectedDeclarationType || !simulationData) return;
+
+        const doc = new jsPDF();
+        const config = declarationConfigs[selectedDeclarationType];
+
+        doc.setFontSize(22);
+        doc.text(`Simulation - ${config.label}`, 105, 20, { align: 'center' });
+        
+        autoTable(doc, {
+            startY: 40,
+            head: [['Champ', 'Valeur']],
+            body: Object.entries(simulationData).map(([key, value]) => [key, String(value)]),
+            theme: 'grid',
+        });
+        
+        addWatermarkToPdf(doc);
+
+        doc.save(`simulation_${selectedDeclarationType}.pdf`);
+        toast({ title: "Exportation PDF réussie", description: "Le document de simulation a été téléchargé." });
+    };
+
+    const FormComponent = selectedDeclarationType ? declarationConfigs[selectedDeclarationType].formComponent : null;
+    const config = selectedDeclarationType ? declarationConfigs[selectedDeclarationType] : null;
+
+    return (
+        <div className="flex-1 flex flex-col">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl">Simulations Fiscales et Sociales</CardTitle>
+                    <CardDescription>Estimez vos impôts, taxes et cotisations en fonction de différents scénarios. Les documents générés portent un filigrane "SPECIMEN".</CardDescription>
+                </CardHeader>
+                <CardContent className="h-64 flex flex-col items-center justify-center gap-4">
+                    <Calculator className="h-16 w-16 text-primary/30" />
+                    <Button size="lg" onClick={() => setIsSelectionModalOpen(true)}>
+                        <FilePlus className="mr-2 h-4 w-4" />
+                        Lancer une nouvelle simulation
+                    </Button>
+                </CardContent>
+            </Card>
+            
+            <SimulationSelectionModal
+                isOpen={isSelectionModalOpen}
+                onClose={() => setIsSelectionModalOpen(false)}
+                onSelect={handleSelectDeclaration}
+            />
+
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetContent className="w-[600px] sm:max-w-none">
+                     <SheetHeader>
+                        <SheetTitle>Simulation : {config?.label}</SheetTitle>
+                        <SheetDescription>{config?.description}</SheetDescription>
+                    </SheetHeader>
+                    <div className="py-4">
+                        {FormComponent && <FormComponent data={simulationData} setData={setSimulationData} />}
+                    </div>
+                    <SheetFooter>
+                        <Button variant="outline" onClick={() => setIsSheetOpen(false)}>Annuler</Button>
+                        <Button onClick={handleGeneratePreview}><Eye className="mr-2 h-4 w-4" /> Générer un aperçu</Button>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
+
+            <Dialog open={isPreviewModalOpen} onOpenChange={setIsPreviewModalOpen}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Aperçu du Spécimen</DialogTitle>
+                        <DialogDescription>
+                            Ceci est un aperçu du document qui sera généré. Le PDF final contiendra un filigrane "SPECIMEN".
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[60vh] overflow-y-auto p-4 border rounded-md bg-muted/30 relative">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span className="text-8xl font-bold text-destructive/10 -rotate-45">SPECIMEN</span>
+                        </div>
+                        <h3 className="text-xl font-bold mb-4">{config?.label}</h3>
+                        {FormComponent && <FormComponent data={simulationData} setData={() => {}} />}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setIsPreviewModalOpen(false); setIsSheetOpen(true); }}>Retour</Button>
+                        <Button onClick={handleExportPDF}><Download className="mr-2 h-4 w-4" /> Exporter en PDF</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
-        <Tabs defaultValue="is" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="is">Impôt sur les Sociétés</TabsTrigger>
-                <TabsTrigger value="tva">TVA</TabsTrigger>
-            </TabsList>
-            <TabsContent value="is">
-                <ISSimulator />
-            </TabsContent>
-            <TabsContent value="tva">
-                <TVASimulator />
-            </TabsContent>
-        </Tabs>
-    </div>
-  );
+    );
+}
+
+function SimulationSelectionModal({ isOpen, onClose, onSelect }: { isOpen: boolean, onClose: () => void, onSelect: (type: DeclarationType) => void }) {
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Choisir une simulation</DialogTitle>
+                    <DialogDescription>Sélectionnez le type de déclaration que vous souhaitez simuler.</DialogDescription>
+                </DialogHeader>
+                 <Accordion type="multiple" className="w-full">
+                    <AccordionItem value="fiscal">
+                        <AccordionTrigger>Déclarations Fiscales</AccordionTrigger>
+                        <AccordionContent>
+                            <div className="grid grid-cols-2 gap-2">
+                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('TVA')}>TVA (CA3)</Button>
+                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('BIC')}>BIC - Impôt sur les Sociétés</Button>
+                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('ImpotSynthetique')}>Impôt Synthétique</Button>
+                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('DroitsEnregistrement')}>Droits d'Enregistrement</Button>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="social">
+                        <AccordionTrigger>Déclarations Sociales</AccordionTrigger>
+                        <AccordionContent>
+                             <div className="grid grid-cols-2 gap-2">
+                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('ITS')}>ITS - Impôt sur les Salaires</Button>
+                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('ImmatriculationEmployeur')}>Immatriculation Employeur (CNPS)</Button>
+                                <Button variant="ghost" className="justify-start" onClick={() => onSelect('DMS')}>Déclaration Mensuelle Salaires (CNPS)</Button>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            </DialogContent>
+        </Dialog>
+    );
 }
 
 export default function SimulationsFiscalesPage() {
@@ -124,5 +304,5 @@ export default function SimulationsFiscalesPage() {
         <FiscalPageLayout>
             <SimulationsFiscalesMainContent />
         </FiscalPageLayout>
-    )
+    );
 }
