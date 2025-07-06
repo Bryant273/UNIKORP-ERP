@@ -58,7 +58,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-indigo-500 px-4 text-primary-foreground sm:px-6">
       <div className="flex items-center gap-2">
-        <Logo className="h-8 w-8 text-primary" />
+        <Logo className="h-8 w-8 text-white" />
         <Button variant="ghost" className="hover:bg-white/10 hover:text-primary-foreground">
           <span>AUTO - SociétéX</span>
           <ChevronDown className="ml-2 h-4 w-4" />

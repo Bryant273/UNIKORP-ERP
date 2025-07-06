@@ -78,7 +78,7 @@ export default function SkomptabPage() {
               <BarChart data={barChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact', compactDisplay: 'short' }).format(value as number)} />
+                <YAxis tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)} />
                 <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
                 <Bar dataKey="revenus" fill="var(--color-revenus)" radius={4} />
                 <Bar dataKey="depenses" fill="var(--color-depenses)" radius={4} />
@@ -95,7 +95,7 @@ export default function SkomptabPage() {
               <LineChart data={lineChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact', compactDisplay: 'short' }).format(value as number)}/>
+                <YAxis tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)}/>
                 <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
                 <Line type="monotone" dataKey="entrees" stroke="var(--color-entrees)" strokeWidth={2} dot={false}/>
                 <Line type="monotone" dataKey="sorties" stroke="var(--color-sorties)" strokeWidth={2} dot={false}/>

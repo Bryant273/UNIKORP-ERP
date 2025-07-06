@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Roboto, Noto_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppSidebar } from '@/components/app-sidebar';
@@ -37,7 +37,7 @@ export default function RootLayout({
               <AppSidebar />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <ModuleNav />
-                <main className="flex-1 overflow-y-auto bg-background/80 p-4 sm:p-6 lg:p-8">
+                <main className="flex-1 overflow-y-auto bg-background/80 p-6">
                   {children}
                 </main>
               </div>

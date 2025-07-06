@@ -155,8 +155,8 @@ export default function DashboardPage() {
                     <ComposedChart data={skomptabChartData}>
                         <CartesianGrid vertical={false} />
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                        <YAxis tickLine={false} axisLine={false} fontSize={12} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
                         <Legend />
                         <Bar dataKey="revenus" fill="var(--color-revenus)" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="depenses" fill="var(--color-depenses)" radius={[4, 4, 0, 0]} />
@@ -185,9 +185,9 @@ export default function DashboardPage() {
                     <ComposedChart data={markosChartData}>
                         <CartesianGrid vertical={false} />
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                        <YAxis yAxisId="left" orientation="left" stroke="var(--color-leads)" tickLine={false} axisLine={false} fontSize={12} />
+                        <YAxis yAxisId="left" orientation="left" stroke="var(--color-leads)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')}/>
                         <YAxis yAxisId="right" orientation="right" stroke="var(--color-conversion)" tickLine={false} axisLine={false} fontSize={12} unit="%" />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => name === 'conversion' ? `${value}%` : `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
                         <Legend />
                         <Bar dataKey="leads" yAxisId="left" fill="var(--color-leads)" radius={[4, 4, 0, 0]} />
                         <Line type="monotone" dataKey="conversion" yAxisId="right" stroke="var(--color-conversion)" strokeWidth={2} dot={{ r: 4 }} />
@@ -215,9 +215,9 @@ export default function DashboardPage() {
                     <ComposedChart data={logsonChartData}>
                         <CartesianGrid vertical={false} />
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                        <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" tickLine={false} axisLine={false} fontSize={12} />
+                        <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')}/>
                         <YAxis yAxisId="right" orientation="right" stroke="var(--color-retours)" tickLine={false} axisLine={false} fontSize={12} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => (value as number).toLocaleString('fr-FR')} />} />
                         <Legend />
                         <Bar dataKey="expeditions" yAxisId="left" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
                         <Line type="monotone" dataKey="retours" yAxisId="right" stroke="var(--color-retours)" strokeWidth={2} dot={{ r: 4 }} />
@@ -246,8 +246,8 @@ export default function DashboardPage() {
                         <CartesianGrid vertical={false} />
                         <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
                         <YAxis yAxisId="left" orientation="left" stroke="var(--color-recrutements)" tickLine={false} axisLine={false} fontSize={12} />
-                        <YAxis yAxisId="right" orientation="right" stroke="var(--color-effectif)" tickLine={false} axisLine={false} fontSize={12} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <YAxis yAxisId="right" orientation="right" stroke="var(--color-effectif)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => (value as number).toLocaleString('fr-FR')} />} />
                         <Legend />
                         <Bar dataKey="recrutements" stackId="a" yAxisId="left" fill="var(--color-recrutements)" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="departs" stackId="a" yAxisId="left" fill="var(--color-departs)" radius={[4, 4, 0, 0]} />

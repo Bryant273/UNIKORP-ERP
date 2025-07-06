@@ -225,10 +225,10 @@ export default function ModeleSaisiePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Libellé</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-[150px] text-center">Nb. Écritures</TableHead>
-                  <TableHead className="w-[150px] text-center">Actions</TableHead>
+                  <TableHead className="font-semibold">Libellé</TableHead>
+                  <TableHead className="font-semibold">Description</TableHead>
+                  <TableHead className="w-[150px] text-center font-semibold">Nb. Écritures</TableHead>
+                  <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -294,13 +294,13 @@ export default function ModeleSaisiePage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[50px] text-center">N°</TableHead>
-                        <TableHead>Compte général</TableHead>
-                        <TableHead>Tiers</TableHead>
-                        <TableHead>Libellé</TableHead>
-                        <TableHead className="w-[150px]">Débit</TableHead>
-                        <TableHead className="w-[150px]">Crédit</TableHead>
-                        <TableHead className="w-[50px] text-center">Action</TableHead>
+                        <TableHead className="w-[50px] text-center font-semibold">N°</TableHead>
+                        <TableHead className="font-semibold">Compte général</TableHead>
+                        <TableHead className="font-semibold">Tiers</TableHead>
+                        <TableHead className="font-semibold">Libellé</TableHead>
+                        <TableHead className="w-[150px] font-semibold">Débit</TableHead>
+                        <TableHead className="w-[150px] font-semibold">Crédit</TableHead>
+                        <TableHead className="w-[50px] text-center font-semibold">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

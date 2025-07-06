@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -381,20 +382,20 @@ export default function ModeleDeclarationPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center font-semibold">Libellé</TableHead>
+                <TableHead className="font-semibold">Libellé</TableHead>
                 <TableHead className="w-[180px] text-center font-semibold">Type de déclaration</TableHead>
-                <TableHead className="text-center font-semibold">Description</TableHead>
+                <TableHead className="font-semibold">Description</TableHead>
                 <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {modeles.map((modele) => (
                 <TableRow key={modele.id} className="odd:bg-muted/50">
-                  <TableCell className="font-medium text-center">{modele.libelle}</TableCell>
-                  <TableCell className="flex justify-center">
+                  <TableCell className="font-medium">{modele.libelle}</TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="outline">{modele.type}</Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-center">{modele.description}</TableCell>
+                  <TableCell className="text-muted-foreground">{modele.description}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(modele)}>

@@ -10,7 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['var(--font-body)', 'sans-serif'],
+        body: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
         headline: ['var(--font-body)', 'sans-serif'],
         code: ['monospace'],
       },
