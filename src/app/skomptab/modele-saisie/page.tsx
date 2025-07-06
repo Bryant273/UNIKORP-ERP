@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -96,6 +97,8 @@ const defaultFormData: Omit<ModeleSaisie, 'id'> = {
   ecritures: [],
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ModeleSaisiePage() {
   const [modeles, setModeles] = useState<ModeleSaisie[]>(initialModeles);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,6 +106,17 @@ export default function ModeleSaisiePage() {
   const [formData, setFormData] = useState(defaultFormData);
   const [modeleToDelete, setModeleToDelete] = useState<ModeleSaisie | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(modeles.length / ITEMS_PER_PAGE);
+  const paginatedModeles = modeles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
 
   const handleOpenCreateModal = () => {
     setIsViewMode(false);
@@ -221,51 +235,75 @@ export default function ModeleSaisiePage() {
           </div>
         </CardHeader>
         <CardContent>
-          {modeles.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-semibold">Libellé</TableHead>
-                  <TableHead className="font-semibold">Description</TableHead>
-                  <TableHead className="w-[150px] text-center font-semibold">Nb. Écritures</TableHead>
-                  <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-semibold">Libellé</TableHead>
+                <TableHead className="font-semibold">Description</TableHead>
+                <TableHead className="w-[180px] text-center font-semibold">Nb. Écritures</TableHead>
+                <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedModeles.map((modele) => (
+                <TableRow key={modele.id} className="odd:bg-muted/50">
+                  <TableCell className="font-medium">{modele.libelle}</TableCell>
+                  <TableCell className="text-muted-foreground">{modele.description}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="secondary">{modele.ecritures.length} lignes</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(modele)}>
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(modele)}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Modifier</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setModeleToDelete(modele)} className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Supprimer</span>
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {modeles.map((modele) => (
-                  <TableRow key={modele.id} className="odd:bg-muted/50">
-                    <TableCell className="font-medium">{modele.libelle}</TableCell>
-                    <TableCell className="text-muted-foreground">{modele.description}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary">{modele.ecritures.length} lignes</Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(modele)}>
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">Voir</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(modele)}>
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Modifier</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setModeleToDelete(modele)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Supprimer</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
+              ))}
+            </TableBody>
+          </Table>
+           {modeles.length === 0 && (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
               <p className="text-muted-foreground">Aucun modèle de saisie pour le moment.</p>
               <Button variant="link" onClick={handleOpenCreateModal}>Créer votre premier modèle</Button>
             </div>
           )}
         </CardContent>
+        <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Total de {modeles.length} modèles. Page {currentPage} sur {totalPages}.
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                </Button>
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>

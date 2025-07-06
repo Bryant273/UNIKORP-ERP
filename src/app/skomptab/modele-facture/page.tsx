@@ -17,6 +17,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -110,9 +118,9 @@ const LiveInvoicePreview = ({ template }: { template: Omit<InvoiceTemplate, 'id'
     const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
     const dummyData = {
-        subTotal: 450,
-        vatAmount: template.showTax ? 450 * 0.18 : 0,
-        total: template.showTax ? 450 * 1.18 : 450
+        subTotal: 450000,
+        vatAmount: template.showTax ? 450000 * 0.18 : 0,
+        total: template.showTax ? 450000 * 1.18 : 450000
     };
 
     return (
@@ -149,8 +157,8 @@ const LiveInvoicePreview = ({ template }: { template: Omit<InvoiceTemplate, 'id'
                     </tr>
                 </thead>
                 <tbody>
-                    <tr className="border-b odd:bg-muted/50"><td className="p-2 font-medium text-center">Service ou produit 1</td><td className="p-2 text-center">2</td><td className="p-2 text-center">{formatFr(150)} FCFA</td><td className="p-2 text-center">{formatFr(300)} FCFA</td></tr>
-                    <tr className="border-b odd:bg-muted/50"><td className="p-2 font-medium text-center">Service ou produit 2</td><td className="p-2 text-center">1</td><td className="p-2 text-center">{formatFr(150)} FCFA</td><td className="p-2 text-center">{formatFr(150)} FCFA</td></tr>
+                    <tr className="border-b odd:bg-muted/50"><td className="p-2 font-medium text-center">Service ou produit 1</td><td className="p-2 text-center">2</td><td className="p-2 text-center">{formatFr(150000)} FCFA</td><td className="p-2 text-center">{formatFr(300000)} FCFA</td></tr>
+                    <tr className="border-b odd:bg-muted/50"><td className="p-2 font-medium text-center">Service ou produit 2</td><td className="p-2 text-center">1</td><td className="p-2 text-center">{formatFr(150000)} FCFA</td><td className="p-2 text-center">{formatFr(150000)} FCFA</td></tr>
                 </tbody>
             </table>
             <div className="flex justify-end mb-8">
@@ -170,6 +178,8 @@ const LiveInvoicePreview = ({ template }: { template: Omit<InvoiceTemplate, 'id'
 };
 LiveInvoicePreview.displayName = 'LiveInvoicePreview';
 
+const ITEMS_PER_PAGE = 10;
+
 // --- MAIN PAGE COMPONENT ---
 export default function ModeleFacturePage() {
   const [templates, setTemplates] = useState<InvoiceTemplate[]>(initialTemplates);
@@ -179,6 +189,16 @@ export default function ModeleFacturePage() {
   
   const [formData, setFormData] = useState<Omit<InvoiceTemplate, 'id'>>(defaultTemplate);
   const { toast } = useToast();
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(templates.length / ITEMS_PER_PAGE);
+  const paginatedTemplates = templates.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleOpenCreateSheet = () => {
     setEditingTemplate(null);
@@ -236,34 +256,65 @@ export default function ModeleFacturePage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {templates.map(template => (
-                        <Card key={template.id} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                   <div className="w-4 h-4 rounded-full" style={{backgroundColor: template.primaryColor}}/>
-                                   {template.name}
-                                </CardTitle>
-                                <CardDescription>{template.companyName}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-1">
-                                <div className="border rounded-md p-4 bg-muted text-xs text-muted-foreground">
-                                    <p className="font-semibold">Pied de page :</p>
-                                    <p className="whitespace-pre-line">{template.footerText}</p>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-end gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleOpenEditSheet(template)}>
-                                    <Pencil className="mr-2 h-4 w-4" /> Modifier
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => setTemplateToDelete(template)}>
-                                    <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
-                </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="font-semibold">Nom du Modèle</TableHead>
+                            <TableHead className="font-semibold">Nom de la Société</TableHead>
+                            <TableHead className="font-semibold text-center">Couleur</TableHead>
+                            <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedTemplates.map(template => (
+                             <TableRow key={template.id} className="odd:bg-muted/50">
+                                <TableCell className="font-medium">{template.name}</TableCell>
+                                <TableCell>{template.companyName}</TableCell>
+                                <TableCell className="flex justify-center">
+                                    <div className="w-6 h-6 rounded-full border" style={{backgroundColor: template.primaryColor}}/>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(template)}>
+                                            <Pencil className="h-4 w-4" />
+                                            <span className="sr-only">Modifier</span>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setTemplateToDelete(template)}>
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Supprimer</span>
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </CardContent>
+             <CardFooter className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                    Total de {templates.length} modèles. Page {currentPage} sur {totalPages}.
+                </div>
+                {totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            Précédent
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            Suivant
+                        </Button>
+                    </div>
+                )}
+            </CardFooter>
         </Card>
 
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
