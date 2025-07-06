@@ -21,6 +21,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 // --- TYPES & MOCK DATA ---
@@ -538,24 +540,204 @@ function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; 
 
 function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose: () => void; employee: Employee | null }) {
     if (!employee) return null;
-    
-    const handlePrint = () => { /* PDF generation logic */ };
+
+    const { toast } = useToast();
+
+    const mockContractData = {
+        ENTREPRISE_NOM: 'UNIKORP',
+        ENTREPRISE_FORME: 'SAS',
+        ENTREPRISE_ADRESSE: '123 Avenue Unikorp, Abidjan, Côte d\'Ivoire',
+        ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345',
+        ENTREPRISE_APE: '6201Z',
+        REPRESENTANT_NOM: 'Elodie Dubois',
+        REPRESENTANT_FONCTION: 'Présidente Directrice Générale',
+        EMPLOYE_NOM: employee.nom.toUpperCase(),
+        EMPLOYE_PRENOM: employee.prenom,
+        EMPLOYE_DATE_NAISSANCE: new Date(employee.dateNaissance).toLocaleDateString('fr-FR'),
+        EMPLOYE_LIEU_NAISSANCE: 'Abidjan',
+        EMPLOYE_ADRESSE: '456 Rue Imaginaire, Cocody',
+        EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78',
+        EMPLOYE_NATIONALITE: 'Ivoirienne',
+        TYPE_CONTRAT: employee.contractType,
+        CONVENTION_COLLECTIVE: 'Convention Collective Interprofessionnelle',
+        SI_CDD: employee.contractType === 'CDD',
+        DATE_DEBUT: new Date(employee.dateEmbauche).toLocaleDateString('fr-FR'),
+        DATE_FIN: employee.contractType === 'CDD' ? '31/12/2024' : '',
+        MOTIF_CDD: 'Accroissement temporaire d\'activité',
+        SI_PERIODE_ESSAI: true,
+        DUREE_ESSAI: '3 mois',
+        DUREE_RENOUVELLEMENT_ESSAI: '3 mois',
+        FONCTION: employee.poste,
+        QUALIFICATION_PROFESSIONNELLE: 'Cadre',
+        CLASSIFICATION: 'Catégorie 12',
+        COEFFICIENT: '450',
+        SUPERIEUR_HIERARCHIQUE: 'Directeur du département',
+        LIEU_TRAVAIL: 'Siège social, Abidjan',
+        SI_DEPLACEMENT: true,
+        ZONE_DEPLACEMENT: 'sur le territoire national et international',
+        HORAIRES_TRAVAIL: '9h00-12h30 et 14h00-18h00',
+        DUREE_HEBDOMADAIRE: '40',
+        JOURS_REPOS: 'Samedi et Dimanche',
+        SI_TEMPS_PARTIEL: false,
+        NOMBRE_HEURES_PARTIEL: '',
+        REPARTITION_HORAIRES: '',
+        SALAIRE_BASE: (350000).toLocaleString('fr-FR'),
+        PERIODICITE_SALAIRE: 'mensuel',
+        SI_PRIMES: true,
+        LISTE_PRIMES: 'Prime de transport, prime de panier',
+        SI_AVANTAGES_NATURE: false,
+        LISTE_AVANTAGES: '',
+        DATE_VERSEMENT: 'dernier jour ouvré',
+        MODE_PAIEMENT: 'virement bancaire',
+        NOMBRE_JOURS_CONGES: '30',
+        PERIODE_CONGES: 'du 1er janvier au 31 décembre',
+        SI_FORMATION_INITIALE: false,
+        DUREE_FORMATION: '',
+        OBLIGATIONS_SUPPLEMENTAIRES: "Respecter la charte informatique de l'entreprise",
+        SI_NON_CONCURRENCE: false,
+        DUREE_NON_CONCURRENCE: '',
+        SECTEURS_CONCERNES: '',
+        ZONE_NON_CONCURRENCE: '',
+        MONTANT_CONTREPARTIE: '',
+        SI_CDI: employee.contractType === 'CDI',
+        DUREE_PREAVIS: '3 mois',
+        LIEU_SIGNATURE: 'Abidjan',
+        DATE_SIGNATURE: new Date().toLocaleDateString('fr-FR'),
+        SIGNATURE_EMPLOYEUR: 'Elodie Dubois',
+        SIGNATURE_EMPLOYE: `${employee.prenom} ${employee.nom}`,
+        DATE_REMISE: new Date().toLocaleDateString('fr-FR'),
+        DATE_DPAE: new Date(employee.dateEmbauche).toLocaleDateString('fr-FR'),
+        DATE_VISITE_MEDICALE: 'À programmer',
+    };
+
+    const handlePrint = () => {
+        const doc = new jsPDF();
+        let y = 15;
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 15;
+
+        const addText = (text: string, options: any = {}) => {
+            if (y > pageHeight - margin) {
+                doc.addPage();
+                y = margin;
+            }
+            const splitText = doc.splitTextToSize(text, doc.internal.pageSize.getWidth() - margin * 2);
+            doc.text(splitText, margin, y, options);
+            y += (doc.getTextDimensions(splitText).h) + 4;
+        };
+
+        const addTitle = (text: string) => {
+            doc.setFontSize(14).setFont('helvetica', 'bold');
+            addText(text);
+            doc.setFontSize(10).setFont('helvetica', 'normal');
+        };
+
+        const addSubtitle = (text: string) => {
+            doc.setFontSize(11).setFont('helvetica', 'bold');
+            addText(text);
+            doc.setFontSize(10).setFont('helvetica', 'normal');
+        };
+        
+        doc.setFont('times', 'normal');
+        doc.setFontSize(18);
+        doc.text('CONTRAT DE TRAVAIL', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+        y += 10;
+        
+        addSubtitle('Entre les soussignés :');
+        addText(`L'EMPLOYEUR :\n- Dénomination sociale : ${mockContractData.ENTREPRISE_NOM}\n- Adresse : ${mockContractData.ENTREPRISE_ADRESSE}\n- Représenté par : ${mockContractData.REPRESENTANT_NOM}, ${mockContractData.REPRESENTANT_FONCTION}`);
+        
+        addText(`L'EMPLOYÉ :\n- Nom : ${mockContractData.EMPLOYE_NOM}\n- Prénom : ${mockContractData.EMPLOYE_PRENOM}\n- Date de naissance : ${mockContractData.EMPLOYE_DATE_NAISSANCE}\n- Adresse : ${mockContractData.EMPLOYE_ADRESSE}\n- Numéro de sécurité sociale : ${mockContractData.EMPLOYE_NUM_SECU}`);
+        
+        doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+        y += 5;
+
+        addTitle('ARTICLE 1 - NATURE DU CONTRAT');
+        addText(`Il est conclu entre les parties un contrat de travail à durée ${mockContractData.TYPE_CONTRAT} sous le régime de la convention collective ${mockContractData.CONVENTION_COLLECTIVE}.`);
+        if (mockContractData.SI_CDD) {
+            addText(`Durée du contrat : Du ${mockContractData.DATE_DEBUT} au ${mockContractData.DATE_FIN}.\nMotif de recours : ${mockContractData.MOTIF_CDD}`);
+        }
+        if (mockContractData.SI_PERIODE_ESSAI) {
+            addText(`Période d'essai : ${mockContractData.DUREE_ESSAI} renouvelable une fois pour une durée de ${mockContractData.DUREE_RENOUVELLEMENT_ESSAI}.`);
+        }
+
+        addTitle('ARTICLE 2 - FONCTION ET QUALIFICATION');
+        addText(`Le salarié est engagé en qualité de ${mockContractData.FONCTION} - ${mockContractData.QUALIFICATION_PROFESSIONNELLE}.`);
+
+        addTitle('ARTICLE 3 - LIEU DE TRAVAIL');
+        addText(`Le salarié exercera ses fonctions à l'adresse suivante : ${mockContractData.LIEU_TRAVAIL}.`);
+        
+        addTitle('ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL');
+        addText(`Durée hebdomadaire : ${mockContractData.DUREE_HEBDOMADAIRE} heures.`);
+
+        addTitle('ARTICLE 5 - RÉMUNÉRATION');
+        addText(`Salaire de base : ${mockContractData.SALAIRE_BASE} € ${mockContractData.PERIODICITE_SALAIRE}.`);
+
+        addTitle('ARTICLE 6 - CONGÉS PAYÉS');
+        addText(`Le salarié bénéficie de ${mockContractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.`);
+        
+        y += 15;
+        addText(`Fait à ${mockContractData.LIEU_SIGNATURE}, le ${mockContractData.DATE_SIGNATURE}, en deux exemplaires.`);
+        y += 15;
+        doc.text("L'EMPLOYEUR", margin, y);
+        doc.text("L'EMPLOYÉ", doc.internal.pageSize.getWidth() / 2 + margin, y);
+        y += 10;
+        doc.text(`( ${mockContractData.SIGNATURE_EMPLOYEUR} )`, margin, y);
+        doc.text(`( ${mockContractData.SIGNATURE_EMPLOYE} )`, doc.internal.pageSize.getWidth() / 2 + margin, y);
+        
+
+        doc.save(`contrat_${employee.nom}.pdf`);
+        toast({ title: 'PDF du contrat généré.' });
+    };
+
+    const ContractField = ({ label, value }: { label: string, value: string }) => (
+        <p><span className="font-semibold">{label} :</span> {value}</p>
+    );
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Contrat de travail</DialogTitle>
-                    <DialogDescription>Détails du contrat pour {employee.prenom} {employee.nom}.</DialogDescription>
+                    <DialogTitle>Aperçu du Contrat de Travail</DialogTitle>
+                    <DialogDescription>Contrat pour {employee.prenom} {employee.nom}.</DialogDescription>
                 </DialogHeader>
-                <div className="py-4 space-y-2">
-                    <p><strong>Type de contrat :</strong> <Badge variant="secondary">{employee.contractType}</Badge></p>
-                    <p><strong>Date de début :</strong> {new Date(employee.dateEmbauche).toLocaleDateString('fr-FR')}</p>
-                    <p><strong>Poste :</strong> {employee.poste}</p>
-                </div>
+                <ScrollArea className="flex-1 p-6 border rounded-lg bg-muted/50 font-serif text-sm">
+                    <div className="bg-white p-8 max-w-3xl mx-auto shadow-lg">
+                        <h1 className="text-2xl font-bold text-center mb-6">CONTRAT DE TRAVAIL</h1>
+                        <h2 className="font-bold mb-2">Entre les soussignés :</h2>
+                        <div className="mb-4 pl-4">
+                            <h3 className="font-semibold">L'EMPLOYEUR :</h3>
+                            <p>Dénomination sociale : {mockContractData.ENTREPRISE_NOM}</p>
+                            <p>Adresse du siège social : {mockContractData.ENTREPRISE_ADRESSE}</p>
+                            <p>Représenté par : {mockContractData.REPRESENTANT_NOM}, {mockContractData.REPRESENTANT_FONCTION}</p>
+                        </div>
+                        <div className="mb-4 pl-4">
+                            <h3 className="font-semibold">L'EMPLOYÉ :</h3>
+                            <p>Nom : {mockContractData.EMPLOYE_NOM}</p>
+                            <p>Prénom : {mockContractData.EMPLOYE_PRENOM}</p>
+                            <p>Date de naissance : {mockContractData.EMPLOYE_DATE_NAISSANCE}</p>
+                            <p>Adresse : {mockContractData.EMPLOYE_ADRESSE}</p>
+                        </div>
+                        <Separator className="my-6" />
+                        <div className="space-y-4">
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 1 - NATURE DU CONTRAT</h3><p>Il est conclu entre les parties un contrat de travail à durée {mockContractData.TYPE_CONTRAT} sous le régime de la convention collective {mockContractData.CONVENTION_COLLECTIVE}.</p>{mockContractData.SI_CDD && <p className="mt-2"><strong>Durée du contrat :</strong> Du {mockContractData.DATE_DEBUT} au {mockContractData.DATE_FIN}</p>}</div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 2 - FONCTION ET QUALIFICATION</h3><p>Le salarié est engagé en qualité de {mockContractData.FONCTION} - {mockContractData.QUALIFICATION_PROFESSIONNELLE}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {mockContractData.LIEU_TRAVAIL}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL</h3><p>La durée hebdomadaire du travail est de {mockContractData.DUREE_HEBDOMADAIRE} heures.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {mockContractData.SALAIRE_BASE} € {mockContractData.PERIODICITE_SALAIRE}.</p></div>
+                        </div>
+                         <Separator className="my-6" />
+                         <div className="mt-12 text-center">
+                            <p>Fait à {mockContractData.LIEU_SIGNATURE}, le {mockContractData.DATE_SIGNATURE}.</p>
+                            <div className="flex justify-around mt-12 pt-8">
+                                <div><p className="border-t pt-2">L'EMPLOYEUR</p><p>({mockContractData.SIGNATURE_EMPLOYEUR})</p></div>
+                                <div><p className="border-t pt-2">L'EMPLOYÉ</p><p>({mockContractData.SIGNATURE_EMPLOYE})</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </ScrollArea>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
-                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4"/>Imprimer</Button>
+                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4"/>Imprimer le contrat</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
