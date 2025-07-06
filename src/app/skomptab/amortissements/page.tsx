@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -177,7 +178,7 @@ export default function AmortissementsPage() {
     }, [reportData]);
 
     return (
-        <>
+        <div className="w-full">
             <Card>
                 <CardHeader>
                     <CardTitle className="text-2xl">État des Amortissements</CardTitle>
@@ -245,22 +246,22 @@ export default function AmortissementsPage() {
                                                 <TableCell className="font-mono text-xs">{line.codeImmo}</TableCell>
                                                 <TableCell>{line.libelle}</TableCell>
                                                 <TableCell>{format(new Date(line.dateAcquisition), 'dd/MM/yyyy')}</TableCell>
-                                                <TableCell className="text-right font-mono">{formatAmount(line.valeurBrute)}</TableCell>
-                                                <TableCell className="text-right font-mono">{formatAmount(line.amortissementAnterieur)}</TableCell>
-                                                <TableCell className="text-right font-mono">{formatAmount(line.dotationExercice)}</TableCell>
-                                                <TableCell className="text-right font-mono">{formatAmount(line.amortissementCumule)}</TableCell>
-                                                <TableCell className="text-right font-mono font-bold">{formatAmount(line.valeurNetteComptable)}</TableCell>
+                                                <TableCell className="text-right">{formatAmount(line.valeurBrute)}</TableCell>
+                                                <TableCell className="text-right">{formatAmount(line.amortissementAnterieur)}</TableCell>
+                                                <TableCell className="text-right">{formatAmount(line.dotationExercice)}</TableCell>
+                                                <TableCell className="text-right">{formatAmount(line.amortissementCumule)}</TableCell>
+                                                <TableCell className="text-right font-bold">{formatAmount(line.valeurNetteComptable)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                     <TableFooter>
                                         <TableRow className="font-bold bg-secondary">
                                             <TableCell colSpan={3} className="text-right">Totaux</TableCell>
-                                            <TableCell className="text-right font-mono">{formatAmount(totals.valeurBrute)}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatAmount(totals.amortissementAnterieur)}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatAmount(totals.dotationExercice)}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatAmount(totals.amortissementCumule)}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatAmount(totals.valeurNetteComptable)}</TableCell>
+                                            <TableCell className="text-right">{formatAmount(totals.valeurBrute)}</TableCell>
+                                            <TableCell className="text-right">{formatAmount(totals.amortissementAnterieur)}</TableCell>
+                                            <TableCell className="text-right">{formatAmount(totals.dotationExercice)}</TableCell>
+                                            <TableCell className="text-right">{formatAmount(totals.amortissementCumule)}</TableCell>
+                                            <TableCell className="text-right">{formatAmount(totals.valeurNetteComptable)}</TableCell>
                                         </TableRow>
                                     </TableFooter>
                                 </Table>
@@ -275,6 +276,6 @@ export default function AmortissementsPage() {
                     )}
                 </DialogContent>
             </Dialog>
-        </>
+        </div>
     );
 }

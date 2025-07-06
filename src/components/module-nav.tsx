@@ -25,6 +25,11 @@ const navLinks = [
     icon: Calculator,
   },
   {
+    href: '/socix',
+    label: 'SOCIX',
+    icon: UsersRound,
+  },
+  {
     href: '/markos',
     label: 'MARKOS',
     icon: Megaphone,
@@ -33,11 +38,6 @@ const navLinks = [
     href: '/logson',
     label: 'LOGSON',
     icon: Truck,
-  },
-  {
-    href: '/socix',
-    label: 'SOCIX',
-    icon: UsersRound,
   },
   {
     href: '/chat',

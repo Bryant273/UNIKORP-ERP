@@ -27,9 +27,9 @@ import FiscalPageLayout from '@/components/fiscal-layout';
 // --- DATA & CONFIGS ---
 
 const kpiData = [
-    { title: "TVA Collectée (Mois)", value: "18 500 €", Icon: TrendingUp, color: "text-blue-500" },
-    { title: "TVA Déductible (Mois)", value: "12 200 €", Icon: TrendingDown, color: "text-orange-500" },
-    { title: "TVA à décaisser (Mois)", value: "6 300 €", Icon: Scale, color: "text-destructive" },
+    { title: "TVA Collectée (Mois)", value: "18 500 FCFA", Icon: TrendingUp, color: "text-blue-500" },
+    { title: "TVA Déductible (Mois)", value: "12 200 FCFA", Icon: TrendingDown, color: "text-orange-500" },
+    { title: "TVA à décaisser (Mois)", value: "6 300 FCFA", Icon: Scale, color: "text-destructive" },
 ];
 
 const barChartDataS1 = [
@@ -187,7 +187,7 @@ function TVAMainContent() {
             finalY += 5;
             autoTable(doc, {
                 startY: finalY,
-                body: entries.map(e => [e.label, typeof e.value === 'number' ? e.value.toLocaleString('fr-FR') + ' €' : e.value]),
+                body: entries.map(e => [e.label, typeof e.value === 'number' ? e.value.toLocaleString('fr-FR') + ' FCFA' : e.value]),
                 theme: 'grid',
                 styles: { fontSize: 9 },
                 columnStyles: { 0: { cellWidth: 100 }, 1: { halign: 'right' } }
@@ -246,7 +246,7 @@ function TVAMainContent() {
     };
 
     return (
-        <>
+        <div className="w-full">
             <div className="flex flex-col gap-6">
                  <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold tracking-tight">Gestion de la TVA</h1>
@@ -287,7 +287,7 @@ function TVAMainContent() {
                                         <BarChart data={barChartDataS1}>
                                             <CartesianGrid vertical={false} />
                                             <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                                            <YAxis unit="€" />
+                                            <YAxis unit="FCFA" />
                                             <ChartTooltip content={<ChartTooltipContent />} />
                                             <Legend />
                                             <Bar dataKey="collectee" fill="var(--color-collectee)" radius={4} />
@@ -301,7 +301,7 @@ function TVAMainContent() {
                                         <BarChart data={barChartDataS2}>
                                             <CartesianGrid vertical={false} />
                                             <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                                            <YAxis unit="€" />
+                                            <YAxis unit="FCFA" />
                                             <ChartTooltip content={<ChartTooltipContent />} />
                                             <Legend />
                                             <Bar dataKey="collectee" fill="var(--color-collectee)" radius={4} />
@@ -335,7 +335,7 @@ function TVAMainContent() {
                                         return (
                                         <TableRow key={d.id}>
                                             <TableCell className="font-medium capitalize">{d.periode}</TableCell>
-                                            <TableCell className="text-right font-mono">{d.montant.toLocaleString('fr-FR')} €</TableCell>
+                                            <TableCell className="text-right">{d.montant.toLocaleString('fr-FR')} FCFA</TableCell>
                                             <TableCell className="text-center">{getStatusBadge(d.statut, d.id)}</TableCell>
                                             <TableCell className="text-center">
                                                 <div className="flex justify-center gap-1">
@@ -387,7 +387,7 @@ function TVAMainContent() {
                     <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </>
+        </div>
     );
 }
 
@@ -478,7 +478,7 @@ function TvaDeclarationModal({ isOpen, onClose, onSave, declarationToEdit }: { i
                         <TabsContent value="identification" className="mt-4"><Card><CardHeader><CardTitle>Informations Générales</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-3 gap-4"><Field label="NCC" id="ncc" value={formData.ncc} isRequired /><Field label="Raison Sociale" id="raisonSociale" value={formData.raisonSociale} isRequired disabled/><div className="space-y-2"><Label htmlFor="periode">Période (mois/année)</Label><Input id="periode" type="month" value={formData.periode} onChange={handleChange} /></div></div><Field label="Régime fiscal" id="regimeFiscal" value={formData.regimeFiscal} /><Separator /><CardTitle>Chiffres d'Affaires HT</CardTitle><div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"><Field label="CA Taux Normal (18%)" id="caHtNormal" type="text" inputMode="decimal" value={formData.caHtNormal} /><Field label="CA Taux Réduit (10%)" id="caHtReduit" type="text" inputMode="decimal" value={formData.caHtReduit} /><Field label="CA Exonéré" id="caExonere" type="text" inputMode="decimal" value={formData.caExonere} /><Field label="Exportations" id="exportations" type="text" inputMode="decimal" value={formData.exportations} /></div></CardContent></Card></TabsContent>
                         <TabsContent value="collectee" className="mt-4"><Card><CardHeader><CardTitle>Détail de la TVA Collectée</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-3 gap-4"><div className="space-y-2"><Label>TVA sur CA à 18%</Label><Input value={tvaCollectee18.toLocaleString('fr-FR')} disabled /></div><div className="space-y-2"><Label>TVA sur CA à taux réduit</Label><Input value={tvaCollecteeReduit.toLocaleString('fr-FR')} disabled /></div><Field label="TVA sur livraisons à soi-même" id="tvaLasem" type="text" inputMode="decimal" value={formData.tvaLasem} /></div></CardContent></Card></TabsContent>
                         <TabsContent value="deductible" className="mt-4"><Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Détail de la TVA Déductible</CardTitle> <Button variant="outline" onClick={handleSimulatedImport} disabled={isImporting}>{isImporting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Upload className="h-4 w-4"/>}<span className="ml-2">Importer Annexe EDI</span></Button></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"><Field label="TVA sur achats" id="tvaDeductibleAchats" type="text" inputMode="decimal" value={formData.tvaDeductibleAchats} isRequired/><Field label="TVA sur services" id="tvaDeductibleServices" type="text" inputMode="decimal" value={formData.tvaDeductibleServices} isRequired/><Field label="TVA sur immobilisations" id="tvaDeductibleImmo" type="text" inputMode="decimal" value={formData.tvaDeductibleImmo}/><Field label="TVA sur importations" id="tvaDeductibleImport" type="text" inputMode="decimal" value={formData.tvaDeductibleImport}/></div></CardContent></Card></TabsContent>
-                        <TabsContent value="liquidation" className="mt-4"><Card><CardHeader><CardTitle>Liquidation et Validation</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-3 gap-4"><div className="space-y-2"><Label>Total TVA Collectée</Label><Input value={totalTvaCollectee.toLocaleString('fr-FR')} disabled className="font-bold"/></div><div className="space-y-2"><Label>Total TVA Déductible</Label><Input value={totalTvaDeductible.toLocaleString('fr-FR')} disabled className="font-bold"/></div><Field label="Crédit de TVA antérieur" id="creditTvaAnterieur" type="text" inputMode="decimal" value={formData.creditTvaAnterieur}/></div><Separator /><div className="grid md:grid-cols-2 gap-4"><div className="space-y-2"><Label>TVA Nette Due</Label><Input value={`${tvaNetteDue.toLocaleString('fr-FR')} €`} disabled className="font-bold text-lg text-destructive"/></div><div className="space-y-2"><Label>Crédit à Reporter</Label><Input value={`${creditAReporter.toLocaleString('fr-FR')} €`} disabled className="font-bold text-lg text-green-600"/></div></div><Separator /><CardTitle className="pt-4">Finalisation</CardTitle><div className="grid md:grid-cols-3 gap-4"><Field label="Date de déclaration" id="dateDeclaration" type="date" value={formData.dateDeclaration} isRequired/><Field label="Pénalités (si applicable)" id="penalites" type="text" inputMode="decimal" value={formData.penalites} /><Field label="Intérêts de retard (si applicable)" id="interetsRetard" type="text" inputMode="decimal" value={formData.interetsRetard} /></div><div className="space-y-2"><Label htmlFor="observations">Observations</Label><Textarea id="observations" value={formData.observations} onChange={handleChange} /></div></CardContent></Card></TabsContent>
+                        <TabsContent value="liquidation" className="mt-4"><Card><CardHeader><CardTitle>Liquidation et Validation</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid md:grid-cols-3 gap-4"><div className="space-y-2"><Label>Total TVA Collectée</Label><Input value={totalTvaCollectee.toLocaleString('fr-FR')} disabled className="font-bold"/></div><div className="space-y-2"><Label>Total TVA Déductible</Label><Input value={totalTvaDeductible.toLocaleString('fr-FR')} disabled className="font-bold"/></div><Field label="Crédit de TVA antérieur" id="creditTvaAnterieur" type="text" inputMode="decimal" value={formData.creditTvaAnterieur}/></div><Separator /><div className="grid md:grid-cols-2 gap-4"><div className="space-y-2"><Label>TVA Nette Due</Label><Input value={`${tvaNetteDue.toLocaleString('fr-FR')} FCFA`} disabled className="font-bold text-lg text-destructive"/></div><div className="space-y-2"><Label>Crédit à Reporter</Label><Input value={`${creditAReporter.toLocaleString('fr-FR')} FCFA`} disabled className="font-bold text-lg text-green-600"/></div></div><Separator /><CardTitle className="pt-4">Finalisation</CardTitle><div className="grid md:grid-cols-3 gap-4"><Field label="Date de déclaration" id="dateDeclaration" type="date" value={formData.dateDeclaration} isRequired/><Field label="Pénalités (si applicable)" id="penalites" type="text" inputMode="decimal" value={formData.penalites} /><Field label="Intérêts de retard (si applicable)" id="interetsRetard" type="text" inputMode="decimal" value={formData.interetsRetard} /></div><div className="space-y-2"><Label htmlFor="observations">Observations</Label><Textarea id="observations" value={formData.observations} onChange={handleChange} /></div></CardContent></Card></TabsContent>
                     </Tabs>
                 </div>
                 <DialogFooter className="pt-4 border-t gap-2"><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={handleSubmit} disabled={!isFormValid}>{declarationToEdit ? 'Modifier' : 'Valider'} la déclaration</Button></DialogFooter>
@@ -534,36 +534,36 @@ function DeclarationFormView({ data }: { data: any }) {
                 <div className="space-y-2 border p-2 rounded">
                     <h3 className="font-semibold">CADRE I - CA HT</h3>
                     <div className="grid grid-cols-4 gap-2">
-                        <Field label="Taux Normal" value={`${(parseFloat(data.caHtNormal) || 0).toLocaleString('fr-FR')} €`} />
-                        <Field label="Taux Réduit" value={`${(parseFloat(data.caHtReduit) || 0).toLocaleString('fr-FR')} €`} />
-                        <Field label="Exonéré" value={`${(parseFloat(data.caExonere) || 0).toLocaleString('fr-FR')} €`} />
-                        <Field label="Exportations" value={`${(parseFloat(data.exportations) || 0).toLocaleString('fr-FR')} €`} />
+                        <Field label="Taux Normal" value={`${(parseFloat(data.caHtNormal) || 0).toLocaleString('fr-FR')} FCFA`} />
+                        <Field label="Taux Réduit" value={`${(parseFloat(data.caHtReduit) || 0).toLocaleString('fr-FR')} FCFA`} />
+                        <Field label="Exonéré" value={`${(parseFloat(data.caExonere) || 0).toLocaleString('fr-FR')} FCFA`} />
+                        <Field label="Exportations" value={`${(parseFloat(data.exportations) || 0).toLocaleString('fr-FR')} FCFA`} />
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2 border p-2 rounded">
                         <h3 className="font-semibold">CADRE II - TVA COLLECTÉE</h3>
-                         <Field label="TVA sur CA à 18%" value={`${tvaCollectee18.toLocaleString('fr-FR')} €`} />
-                         <Field label="TVA sur CA à taux réduit" value={`${tvaCollecteeReduit.toLocaleString('fr-FR')} €`} />
-                         <Field label="TVA sur LASM" value={`${(parseFloat(data.tvaLasem) || 0).toLocaleString('fr-FR')} €`} />
+                         <Field label="TVA sur CA à 18%" value={`${tvaCollectee18.toLocaleString('fr-FR')} FCFA`} />
+                         <Field label="TVA sur CA à taux réduit" value={`${tvaCollecteeReduit.toLocaleString('fr-FR')} FCFA`} />
+                         <Field label="TVA sur LASM" value={`${(parseFloat(data.tvaLasem) || 0).toLocaleString('fr-FR')} FCFA`} />
                          <Separator className="my-1"/>
-                         <div className="font-bold"><Field label="TOTAL TVA COLLECTÉE" value={`${totalTvaCollectee.toLocaleString('fr-FR')} €`} /></div>
+                         <div className="font-bold"><Field label="TOTAL TVA COLLECTÉE" value={`${totalTvaCollectee.toLocaleString('fr-FR')} FCFA`} /></div>
                     </div>
                      <div className="space-y-2 border p-2 rounded">
                         <h3 className="font-semibold">CADRE III - TVA DÉDUCTIBLE</h3>
-                         <Field label="Sur Achats" value={`${(parseFloat(data.tvaDeductibleAchats) || 0).toLocaleString('fr-FR')} €`} />
-                         <Field label="Sur Services" value={`${(parseFloat(data.tvaDeductibleServices) || 0).toLocaleString('fr-FR')} €`} />
-                         <Field label="Sur Immobilisations" value={`${(parseFloat(data.tvaDeductibleImmo) || 0).toLocaleString('fr-FR')} €`} />
+                         <Field label="Sur Achats" value={`${(parseFloat(data.tvaDeductibleAchats) || 0).toLocaleString('fr-FR')} FCFA`} />
+                         <Field label="Sur Services" value={`${(parseFloat(data.tvaDeductibleServices) || 0).toLocaleString('fr-FR')} FCFA`} />
+                         <Field label="Sur Immobilisations" value={`${(parseFloat(data.tvaDeductibleImmo) || 0).toLocaleString('fr-FR')} FCFA`} />
                          <Separator className="my-1"/>
-                         <div className="font-bold"><Field label="TOTAL TVA DÉDUCTIBLE" value={`${totalTvaDeductible.toLocaleString('fr-FR')} €`} /></div>
+                         <div className="font-bold"><Field label="TOTAL TVA DÉDUCTIBLE" value={`${totalTvaDeductible.toLocaleString('fr-FR')} FCFA`} /></div>
                     </div>
                 </div>
                 <div className="space-y-2 border p-2 rounded bg-muted/50">
                     <h3 className="font-semibold">CADRE IV - LIQUIDATION</h3>
-                    <Field label="Crédit de TVA antérieur" value={`${(parseFloat(data.creditTvaAnterieur) || 0).toLocaleString('fr-FR')} €`} />
+                    <Field label="Crédit de TVA antérieur" value={`${(parseFloat(data.creditTvaAnterieur) || 0).toLocaleString('fr-FR')} FCFA`} />
                     <Separator className="my-1" />
-                    <div className="text-destructive font-bold"><Field label="TVA Nette Due" value={`${tvaNetteDue.toLocaleString('fr-FR')} €`} /></div>
-                    <div className="text-green-600 font-bold"><Field label="Crédit à Reporter" value={`${creditAReporter.toLocaleString('fr-FR')} €`} /></div>
+                    <div className="text-destructive font-bold"><Field label="TVA Nette Due" value={`${tvaNetteDue.toLocaleString('fr-FR')} FCFA`} /></div>
+                    <div className="text-green-600 font-bold"><Field label="Crédit à Reporter" value={`${creditAReporter.toLocaleString('fr-FR')} FCFA`} /></div>
                 </div>
             </CardContent>
         </Card>
@@ -588,10 +588,10 @@ function AnnexEdiView() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow><TableCell>F2024-A150</TableCell><TableCell>Fournisseur Alpha</TableCell><TableCell className="text-right">5 000 €</TableCell><TableCell className="text-right">900 €</TableCell></TableRow>
-                        <TableRow><TableCell>F2024-B088</TableCell><TableCell>Fournisseur Beta</TableCell><TableCell className="text-right">8 500 €</TableCell><TableCell className="text-right">1 530 €</TableCell></TableRow>
-                        <TableRow><TableCell>F2024-C212</TableCell><TableCell>Fournisseur Gamma</TableCell><TableCell className="text-right">2 500 €</TableCell><TableCell className="text-right">450 €</TableCell></TableRow>
-                        <TableRow><TableCell>F2024-I034</TableCell><TableCell>Immo Service</TableCell><TableCell className="text-right">2 777.78 €</TableCell><TableCell className="text-right">500 €</TableCell></TableRow>
+                        <TableRow><TableCell>F2024-A150</TableCell><TableCell>Fournisseur Alpha</TableCell><TableCell className="text-right">5 000 FCFA</TableCell><TableCell className="text-right">900 FCFA</TableCell></TableRow>
+                        <TableRow><TableCell>F2024-B088</TableCell><TableCell>Fournisseur Beta</TableCell><TableCell className="text-right">8 500 FCFA</TableCell><TableCell className="text-right">1 530 FCFA</TableCell></TableRow>
+                        <TableRow><TableCell>F2024-C212</TableCell><TableCell>Fournisseur Gamma</TableCell><TableCell className="text-right">2 500 FCFA</TableCell><TableCell className="text-right">450 FCFA</TableCell></TableRow>
+                        <TableRow><TableCell>F2024-I034</TableCell><TableCell>Immo Service</TableCell><TableCell className="text-right">2 777.78 FCFA</TableCell><TableCell className="text-right">500 FCFA</TableCell></TableRow>
                     </TableBody>
                 </Table>
             </CardContent>

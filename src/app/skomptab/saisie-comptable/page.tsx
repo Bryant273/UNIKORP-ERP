@@ -293,7 +293,7 @@ export default function SaisieComptablePage() {
 
 
   return (
-    <>
+    <div className="w-full">
       <Card>
         <CardHeader>
            <div className="flex items-center justify-between">
@@ -489,12 +489,12 @@ export default function SaisieComptablePage() {
                         <div className="flex justify-between items-start">
                            {!isViewMode && <Button type="button" variant="default" onClick={addLigne} disabled={isViewMode}><PlusCircle className="mr-2 h-4 w-4"/>Ajouter une ligne</Button>}
                             <div className="w-full max-w-sm space-y-2 text-sm ml-auto">
-                                <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
-                                <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
+                                <div className="flex justify-between"><span>Total Débit:</span><span className="font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
+                                <div className="flex justify-between"><span>Total Crédit:</span><span className="font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
                                 <Separator/>
                                 <div className={`flex justify-between font-bold ${!isBalanced ? 'text-destructive' : 'text-green-600'}`}>
                                     <span>Solde:</span>
-                                    <span className="font-mono">{(totalDebit - totalCredit).toFixed(2)} FCFA</span>
+                                    <span>{(totalDebit - totalCredit).toFixed(2)} FCFA</span>
                                 </div>
                             </div>
                         </div>
@@ -544,6 +544,6 @@ export default function SaisieComptablePage() {
             </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
