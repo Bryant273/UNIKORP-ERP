@@ -80,7 +80,7 @@ const skomptabNav = [
   },
   {
     title: 'GESTION',
-    icon: Settings,
+    icon: Pencil,
     subItems: [
       { title: 'Brouillards', href: '/skomptab/brouillards', icon: Pencil },
       { title: 'Saisie comptable', href: '/skomptab/saisie-comptable', icon: Calculator },
@@ -139,17 +139,27 @@ const skomptabNav = [
 
 const socixNav = [
   {
-    title: 'Administration du Personnel',
+    title: 'Personnel',
     icon: Contact,
     subItems: [
       { title: 'Employés', href: '/socix/employes', icon: Contact },
-      { title: 'Contrats', href: '/socix/contrats', icon: FileSignature },
       { title: 'Dossiers administratifs', href: '/socix/dossiers-administratifs', icon: FolderKanban },
+      { title: 'Contrats', href: '/socix/contrats', icon: FileSignature },
       { title: 'Organigramme', href: '/socix/organigramme', icon: Network },
     ]
   },
   {
-    title: 'Paie et Rémunération',
+    title: 'Présences',
+    icon: CalendarDays,
+    subItems: [
+      { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
+      { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
+      { title: 'Absences et arrêts', href: '/socix/absences-arrets', icon: UserX },
+      { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
+    ]
+  },
+  {
+    title: 'Paie',
     icon: Wallet,
     subItems: [
       { title: 'Traitement de la paie', href: '/socix/traitement-paie', icon: HandCoins },
@@ -159,36 +169,27 @@ const socixNav = [
     ]
   },
   {
-    title: 'Gestion des Talents',
+    title: 'Talents',
     icon: Star,
     subItems: [
       { title: 'Recrutement', href: '/socix/recrutement', icon: UserPlus },
+      { title: 'Plans de formation', href: '/socix/plans-formation', icon: BookOpenCheck },
       { title: 'Compétences et évaluations', href: '/socix/competences-evaluations', icon: Star },
       { title: 'Entretiens annuels', href: '/socix/entretiens-annuels', icon: MessageSquare },
-      { title: 'Plans de formation', href: '/socix/plans-formation', icon: BookOpenCheck },
     ]
   },
   {
-    title: 'Temps et Activités',
-    icon: CalendarDays,
-    subItems: [
-      { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
-      { title: 'Absences et arrêts', href: '/socix/absences-arrets', icon: UserX },
-      { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
-      { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
-    ]
-  },
-  {
-    title: 'Pilotage et Rapports',
+    title: 'Analyse',
     icon: BarChart3,
     subItems: [
       { title: 'KPI sociaux', href: '/socix/kpi-sociaux', icon: TrendingUp },
       { title: 'Rapports et analyses', href: '/socix/rapports-analyses', icon: AreaChart },
-      { title: 'Bilan social', href: '/socix/bilan-social', icon: BookHeart },
       { title: 'Alternance des équipes', href: '/socix/alternance-equipes', icon: Repeat },
+      { title: 'Bilan social', href: '/socix/bilan-social', icon: BookHeart },
     ]
   },
 ];
+
 
 const getNavForPath = (pathname: string) => {
   if (pathname.startsWith('/skomptab')) {
@@ -314,7 +315,7 @@ export function AppSidebar() {
               className="w-full justify-start gap-2 font-semibold"
             >
               <LayoutDashboard className="h-4 w-4" />
-              Tableau de bord
+              Accueil
             </Button>
           </Link>
         </div>
