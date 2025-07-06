@@ -28,7 +28,7 @@ type Kpi = {
 };
 
 const mainKpis: Kpi[] = [
-  { title: "Revenus (T3)", value: `${(1200000).toLocaleString('fr-FR')} FCFA`, change: "+15.2%", icon: DollarSign, changeType: "up" },
+  { title: "Revenus (T3)", value: `${(1200000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, change: "+15.2%", icon: DollarSign, changeType: "up" },
   { title: "Nouveaux Clients", value: "89", change: "+20.1%", icon: Users, changeType: "up" },
   { title: "Commandes en cours", value: "245", change: "-3.5%", icon: ShoppingCart, changeType: "down" },
   { title: "Effectif Total", value: "112", breakdown: "60 H / 52 F", icon: UserCheck },
@@ -36,12 +36,12 @@ const mainKpis: Kpi[] = [
 
 const skomptabKpis = [
     { title: "Marge Nette", value: "28.4%", icon: Target },
-    { title: "Factures en attente", value: `${(12450).toLocaleString('fr-FR')} FCFA`, icon: FileText }
+    { title: "Factures en attente", value: `${(12450).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, icon: FileText }
 ];
 
 const markosKpis = [
     { title: "Nouveaux Leads (Mois)", value: "316", icon: Users },
-    { title: "Coût par Lead", value: `${(18.50).toLocaleString('fr-FR')} FCFA`, icon: DollarSign }
+    { title: "Coût par Lead", value: `${(1850).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, icon: DollarSign }
 ];
 
 const logsonKpis = [
@@ -50,7 +50,7 @@ const logsonKpis = [
 ];
 
 const socixKpis = [
-    { title: "Masse Salariale", value: `${(89000).toLocaleString('fr-FR')} FCFA`, icon: DollarSign },
+    { title: "Masse Salariale", value: `${(89000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, icon: DollarSign },
     { title: "Turnover", value: "2.1%", icon: TrendingDown }
 ];
 

@@ -192,12 +192,12 @@ export default function CreationJournauxPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Intitulé</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Compte rattaché</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="font-semibold">Code</TableHead>
+                <TableHead className="font-semibold">Intitulé</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold">Compte rattaché</TableHead>
+                <TableHead className="font-semibold">Statut</TableHead>
+                <TableHead className="text-right font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

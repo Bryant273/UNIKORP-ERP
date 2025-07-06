@@ -109,19 +109,20 @@ const dummyInvoiceData = {
     address: '10 Rue du Commerce, 33000 Bordeaux',
   },
   items: [
-    { description: 'Développement de site web', quantity: 1, unitPrice: 2500, tax: 20, total: 3000 },
-    { description: 'Hébergement annuel', quantity: 1, unitPrice: 300, tax: 20, total: 360 },
-    { description: 'Conception de logo', quantity: 1, unitPrice: 800, tax: 20, total: 960 },
+    { description: 'Développement de site web', quantity: 1, unitPrice: 2500000, tax: 20, total: 3000000 },
+    { description: 'Hébergement annuel', quantity: 1, unitPrice: 300000, tax: 20, total: 360000 },
+    { description: 'Conception de logo', quantity: 1, unitPrice: 800000, tax: 20, total: 960000 },
   ],
-  subtotal: 3600,
-  taxAmount: 720,
-  total: 4320,
+  subtotal: 3600000,
+  taxAmount: 720000,
+  total: 4320000,
 };
 
 // Component for the invoice preview
 const InvoicePreview = React.forwardRef<HTMLDivElement, { template: InvoiceTemplate }>(({ template }, ref) => {
     const { primaryColor, companyName, companyAddress, companyLogoUrl, showQuantity, showUnitPrice, showTax, footerText } = template;
     const { invoiceNumber, issueDate, dueDate, client, items, subtotal, taxAmount, total } = dummyInvoiceData;
+    const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
     return (
         <div ref={ref} className="bg-white rounded-lg shadow-lg p-8 w-full max-w-4xl mx-auto text-black font-sans text-sm">
@@ -161,11 +162,11 @@ const InvoicePreview = React.forwardRef<HTMLDivElement, { template: InvoiceTempl
             <table className="w-full text-left mb-8 text-xs">
                 <thead style={{ backgroundColor: primaryColor }} className="text-white">
                     <tr>
-                        <th className="p-2 text-center rounded-l-md">Description</th>
-                        {showQuantity && <th className="p-2 text-center">Quantité</th>}
-                        {showUnitPrice && <th className="p-2 text-center">Prix Unitaire</th>}
-                        {showTax && <th className="p-2 text-center">TVA (%)</th>}
-                        <th className="p-2 text-center rounded-r-md">Total HT</th>
+                        <th className="p-2 text-center rounded-l-md font-semibold">Description</th>
+                        {showQuantity && <th className="p-2 text-center font-semibold">Quantité</th>}
+                        {showUnitPrice && <th className="p-2 text-center font-semibold">Prix Unitaire</th>}
+                        {showTax && <th className="p-2 text-center font-semibold">TVA (%)</th>}
+                        <th className="p-2 text-center rounded-r-md font-semibold">Total HT</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -173,9 +174,9 @@ const InvoicePreview = React.forwardRef<HTMLDivElement, { template: InvoiceTempl
                          <tr key={i} className="border-b odd:bg-muted/50">
                             <td className="p-2 font-medium">{item.description}</td>
                              {showQuantity && <td className="p-2 text-center">{item.quantity}</td>}
-                             {showUnitPrice && <td className="p-2 text-right">{item.unitPrice.toFixed(2)} €</td>}
+                             {showUnitPrice && <td className="p-2 text-right">{formatFr(item.unitPrice)} FCFA</td>}
                              {showTax && <td className="p-2 text-right">{item.tax} %</td>}
-                            <td className="p-2 text-right">{(item.unitPrice * item.quantity).toFixed(2)} €</td>
+                            <td className="p-2 text-right">{formatFr(item.unitPrice * item.quantity)} FCFA</td>
                         </tr>
                     ))}
                 </tbody>
@@ -186,16 +187,16 @@ const InvoicePreview = React.forwardRef<HTMLDivElement, { template: InvoiceTempl
                 <div className="w-1/2 max-w-xs text-xs space-y-2">
                     <div className="flex justify-between">
                         <p className="text-gray-500">Sous-total :</p>
-                        <p>{subtotal.toFixed(2)} €</p>
+                        <p>{formatFr(subtotal)} FCFA</p>
                     </div>
                     <div className="flex justify-between">
                         <p className="text-gray-500">TVA (20%) :</p>
-                        <p>{taxAmount.toFixed(2)} €</p>
+                        <p>{formatFr(taxAmount)} FCFA</p>
                     </div>
                      <Separator />
                     <div className="flex justify-between font-bold text-base" style={{ color: primaryColor }}>
                         <p>TOTAL TTC :</p>
-                        <p>{total.toFixed(2)} €</p>
+                        <p>{formatFr(total)} FCFA</p>
                     </div>
                 </div>
             </div>
@@ -293,9 +294,9 @@ export default function ModeleFacturePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Nom du modèle</TableHead>
-                <TableHead className="text-center">Couleur principale</TableHead>
-                <TableHead className="w-[150px] text-center">Actions</TableHead>
+                <TableHead className="font-semibold text-center">Nom du modèle</TableHead>
+                <TableHead className="font-semibold text-center">Couleur principale</TableHead>
+                <TableHead className="w-[150px] font-semibold text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

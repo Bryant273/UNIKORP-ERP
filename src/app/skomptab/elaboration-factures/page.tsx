@@ -135,8 +135,8 @@ const initialInvoices: InvoiceData[] = [
     invoiceDate: '2024-07-15',
     dueDate: '2024-08-14',
     lineItems: [
-      { id: 'l1', description: 'Développement de site web', quantity: 1, unitPrice: 2500 },
-      { id: 'l2', description: 'Hébergement annuel', quantity: 1, unitPrice: 300 },
+      { id: 'l1', description: 'Développement de site web', quantity: 1, unitPrice: 2500000 },
+      { id: 'l2', description: 'Hébergement annuel', quantity: 1, unitPrice: 300000 },
     ],
     isVatEnabled: true,
     vatRate: 20,
@@ -154,7 +154,7 @@ const initialInvoices: InvoiceData[] = [
     invoiceNumber: 'FACT-2024-00124',
     invoiceDate: '2024-07-18',
     dueDate: '2024-08-17',
-    lineItems: [{ id: 'l3', description: 'Consulting SEO', quantity: 10, unitPrice: 150 }],
+    lineItems: [{ id: 'l3', description: 'Consulting SEO', quantity: 10, unitPrice: 150000 }],
     isVatEnabled: true,
     vatRate: 20,
     notes: 'Paiement à réception.',
@@ -196,6 +196,7 @@ const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id
 
 const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) => {
     const { subTotal, vatAmount, total } = calculateTotals(invoice);
+    const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
     return (
         <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
@@ -231,10 +232,10 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
             <table className="w-full text-left mb-8 text-xs">
                 <thead style={{ backgroundColor: invoice.primaryColor }} className="text-white">
                     <tr>
-                        <th className="p-2 rounded-l-md text-center">Description</th>
-                        <th className="p-2 text-center">Qté</th>
-                        <th className="p-2 text-center">Prix U. HT</th>
-                        <th className="p-2 text-center rounded-r-md">Total HT</th>
+                        <th className="p-2 rounded-l-md font-semibold text-center">Description</th>
+                        <th className="p-2 font-semibold text-center">Qté</th>
+                        <th className="p-2 font-semibold text-center">Prix U. HT</th>
+                        <th className="p-2 font-semibold text-center rounded-r-md">Total HT</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -242,8 +243,8 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                          <tr key={item.id} className="border-b odd:bg-muted/50">
                             <td className="p-2 font-medium text-center">{item.description || 'Service ou produit'}</td>
                             <td className="p-2 text-center">{item.quantity}</td>
-                            <td className="p-2 text-center">{item.unitPrice.toFixed(2)} XOF</td>
-                            <td className="p-2 text-center">{(item.quantity * item.unitPrice).toFixed(2)} XOF</td>
+                            <td className="p-2 text-center">{formatFr(item.unitPrice)} FCFA</td>
+                            <td className="p-2 text-center">{formatFr(item.quantity * item.unitPrice)} FCFA</td>
                         </tr>
                     ))}
                     {invoice.lineItems.length === 0 && (
@@ -255,18 +256,18 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                 <div className="w-1/2 max-w-xs text-xs space-y-2">
                     <div className="flex justify-between">
                         <p className="text-gray-500">Sous-total HT :</p>
-                        <p>{subTotal.toFixed(2)} XOF</p>
+                        <p>{formatFr(subTotal)} FCFA</p>
                     </div>
                     {invoice.isVatEnabled && (
                         <div className="flex justify-between">
                             <p className="text-gray-500">TVA ({invoice.vatRate}%) :</p>
-                            <p>{vatAmount.toFixed(2)} XOF</p>
+                            <p>{formatFr(vatAmount)} FCFA</p>
                         </div>
                     )}
                      <Separator />
                     <div className="flex justify-between font-bold text-base" style={{ color: invoice.primaryColor }}>
                         <p>TOTAL TTC :</p>
-                        <p>{total.toFixed(2)} XOF</p>
+                        <p>{formatFr(total)} FCFA</p>
                     </div>
                 </div>
             </div>
@@ -367,6 +368,7 @@ export default function ElaborationFacturesPage() {
   const generatePDF = (invoice: InvoiceData) => {
     const doc = new jsPDF();
     const { subTotal, vatAmount, total } = calculateTotals(invoice);
+    const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
     
     // Header
     doc.setFontSize(20);
@@ -402,8 +404,8 @@ export default function ElaborationFacturesPage() {
     const tableRows = invoice.lineItems.map(item => [
       item.description,
       item.quantity,
-      `${item.unitPrice.toFixed(2)} XOF`,
-      `${(item.quantity * item.unitPrice).toFixed(2)} XOF`,
+      `${formatFr(item.unitPrice)} FCFA`,
+      `${formatFr(item.quantity * item.unitPrice)} FCFA`,
     ]);
 
     autoTable(doc, {
@@ -420,19 +422,19 @@ export default function ElaborationFacturesPage() {
     let currentY = finalY + 10;
 
     doc.text(`Sous-total HT:`, 140, currentY);
-    doc.text(`${subTotal.toFixed(2)} XOF`, 190, currentY, { align: 'right' });
+    doc.text(`${formatFr(subTotal)} FCFA`, 190, currentY, { align: 'right' });
     currentY += 7;
 
     if (invoice.isVatEnabled) {
         doc.text(`TVA (${invoice.vatRate}%):`, 140, currentY);
-        doc.text(`${vatAmount.toFixed(2)} XOF`, 190, currentY, { align: 'right' });
+        doc.text(`${formatFr(vatAmount)} FCFA`, 190, currentY, { align: 'right' });
         currentY += 7;
     }
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text(`TOTAL TTC:`, 140, currentY);
-    doc.text(`${total.toFixed(2)} XOF`, 190, currentY, { align: 'right' });
+    doc.text(`${formatFr(total)} FCFA`, 190, currentY, { align: 'right' });
     
     // Footer
     currentY += 20;
@@ -476,11 +478,11 @@ export default function ElaborationFacturesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px] text-center">Date d'émission</TableHead>
-                            <TableHead className="text-center">Tiers</TableHead>
-                            <TableHead className="text-center">Libellé</TableHead>
-                            <TableHead className="w-[150px] text-center">Montant TTC</TableHead>
-                            <TableHead className="w-[200px] text-center">Actions</TableHead>
+                            <TableHead className="w-[120px] text-center font-semibold">Date d'émission</TableHead>
+                            <TableHead className="text-center font-semibold">Tiers</TableHead>
+                            <TableHead className="text-center font-semibold">Libellé</TableHead>
+                            <TableHead className="w-[150px] text-center font-semibold">Montant TTC</TableHead>
+                            <TableHead className="w-[200px] text-center font-semibold">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -491,7 +493,7 @@ export default function ElaborationFacturesPage() {
                                     <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
                                     <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
                                     <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
-                                    <TableCell className="font-mono text-center">{total.toFixed(2)} XOF</TableCell>
+                                    <TableCell className="font-sans text-center">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
@@ -545,7 +547,7 @@ export default function ElaborationFacturesPage() {
                                 <CardHeader><CardTitle>Lignes de la facture</CardTitle></CardHeader>
                                 <CardContent>
                                     <Table>
-                                        <TableHeader><TableRow><TableHead className="text-center">Description</TableHead><TableHead className="w-[100px] text-center">Qté</TableHead><TableHead className="w-[150px] text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] text-center"></TableHead></TableRow></TableHeader>
+                                        <TableHeader><TableRow><TableHead className="font-semibold text-center">Description</TableHead><TableHead className="w-[100px] font-semibold text-center">Qté</TableHead><TableHead className="w-[150px] font-semibold text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] font-semibold text-center"></TableHead></TableRow></TableHeader>
                                         <TableBody>
                                             {formData.lineItems.map(item => (
                                                 <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell className="text-center">{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
@@ -607,7 +609,7 @@ export default function ElaborationFacturesPage() {
                       <Card key={template.id} className="hover:bg-accent transition-colors">
                         <CardHeader className="flex flex-row justify-between items-center p-4">
                             <div>
-                               <CardTitle className="text-base">{template.name}</CardTitle>
+                               <CardTitle className="text-base font-semibold">{template.name}</CardTitle>
                                <CardDescription className="flex items-center gap-2">
                                    <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: template.primaryColor }} />
                                    {template.companyName}

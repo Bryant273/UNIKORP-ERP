@@ -11,27 +11,27 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from "rec
 import { type ChartConfig } from "@/components/ui/chart"
 
 const kpiData = [
-  { title: "Chiffre d'affaires", value: "128 500 000 FCFA", change: "+12.8% vs Q3", target: "Objectif: 130 000 000 FCFA", progress: 98.8 },
-  { title: "Résultat net", value: "43 200 000 FCFA", change: "+8.5% vs Q3", target: "Objectif: 40 000 000 FCFA", progress: 108 },
-  { title: "Trésorerie", value: "76 800 000 FCFA", change: "+3.2% vs Q3", target: "Objectif: 85 000 000 FCFA", progress: 90.4 },
+  { title: "Chiffre d'affaires", value: `${(128500000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, change: "+12.8% vs Q3", target: "Objectif: 130 000 000 FCFA" },
+  { title: "Résultat net", value: `${(43200000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, change: "+8.5% vs Q3", target: "Objectif: 40 000 000 FCFA" },
+  { title: "Trésorerie", value: `${(76800000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, change: "+3.2% vs Q3", target: "Objectif: 85 000 000 FCFA" },
 ];
 
 const barChartData = [
-  { name: 'Jan', revenus: 4000, depenses: 2400 },
-  { name: 'Fev', revenus: 3000, depenses: 1398 },
-  { name: 'Mar', revenus: 2000, depenses: 9800 },
-  { name: 'Avr', revenus: 2780, depenses: 3908 },
-  { name: 'Mai', revenus: 1890, depenses: 4800 },
-  { name: 'Juin', revenus: 2390, depenses: 3800 },
+  { name: 'Jan', revenus: 40000000, depenses: 24000000 },
+  { name: 'Fev', revenus: 30000000, depenses: 13980000 },
+  { name: 'Mar', revenus: 20000000, depenses: 38000000 },
+  { name: 'Avr', revenus: 27800000, depenses: 39080000 },
+  { name: 'Mai', revenus: 18900000, depenses: 48000000 },
+  { name: 'Juin', revenus: 23900000, depenses: 38000000 },
 ];
 
 const lineChartData = [
-    { name: 'Jan', entrees: 4000, sorties: 2400, net: 1600 },
-    { name: 'Fev', entrees: 3000, sorties: 1398, net: 1602 },
-    { name: 'Mar', entrees: 2000, sorties: 2800, net: -800 },
-    { name: 'Avr', entrees: 2780, sorties: 3908, net: -1128 },
-    { name: 'Mai', entrees: 1890, sorties: 4800, net: -2910 },
-    { name: 'Juin', entrees: 2390, sorties: 3800, net: -1410 },
+    { name: 'Jan', entrees: 40000000, sorties: 24000000, net: 16000000 },
+    { name: 'Fev', entrees: 30000000, sorties: 13980000, net: 16020000 },
+    { name: 'Mar', entrees: 20000000, sorties: 28000000, net: -8000000 },
+    { name: 'Avr', entrees: 27800000, sorties: 39080000, net: -11280000 },
+    { name: 'Mai', entrees: 18900000, sorties: 48000000, net: -29100000 },
+    { name: 'Juin', entrees: 23900000, sorties: 38000000, net: -14100000 },
 ]
 
 const chartConfig = {
@@ -78,8 +78,8 @@ export default function SkomptabPage() {
               <BarChart data={barChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <YAxis tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact', compactDisplay: 'short' }).format(value as number)} />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
                 <Bar dataKey="revenus" fill="var(--color-revenus)" radius={4} />
                 <Bar dataKey="depenses" fill="var(--color-depenses)" radius={4} />
               </BarChart>
@@ -95,8 +95,8 @@ export default function SkomptabPage() {
               <LineChart data={lineChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <YAxis tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact', compactDisplay: 'short' }).format(value as number)}/>
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
                 <Line type="monotone" dataKey="entrees" stroke="var(--color-entrees)" strokeWidth={2} dot={false}/>
                 <Line type="monotone" dataKey="sorties" stroke="var(--color-sorties)" strokeWidth={2} dot={false}/>
                 <Line type="monotone" dataKey="net" stroke="var(--color-net)" strokeWidth={2} dot={false}/>

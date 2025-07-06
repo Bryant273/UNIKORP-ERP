@@ -133,7 +133,7 @@ const DeclarationFormRenderer = ({ type, formData, setFormData, isViewMode }: { 
         }
     }, [formData.formContent, type]);
 
-    const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+    const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(value) + ' FCFA';
 
     switch (type) {
         case 'TVA':
@@ -147,11 +147,11 @@ const DeclarationFormRenderer = ({ type, formData, setFormData, isViewMode }: { 
                         <div className="grid md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="tvaCollectee">TVA Collectée</Label>
-                                <Input id="tvaCollectee" type="number" placeholder="0.00" value={formData.formContent.tvaCollectee || ''} onChange={(e) => handleFormContentChange('tvaCollectee', e.target.value)} disabled={isViewMode}/>
+                                <Input id="tvaCollectee" type="number" placeholder="0" value={formData.formContent.tvaCollectee || ''} onChange={(e) => handleFormContentChange('tvaCollectee', e.target.value)} disabled={isViewMode}/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="tvaDeductible">TVA Déductible</Label>
-                                <Input id="tvaDeductible" type="number" placeholder="0.00" value={formData.formContent.tvaDeductible || ''} onChange={(e) => handleFormContentChange('tvaDeductible', e.target.value)} disabled={isViewMode}/>
+                                <Input id="tvaDeductible" type="number" placeholder="0" value={formData.formContent.tvaDeductible || ''} onChange={(e) => handleFormContentChange('tvaDeductible', e.target.value)} disabled={isViewMode}/>
                             </div>
                         </div>
                         <Separator />
@@ -178,7 +178,7 @@ const DeclarationFormRenderer = ({ type, formData, setFormData, isViewMode }: { 
                          <div className="grid md:grid-cols-3 gap-4">
                              <div className="space-y-2">
                                 <Label htmlFor="resultatFiscal">Résultat Fiscal N-1</Label>
-                                <Input id="resultatFiscal" type="number" placeholder="0.00" value={formData.formContent.resultatFiscal || ''} onChange={(e) => handleFormContentChange('resultatFiscal', e.target.value)} disabled={isViewMode}/>
+                                <Input id="resultatFiscal" type="number" placeholder="0" value={formData.formContent.resultatFiscal || ''} onChange={(e) => handleFormContentChange('resultatFiscal', e.target.value)} disabled={isViewMode}/>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="tauxIS">Taux d'IS (%)</Label>
@@ -208,7 +208,7 @@ const DeclarationFormRenderer = ({ type, formData, setFormData, isViewMode }: { 
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                            <Label htmlFor="masseSalariale">Masse Salariale Brute</Label>
-                           <Input id="masseSalariale" type="number" placeholder="0.00" value={formData.formContent.masseSalariale || ''} onChange={(e) => handleFormContentChange('masseSalariale', e.target.value)} disabled={isViewMode}/>
+                           <Input id="masseSalariale" type="number" placeholder="0" value={formData.formContent.masseSalariale || ''} onChange={(e) => handleFormContentChange('masseSalariale', e.target.value)} disabled={isViewMode}/>
                         </div>
                         <Separator/>
                         <div className="grid md:grid-cols-2 gap-4">
@@ -246,11 +246,11 @@ const DeclarationFormRenderer = ({ type, formData, setFormData, isViewMode }: { 
                         <div className="grid md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="chiffreAffaires">Chiffre d'Affaires</Label>
-                                <Input id="chiffreAffaires" type="number" placeholder="0.00" value={formData.formContent.chiffreAffaires || ''} onChange={(e) => handleFormContentChange('chiffreAffaires', e.target.value)} disabled={isViewMode}/>
+                                <Input id="chiffreAffaires" type="number" placeholder="0" value={formData.formContent.chiffreAffaires || ''} onChange={(e) => handleFormContentChange('chiffreAffaires', e.target.value)} disabled={isViewMode}/>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="valeurAjoutee">Valeur Ajoutée Produite</Label>
-                                <Input id="valeurAjoutee" type="number" placeholder="0.00" value={formData.formContent.valeurAjoutee || ''} onChange={(e) => handleFormContentChange('valeurAjoutee', e.target.value)} disabled={isViewMode}/>
+                                <Input id="valeurAjoutee" type="number" placeholder="0" value={formData.formContent.valeurAjoutee || ''} onChange={(e) => handleFormContentChange('valeurAjoutee', e.target.value)} disabled={isViewMode}/>
                             </div>
                         </div>
                         <Separator/>
@@ -381,10 +381,10 @@ export default function ModeleDeclarationPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Libellé</TableHead>
-                <TableHead className="w-[180px] text-center">Type de déclaration</TableHead>
-                <TableHead className="text-center">Description</TableHead>
-                <TableHead className="w-[150px] text-center">Actions</TableHead>
+                <TableHead className="text-center font-semibold">Libellé</TableHead>
+                <TableHead className="w-[180px] text-center font-semibold">Type de déclaration</TableHead>
+                <TableHead className="text-center font-semibold">Description</TableHead>
+                <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
