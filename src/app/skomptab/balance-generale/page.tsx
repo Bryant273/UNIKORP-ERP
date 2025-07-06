@@ -146,13 +146,13 @@ export default function BalanceGeneralePage() {
         const pdfTableBody = reportData.map(row => tableConfig.keys.map(key => {
             const value = row[key as keyof BalanceRow];
             if (key === 'numero' || key === 'intitule') return value;
-            return typeof value === 'number' && value !== 0 ? value.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '';
+            return typeof value === 'number' && value !== 0 ? value.toLocaleString('fr-FR') : '';
         }));
 
         const pdfTableFooter = [tableConfig.keys.map((key, index) => {
             if (index === 1) return 'TOTAUX';
             const totalValue = totals[key as keyof BalanceRow];
-            if(typeof totalValue === 'number') return totalValue.toLocaleString('fr-FR', { minimumFractionDigits: 2 });
+            if(typeof totalValue === 'number') return totalValue.toLocaleString('fr-FR');
             return '';
         })];
 
@@ -186,7 +186,7 @@ export default function BalanceGeneralePage() {
 
     return (
         <>
-            <Card>
+            <Card className="w-full">
                 <CardHeader>
                     <CardTitle className="text-2xl">Balance Générale</CardTitle>
                     <CardDescription>Consultez la balance générale des comptes pour une période donnée.</CardDescription>
@@ -258,8 +258,8 @@ export default function BalanceGeneralePage() {
                                         {reportData.map((row) => (
                                             <TableRow key={row.numero}>
                                                 {tableConfig.keys.map(key => (
-                                                    <TableCell key={key} className={key.includes('numero') || key.includes('intitule') ? 'text-left font-medium' : 'text-right font-mono'}>
-                                                        {typeof row[key] === 'number' && (row[key] as number) === 0 ? '' : typeof row[key] === 'number' ? (row[key] as number).toLocaleString('fr-FR', {minimumFractionDigits: 2}) : row[key]}
+                                                    <TableCell key={key} className={key.includes('numero') || key.includes('intitule') ? 'text-left font-medium' : 'text-right'}>
+                                                        {typeof row[key] === 'number' && (row[key] as number) === 0 ? '' : typeof row[key] === 'number' ? (row[key] as number).toLocaleString('fr-FR') : row[key]}
                                                     </TableCell>
                                                 ))}
                                             </TableRow>
@@ -269,8 +269,8 @@ export default function BalanceGeneralePage() {
                                         <TableRow>
                                             <TableCell colSpan={2} className="text-right font-bold">TOTAUX</TableCell>
                                              {tableConfig.keys.slice(2).map(key => (
-                                                 <TableCell key={`total-${key}`} className="text-right font-bold font-mono">
-                                                     {(totals[key as keyof BalanceRow] || 0).toLocaleString('fr-FR', {minimumFractionDigits: 2})}
+                                                 <TableCell key={`total-${key}`} className="text-right font-bold">
+                                                     {(totals[key as keyof BalanceRow] || 0).toLocaleString('fr-FR')}
                                                  </TableCell>
                                              ))}
                                         </TableRow>

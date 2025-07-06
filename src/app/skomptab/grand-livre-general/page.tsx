@@ -144,9 +144,9 @@ export default function GrandLivreGeneralPage() {
                     e.numeroPiece,
                     e.journal,
                     e.libelle,
-                    e.debit > 0 ? e.debit.toFixed(2) : '',
-                    e.credit > 0 ? e.credit.toFixed(2) : '',
-                    runningBalance.toFixed(2)
+                    e.debit > 0 ? e.debit.toLocaleString('fr-FR') : '',
+                    e.credit > 0 ? e.credit.toLocaleString('fr-FR') : '',
+                    runningBalance.toLocaleString('fr-FR')
                 ]);
             });
         });
@@ -192,7 +192,7 @@ export default function GrandLivreGeneralPage() {
 
     return (
         <>
-            <Card>
+            <Card className="w-full">
                 <CardHeader>
                     <CardTitle className="text-2xl">Grand Livre Général</CardTitle>
                     <CardDescription>Consultez le détail des mouvements par compte général.</CardDescription>
@@ -326,20 +326,20 @@ export default function GrandLivreGeneralPage() {
                                                             <TableCell>{ecriture.journal}</TableCell>
                                                             <TableCell>{ecriture.numeroPiece}</TableCell>
                                                             <TableCell>{ecriture.libelle}</TableCell>
-                                                            <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toFixed(2) : ''}</TableCell>
-                                                            <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toFixed(2) : ''}</TableCell>
+                                                            <TableCell className="text-right">{ecriture.debit > 0 ? ecriture.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                                            <TableCell className="text-right">{ecriture.credit > 0 ? ecriture.credit.toLocaleString('fr-FR') : ''}</TableCell>
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
                                                 <TableFooter>
                                                     <TableRow>
                                                         <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
-                                                        <TableCell className="text-right font-bold font-mono">{totalDebit.toFixed(2)}</TableCell>
-                                                        <TableCell className="text-right font-bold font-mono">{totalCredit.toFixed(2)}</TableCell>
+                                                        <TableCell className="text-right font-bold">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                                        <TableCell className="text-right font-bold">{totalCredit.toLocaleString('fr-FR')}</TableCell>
                                                     </TableRow>
                                                     <TableRow>
                                                         <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
-                                                        <TableCell className="text-right font-bold font-mono">{solde.toFixed(2)}</TableCell>
+                                                        <TableCell className="text-right font-bold">{solde.toLocaleString('fr-FR')}</TableCell>
                                                     </TableRow>
                                                 </TableFooter>
                                             </Table>

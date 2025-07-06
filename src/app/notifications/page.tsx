@@ -71,7 +71,7 @@ export default function NotificationsPage() {
     })
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <div className="flex items-center justify-between">
             <div>

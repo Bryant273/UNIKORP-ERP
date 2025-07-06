@@ -173,7 +173,7 @@ export default function CreationJournauxPage() {
 
   return (
     <>
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -203,7 +203,7 @@ export default function CreationJournauxPage() {
             <TableBody>
               {journals.map((journal) => (
                 <TableRow key={journal.id}>
-                  <TableCell className="font-medium">{journal.code}</TableCell>
+                  <TableCell className="font-mono">{journal.code}</TableCell>
                   <TableCell>{journal.intitule}</TableCell>
                   <TableCell>{journal.type}</TableCell>
                   <TableCell>{journal.compteRattache || 'N/A'}</TableCell>

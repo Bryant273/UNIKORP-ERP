@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function HelpPage() {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Centre d'aide</CardTitle>
         <CardDescription>Trouvez des réponses à vos questions et apprenez à utiliser Unikorp Central.</CardDescription>

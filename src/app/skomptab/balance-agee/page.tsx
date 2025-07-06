@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function BalanceAgeePage() {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Balance Âgée</CardTitle>
         <CardDescription>Consultation de la balance âgée.</CardDescription>

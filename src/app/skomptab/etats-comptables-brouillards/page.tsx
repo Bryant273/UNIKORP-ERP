@@ -263,7 +263,7 @@ export default function EtatsComptablesBrouillardsPage() {
 
   return (
     <>
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl">Consultation des Brouillards</CardTitle>
           <CardDescription>
@@ -383,16 +383,16 @@ export default function EtatsComptablesBrouillardsPage() {
                                                     <TableCell rowSpan={group.lignes.length} className="text-center align-middle font-medium border-r">
                                                         {format(new Date(group.dateOperation), 'dd/MM/yyyy')}
                                                     </TableCell>
-                                                    <TableCell rowSpan={group.lignes.length} className="text-center align-middle font-mono border-r">
+                                                    <TableCell rowSpan={group.lignes.length} className="text-center align-middle border-r">
                                                         {group.numeroPiece}
                                                     </TableCell>
                                                 </>
                                             )}
-                                            <TableCell className="text-center font-mono">{ligne.compte}</TableCell>
+                                            <TableCell className="text-center">{ligne.compte}</TableCell>
                                             <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
                                             <TableCell className="text-left">{ligneIndex === 0 ? <span className="font-semibold">{group.libelleOperation}</span> : <span className="pl-4 text-muted-foreground">{ligne.libelle}</span>}</TableCell>
-                                            <TableCell className="text-right font-mono text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR', {minimumFractionDigits: 2}) : ''}</TableCell>
-                                            <TableCell className="text-right font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR', {minimumFractionDigits: 2}) : ''}</TableCell>
+                                            <TableCell className="text-right text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                            <TableCell className="text-right text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
                                             {ligneIndex === 0 && (
                                                 <>
                                                     <TableCell rowSpan={group.lignes.length} className="text-center align-middle border-l">
@@ -418,8 +418,8 @@ export default function EtatsComptablesBrouillardsPage() {
                           <TableFooter>
                               <TableRow className="bg-secondary font-bold">
                                   <TableCell colSpan={5} className="text-right">Totaux</TableCell>
-                                  <TableCell className="text-right font-mono">{totalDebit.toLocaleString('fr-FR', {minimumFractionDigits: 2})}</TableCell>
-                                  <TableCell className="text-right font-mono">{totalCredit.toLocaleString('fr-FR', {minimumFractionDigits: 2})}</TableCell>
+                                  <TableCell className="text-right">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                  <TableCell className="text-right">{totalCredit.toLocaleString('fr-FR')}</TableCell>
                                   <TableCell colSpan={2}></TableCell>
                               </TableRow>
                           </TableFooter>

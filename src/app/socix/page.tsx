@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function SocixPage() {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Module SOCIX</CardTitle>
         <CardDescription>RH et Mix Social</CardDescription>

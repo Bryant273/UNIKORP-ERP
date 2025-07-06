@@ -224,7 +224,7 @@ export default function ControleTresoreriePage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <Card className="relative overflow-hidden rounded-xl shadow-lg">
         <div
           className={cn(
@@ -254,7 +254,7 @@ export default function ControleTresoreriePage() {
           <div className="z-10">
             {selectedAccount.type === 'bank' ? (
                 <div className="flex items-center gap-2">
-                    <p className="font-mono text-xl md:text-2xl">
+                    <p className="text-xl md:text-2xl">
                         {isAccountNumberVisible ? formatIban(selectedAccount.accountNumber) : maskAccountNumber(selectedAccount.accountNumber)}
                     </p>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10" onClick={() => setIsAccountNumberVisible(!isAccountNumberVisible)}>
@@ -345,7 +345,7 @@ export default function ControleTresoreriePage() {
                                     {tx.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="text-center font-mono">{tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</TableCell>
+                            <TableCell className="text-center">{tx.amount.toLocaleString('fr-FR')} FCFA</TableCell>
                             <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-2">
                                     <Button variant="ghost" size="icon" onClick={() => setViewingTransaction(tx)}>
@@ -401,7 +401,7 @@ export default function ControleTresoreriePage() {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="amount">Montant (XOF)</Label>
+                            <Label htmlFor="amount">Montant (FCFA)</Label>
                             <Input id="amount" type="number" step="0.01" min="0" value={isNaN(transactionFormData.amount) ? '' : transactionFormData.amount} onChange={handleTransactionInputChange} required />
                         </div>
                     </div>
@@ -442,7 +442,7 @@ export default function ControleTresoreriePage() {
                         </div>
                     )}
                     <div className="space-y-2">
-                        <Label htmlFor="balance">Solde initial (XOF)</Label>
+                        <Label htmlFor="balance">Solde initial (FCFA)</Label>
                         <Input id="balance" type="number" value={isNaN(newAccountFormData.balance) ? '' : newAccountFormData.balance} onChange={handleNewAccountInputChange} required/>
                     </div>
                 </div>
@@ -500,7 +500,7 @@ export default function ControleTresoreriePage() {
                 </div>
                 <div className="flex justify-between items-center pt-2">
                     <span className="text-muted-foreground">Montant</span>
-                    <span className="font-bold text-lg">{viewingTransaction.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}</span>
+                    <span className="font-bold text-lg">{viewingTransaction.amount.toLocaleString('fr-FR')} FCFA</span>
                 </div>
             </div>
             )}

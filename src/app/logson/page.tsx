@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function LogsonPage() {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Module LOGSON</CardTitle>
         <CardDescription>Logistique et Contrôle de gestion</CardDescription>

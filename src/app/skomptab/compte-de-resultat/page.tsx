@@ -245,7 +245,7 @@ export default function CompteDeResultatPage() {
         });
 
         autoTable(doc, {
-            head: [['Ref.', 'Libellé', 'Valeur']],
+            head: [['Ref.', 'Libellé', 'Valeur (FCFA)']],
             body: tableBody,
             theme: 'striped',
             headStyles: { fillColor: [226, 232, 240] },
@@ -289,7 +289,7 @@ export default function CompteDeResultatPage() {
 
     return (
         <>
-            <Card>
+            <Card className="w-full">
                 <CardHeader>
                     <CardTitle className="text-2xl">Compte de Résultat</CardTitle>
                     <CardDescription>Générez et consultez le compte de résultat pour une période donnée.</CardDescription>
@@ -341,12 +341,12 @@ export default function CompteDeResultatPage() {
                                         <TableRow>
                                             <TableHead className="w-[80px]">Ref.</TableHead>
                                             <TableHead>Libellé</TableHead>
-                                            <TableHead className="text-right">Valeur</TableHead>
+                                            <TableHead className="text-right">Valeur (FCFA)</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {reportData.map((line) => (
-                                            <TableRow key={line.ref || Math.random()} className={cn(
+                                        {reportData.map((line, index) => (
+                                            <TableRow key={index} className={cn(
                                                 (line.isSubTotal || line.isGrandTotal) && "font-bold",
                                                 line.isSubTotal && !line.isEmphasized && "bg-muted/50",
                                                 line.isEmphasized && "bg-secondary",
@@ -360,7 +360,7 @@ export default function CompteDeResultatPage() {
                                                         <TableCell style={{ paddingLeft: `${1 + (line.indent || 0) * 1.5}rem` }}>
                                                             {line.label}
                                                         </TableCell>
-                                                        <TableCell className={cn("text-right font-mono", line.value < 0 && "text-red-600")}>
+                                                        <TableCell className={cn("text-right", line.value < 0 && "text-red-600")}>
                                                             {formatAmount(line.value)}
                                                         </TableCell>
                                                     </>

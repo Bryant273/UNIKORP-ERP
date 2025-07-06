@@ -205,7 +205,7 @@ export default function GrandLivreTiersPage() {
 
     return (
         <>
-            <Card>
+            <Card className="w-full">
                 <CardHeader>
                     <CardTitle className="text-2xl">Grand Livre Tiers</CardTitle>
                     <CardDescription>Consultez le détail des mouvements par client et fournisseur.</CardDescription>
@@ -337,24 +337,24 @@ export default function GrandLivreTiersPage() {
                                                 <TableBody>
                                                     {ecritures.map((ecriture: EcritureLivreTiers) => (
                                                         <TableRow key={ecriture.id}>
-                                                            <TableCell className="font-mono text-xs">{ecriture.numeroCompta}</TableCell>
+                                                            <TableCell className="text-xs">{ecriture.numeroCompta}</TableCell>
                                                             <TableCell>{ecriture.journal}</TableCell>
                                                             <TableCell>{format(new Date(ecriture.date), 'dd/MM/yyyy')}</TableCell>
                                                             <TableCell>{ecriture.operation}</TableCell>
-                                                            <TableCell className="text-right font-mono">{ecriture.debit > 0 ? ecriture.debit.toLocaleString('fr-FR') : ''}</TableCell>
-                                                            <TableCell className="text-right font-mono">{ecriture.credit > 0 ? ecriture.credit.toLocaleString('fr-FR') : ''}</TableCell>
+                                                            <TableCell className="text-right">{ecriture.debit > 0 ? ecriture.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                                            <TableCell className="text-right">{ecriture.credit > 0 ? ecriture.credit.toLocaleString('fr-FR') : ''}</TableCell>
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
                                                 <TableFooter>
                                                     <TableRow>
                                                         <TableCell colSpan={4} className="text-right font-bold">Total :</TableCell>
-                                                        <TableCell className="text-right font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
-                                                        <TableCell className="text-right font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
+                                                        <TableCell className="text-right font-bold">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                                        <TableCell className="text-right font-bold">{totalCredit.toLocaleString('fr-FR')}</TableCell>
                                                     </TableRow>
                                                     <TableRow>
                                                         <TableCell colSpan={5} className="text-right font-bold">Solde :</TableCell>
-                                                        <TableCell className={`text-right font-bold font-mono ${solde !== 0 ? 'text-red-500' : ''}`}>
+                                                        <TableCell className={`text-right font-bold ${solde !== 0 ? 'text-red-500' : ''}`}>
                                                             {solde.toLocaleString('fr-FR')}
                                                         </TableCell>
                                                     </TableRow>
