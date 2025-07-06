@@ -40,6 +40,28 @@ import {
   GitCompareArrows,
   Pencil,
   BookDown,
+  CalendarOff,
+  Wallet,
+  GraduationCap,
+  BarChart3,
+  Contact,
+  FileSignature,
+  FolderKanban,
+  Network,
+  Plane,
+  UserX,
+  CalendarDays,
+  CheckSquare,
+  HandCoins,
+  Mail,
+  BookOpenCheck,
+  Star,
+  UserPlus,
+  MessageSquare,
+  TrendingUp,
+  Repeat,
+  AreaChart,
+  BookHeart,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -117,6 +139,59 @@ const skomptabNav = [
   }
 ];
 
+const socixNav = [
+  {
+    title: 'Gestion du Personnel',
+    icon: Users,
+    subItems: [
+      { title: 'Employés', href: '/socix/employes', icon: Contact },
+      { title: 'Contrats', href: '/socix/contrats', icon: FileSignature },
+      { title: 'Dossiers administratifs', href: '/socix/dossiers-administratifs', icon: FolderKanban },
+      { title: 'Organigramme', href: '/socix/organigramme', icon: Network },
+    ]
+  },
+  {
+    title: 'Gestion des Absences',
+    icon: CalendarOff,
+    subItems: [
+      { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
+      { title: 'Absences et arrêts', href: '/socix/absences-arrets', icon: UserX },
+      { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
+      { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
+    ]
+  },
+  {
+    title: 'Paie et Administration',
+    icon: Wallet,
+    subItems: [
+      { title: 'Traitement de la paie', href: '/socix/traitement-paie', icon: HandCoins },
+      { title: 'Déclarations sociales', href: '/skomptab/declarations-sociales', icon: FileText },
+      { title: 'Notes de frais', href: '/socix/notes-de-frais', icon: Receipt },
+      { title: 'Bulletins de paie', href: '/socix/bulletins-paie', icon: Mail },
+    ]
+  },
+  {
+    title: 'Formation et Talents',
+    icon: GraduationCap,
+    subItems: [
+      { title: 'Plans de formation', href: '/socix/plans-formation', icon: BookOpenCheck },
+      { title: 'Compétences et évaluations', href: '/socix/competences-evaluations', icon: Star },
+      { title: 'Recrutement', href: '/socix/recrutement', icon: UserPlus },
+      { title: 'Entretiens annuels', href: '/socix/entretiens-annuels', icon: MessageSquare },
+    ]
+  },
+  {
+    title: 'Pilotage Social',
+    icon: BarChart3,
+    subItems: [
+      { title: 'KPI sociaux', href: '/socix/kpi-sociaux', icon: TrendingUp },
+      { title: 'Alternance des équipes', href: '/socix/alternance-equipes', icon: Repeat },
+      { title: 'Rapports et analyses', href: '/socix/rapports-analyses', icon: AreaChart },
+      { title: 'Bilan social', href: '/socix/bilan-social', icon: BookHeart },
+    ]
+  },
+];
+
 const getNavForPath = (pathname: string) => {
   if (pathname.startsWith('/skomptab')) {
     return {
@@ -124,7 +199,13 @@ const getNavForPath = (pathname: string) => {
       items: skomptabNav,
     };
   }
-  if (pathname.startsWith('/logson') || pathname.startsWith('/markos') || pathname.startsWith('/socix')) {
+  if (pathname.startsWith('/socix')) {
+    return {
+      dashboardLink: '/socix',
+      items: socixNav,
+    };
+  }
+  if (pathname.startsWith('/logson') || pathname.startsWith('/markos')) {
      return {
       dashboardLink: pathname,
       items: [],
