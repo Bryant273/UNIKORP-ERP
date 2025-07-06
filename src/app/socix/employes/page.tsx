@@ -14,12 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap, FileText } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap, FileText, Heart, Users as UsersIcon } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 
 // --- TYPES & MOCK DATA ---
@@ -81,6 +82,7 @@ function EmployesMainContent() {
     const [visibleColumns, setVisibleColumns] = useState({
         matricule: true, departement: true, fonction: true, contractType: true, dateEmbauche: true, statut: true,
     });
+    const [currentPage, setCurrentPage] = useState(1);
     const { toast } = useToast();
 
     const filteredEmployees = useMemo(() => {
@@ -93,6 +95,15 @@ function EmployesMainContent() {
             return searchMatch && departmentMatch && contractMatch && statusMatch;
         });
     }, [employees, searchTerm, filters]);
+    
+    const totalPages = Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE);
+    const currentEmployees = filteredEmployees.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
 
     const openCreateModal = () => { setEditingEmployee(null); setIsModalOpen(true); };
     const openEditModal = (employee: Employee) => { setEditingEmployee(employee); setIsModalOpen(true); };
@@ -127,11 +138,35 @@ function EmployesMainContent() {
     const handleExport = (format: 'pdf' | 'excel') => {
         if (format === 'pdf') {
             const doc = new jsPDF();
-            doc.text("Liste des Employés", 14, 16);
+            const companyName = "Unikorp Central";
+            const userName = "Utilisateur Unikorp";
+            const moduleName = "SOCIX";
+            const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+            const printDateTime = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
             autoTable(doc, {
-                head: [['Matricule', 'Nom', 'Poste', 'Département', 'Statut']],
+                head: [['Matricule', 'Nom Complet', 'Poste', 'Département', 'Statut']],
                 body: employees.map(e => [e.matricule, `${e.prenom} ${e.nom}`, e.poste, e.departement, e.statut]),
-                startY: 20
+                startY: 50,
+                theme: 'striped',
+                headStyles: { fillColor: '#1C2039' },
+                didDrawPage: (data) => {
+                    doc.setFontSize(9); doc.setTextColor(150);
+                    doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+                    doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+                    doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+                    doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+                    doc.text(companyName, data.settings.margin.left + 15, 28);
+                    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+                    const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+                    doc.text(`État : Liste des Employés`, rightX, 25, { align: 'right' });
+                    doc.text(`Imprimé le : ${printDateTime}`, rightX, 30, { align: 'right' });
+                    doc.text(`Par : ${userName}`, rightX, 35, { align: 'right' });
+                    const pageCountTotal = (doc as any).internal.getNumberOfPages();
+                    doc.setFontSize(8); doc.setTextColor(150);
+                    doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
+                },
+                margin: { top: 50 }
             });
             doc.save('liste_employes.pdf');
             toast({ title: 'Exportation PDF lancée' });
@@ -184,16 +219,16 @@ function EmployesMainContent() {
                         <Table>
                             <TableHeader><TableRow>
                                 <TableHead>Employé</TableHead>
-                                {visibleColumns.matricule && <TableHead>Matricule</TableHead>}
-                                {visibleColumns.departement && <TableHead>Département</TableHead>}
-                                {visibleColumns.fonction && <TableHead>Fonction</TableHead>}
-                                {visibleColumns.contractType && <TableHead>Type contrat</TableHead>}
-                                {visibleColumns.dateEmbauche && <TableHead>Date d'embauche</TableHead>}
+                                {visibleColumns.matricule && <TableHead className="text-center">Matricule</TableHead>}
+                                {visibleColumns.departement && <TableHead className="text-center">Département</TableHead>}
+                                {visibleColumns.fonction && <TableHead className="text-center">Fonction</TableHead>}
+                                {visibleColumns.contractType && <TableHead className="text-center">Type contrat</TableHead>}
+                                {visibleColumns.dateEmbauche && <TableHead className="text-center">Date d'embauche</TableHead>}
                                 {visibleColumns.statut && <TableHead className="text-center">Statut</TableHead>}
-                                <TableHead className="w-[150px] text-right">Actions</TableHead>
+                                <TableHead className="w-[150px] text-center">Actions</TableHead>
                             </TableRow></TableHeader>
                             <TableBody>
-                                {filteredEmployees.map(e => (
+                                {currentEmployees.map(e => (
                                     <TableRow key={e.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -201,23 +236,17 @@ function EmployesMainContent() {
                                                 <div><p className="font-medium">{e.prenom} {e.nom}</p><p className="text-xs text-muted-foreground">{e.email}</p></div>
                                             </div>
                                         </TableCell>
-                                        {visibleColumns.matricule && <TableCell className="font-mono text-xs">{e.matricule}</TableCell>}
-                                        {visibleColumns.departement && <TableCell>{e.departement}</TableCell>}
-                                        {visibleColumns.fonction && <TableCell>{e.poste}</TableCell>}
-                                        {visibleColumns.contractType && <TableCell><Badge variant="outline">{e.contractType}</Badge></TableCell>}
-                                        {visibleColumns.dateEmbauche && <TableCell>{new Date(e.dateEmbauche).toLocaleDateString('fr-FR')}</TableCell>}
+                                        {visibleColumns.matricule && <TableCell className="font-mono text-xs text-center">{e.matricule}</TableCell>}
+                                        {visibleColumns.departement && <TableCell className="text-center">{e.departement}</TableCell>}
+                                        {visibleColumns.fonction && <TableCell className="text-center">{e.poste}</TableCell>}
+                                        {visibleColumns.contractType && <TableCell className="text-center"><Badge variant="outline">{e.contractType}</Badge></TableCell>}
+                                        {visibleColumns.dateEmbauche && <TableCell className="text-center">{new Date(e.dateEmbauche).toLocaleDateString('fr-FR')}</TableCell>}
                                         {visibleColumns.statut && <TableCell className="text-center"><Badge className={getStatusBadgeStyles(e.statut)}><span className={`h-2 w-2 rounded-full mr-2 ${getStatusIndicatorStyles(e.statut)}`}/>{e.statut}</Badge></TableCell>}
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button variant="ghost" size="icon" onClick={() => openViewModal(e)}>
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => openEditModal(e)}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setEmployeeToDelete(e)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                        <TableCell className="text-center">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Button variant="ghost" size="icon" onClick={() => openViewModal(e)}><Eye className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => openEditModal(e)}><Pencil className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setEmployeeToDelete(e)}><Trash2 className="h-4 w-4" /></Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -226,6 +255,17 @@ function EmployesMainContent() {
                         </Table>
                     </div>
                 </CardContent>
+                <CardFooter className="flex items-center justify-between pt-6">
+                    <div className="text-sm text-muted-foreground">
+                        Total de {filteredEmployees.length} employés. Page {currentPage} sur {totalPages}.
+                    </div>
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Précédent</Button>
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Suivant</Button>
+                        </div>
+                    )}
+                </CardFooter>
             </Card>
 
             <EmployeeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} employeeToEdit={editingEmployee} />
@@ -298,7 +338,7 @@ function FicheIndividuellePaie() {
         <div className="p-2 border rounded-lg bg-background text-foreground text-xs font-sans">
             <div className="flex justify-between items-start pb-2 mb-2 border-b">
                 <div>
-                    <h3 className="font-bold text-sm">CROISIERES PRODUCTION</h3>
+                    <h3 className="font-bold text-sm">Unikorp Central</h3>
                     <p className="text-muted-foreground text-xs">39 rue du faubourg Poissonnière 75009 Paris</p>
                 </div>
                 <div className="text-right">
@@ -431,6 +471,9 @@ function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; 
                                      <p><strong>Email :</strong> {employee.email}</p>
                                     <p><strong>Téléphone :</strong> {employee.telephone}</p>
                                     <p><strong>Adresse :</strong> 123 Rue Fictive, Abidjan</p>
+                                    <p><strong>Date de naissance :</strong> 15/05/1985</p>
+                                    <p><strong>Statut matrimonial :</strong> Marié(e)</p>
+                                    <p><strong>Nombre d'enfants :</strong> 2</p>
                                 </AccordionContent>
                             </AccordionItem>
                              <AccordionItem value="item-3">
