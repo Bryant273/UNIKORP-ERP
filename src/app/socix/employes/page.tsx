@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap, FileText, Heart, Users as UsersIcon } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap, FileText, Heart, Users as UsersIcon, FileSignature, FolderKanban } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -39,15 +39,18 @@ type Employee = {
     statut: EmployeeStatus;
     contractType: ContractType;
     avatarUrl: string;
+    dateNaissance: string;
+    statutMatrimonial: 'Marié(e)' | 'Célibataire';
+    nombreEnfants: number;
 };
 
 const initialEmployees: Employee[] = [
-    { id: 'emp-001', matricule: 'UNIK-076', nom: 'Dupont', prenom: 'Jean', poste: 'Développeur Senior', departement: 'IT', email: 'jean.dupont@unikorp.com', telephone: '0102030405', dateEmbauche: '2020-03-15', statut: 'Actif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png' },
-    { id: 'emp-002', matricule: 'UNIK-077', nom: 'Martin', prenom: 'Sophie', poste: 'Chef de projet Marketing', departement: 'MARKOS', email: 'sophie.martin@unikorp.com', telephone: '0607080910', dateEmbauche: '2021-09-01', statut: 'Actif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png' },
-    { id: 'emp-003', matricule: 'UNIK-078', nom: 'Garcia', prenom: 'David', poste: 'Comptable', departement: 'SKOMPTAB', email: 'david.garcia@unikorp.com', telephone: '0708091011', dateEmbauche: '2022-01-20', statut: 'En congé', contractType: 'CDD', avatarUrl: 'https://placehold.co/100x100.png' },
-    { id: 'emp-004', matricule: 'UNIK-042', nom: 'Petit', prenom: 'Lucas', poste: 'Développeur Junior', departement: 'IT', email: 'lucas.petit@unikorp.com', telephone: '0123456789', dateEmbauche: '2023-06-10', statut: 'Actif', contractType: 'Apprentissage', avatarUrl: 'https://placehold.co/100x100.png' },
-    { id: 'emp-005', matricule: 'UNIK-055', nom: 'Leroy', prenom: 'Camille', poste: 'Gestionnaire RH', departement: 'SOCIX', email: 'camille.leroy@unikorp.com', telephone: '0987654321', dateEmbauche: '2019-11-05', statut: 'Actif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png' },
-    { id: 'emp-006', matricule: 'UNIK-012', nom: 'Moreau', prenom: 'Léa', poste: 'Responsable Logistique', departement: 'LOGSON', email: 'lea.moreau@unikorp.com', telephone: '0655443322', dateEmbauche: '2018-02-18', statut: 'Inactif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png' },
+    { id: 'emp-001', matricule: 'UNIK-076', nom: 'Dupont', prenom: 'Jean', poste: 'Développeur Senior', departement: 'IT', email: 'jean.dupont@unikorp.com', telephone: '0102030405', dateEmbauche: '2020-03-15', statut: 'Actif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png', dateNaissance: '1985-05-15', statutMatrimonial: 'Marié(e)', nombreEnfants: 2 },
+    { id: 'emp-002', matricule: 'UNIK-077', nom: 'Martin', prenom: 'Sophie', poste: 'Chef de projet Marketing', departement: 'MARKOS', email: 'sophie.martin@unikorp.com', telephone: '0607080910', dateEmbauche: '2021-09-01', statut: 'Actif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png', dateNaissance: '1990-11-20', statutMatrimonial: 'Célibataire', nombreEnfants: 0 },
+    { id: 'emp-003', matricule: 'UNIK-078', nom: 'Garcia', prenom: 'David', poste: 'Comptable', departement: 'SKOMPTAB', email: 'david.garcia@unikorp.com', telephone: '0708091011', dateEmbauche: '2022-01-20', statut: 'En congé', contractType: 'CDD', avatarUrl: 'https://placehold.co/100x100.png', dateNaissance: '1992-02-25', statutMatrimonial: 'Célibataire', nombreEnfants: 0 },
+    { id: 'emp-004', matricule: 'UNIK-042', nom: 'Petit', prenom: 'Lucas', poste: 'Développeur Junior', departement: 'IT', email: 'lucas.petit@unikorp.com', telephone: '0123456789', dateEmbauche: '2023-06-10', statut: 'Actif', contractType: 'Apprentissage', avatarUrl: 'https://placehold.co/100x100.png', dateNaissance: '1998-07-30', statutMatrimonial: 'Célibataire', nombreEnfants: 0 },
+    { id: 'emp-005', matricule: 'UNIK-055', nom: 'Leroy', prenom: 'Camille', poste: 'Gestionnaire RH', departement: 'SOCIX', email: 'camille.leroy@unikorp.com', telephone: '0987654321', dateEmbauche: '2019-11-05', statut: 'Actif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png', dateNaissance: '1988-09-05', statutMatrimonial: 'Marié(e)', nombreEnfants: 1 },
+    { id: 'emp-006', matricule: 'UNIK-012', nom: 'Moreau', prenom: 'Léa', poste: 'Responsable Logistique', departement: 'LOGSON', email: 'lea.moreau@unikorp.com', telephone: '0655443322', dateEmbauche: '2018-02-18', statut: 'Inactif', contractType: 'CDI', avatarUrl: 'https://placehold.co/100x100.png', dateNaissance: '1983-01-12', statutMatrimonial: 'Marié(e)', nombreEnfants: 3 },
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -79,6 +82,8 @@ function EmployesMainContent() {
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
     const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+    const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState({
         matricule: true, departement: true, fonction: true, contractType: true, dateEmbauche: true, statut: true,
     });
@@ -138,7 +143,7 @@ function EmployesMainContent() {
     const handleExport = (format: 'pdf' | 'excel') => {
         if (format === 'pdf') {
             const doc = new jsPDF();
-            const companyName = "Unikorp Central";
+            const companyName = "UNIKORP";
             const userName = "Utilisateur Unikorp";
             const moduleName = "SOCIX";
             const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
@@ -225,11 +230,11 @@ function EmployesMainContent() {
                                 {visibleColumns.contractType && <TableHead className="text-center">Type contrat</TableHead>}
                                 {visibleColumns.dateEmbauche && <TableHead className="text-center">Date d'embauche</TableHead>}
                                 {visibleColumns.statut && <TableHead className="text-center">Statut</TableHead>}
-                                <TableHead className="w-[150px] text-center">Actions</TableHead>
+                                <TableHead className="w-[200px] text-center">Actions</TableHead>
                             </TableRow></TableHeader>
                             <TableBody>
                                 {currentEmployees.map(e => (
-                                    <TableRow key={e.id}>
+                                    <TableRow key={e.id} className="odd:bg-muted/50">
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Avatar><AvatarImage src={e.avatarUrl} alt={e.nom} data-ai-hint="person face" /><AvatarFallback>{e.prenom[0]}{e.nom[0]}</AvatarFallback></Avatar>
@@ -244,6 +249,8 @@ function EmployesMainContent() {
                                         {visibleColumns.statut && <TableCell className="text-center"><Badge className={getStatusBadgeStyles(e.statut)}><span className={`h-2 w-2 rounded-full mr-2 ${getStatusIndicatorStyles(e.statut)}`}/>{e.statut}</Badge></TableCell>}
                                         <TableCell className="text-center">
                                             <div className="flex items-center justify-center gap-1">
+                                                <Button variant="ghost" size="icon" onClick={() => { setViewingEmployee(e); setIsContractModalOpen(true); }}><FileSignature className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => { setViewingEmployee(e); setIsDossierModalOpen(true); }}><FolderKanban className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" onClick={() => openViewModal(e)}><Eye className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" onClick={() => openEditModal(e)}><Pencil className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setEmployeeToDelete(e)}><Trash2 className="h-4 w-4" /></Button>
@@ -270,6 +277,9 @@ function EmployesMainContent() {
 
             <EmployeeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} employeeToEdit={editingEmployee} />
             <EmployeeProfileModal isOpen={!!viewingEmployee} onClose={() => setViewingEmployee(null)} employee={viewingEmployee} />
+            <ContractModal isOpen={isContractModalOpen} onClose={() => setIsContractModalOpen(false)} employee={viewingEmployee} />
+            <DossierModal isOpen={isDossierModalOpen} onClose={() => setIsDossierModalOpen(false)} employee={viewingEmployee} />
+
 
             <AlertDialog open={!!employeeToDelete} onOpenChange={() => setEmployeeToDelete(null)}>
                 <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Supprimer cet employé ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible. Le dossier de l'employé sera archivé.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
@@ -338,7 +348,7 @@ function FicheIndividuellePaie() {
         <div className="p-2 border rounded-lg bg-background text-foreground text-xs font-sans">
             <div className="flex justify-between items-start pb-2 mb-2 border-b">
                 <div>
-                    <h3 className="font-bold text-sm">Unikorp Central</h3>
+                    <h3 className="font-bold text-sm">UNIKORP</h3>
                     <p className="text-muted-foreground text-xs">39 rue du faubourg Poissonnière 75009 Paris</p>
                 </div>
                 <div className="text-right">
@@ -470,10 +480,9 @@ function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; 
                                 <AccordionContent className="space-y-2 text-sm">
                                      <p><strong>Email :</strong> {employee.email}</p>
                                     <p><strong>Téléphone :</strong> {employee.telephone}</p>
-                                    <p><strong>Adresse :</strong> 123 Rue Fictive, Abidjan</p>
-                                    <p><strong>Date de naissance :</strong> 15/05/1985</p>
-                                    <p><strong>Statut matrimonial :</strong> Marié(e)</p>
-                                    <p><strong>Nombre d'enfants :</strong> 2</p>
+                                    <p><strong>Date de naissance :</strong> {new Date(employee.dateNaissance).toLocaleDateString('fr-FR')}</p>
+                                    <p><strong>Statut matrimonial :</strong> {employee.statutMatrimonial}</p>
+                                    <p><strong>Nombre d'enfants :</strong> {employee.nombreEnfants}</p>
                                 </AccordionContent>
                             </AccordionItem>
                              <AccordionItem value="item-3">
@@ -527,6 +536,81 @@ function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; 
     );
 }
 
+function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose: () => void; employee: Employee | null }) {
+    if (!employee) return null;
+    
+    const handlePrint = () => { /* PDF generation logic */ };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Contrat de travail</DialogTitle>
+                    <DialogDescription>Détails du contrat pour {employee.prenom} {employee.nom}.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-2">
+                    <p><strong>Type de contrat :</strong> <Badge variant="secondary">{employee.contractType}</Badge></p>
+                    <p><strong>Date de début :</strong> {new Date(employee.dateEmbauche).toLocaleDateString('fr-FR')}</p>
+                    <p><strong>Poste :</strong> {employee.poste}</p>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4"/>Imprimer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function DossierModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose: () => void; employee: Employee | null }) {
+    if (!employee) return null;
+
+    const documents = [
+        { category: 'Personnel', name: 'Pièce d\'identité', status: 'Reçu' },
+        { category: 'Personnel', name: 'Photo d\'identité', status: 'Manquant' },
+        { category: 'Contrat', name: 'Contrat de travail signé', status: 'Reçu' },
+        { category: 'Administratif', name: 'RIB', status: 'Reçu' },
+        { category: 'Administratif', name: 'Attestation sécurité sociale', status: 'En attente' },
+    ];
+
+    const groupedDocs = documents.reduce((acc, doc) => {
+        (acc[doc.category] = acc[doc.category] || []).push(doc);
+        return acc;
+    }, {} as Record<string, typeof documents>);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Dossier Administratif</DialogTitle>
+                    <DialogDescription>Documents pour {employee.prenom} {employee.nom}.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                     <Accordion type="multiple" defaultValue={['Personnel']} className="w-full">
+                        {Object.entries(groupedDocs).map(([category, docs]) => (
+                             <AccordionItem value={category} key={category}>
+                                <AccordionTrigger>{category}</AccordionTrigger>
+                                <AccordionContent>
+                                    <ul className="space-y-2">
+                                        {docs.map(doc => (
+                                            <li key={doc.name} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-muted/50">
+                                                <span>{doc.name}</span>
+                                                <Badge variant={doc.status === 'Reçu' ? 'default' : doc.status === 'Manquant' ? 'destructive' : 'secondary'}>{doc.status}</Badge>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export default function EmployesPage() {
     return (
