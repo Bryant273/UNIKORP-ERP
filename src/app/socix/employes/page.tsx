@@ -8,16 +8,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuCheckboxItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
 
 // --- TYPES & MOCK DATA ---
 type ContractType = 'CDI' | 'CDD' | 'Stage' | 'Apprentissage';
@@ -71,10 +72,10 @@ function EmployesMainContent() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState({ departement: 'all', contractType: 'all', statut: 'all' });
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+    const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState({
         matricule: true, departement: true, fonction: true, contractType: true, dateEmbauche: true, statut: true,
     });
@@ -93,7 +94,7 @@ function EmployesMainContent() {
 
     const openCreateModal = () => { setEditingEmployee(null); setIsModalOpen(true); };
     const openEditModal = (employee: Employee) => { setEditingEmployee(employee); setIsModalOpen(true); };
-    const openViewSheet = (employee: Employee) => { setEditingEmployee(employee); setIsSheetOpen(true); };
+    const openViewModal = (employee: Employee) => { setViewingEmployee(employee); };
 
     const handleSave = (formData: Employee) => {
         if (editingEmployee) {
@@ -206,17 +207,14 @@ function EmployesMainContent() {
                                         {visibleColumns.statut && <TableCell className="text-center"><Badge className={getStatusBadgeStyles(e.statut)}><span className={`h-2 w-2 rounded-full mr-2 ${getStatusIndicatorStyles(e.statut)}`}/>{e.statut}</Badge></TableCell>}
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button variant="ghost" size="icon" onClick={() => openViewSheet(e)}>
+                                                <Button variant="ghost" size="icon" onClick={() => openViewModal(e)}>
                                                     <Eye className="h-4 w-4" />
-                                                    <span className="sr-only">Voir détails</span>
                                                 </Button>
                                                 <Button variant="ghost" size="icon" onClick={() => openEditModal(e)}>
                                                     <Pencil className="h-4 w-4" />
-                                                    <span className="sr-only">Modifier</span>
                                                 </Button>
                                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setEmployeeToDelete(e)}>
                                                     <Trash2 className="h-4 w-4" />
-                                                    <span className="sr-only">Supprimer</span>
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -229,7 +227,7 @@ function EmployesMainContent() {
             </Card>
 
             <EmployeeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} employeeToEdit={editingEmployee} />
-            <EmployeeSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} employee={editingEmployee} />
+            <EmployeeProfileModal isOpen={!!viewingEmployee} onClose={() => setViewingEmployee(null)} employee={viewingEmployee} />
 
             <AlertDialog open={!!employeeToDelete} onOpenChange={() => setEmployeeToDelete(null)}>
                 <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Supprimer cet employé ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible. Le dossier de l'employé sera archivé.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
@@ -269,19 +267,110 @@ function EmployeeModal({ isOpen, onClose, onSave, employeeToEdit }: { isOpen: bo
     );
 }
 
-function EmployeeSheet({ isOpen, onClose, employee }: { isOpen: boolean, onClose: () => void, employee: Employee | null }) {
+function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose: () => void; employee: Employee | null }) {
     if (!employee) return null;
+
+    const cvData = {
+        education: [
+            { year: '2018', degree: 'Master en Informatique', school: 'Université Virtuelle de Côte d\'Ivoire' },
+            { year: '2016', degree: 'Licence en Génie Logiciel', school: 'Institut National Polytechnique Houphouët-Boigny' },
+        ],
+        experience: [
+            { year: '2018-2020', position: 'Développeur Junior', company: 'Tech Solutions Abidjan' },
+        ]
+    };
+    const careerData = [
+        { date: '2020-03-15', event: `Embauche en tant que Développeur` },
+        { date: '2022-04-01', event: `Promotion au poste de ${employee.poste}` },
+    ];
+    
     return (
-        <Sheet open={isOpen} onOpenChange={onClose}><SheetContent className="sm:max-w-lg"><SheetHeader><SheetTitle>{employee.prenom} {employee.nom}</SheetTitle><SheetDescription>Matricule: {employee.matricule}</SheetDescription></SheetHeader><div className="space-y-6 py-6">
-            <div className="flex items-center"><User className="mr-4 h-5 w-5 text-muted-foreground" /><div className="space-y-1"><p className="text-sm text-muted-foreground">Poste</p><p>{employee.poste}</p></div></div>
-            <div className="flex items-center"><Building className="mr-4 h-5 w-5 text-muted-foreground" /><div className="space-y-1"><p className="text-sm text-muted-foreground">Département</p><p>{employee.departement}</p></div></div>
-            <div className="flex items-center"><Briefcase className="mr-4 h-5 w-5 text-muted-foreground" /><div className="space-y-1"><p className="text-sm text-muted-foreground">Type de contrat</p><p>{employee.contractType}</p></div></div>
-            <div className="flex items-center"><Mail className="mr-4 h-5 w-5 text-muted-foreground" /><div className="space-y-1"><p className="text-sm text-muted-foreground">Email</p><p>{employee.email}</p></div></div>
-            <div className="flex items-center"><Phone className="mr-4 h-5 w-5 text-muted-foreground" /><div className="space-y-1"><p className="text-sm text-muted-foreground">Téléphone</p><p>{employee.telephone}</p></div></div>
-            <div className="flex items-center"><Calendar className="mr-4 h-5 w-5 text-muted-foreground" /><div className="space-y-1"><p className="text-sm text-muted-foreground">Date d'embauche</p><p>{new Date(employee.dateEmbauche).toLocaleDateString('fr-FR')}</p></div></div>
-        </div></SheetContent></Sheet>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                <DialogHeader className="p-6">
+                    <DialogTitle className="text-2xl">Fiche Employé</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 grid md:grid-cols-3 gap-6 overflow-y-auto px-6 pb-6">
+                    {/* Left Column */}
+                    <div className="md:col-span-1 flex flex-col items-center text-center space-y-4 pt-4">
+                        <Avatar className="h-28 w-28 border-4 border-primary/10">
+                            <AvatarImage src={employee.avatarUrl} alt={employee.nom} />
+                            <AvatarFallback className="text-3xl">{employee.prenom[0]}{employee.nom[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <h2 className="text-2xl font-bold">{employee.prenom} {employee.nom}</h2>
+                            <p className="text-primary">{employee.poste}</p>
+                            <Badge className={`mt-2 ${getStatusBadgeStyles(employee.statut)}`}>
+                                <span className={`h-2 w-2 rounded-full mr-2 ${getStatusIndicatorStyles(employee.statut)}`}/>
+                                {employee.statut}
+                            </Badge>
+                        </div>
+                    </div>
+                    {/* Right Column */}
+                    <div className="md:col-span-2">
+                        <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full">
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>Informations Professionnelles</AccordionTrigger>
+                                <AccordionContent className="space-y-2 text-sm">
+                                    <p><strong>Département :</strong> {employee.departement}</p>
+                                    <p><strong>Type de contrat :</strong> {employee.contractType}</p>
+                                    <p><strong>Date d'embauche :</strong> {new Date(employee.dateEmbauche).toLocaleDateString('fr-FR')}</p>
+                                    <p><strong>Matricule :</strong> {employee.matricule}</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="item-2">
+                                <AccordionTrigger>Informations Personnelles</AccordionTrigger>
+                                <AccordionContent className="space-y-2 text-sm">
+                                     <p><strong>Email :</strong> {employee.email}</p>
+                                    <p><strong>Téléphone :</strong> {employee.telephone}</p>
+                                    <p><strong>Adresse :</strong> 123 Rue Fictive, Abidjan</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                             <AccordionItem value="item-3">
+                                <AccordionTrigger>Mini CV</AccordionTrigger>
+                                <AccordionContent className="space-y-4 text-sm">
+                                    <div>
+                                        <h4 className="font-semibold mb-2 flex items-center gap-2"><GraduationCap className="h-4 w-4"/>Formation</h4>
+                                        <ul className="list-disc list-inside space-y-1">
+                                            {cvData.education.map(edu => <li key={edu.year}><strong>{edu.year}:</strong> {edu.degree}, <em>{edu.school}</em></li>)}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold mb-2 flex items-center gap-2"><Briefcase className="h-4 w-4"/>Expérience</h4>
+                                        <ul className="list-disc list-inside space-y-1">
+                                            {cvData.experience.map(exp => <li key={exp.year}><strong>{exp.year}:</strong> {exp.position} chez <em>{exp.company}</em></li>)}
+                                        </ul>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                             <AccordionItem value="item-4">
+                                <AccordionTrigger>Évolution de Carrière</AccordionTrigger>
+                                <AccordionContent className="space-y-3 text-sm">
+                                    {careerData.map((item, index) => (
+                                        <div key={item.date} className="flex items-center gap-4">
+                                            <div className="flex flex-col items-center">
+                                                <div className="h-3 w-3 rounded-full bg-primary" />
+                                                {index < careerData.length - 1 && <div className="w-px h-8 bg-border" />}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold">{new Date(item.date).toLocaleDateString('fr-FR')}</p>
+                                                <p className="text-muted-foreground">{item.event}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    </div>
+                </div>
+                <DialogFooter className="p-6 border-t">
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
+
 
 export default function EmployesPage() {
     return (
