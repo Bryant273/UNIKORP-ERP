@@ -133,7 +133,7 @@ const LiveInvoicePreview = ({ template }: { template: Omit<InvoiceTemplate, 'id'
                 </div>
                 <div className="text-right">
                     <h2 className="text-2xl font-bold uppercase" style={{ color: template.primaryColor }}>FACTURE</h2>
-                    <p className="font-mono text-xs">FACT-XXXX-000</p>
+                    <p className="font-sans text-xs">FACT-XXXX-000</p>
                 </div>
             </div>
             <div className="flex justify-between mb-8">
@@ -186,6 +186,7 @@ export default function ModeleFacturePage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<InvoiceTemplate | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
   
   const [formData, setFormData] = useState<Omit<InvoiceTemplate, 'id'>>(defaultTemplate);
   const { toast } = useToast();
@@ -202,12 +203,21 @@ export default function ModeleFacturePage() {
 
   const handleOpenCreateSheet = () => {
     setEditingTemplate(null);
+    setIsViewMode(false);
     setFormData(defaultTemplate);
     setIsSheetOpen(true);
   };
   
   const handleOpenEditSheet = (template: InvoiceTemplate) => {
     setEditingTemplate(template);
+    setIsViewMode(false);
+    setFormData(JSON.parse(JSON.stringify(template)));
+    setIsSheetOpen(true);
+  };
+  
+  const handleOpenViewSheet = (template: InvoiceTemplate) => {
+    setEditingTemplate(template);
+    setIsViewMode(true);
     setFormData(JSON.parse(JSON.stringify(template)));
     setIsSheetOpen(true);
   };
@@ -275,6 +285,10 @@ export default function ModeleFacturePage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                     <div className="flex items-center justify-center gap-2">
+                                        <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(template)}>
+                                            <Eye className="h-4 w-4" />
+                                            <span className="sr-only">Voir</span>
+                                        </Button>
                                         <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(template)}>
                                             <Pencil className="h-4 w-4" />
                                             <span className="sr-only">Modifier</span>
@@ -320,9 +334,9 @@ export default function ModeleFacturePage() {
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent className="w-full sm:max-w-full md:w-[90vw] lg:w-[80vw] xl:w-[70vw] p-0 flex flex-col">
                 <SheetHeader className="p-6 border-b">
-                    <SheetTitle>{editingTemplate ? 'Modifier le modèle de facture' : 'Créer un nouveau modèle'}</SheetTitle>
+                    <SheetTitle>{editingTemplate ? (isViewMode ? 'Détails du modèle' : 'Modifier le modèle de facture') : 'Créer un nouveau modèle'}</SheetTitle>
                     <SheetDescription>
-                        Personnalisez l'apparence et les informations par défaut de vos factures.
+                       {isViewMode ? 'Consultez les détails de ce modèle.' : "Personnalisez l'apparence et les informations par défaut de vos factures."}
                     </SheetDescription>
                 </SheetHeader>
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
@@ -334,18 +348,18 @@ export default function ModeleFacturePage() {
                                 <CardContent className="space-y-4">
                                      <div className="space-y-2">
                                         <Label htmlFor="name">Nom du modèle</Label>
-                                        <Input id="name" value={formData.name} onChange={(e) => handleFormChange('name', e.target.value)} placeholder="Ex: Facture Standard" />
+                                        <Input id="name" value={formData.name} onChange={(e) => handleFormChange('name', e.target.value)} placeholder="Ex: Facture Standard" disabled={isViewMode} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="primaryColor">Couleur principale (Hex)</Label>
-                                        <Input id="primaryColor" value={formData.primaryColor} onChange={(e) => handleFormChange('primaryColor', e.target.value)} placeholder="#3b82f6" />
+                                        <Input id="primaryColor" value={formData.primaryColor} onChange={(e) => handleFormChange('primaryColor', e.target.value)} placeholder="#3b82f6" disabled={isViewMode} />
                                     </div>
                                     <div className="flex items-center space-x-2 rounded-lg border p-4">
                                         <div className="flex-1 space-y-1">
                                             <Label htmlFor="showTax">Afficher la TVA</Label>
                                             <p className="text-xs text-muted-foreground">Calculer et afficher la TVA sur la facture.</p>
                                         </div>
-                                        <Switch id="showTax" checked={formData.showTax} onCheckedChange={(checked) => handleFormChange('showTax', checked)} />
+                                        <Switch id="showTax" checked={formData.showTax} onCheckedChange={(checked) => handleFormChange('showTax', checked)} disabled={isViewMode} />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -354,11 +368,11 @@ export default function ModeleFacturePage() {
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="companyName">Nom de l'entreprise</Label>
-                                        <Input id="companyName" value={formData.companyName} onChange={(e) => handleFormChange('companyName', e.target.value)} />
+                                        <Input id="companyName" value={formData.companyName} onChange={(e) => handleFormChange('companyName', e.target.value)} disabled={isViewMode} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="companyAddress">Adresse de l'entreprise</Label>
-                                        <Textarea id="companyAddress" value={formData.companyAddress} onChange={(e) => handleFormChange('companyAddress', e.target.value)} />
+                                        <Textarea id="companyAddress" value={formData.companyAddress} onChange={(e) => handleFormChange('companyAddress', e.target.value)} disabled={isViewMode} />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -367,7 +381,7 @@ export default function ModeleFacturePage() {
                                 <CardContent>
                                     <div className="space-y-2">
                                         <Label htmlFor="footerText">Texte du pied de page</Label>
-                                        <Textarea id="footerText" value={formData.footerText} onChange={(e) => handleFormChange('footerText', e.target.value)} placeholder="Ex: Merci de votre confiance."/>
+                                        <Textarea id="footerText" value={formData.footerText} onChange={(e) => handleFormChange('footerText', e.target.value)} placeholder="Ex: Merci de votre confiance." disabled={isViewMode}/>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -381,8 +395,8 @@ export default function ModeleFacturePage() {
                     </ScrollArea>
                 </div>
                 <SheetFooter className="p-6 border-t">
-                    <SheetClose asChild><Button variant="outline">Annuler</Button></SheetClose>
-                    <Button onClick={handleSave}>Enregistrer</Button>
+                    <SheetClose asChild><Button variant="outline">{isViewMode ? 'Fermer' : 'Annuler'}</Button></SheetClose>
+                    {!isViewMode && <Button onClick={handleSave}>Enregistrer</Button>}
                 </SheetFooter>
             </SheetContent>
         </Sheet>
