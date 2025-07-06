@@ -64,13 +64,13 @@ const addWatermarkToPdf = (doc: jsPDF) => {
         doc.setPage(i);
         doc.setFontSize(60);
         doc.setTextColor(150, 150, 150);
-        doc.saveState();
+        doc.saveGraphicsState();
         doc.setGState(new (doc as any).GState({opacity: 0.2}));
         doc.text('SPECIMEN', doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() / 2, {
             angle: -45,
             align: 'center'
         });
-        doc.restoreState();
+        doc.restoreGraphicsState();
     }
 }
 
