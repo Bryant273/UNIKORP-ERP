@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,13 +46,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, PlusCircle, Upload, FileUp } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Upload, FileUp, Download } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { handleParseAccountingPlan } from '@/app/actions';
 import type { NatureCompte } from '@/ai/flows/parse-accounting-plan';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 type SectionType = 'Charges' | 'Centre de coût' | 'Produits' | 'Centre de profit' | 'Projet';
 
@@ -92,6 +96,8 @@ const defaultFormData: Omit<SectionAnalytique, 'id'> = {
   type: 'Centre de coût',
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function PlanAnalytiquesPage() {
   const [sections, setSections] = useState<SectionAnalytique[]>(initialSections);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,6 +105,7 @@ export default function PlanAnalytiquesPage() {
   const [formData, setFormData] = useState(defaultFormData);
   const [sectionToDelete, setSectionToDelete] = useState<SectionAnalytique | null>(null);
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
@@ -106,6 +113,15 @@ export default function PlanAnalytiquesPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  const totalPages = Math.ceil(sections.length / ITEMS_PER_PAGE);
+  const paginatedSections = sections.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,6 +315,19 @@ export default function PlanAnalytiquesPage() {
     };
   };
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Plan Analytique', 14, 22);
+    autoTable(doc, {
+        head: [['Code', 'Intitulé', 'Compte Général', 'Type']],
+        body: sections.map(s => [s.code, s.intitule, s.compteGeneral, s.type]),
+        startY: 30,
+    });
+    doc.save('plan_analytique.pdf');
+    toast({ title: "Exportation PDF réussie" });
+  };
+
   return (
     <>
       <Card>
@@ -311,6 +340,10 @@ export default function PlanAnalytiquesPage() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={handleExportPDF}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Exporter
+              </Button>
               <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
                 <Upload className="mr-2 h-4 w-4" />
                 Importer
@@ -334,7 +367,7 @@ export default function PlanAnalytiquesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sections.map((section) => (
+              {paginatedSections.map((section) => (
                 <TableRow key={section.id} className="odd:bg-muted/50">
                   <TableCell className="font-mono" style={{ paddingLeft: `${getIndentLevel(section.code) + 1}rem` }}>{section.code}</TableCell>
                   <TableCell className="font-medium">{section.intitule}</TableCell>
@@ -357,6 +390,31 @@ export default function PlanAnalytiquesPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Total de {sections.length} sections. Page {currentPage} sur {totalPages}.
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                </Button>
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

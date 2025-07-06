@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -72,6 +73,8 @@ const defaultFormData: Omit<CompteTiers, 'id'> = {
   telephone: '',
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ComptesTiersPage() {
   const [comptes, setComptes] = useState<CompteTiers[]>(initialComptes);
   const [activeTab, setActiveTab] = useState('clients');
@@ -79,6 +82,7 @@ export default function ComptesTiersPage() {
   const [editingCompte, setEditingCompte] = useState<CompteTiers | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
   const [compteToDelete, setCompteToDelete] = useState<CompteTiers | null>(null);
+  const [currentPage, setCurrentPage] = useState({ clients: 1, fournisseurs: 1 });
   
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
@@ -88,8 +92,27 @@ export default function ComptesTiersPage() {
   const [importProgress, setImportProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  const clients = comptes.filter(c => c.type === 'Client');
-  const fournisseurs = comptes.filter(c => c.type === 'Fournisseur');
+  const clients = useMemo(() => comptes.filter(c => c.type === 'Client'), [comptes]);
+  const fournisseurs = useMemo(() => comptes.filter(c => c.type === 'Fournisseur'), [comptes]);
+
+  const { paginatedClients, totalClientPages } = useMemo(() => {
+    const total = Math.ceil(clients.length / ITEMS_PER_PAGE);
+    const start = (currentPage.clients - 1) * ITEMS_PER_PAGE;
+    return {
+        paginatedClients: clients.slice(start, start + ITEMS_PER_PAGE),
+        totalClientPages: total
+    }
+  }, [clients, currentPage.clients]);
+
+  const { paginatedFournisseurs, totalFournisseurPages } = useMemo(() => {
+    const total = Math.ceil(fournisseurs.length / ITEMS_PER_PAGE);
+    const start = (currentPage.fournisseurs - 1) * ITEMS_PER_PAGE;
+    return {
+        paginatedFournisseurs: fournisseurs.slice(start, start + ITEMS_PER_PAGE),
+        totalFournisseurPages: total
+    }
+  }, [fournisseurs, currentPage.fournisseurs]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -232,45 +255,84 @@ export default function ComptesTiersPage() {
         head: [['Numéro', 'Intitulé', 'Téléphone']],
         body: tableData.map(c => [c.numero, c.intitule, c.telephone]),
         theme: 'striped',
-        headStyles: { fillColor: [28, 32, 57] }, // #1C2039
+        headStyles: { fillColor: '#1C2039' },
     });
 
     doc.save(`export_${activeTab}.pdf`);
   };
-  
-  const renderTable = (data: CompteTiers[]) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[150px] text-center font-semibold">Numéro</TableHead>
-          <TableHead className="text-center font-semibold">Intitulé</TableHead>
-          <TableHead className="text-center font-semibold">Téléphone</TableHead>
-          <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((compte) => (
-          <TableRow key={compte.id} className="odd:bg-muted/50">
-            <TableCell className="text-center">{compte.numero}</TableCell>
-            <TableCell className="font-medium text-center">{compte.intitule}</TableCell>
-            <TableCell className="text-center">{compte.telephone}</TableCell>
-            <TableCell className="text-center">
-              <div className="flex items-center justify-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(compte)}>
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Modifier</span>
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setCompteToDelete(compte)} className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Supprimer</span>
-                  </Button>
+
+  const renderTable = (data: CompteTiers[], type: 'clients' | 'fournisseurs') => {
+    const paginatedData = type === 'clients' ? paginatedClients : paginatedFournisseurs;
+    const totalPages = type === 'clients' ? totalClientPages : totalFournisseurPages;
+    const currentP = currentPage[type];
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(prev => ({ ...prev, [type]: newPage }));
+        }
+    };
+    
+    return (
+        <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[150px] text-center font-semibold">Numéro</TableHead>
+                  <TableHead className="text-center font-semibold">Intitulé</TableHead>
+                  <TableHead className="text-center font-semibold">Téléphone</TableHead>
+                  <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.map((compte) => (
+                  <TableRow key={compte.id} className="odd:bg-muted/50">
+                    <TableCell className="text-center">{compte.numero}</TableCell>
+                    <TableCell className="font-medium text-center">{compte.intitule}</TableCell>
+                    <TableCell className="text-center">{compte.telephone}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(compte)}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Modifier</span>
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setCompteToDelete(compte)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Supprimer</span>
+                          </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <CardFooter className="flex items-center justify-between pt-6">
+              <div className="text-sm text-muted-foreground">
+                Total de {data.length} {type}. Page {currentP} sur {totalPages}.
               </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentP - 1)}
+                    disabled={currentP === 1}
+                  >
+                    Précédent
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentP + 1)}
+                    disabled={currentP === totalPages}
+                  >
+                    Suivant
+                  </Button>
+                </div>
+              )}
+            </CardFooter>
+        </>
+    );
+  }
 
   return (
     <>
@@ -298,16 +360,16 @@ export default function ComptesTiersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="clients" className="w-full" onValueChange={(value) => setActiveTab(value as 'clients' | 'fournisseurs')}>
+          <Tabs defaultValue="clients" className="w-full" onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="clients">Clients</TabsTrigger>
-              <TabsTrigger value="fournisseurs">Fournisseurs</TabsTrigger>
+              <TabsTrigger value="clients" className="data-[state=active]:hover:bg-primary/10">Clients</TabsTrigger>
+              <TabsTrigger value="fournisseurs" className="data-[state=active]:hover:bg-primary/10">Fournisseurs</TabsTrigger>
             </TabsList>
-            <TabsContent value="clients">
-              {renderTable(clients)}
+            <TabsContent value="clients" className="pt-4">
+              {renderTable(clients, 'clients')}
             </TabsContent>
-            <TabsContent value="fournisseurs">
-              {renderTable(fournisseurs)}
+            <TabsContent value="fournisseurs" className="pt-4">
+              {renderTable(fournisseurs, 'fournisseurs')}
             </TabsContent>
           </Tabs>
         </CardContent>

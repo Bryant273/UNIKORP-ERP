@@ -46,14 +46,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, PlusCircle, Upload, FileUp } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Upload, FileUp, Download } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { handleParseAccountingPlan } from '@/app/actions';
-
-type NatureCompte = 'Bilan - Actif' | 'Bilan - Passif' | 'Compte de résultat - Charge' | 'Compte de résultat - Produit' | 'Autre';
+import type { NatureCompte } from '@/ai/flows/parse-accounting-plan';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 type Compte = {
   id: number;
@@ -87,7 +88,7 @@ const defaultFormData: Omit<Compte, 'id'> = {
   nature: 'Autre',
 };
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 10;
 
 export default function ComptesGenerauxPage() {
   const [comptes, setComptes] = useState<Compte[]>(initialComptes);
@@ -173,6 +174,19 @@ export default function ComptesGenerauxPage() {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Plan Comptable Général', 14, 22);
+    autoTable(doc, {
+        head: [['Numéro', 'Intitulé', 'Nature']],
+        body: comptes.map(c => [c.numero, c.intitule, c.nature]),
+        startY: 30,
+    });
+    doc.save('plan_comptable_general.pdf');
+    toast({ title: "Exportation PDF réussie" });
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -302,6 +316,10 @@ export default function ComptesGenerauxPage() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={handleExportPDF}>
+                <Download className="mr-2 h-4 w-4" />
+                Exporter
+              </Button>
               <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
                 <Upload className="mr-2 h-4 w-4" />
                 Importer
@@ -348,26 +366,28 @@ export default function ComptesGenerauxPage() {
         </CardContent>
         <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Page {currentPage} sur {totalPages}
+            Total de {comptes.length} comptes. Page {currentPage} sur {totalPages}.
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Précédent
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Suivant
-            </Button>
-          </div>
+          { totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          )}
         </CardFooter>
       </Card>
 

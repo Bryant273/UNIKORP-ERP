@@ -277,6 +277,7 @@ const DeclarationFormRenderer = ({ type, formData, setFormData, isViewMode }: { 
     }
 };
 
+const ITEMS_PER_PAGE = 10;
 
 export default function ModeleDeclarationPage() {
   const [modeles, setModeles] = useState<ModeleDeclaration[]>(initialModeles);
@@ -285,6 +286,16 @@ export default function ModeleDeclarationPage() {
   const [formData, setFormData] = useState<Omit<ModeleDeclaration, 'id'>>(defaultFormData);
   const [modeleToDelete, setModeleToDelete] = useState<ModeleDeclaration | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(modeles.length / ITEMS_PER_PAGE);
+  const paginatedModeles = modeles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleOpenCreateModal = () => {
     setIsViewMode(false);
@@ -389,7 +400,7 @@ export default function ModeleDeclarationPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {modeles.map((modele) => (
+              {paginatedModeles.map((modele) => (
                 <TableRow key={modele.id} className="odd:bg-muted/50">
                   <TableCell className="font-medium">{modele.libelle}</TableCell>
                   <TableCell className="text-center">
@@ -417,6 +428,31 @@ export default function ModeleDeclarationPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Total de {modeles.length} modèles. Page {currentPage} sur {totalPages}.
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                </Button>
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>

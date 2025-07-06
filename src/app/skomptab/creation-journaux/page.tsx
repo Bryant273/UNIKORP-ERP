@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -103,12 +104,19 @@ const defaultFormData: Omit<Journal, 'id'> = {
   statut: 'Actif',
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function CreationJournauxPage() {
   const [journals, setJournals] = useState<Journal[]>(initialJournals);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJournal, setEditingJournal] = useState<Journal | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
   const [journalToDelete, setJournalToDelete] = useState<Journal | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(journals.length / ITEMS_PER_PAGE);
+  const paginatedJournals = journals.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -171,6 +179,12 @@ export default function CreationJournauxPage() {
       setJournalToDelete(null);
     }
   };
+  
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   return (
     <>
@@ -202,7 +216,7 @@ export default function CreationJournauxPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {journals.map((journal) => (
+              {paginatedJournals.map((journal) => (
                 <TableRow key={journal.id}>
                   <TableCell>{journal.code}</TableCell>
                   <TableCell>{journal.intitule}</TableCell>
@@ -228,6 +242,31 @@ export default function CreationJournauxPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Total de {journals.length} journaux. Page {currentPage} sur {totalPages}.
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                </Button>
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

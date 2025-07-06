@@ -1,13 +1,14 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,14 +16,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Sheet,
   SheetContent,
@@ -42,18 +35,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { Trash2, PlusCircle, Palette, Eye, Pencil, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- DATA TYPES & MOCK DATA ---
@@ -72,8 +56,6 @@ type InvoiceTemplate = {
   companyName: string;
   companyAddress: string;
   companyLogoUrl: string;
-  showQuantity: boolean;
-  showUnitPrice: boolean;
   showTax: boolean;
   footerText: string;
 };
@@ -84,10 +66,8 @@ const initialTemplates: InvoiceTemplate[] = [
     name: 'Classique',
     primaryColor: '#3b82f6', // blue-500
     companyName: 'Votre Société S.A.',
-    companyAddress: '123 Rue de la Facture, 75001 Paris',
+    companyAddress: '123 Rue de la Facture\n75001 Paris, France',
     companyLogoUrl: '',
-    showQuantity: true,
-    showUnitPrice: true,
     showTax: true,
     footerText: 'Merci de votre confiance.\nPaiement à 30 jours net.',
   },
@@ -96,10 +76,8 @@ const initialTemplates: InvoiceTemplate[] = [
     name: 'Moderne',
     primaryColor: '#10b981', // emerald-500
     companyName: 'Tech Innovante Inc.',
-    companyAddress: '456 Avenue du Futur, Lyon',
+    companyAddress: '456 Avenue du Futur\n69002 Lyon, France',
     companyLogoUrl: '',
-    showQuantity: true,
-    showUnitPrice: true,
     showTax: false,
     footerText: 'Coordonnées bancaires : FR76 ...',
   },
@@ -108,148 +86,61 @@ const initialTemplates: InvoiceTemplate[] = [
     name: 'Minimaliste',
     primaryColor: '#18181b', // neutral-900
     companyName: 'Studio Créatif',
-    companyAddress: '789 Boulevard des Arts, Marseille',
+    companyAddress: '789 Boulevard des Arts\n13001 Marseille, France',
     companyLogoUrl: '',
-    showQuantity: false,
-    showUnitPrice: true,
     showTax: true,
     footerText: 'Prestation réalisée par Studio Créatif.',
   },
 ];
 
-
-type InvoiceData = {
-  id: string;
-  invoiceTitle: string;
-  clientName: string;
-  clientAddress: string;
-  invoiceNumber: string;
-  invoiceDate: string;
-  dueDate: string;
-  lineItems: LineItem[];
-  isVatEnabled: boolean;
-  vatRate: number;
-  notes: string;
-  // From template
-  companyName: string;
-  companyAddress: string;
-  companyLogoUrl: string;
-  primaryColor: string;
-};
-
-const calculateTotals = (invoice: Omit<InvoiceData, 'id'>) => {
-    const subTotal = invoice.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
-    const vatAmount = invoice.isVatEnabled ? subTotal * (invoice.vatRate / 100) : 0;
-    const total = subTotal + vatAmount;
-    return { subTotal, vatAmount, total };
-};
-
-const initialInvoices: InvoiceData[] = [
-  {
-    id: 'inv_1',
-    invoiceTitle: 'Prestation de développement web',
-    clientName: 'Client Alpha SARL',
-    clientAddress: '10 Rue du Commerce, 33000 Bordeaux',
-    invoiceNumber: 'FACT-2024-00123',
-    invoiceDate: '2024-07-15',
-    dueDate: '2024-08-14',
-    lineItems: [
-      { id: 'l1', description: 'Développement de site web', quantity: 1, unitPrice: 2500000 },
-      { id: 'l2', description: 'Hébergement annuel', quantity: 1, unitPrice: 300000 },
-    ],
-    isVatEnabled: true,
-    vatRate: 20,
-    notes: 'Merci de votre confiance.',
-    companyName: 'Votre Société S.A.',
-    companyAddress: '123 Rue de la Facture, 75001 Paris',
-    companyLogoUrl: '',
-    primaryColor: '#3b82f6',
-  },
-  {
-    id: 'inv_2',
-    invoiceTitle: 'Consulting SEO - Juillet 2024',
-    clientName: 'Tech Innovante Inc.',
-    clientAddress: '456 Avenue du Futur, Lyon',
-    invoiceNumber: 'FACT-2024-00124',
-    invoiceDate: '2024-07-18',
-    dueDate: '2024-08-17',
-    lineItems: [{ id: 'l3', description: 'Consulting SEO', quantity: 10, unitPrice: 150000 }],
-    isVatEnabled: true,
-    vatRate: 20,
-    notes: 'Paiement à réception.',
-    companyName: 'Tech Innovante Inc.',
-    companyAddress: '456 Avenue du Futur, Lyon',
-    companyLogoUrl: '',
-    primaryColor: '#10b981',
-  },
-];
-
-const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id'> => {
-    const today = new Date();
-    const dueDate = new Date();
-    dueDate.setDate(today.getDate() + 30);
-
-    const nextInvoiceNumber = `FACT-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-001`;
-
-    return {
-        invoiceTitle: '',
-        clientName: '',
-        clientAddress: '',
-        invoiceNumber: nextInvoiceNumber,
-        invoiceDate: today.toISOString().split('T')[0],
-        dueDate: dueDate.toISOString().split('T')[0],
-        lineItems: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
-        vatRate: 18,
-        // From template
-        isVatEnabled: template.showTax,
-        notes: template.footerText,
-        companyName: template.companyName,
-        companyAddress: template.companyAddress,
-        companyLogoUrl: template.companyLogoUrl,
-        primaryColor: template.primaryColor
-    };
+const defaultTemplate: Omit<InvoiceTemplate, 'id'> = {
+  name: 'Nouveau Modèle',
+  primaryColor: '#673AB7',
+  companyName: 'Votre Société S.A.',
+  companyAddress: 'Votre Adresse\nVotre Ville, Code Postal',
+  companyLogoUrl: '',
+  showTax: true,
+  footerText: 'Merci pour votre paiement.',
 };
 
 
 // --- INVOICE PREVIEW COMPONENT ---
 
-const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) => {
-    const { subTotal, vatAmount, total } = calculateTotals(invoice);
+const LiveInvoicePreview = ({ template }: { template: Omit<InvoiceTemplate, 'id'> }) => {
     const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+
+    const dummyData = {
+        subTotal: 450,
+        vatAmount: template.showTax ? 450 * 0.18 : 0,
+        total: template.showTax ? 450 * 1.18 : 450
+    };
 
     return (
         <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
             <div className="flex justify-between items-start mb-8">
                 <div>
-                     {invoice.companyLogoUrl ? <img src={invoice.companyLogoUrl} alt="Logo" className="h-12" data-ai-hint="company logo" /> : <Logo className="h-12 w-12" style={{ color: invoice.primaryColor }} />}
-                    <h1 className="font-bold text-lg mt-2">{invoice.companyName}</h1>
-                    <p className="text-xs whitespace-pre-line">{invoice.companyAddress}</p>
+                     {template.companyLogoUrl ? <img src={template.companyLogoUrl} alt="Logo" className="h-12" data-ai-hint="company logo" /> : <Logo className="h-12 w-12" style={{ color: template.primaryColor }} />}
+                    <h1 className="font-bold text-lg mt-2">{template.companyName}</h1>
+                    <p className="text-xs whitespace-pre-line">{template.companyAddress}</p>
                 </div>
                 <div className="text-right">
-                    <h2 className="text-2xl font-bold uppercase" style={{ color: invoice.primaryColor }}>FACTURE</h2>
-                    <p className="font-mono text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{invoice.invoiceTitle}</p>
+                    <h2 className="text-2xl font-bold uppercase" style={{ color: template.primaryColor }}>FACTURE</h2>
+                    <p className="font-mono text-xs">FACT-XXXX-000</p>
                 </div>
             </div>
             <div className="flex justify-between mb-8">
                 <div className="text-xs">
                     <p className="font-bold text-gray-500 mb-1">FACTURÉ À</p>
-                    <p className="font-bold">{invoice.clientName || 'Nom du Client'}</p>
-                    <p className="whitespace-pre-line">{invoice.clientAddress || 'Adresse du client'}</p>
+                    <p className="font-bold">Nom du Client</p>
+                    <p className="whitespace-pre-line">Adresse du client</p>
                 </div>
                 <div className="text-right text-xs">
-                    <div className="flex items-center justify-end gap-4">
-                        <p className="font-bold text-gray-500">Date :</p>
-                        <p>{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString('fr-FR') : ''}</p>
-                    </div>
-                     <div className="flex items-center justify-end gap-4 mt-1">
-                        <p className="font-bold text-gray-500">Échéance :</p>
-                        <p>{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('fr-FR') : ''}</p>
-                    </div>
+                    <div className="flex items-center justify-end gap-4"><p className="font-bold text-gray-500">Date :</p><p>JJ/MM/AAAA</p></div>
+                    <div className="flex items-center justify-end gap-4 mt-1"><p className="font-bold text-gray-500">Échéance :</p><p>JJ/MM/AAAA</p></div>
                 </div>
             </div>
             <table className="w-full text-left mb-8 text-xs">
-                <thead style={{ backgroundColor: invoice.primaryColor }} className="text-white">
+                <thead style={{ backgroundColor: template.primaryColor }} className="text-white">
                     <tr>
                         <th className="p-2 rounded-l-md font-semibold text-center">Description</th>
                         <th className="p-2 font-semibold text-center">Qté</th>
@@ -258,42 +149,22 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                     </tr>
                 </thead>
                 <tbody>
-                    {invoice.lineItems.map((item) => (
-                         <tr key={item.id} className="border-b odd:bg-muted/50">
-                            <td className="p-2 font-medium text-center">{item.description || 'Service ou produit'}</td>
-                            <td className="p-2 text-center">{item.quantity}</td>
-                            <td className="p-2 text-center">{formatFr(item.unitPrice)} FCFA</td>
-                            <td className="p-2 text-center">{formatFr(item.quantity * item.unitPrice)} FCFA</td>
-                        </tr>
-                    ))}
-                    {invoice.lineItems.length === 0 && (
-                        <tr><td colSpan={4} className="p-4 text-center text-gray-400">Aucun article</td></tr>
-                    )}
+                    <tr className="border-b odd:bg-muted/50"><td className="p-2 font-medium text-center">Service ou produit 1</td><td className="p-2 text-center">2</td><td className="p-2 text-center">{formatFr(150)} FCFA</td><td className="p-2 text-center">{formatFr(300)} FCFA</td></tr>
+                    <tr className="border-b odd:bg-muted/50"><td className="p-2 font-medium text-center">Service ou produit 2</td><td className="p-2 text-center">1</td><td className="p-2 text-center">{formatFr(150)} FCFA</td><td className="p-2 text-center">{formatFr(150)} FCFA</td></tr>
                 </tbody>
             </table>
             <div className="flex justify-end mb-8">
                 <div className="w-1/2 max-w-xs text-xs space-y-2">
-                    <div className="flex justify-between">
-                        <p className="text-gray-500">Sous-total HT :</p>
-                        <p>{formatFr(subTotal)} FCFA</p>
-                    </div>
-                    {invoice.isVatEnabled && (
-                        <div className="flex justify-between">
-                            <p className="text-gray-500">TVA ({invoice.vatRate}%) :</p>
-                            <p>{formatFr(vatAmount)} FCFA</p>
-                        </div>
+                    <div className="flex justify-between"><p className="text-gray-500">Sous-total HT :</p><p>{formatFr(dummyData.subTotal)} FCFA</p></div>
+                    {template.showTax && (
+                        <div className="flex justify-between"><p className="text-gray-500">TVA (18%) :</p><p>{formatFr(dummyData.vatAmount)} FCFA</p></div>
                     )}
-                     <Separator />
-                    <div className="flex justify-between font-bold text-base" style={{ color: invoice.primaryColor }}>
-                        <p>TOTAL TTC :</p>
-                        <p>{formatFr(total)} FCFA</p>
-                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-base" style={{ color: template.primaryColor }}><p>TOTAL TTC :</p><p>{formatFr(dummyData.total)} FCFA</p></div>
                 </div>
             </div>
             <Separator />
-            <div className="mt-4 text-xs text-gray-500 whitespace-pre-line">
-                {invoice.notes}
-            </div>
+            <div className="mt-4 text-xs text-gray-500 whitespace-pre-line">{template.footerText}</div>
         </div>
     );
 };
@@ -301,174 +172,49 @@ LiveInvoicePreview.displayName = 'LiveInvoicePreview';
 
 // --- MAIN PAGE COMPONENT ---
 export default function ModeleFacturePage() {
-  const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
+  const [templates, setTemplates] = useState<InvoiceTemplate[]>(initialTemplates);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isViewMode, setIsViewMode] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState<InvoiceData | null>(null);
-  const [invoiceToDelete, setInvoiceToDelete] = useState<InvoiceData | null>(null);
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | null>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<InvoiceTemplate | null>(null);
   
-  const [formData, setFormData] = useState<Omit<InvoiceData, 'id'>>(getDefaultInvoiceData(initialTemplates[0]));
+  const [formData, setFormData] = useState<Omit<InvoiceTemplate, 'id'>>(defaultTemplate);
   const { toast } = useToast();
 
-  const handleOpenCreateSheet = (template: InvoiceTemplate) => {
-    setEditingInvoice(null);
-    setIsViewMode(false);
-    setFormData(getDefaultInvoiceData(template));
+  const handleOpenCreateSheet = () => {
+    setEditingTemplate(null);
+    setFormData(defaultTemplate);
     setIsSheetOpen(true);
   };
   
-  const handleOpenEditSheet = (invoice: InvoiceData) => {
-    setEditingInvoice(invoice);
-    setIsViewMode(false);
-    setFormData(JSON.parse(JSON.stringify(invoice)));
+  const handleOpenEditSheet = (template: InvoiceTemplate) => {
+    setEditingTemplate(template);
+    setFormData(JSON.parse(JSON.stringify(template)));
     setIsSheetOpen(true);
   };
 
-  const handleOpenViewSheet = (invoice: InvoiceData) => {
-    setEditingInvoice(invoice);
-    setIsViewMode(true);
-    setFormData(JSON.parse(JSON.stringify(invoice)));
-    setIsSheetOpen(true);
-  };
-
-  const handleFormChange = (field: keyof Omit<InvoiceData, 'id' | 'lineItems'>, value: any) => {
+  const handleFormChange = (field: keyof Omit<InvoiceTemplate, 'id'>, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-  
-  const handleLineItemChange = (id: string, field: keyof Omit<LineItem, 'id'>, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      lineItems: prev.lineItems.map(item =>
-        item.id === id ? { ...item, [field]: value } : item
-      ),
-    }));
-  };
-
-  const addLineItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      lineItems: [...prev.lineItems, { id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
-    }));
-  };
-
-  const removeLineItem = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      lineItems: prev.lineItems.filter(item => item.id !== id),
-    }));
   };
 
   const handleSave = () => {
-    if (editingInvoice) {
-      setInvoices(invoices.map(inv => inv.id === editingInvoice.id ? { id: inv.id, ...formData } : inv));
-      toast({ title: "Facture mise à jour." });
+    if (editingTemplate) {
+      setTemplates(templates.map(tpl => tpl.id === editingTemplate.id ? { id: tpl.id, ...formData } : tpl));
+      toast({ title: "Modèle mis à jour." });
     } else {
-      const newInvoice = { id: `inv_${Date.now()}`, ...formData };
-      setInvoices(prev => [newInvoice, ...prev]);
-      toast({ title: "Facture créée avec succès." });
+      const newTemplate = { id: `tpl_${Date.now()}`, ...formData };
+      setTemplates(prev => [newTemplate, ...prev]);
+      toast({ title: "Modèle créé avec succès." });
     }
     setIsSheetOpen(false);
   };
 
   const handleDelete = () => {
-      if (invoiceToDelete) {
-          setInvoices(invoices.filter(inv => inv.id !== invoiceToDelete.id));
-          setInvoiceToDelete(null);
-          toast({ title: "Facture supprimée." });
+      if (templateToDelete) {
+          setTemplates(templates.filter(tpl => tpl.id !== templateToDelete.id));
+          setTemplateToDelete(null);
+          toast({ title: "Modèle supprimé." });
       }
   };
-
-  const handleSelectTemplate = (template: InvoiceTemplate) => {
-    setIsTemplateModalOpen(false);
-    handleOpenCreateSheet(template);
-  };
-
-  const generatePDF = (invoice: InvoiceData) => {
-    const doc = new jsPDF();
-    const { subTotal, vatAmount, total } = calculateTotals(invoice);
-    const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
-    
-    // Header
-    doc.setFontSize(20);
-    doc.setTextColor(40, 40, 40);
-    doc.text("FACTURE", 150, 20);
-    doc.setFontSize(10);
-    doc.text(invoice.invoiceNumber, 150, 26);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(invoice.invoiceTitle, 150, 32, {align: 'right'});
-    doc.setTextColor(40, 40, 40);
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(invoice.companyName, 20, 20);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text(invoice.companyAddress.replace(/\n/g, '\n'), 20, 26);
-    
-    // Client Info & Dates
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text("FACTURÉ À:", 20, 50);
-    doc.setFont('helvetica', 'normal');
-    doc.text(invoice.clientName, 20, 56);
-    doc.text(invoice.clientAddress.replace(/\n/g, '\n'), 20, 62);
-    
-    doc.text(`Date de facture: ${new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}`, 150, 50);
-    doc.text(`Date d'échéance: ${new Date(invoice.dueDate).toLocaleDateString('fr-FR')}`, 150, 56);
-    
-    // Table
-    const tableColumn = ["Description", "Qté", "P.U. HT", "Total HT"];
-    const tableRows = invoice.lineItems.map(item => [
-      item.description,
-      item.quantity,
-      `${formatFr(item.unitPrice)} FCFA`,
-      `${formatFr(item.quantity * item.unitPrice)} FCFA`,
-    ]);
-
-    autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 75,
-        headStyles: { fillColor: invoice.primaryColor }, 
-        styles: { halign: 'center' },
-    });
-
-    // Totals
-    const finalY = (doc as any).lastAutoTable.finalY;
-    doc.setFontSize(10);
-    let currentY = finalY + 10;
-
-    doc.text(`Sous-total HT:`, 140, currentY);
-    doc.text(`${formatFr(subTotal)} FCFA`, 190, currentY, { align: 'right' });
-    currentY += 7;
-
-    if (invoice.isVatEnabled) {
-        doc.text(`TVA (${invoice.vatRate}%):`, 140, currentY);
-        doc.text(`${formatFr(vatAmount)} FCFA`, 190, currentY, { align: 'right' });
-        currentY += 7;
-    }
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`TOTAL TTC:`, 140, currentY);
-    doc.text(`${formatFr(total)} FCFA`, 190, currentY, { align: 'right' });
-    
-    // Footer
-    currentY += 20;
-    doc.setFontSize(9);
-    doc.setTextColor(150);
-    doc.text(invoice.notes.replace(/\n/g, '\n'), 20, currentY, { maxWidth: 170 });
-
-    doc.save(`facture-${invoice.invoiceNumber}.pdf`);
-
-    toast({
-        title: "Facture générée",
-        description: `Le fichier facture-${invoice.invoiceNumber}.pdf a été téléchargé.`,
-    })
-  };
-
 
   return (
     <>
@@ -476,65 +222,56 @@ export default function ModeleFacturePage() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="font-sans text-2xl">Modèles de Facture</CardTitle>
+                        <CardTitle className="text-2xl">Modèles de Facture</CardTitle>
                         <CardDescription>
-                            Créez, consultez et gérez toutes vos factures de vente.
+                            Créez et gérez les différents designs pour vos factures.
                         </CardDescription>
                     </div>
                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setIsTemplateModalOpen(true)}>
-                            <Palette className="mr-2 h-4 w-4" />
-                            Changer de modèle
-                        </Button>
-                        <Button onClick={() => handleOpenCreateSheet(initialTemplates[0])}>
+                        <Button onClick={handleOpenCreateSheet}>
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Créer une facture
+                            Créer un modèle
                         </Button>
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[120px] font-semibold text-center">Date d'émission</TableHead>
-                            <TableHead className="font-semibold text-center">Tiers</TableHead>
-                            <TableHead className="font-semibold text-center">Libellé</TableHead>
-                            <TableHead className="w-[150px] text-right font-semibold">Montant TTC</TableHead>
-                            <TableHead className="w-[200px] text-center font-semibold">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {invoices.map((invoice) => {
-                            const { total } = calculateTotals(invoice);
-                            return (
-                                <TableRow key={invoice.id} className="odd:bg-muted/50">
-                                    <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
-                                    <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
-                                    <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
-                                    <TableCell className="font-sans text-right">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(invoice)}><Pencil className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><FileText className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setInvoiceToDelete(invoice)}><Trash2 className="h-4 w-4" /></Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )
-                        })}
-                    </TableBody>
-                </Table>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {templates.map(template => (
+                        <Card key={template.id} className="flex flex-col">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                   <div className="w-4 h-4 rounded-full" style={{backgroundColor: template.primaryColor}}/>
+                                   {template.name}
+                                </CardTitle>
+                                <CardDescription>{template.companyName}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex-1">
+                                <div className="border rounded-md p-4 bg-muted text-xs text-muted-foreground">
+                                    <p className="font-semibold">Pied de page :</p>
+                                    <p className="whitespace-pre-line">{template.footerText}</p>
+                                </div>
+                            </CardContent>
+                            <CardFooter className="flex justify-end gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleOpenEditSheet(template)}>
+                                    <Pencil className="mr-2 h-4 w-4" /> Modifier
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={() => setTemplateToDelete(template)}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
             </CardContent>
         </Card>
 
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent className="w-full sm:max-w-full md:w-[90vw] lg:w-[80vw] xl:w-[70vw] p-0 flex flex-col">
                 <SheetHeader className="p-6 border-b">
-                    <SheetTitle>{editingInvoice ? (isViewMode ? 'Détails de la facture' : 'Modifier la facture') : 'Créer une nouvelle facture'}</SheetTitle>
+                    <SheetTitle>{editingTemplate ? 'Modifier le modèle de facture' : 'Créer un nouveau modèle'}</SheetTitle>
                     <SheetDescription>
-                        {isViewMode ? 'Consultez les informations de la facture.' : 'Remplissez les informations ci-dessous. Les modifications sont visibles en direct.'}
+                        Personnalisez l'apparence et les informations par défaut de vos factures.
                     </SheetDescription>
                 </SheetHeader>
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
@@ -542,46 +279,45 @@ export default function ModeleFacturePage() {
                     <ScrollArea className="md:col-span-1 h-full">
                         <div className="p-6 space-y-6">
                             <Card>
-                                <CardHeader><CardTitle>Informations sur la facture</CardTitle></CardHeader>
+                                <CardHeader><CardTitle>Informations sur le modèle</CardTitle></CardHeader>
                                 <CardContent className="space-y-4">
                                      <div className="space-y-2">
-                                        <Label htmlFor="invoiceTitle">Libellé de la facture</Label>
-                                        <Input id="invoiceTitle" value={formData.invoiceTitle} onChange={(e) => handleFormChange('invoiceTitle', e.target.value)} placeholder="Ex: Prestation de service" disabled={isViewMode} />
+                                        <Label htmlFor="name">Nom du modèle</Label>
+                                        <Input id="name" value={formData.name} onChange={(e) => handleFormChange('name', e.target.value)} placeholder="Ex: Facture Standard" />
                                     </div>
-                                    <div className="grid sm:grid-cols-3 gap-4">
-                                        <div className="space-y-2"><Label htmlFor="invoiceNumber">N° de facture</Label><Input id="invoiceNumber" value={formData.invoiceNumber} onChange={(e) => handleFormChange('invoiceNumber', e.target.value)} disabled={isViewMode} /></div>
-                                        <div className="space-y-2"><Label htmlFor="invoiceDate">Date de facturation</Label><Input id="invoiceDate" type="date" value={formData.invoiceDate} onChange={(e) => handleFormChange('invoiceDate', e.target.value)} disabled={isViewMode} /></div>
-                                        <div className="space-y-2"><Label htmlFor="dueDate">Date d'échéance</Label><Input id="dueDate" type="date" value={formData.dueDate} onChange={(e) => handleFormChange('dueDate', e.target.value)} disabled={isViewMode} /></div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="primaryColor">Couleur principale (Hex)</Label>
+                                        <Input id="primaryColor" value={formData.primaryColor} onChange={(e) => handleFormChange('primaryColor', e.target.value)} placeholder="#3b82f6" />
+                                    </div>
+                                    <div className="flex items-center space-x-2 rounded-lg border p-4">
+                                        <div className="flex-1 space-y-1">
+                                            <Label htmlFor="showTax">Afficher la TVA</Label>
+                                            <p className="text-xs text-muted-foreground">Calculer et afficher la TVA sur la facture.</p>
+                                        </div>
+                                        <Switch id="showTax" checked={formData.showTax} onCheckedChange={(checked) => handleFormChange('showTax', checked)} />
                                     </div>
                                 </CardContent>
                             </Card>
                             <Card>
-                                <CardHeader><CardTitle>Informations sur le client</CardTitle></CardHeader>
+                                <CardHeader><CardTitle>Informations sur votre société</CardTitle></CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="space-y-2"><Label htmlFor="clientName">Nom du client</Label><Input id="clientName" value={formData.clientName} onChange={(e) => handleFormChange('clientName', e.target.value)} placeholder="Nom ou raison sociale" disabled={isViewMode} /></div>
-                                    <div className="space-y-2"><Label htmlFor="clientAddress">Adresse du client</Label><Textarea id="clientAddress" value={formData.clientAddress} onChange={(e) => handleFormChange('clientAddress', e.target.value)} placeholder="Adresse complète" disabled={isViewMode} /></div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="companyName">Nom de l'entreprise</Label>
+                                        <Input id="companyName" value={formData.companyName} onChange={(e) => handleFormChange('companyName', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="companyAddress">Adresse de l'entreprise</Label>
+                                        <Textarea id="companyAddress" value={formData.companyAddress} onChange={(e) => handleFormChange('companyAddress', e.target.value)} />
+                                    </div>
                                 </CardContent>
                             </Card>
                             <Card>
-                                <CardHeader><CardTitle>Lignes de la facture</CardTitle></CardHeader>
+                                <CardHeader><CardTitle>Pied de page</CardTitle></CardHeader>
                                 <CardContent>
-                                    <Table>
-                                        <TableHeader><TableRow><TableHead className="font-semibold text-center">Description</TableHead><TableHead className="w-[100px] font-semibold text-center">Qté</TableHead><TableHead className="w-[150px] font-semibold text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] font-semibold text-center"></TableHead></TableRow></TableHeader>
-                                        <TableBody>
-                                            {formData.lineItems.map(item => (
-                                                <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell className="text-center">{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                    {!isViewMode && <Button onClick={addLineItem} variant="outline" className="mt-4"><PlusCircle className="mr-2 h-4 w-4" />Ajouter une ligne</Button>}
-                                </CardContent>
-                            </Card>
-                            <Card>
-                                <CardHeader><CardTitle>TVA et Notes</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center space-x-2 rounded-lg border p-4"><div className="flex-1 space-y-1"><Label htmlFor="isVatEnabled">Activer la TVA</Label><p className="text-xs text-muted-foreground">Appliquer la TVA sur le total HT.</p></div><Switch id="isVatEnabled" checked={formData.isVatEnabled} onCheckedChange={(checked) => handleFormChange('isVatEnabled', checked)} disabled={isViewMode} /></div>
-                                    <div className="space-y-2"><Label htmlFor="vatRate">Taux de TVA (%)</Label><Input id="vatRate" type="number" value={formData.vatRate} onChange={(e) => handleFormChange('vatRate', Number(e.target.value))} disabled={!formData.isVatEnabled || isViewMode} /></div>
-                                    <div className="space-y-2"><Label htmlFor="notes">Notes / Pied de page</Label><Textarea id="notes" value={formData.notes} onChange={(e) => handleFormChange('notes', e.target.value)} disabled={isViewMode} /></div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="footerText">Texte du pied de page</Label>
+                                        <Textarea id="footerText" value={formData.footerText} onChange={(e) => handleFormChange('footerText', e.target.value)} placeholder="Ex: Merci de votre confiance."/>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
@@ -589,60 +325,31 @@ export default function ModeleFacturePage() {
                     {/* Preview Panel */}
                     <ScrollArea className="md:col-span-1 h-full bg-muted">
                        <div className="p-8">
-                            <LiveInvoicePreview invoice={formData} />
+                            <LiveInvoicePreview template={formData} />
                        </div>
                     </ScrollArea>
                 </div>
                 <SheetFooter className="p-6 border-t">
                     <SheetClose asChild><Button variant="outline">Annuler</Button></SheetClose>
-                    {!isViewMode && <Button onClick={handleSave}>Enregistrer</Button>}
+                    <Button onClick={handleSave}>Enregistrer</Button>
                 </SheetFooter>
             </SheetContent>
         </Sheet>
         
-        <AlertDialog open={!!invoiceToDelete} onOpenChange={() => setInvoiceToDelete(null)}>
+        <AlertDialog open={!!templateToDelete} onOpenChange={() => setTemplateToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Êtes-vous absolument certain ?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Cette action est irréversible. La facture sera définitivement supprimée.
+                        Cette action est irréversible. Le modèle de facture sera définitivement supprimé.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setInvoiceToDelete(null)}>Annuler</AlertDialogCancel>
+                    <AlertDialogCancel onClick={() => setTemplateToDelete(null)}>Annuler</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-
-        <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
-            <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Choisir un modèle de facture</DialogTitle>
-                  <DialogDescription>
-                    Sélectionnez un modèle pour commencer.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto">
-                    {initialTemplates.map(template => (
-                      <Card key={template.id} className="hover:bg-accent transition-colors">
-                        <CardHeader className="flex flex-row justify-between items-center p-4">
-                            <div>
-                               <CardTitle className="text-base font-semibold">{template.name}</CardTitle>
-                               <CardDescription className="flex items-center gap-2">
-                                   <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: template.primaryColor }} />
-                                   {template.companyName}
-                               </CardDescription>
-                            </div>
-                            <Button size="sm" onClick={() => handleSelectTemplate(template)}>
-                               Sélectionner
-                            </Button>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                </div>
-            </DialogContent>
-        </Dialog>
     </>
   );
 }
