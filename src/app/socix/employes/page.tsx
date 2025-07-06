@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -14,11 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+
 
 // --- TYPES & MOCK DATA ---
 type ContractType = 'CDI' | 'CDD' | 'Stage' | 'Apprentissage';
@@ -267,6 +269,111 @@ function EmployeeModal({ isOpen, onClose, onSave, employeeToEdit }: { isOpen: bo
     );
 }
 
+function FicheIndividuellePaie() {
+    // Mock data based on the image provided by the user
+    const data = {
+        exercice: "2024",
+        salarie: "Jean Dupont",
+        periode: "01/01/2024 au 31/03/2024",
+        historique: [
+            { no: 16, du: '01/01/24', au: '31/01/24', reglt: '31/01/24', brut: 1686000, net: 1297000 },
+            { no: 36, du: '01/02/24', au: '29/02/24', reglt: '29/02/24', brut: 1686000, net: 1297000 },
+            { no: 37, du: '01/03/24', au: '31/03/24', reglt: '31/03/24', brut: 1686000, net: 1297000 },
+        ],
+        cumuls: {
+            heures: 364.02,
+            jours: 52.02,
+            brut: 5058000,
+            salaireNet: 3891000,
+            netImposable: 4111000,
+            chargesSalariales: 1166000,
+            chargesPatronales: 2193000,
+            coutEmployeur: 7491000
+        }
+    };
+    
+    const formatCurrencyFCFA = (value: number) => `${value.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA`;
+
+    return (
+        <div className="p-2 border rounded-lg bg-background text-foreground text-xs font-sans">
+            <div className="flex justify-between items-start pb-2 mb-2 border-b">
+                <div>
+                    <h3 className="font-bold text-sm">CROISIERES PRODUCTION</h3>
+                    <p className="text-muted-foreground text-xs">39 rue du faubourg Poissonnière 75009 Paris</p>
+                </div>
+                <div className="text-right">
+                    <h4 className="font-bold text-base">FICHE INDIVIDUELLE</h4>
+                    <p className="text-xs text-muted-foreground">Exercice : {data.exercice}</p>
+                </div>
+            </div>
+
+            <div className="flex justify-between items-center py-2 text-xs">
+                <p><strong>Salarié :</strong> {data.salarie}</p>
+                <p><strong>Période :</strong> {data.periode}</p>
+            </div>
+            
+            <Card className="mt-2">
+                <CardHeader className="p-3 bg-muted/50 rounded-t-lg">
+                    <CardTitle className="text-sm">Historique des paies</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="text-center">N°</TableHead>
+                                <TableHead className="text-center">Du</TableHead>
+                                <TableHead className="text-center">Au</TableHead>
+                                <TableHead className="text-right">Brut</TableHead>
+                                <TableHead className="text-right">Net à payer</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data.historique.map(h => (
+                                <TableRow key={h.no}>
+                                    <TableCell className="text-center">{h.no}</TableCell>
+                                    <TableCell className="text-center">{h.du}</TableCell>
+                                    <TableCell className="text-center">{h.au}</TableCell>
+                                    <TableCell className="text-right">{formatCurrencyFCFA(h.brut)}</TableCell>
+                                    <TableCell className="text-right font-semibold">{formatCurrencyFCFA(h.net)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        <TableFooter>
+                             <TableRow>
+                                <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
+                                <TableCell className="text-right font-bold">{formatCurrencyFCFA(data.cumuls.brut)}</TableCell>
+                                <TableCell className="text-right font-bold">{formatCurrencyFCFA(data.cumuls.salaireNet)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </CardContent>
+            </Card>
+            
+            <Card className="mt-4">
+                <CardHeader className="p-3 bg-muted/50 rounded-t-lg">
+                    <CardTitle className="text-sm">Cumuls Annuels</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 grid md:grid-cols-2 gap-x-8 gap-y-2 text-xs">
+                    <div className="space-y-1">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Heures travaillées</span><span className="font-semibold">{data.cumuls.heures.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Jours travaillés</span><span className="font-semibold">{data.cumuls.jours}</span></div>
+                    </div>
+                    <div className="space-y-1">
+                         <div className="flex justify-between"><span className="text-muted-foreground">Brut</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.brut)}</span></div>
+                         <div className="flex justify-between"><span className="text-muted-foreground">Net imposable</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.netImposable)}</span></div>
+                         <div className="flex justify-between font-bold text-primary"><span className="">Salaire net</span><span className="">{formatCurrencyFCFA(data.cumuls.salaireNet)}</span></div>
+                         <Separator className="my-2" />
+                         <div className="flex justify-between"><span className="text-muted-foreground">Charges salariales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesSalariales)}</span></div>
+                         <div className="flex justify-between"><span className="text-muted-foreground">Charges patronales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesPatronales)}</span></div>
+                          <Separator className="my-2" />
+                         <div className="flex justify-between text-base"><span className="font-bold">Coût employeur total</span><span className="font-bold">{formatCurrencyFCFA(data.cumuls.coutEmployeur)}</span></div>
+                    </div>
+                 </CardContent>
+            </Card>
+        </div>
+    )
+}
+
 function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose: () => void; employee: Employee | null }) {
     if (!employee) return null;
 
@@ -294,7 +401,7 @@ function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; 
                     {/* Left Column */}
                     <div className="md:col-span-1 flex flex-col items-center text-center space-y-4 pt-4">
                         <Avatar className="h-28 w-28 border-4 border-primary/10">
-                            <AvatarImage src={employee.avatarUrl} alt={employee.nom} />
+                            <AvatarImage src={employee.avatarUrl} alt={employee.nom} data-ai-hint="person face" />
                             <AvatarFallback className="text-3xl">{employee.prenom[0]}{employee.nom[0]}</AvatarFallback>
                         </Avatar>
                         <div>
@@ -358,6 +465,12 @@ function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; 
                                             </div>
                                         </div>
                                     ))}
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="item-5">
+                                <AccordionTrigger className="flex items-center gap-2"><FileText className="h-4 w-4"/>Fiche Individuelle (Paie)</AccordionTrigger>
+                                <AccordionContent className="p-1">
+                                    <FicheIndividuellePaie />
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
