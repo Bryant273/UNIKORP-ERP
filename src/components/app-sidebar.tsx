@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 import {
   FileText,
   FilePlus,
-  Settings,
   Users,
   Receipt,
   Landmark,
@@ -23,7 +22,6 @@ import {
   Percent,
   Calculator,
   LayoutDashboard,
-  Cog,
   FileScan,
   FileSearch,
   BookCopy,
@@ -40,7 +38,6 @@ import {
   GitCompareArrows,
   Pencil,
   BookDown,
-  CalendarOff,
   Wallet,
   GraduationCap,
   BarChart3,
@@ -62,6 +59,7 @@ import {
   Repeat,
   AreaChart,
   BookHeart,
+  Settings,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -141,8 +139,8 @@ const skomptabNav = [
 
 const socixNav = [
   {
-    title: 'Gestion du Personnel',
-    icon: Users,
+    title: 'Administration du Personnel',
+    icon: Contact,
     subItems: [
       { title: 'Employés', href: '/socix/employes', icon: Contact },
       { title: 'Contrats', href: '/socix/contrats', icon: FileSignature },
@@ -151,43 +149,43 @@ const socixNav = [
     ]
   },
   {
-    title: 'Gestion des Absences',
-    icon: CalendarOff,
-    subItems: [
-      { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
-      { title: 'Absences et arrêts', href: '/socix/absences-arrets', icon: UserX },
-      { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
-      { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
-    ]
-  },
-  {
-    title: 'Paie et Administration',
+    title: 'Paie et Rémunération',
     icon: Wallet,
     subItems: [
       { title: 'Traitement de la paie', href: '/socix/traitement-paie', icon: HandCoins },
-      { title: 'Déclarations sociales', href: '/skomptab/declarations-sociales', icon: FileText },
-      { title: 'Notes de frais', href: '/socix/notes-de-frais', icon: Receipt },
       { title: 'Bulletins de paie', href: '/socix/bulletins-paie', icon: Mail },
+      { title: 'Notes de frais', href: '/socix/notes-de-frais', icon: Receipt },
+      { title: 'Déclarations sociales', href: '/skomptab/declarations-sociales', icon: FileText },
     ]
   },
   {
-    title: 'Formation et Talents',
-    icon: GraduationCap,
+    title: 'Gestion des Talents',
+    icon: Star,
     subItems: [
-      { title: 'Plans de formation', href: '/socix/plans-formation', icon: BookOpenCheck },
-      { title: 'Compétences et évaluations', href: '/socix/competences-evaluations', icon: Star },
       { title: 'Recrutement', href: '/socix/recrutement', icon: UserPlus },
+      { title: 'Compétences et évaluations', href: '/socix/competences-evaluations', icon: Star },
       { title: 'Entretiens annuels', href: '/socix/entretiens-annuels', icon: MessageSquare },
+      { title: 'Plans de formation', href: '/socix/plans-formation', icon: BookOpenCheck },
     ]
   },
   {
-    title: 'Pilotage Social',
+    title: 'Temps et Activités',
+    icon: CalendarDays,
+    subItems: [
+      { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
+      { title: 'Absences et arrêts', href: '/socix/absences-arrets', icon: UserX },
+      { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
+      { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
+    ]
+  },
+  {
+    title: 'Pilotage et Rapports',
     icon: BarChart3,
     subItems: [
       { title: 'KPI sociaux', href: '/socix/kpi-sociaux', icon: TrendingUp },
-      { title: 'Alternance des équipes', href: '/socix/alternance-equipes', icon: Repeat },
       { title: 'Rapports et analyses', href: '/socix/rapports-analyses', icon: AreaChart },
       { title: 'Bilan social', href: '/socix/bilan-social', icon: BookHeart },
+      { title: 'Alternance des équipes', href: '/socix/alternance-equipes', icon: Repeat },
     ]
   },
 ];
