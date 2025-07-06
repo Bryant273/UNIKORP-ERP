@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -255,8 +256,8 @@ export default function BalanceGeneralePage() {
                                         {tableConfig.headers.map(h => <TableHead key={h} className={h.includes('Compte') || h.includes('Intitulé') ? 'text-left' : 'text-right'}>{h}</TableHead>)}
                                     </TableRow></TableHeader>
                                     <TableBody>
-                                        {reportData.map((row) => (
-                                            <TableRow key={row.numero}>
+                                        {reportData.map((row, index) => (
+                                            <TableRow key={row.numero} className={index % 2 !== 0 ? 'bg-muted' : ''}>
                                                 {tableConfig.keys.map(key => (
                                                     <TableCell key={key} className={key.includes('numero') || key.includes('intitule') ? 'text-left font-medium' : 'text-right'}>
                                                         {typeof row[key] === 'number' && (row[key] as number) === 0 ? '' : typeof row[key] === 'number' ? (row[key] as number).toLocaleString('fr-FR') : row[key]}

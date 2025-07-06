@@ -240,9 +240,9 @@ export default function AmortissementsPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {reportData.map((line) => (
-                                            <TableRow key={line.codeImmo}>
-                                                <TableCell className="font-mono text-xs">{line.codeImmo}</TableCell>
+                                        {reportData.map((line, index) => (
+                                            <TableRow key={line.codeImmo} className={index % 2 !== 0 ? 'bg-muted' : ''}>
+                                                <TableCell>{line.codeImmo}</TableCell>
                                                 <TableCell>{line.libelle}</TableCell>
                                                 <TableCell>{format(new Date(line.dateAcquisition), 'dd/MM/yyyy')}</TableCell>
                                                 <TableCell className="text-right">{formatAmount(line.valeurBrute)} FCFA</TableCell>

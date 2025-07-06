@@ -340,11 +340,11 @@ export default function EtatsComptablesJournauxPage() {
                                                     </TableCell>
                                                 </>
                                             )}
-                                            <TableCell className="text-center font-mono">{ligne.numeroCompte}</TableCell>
+                                            <TableCell className="text-center">{ligne.numeroCompte}</TableCell>
                                             <TableCell className="text-center">{ligne.tiers || '-'}</TableCell>
                                             <TableCell className="text-center">{ligne.libelleEcriture}</TableCell>
-                                            <TableCell className="text-center font-mono text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
-                                            <TableCell className="text-center font-mono text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
+                                            <TableCell className="text-center text-green-600">{ligne.debit > 0 ? ligne.debit.toLocaleString('fr-FR') : ''}</TableCell>
+                                            <TableCell className="text-center text-red-600">{ligne.credit > 0 ? ligne.credit.toLocaleString('fr-FR') : ''}</TableCell>
                                         </TableRow>
                                     ))}
                                 </React.Fragment>
@@ -358,8 +358,8 @@ export default function EtatsComptablesJournauxPage() {
                           <TableFooter>
                               <TableRow className="bg-secondary">
                                   <TableCell colSpan={5} className="text-center font-bold">Totaux</TableCell>
-                                  <TableCell className="text-center font-bold font-mono">{totalDebit.toLocaleString('fr-FR')}</TableCell>
-                                  <TableCell className="text-center font-bold font-mono">{totalCredit.toLocaleString('fr-FR')}</TableCell>
+                                  <TableCell className="text-center font-bold">{totalDebit.toLocaleString('fr-FR')}</TableCell>
+                                  <TableCell className="text-center font-bold">{totalCredit.toLocaleString('fr-FR')}</TableCell>
                               </TableRow>
                               <TableRow>
                                   <TableCell colSpan={5}></TableCell>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -298,7 +299,7 @@ export default function GrandLivreGeneralPage() {
                                         </div>
                                     </div>
                                 </div>
-                                {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([compte, ecritures]) => {
+                                {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([compte, ecritures], groupIndex) => {
                                     const compteInfo = MOCK_COMPTES.find(c => c.numero === compte);
                                     const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
                                     const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
@@ -320,8 +321,8 @@ export default function GrandLivreGeneralPage() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {ecritures.map((ecriture: any) => (
-                                                        <TableRow key={ecriture.id}>
+                                                    {ecritures.map((ecriture: any, rowIndex) => (
+                                                        <TableRow key={ecriture.id} className={rowIndex % 2 !== 0 ? 'bg-muted' : ''}>
                                                             <TableCell>{format(new Date(ecriture.dateOperation), 'dd/MM/yyyy')}</TableCell>
                                                             <TableCell>{ecriture.journal}</TableCell>
                                                             <TableCell>{ecriture.numeroPiece}</TableCell>

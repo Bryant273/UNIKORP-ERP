@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -377,7 +378,7 @@ export default function EtatsComptablesBrouillardsPage() {
                             {brouillardData.length > 0 ? Object.values(groupedData).map((group, groupIndex) => (
                                 <React.Fragment key={group.numeroPiece}>
                                     {group.lignes.map((ligne, ligneIndex) => (
-                                        <TableRow key={`${group.numeroPiece}-${ligne.id}`} className={groupIndex % 2 !== 0 ? 'bg-muted/5' : ''}>
+                                        <TableRow key={`${group.numeroPiece}-${ligne.id}`} className={groupIndex % 2 !== 0 ? 'bg-muted' : ''}>
                                             {ligneIndex === 0 && (
                                                 <>
                                                     <TableCell rowSpan={group.lignes.length} className="text-center align-middle font-medium border-r">

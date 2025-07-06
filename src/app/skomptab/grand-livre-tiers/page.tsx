@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -308,7 +309,7 @@ export default function GrandLivreTiersPage() {
                                         </div>
                                     </div>
                                 </div>
-                                {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([tiersCode, ecritures]) => {
+                                {Object.entries(reportData).length > 0 ? Object.entries(reportData).map(([tiersCode, ecritures], groupIndex) => {
                                     const tiersInfo = MOCK_TIERS.find(t => t.code === tiersCode);
                                     const totalDebit = ecritures.reduce((acc, e) => acc + e.debit, 0);
                                     const totalCredit = ecritures.reduce((acc, e) => acc + e.credit, 0);
@@ -335,9 +336,9 @@ export default function GrandLivreTiersPage() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {ecritures.map((ecriture: EcritureLivreTiers) => (
-                                                        <TableRow key={ecriture.id}>
-                                                            <TableCell className="text-xs">{ecriture.numeroCompta}</TableCell>
+                                                    {ecritures.map((ecriture: EcritureLivreTiers, rowIndex) => (
+                                                        <TableRow key={ecriture.id} className={rowIndex % 2 !== 0 ? 'bg-muted' : ''}>
+                                                            <TableCell>{ecriture.numeroCompta}</TableCell>
                                                             <TableCell>{ecriture.journal}</TableCell>
                                                             <TableCell>{format(new Date(ecriture.date), 'dd/MM/yyyy')}</TableCell>
                                                             <TableCell>{ecriture.operation}</TableCell>
