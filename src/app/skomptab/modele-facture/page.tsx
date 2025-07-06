@@ -51,6 +51,7 @@ import { Logo } from '@/components/logo';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 // --- DATA TYPES & MOCK DATA ---
 
@@ -214,7 +215,7 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
     const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
     return (
-        <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black text-sm border">
+        <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
             <div className="flex justify-between items-start mb-8">
                 <div>
                      {invoice.companyLogoUrl ? <img src={invoice.companyLogoUrl} alt="Logo" className="h-12" data-ai-hint="company logo" /> : <Logo className="h-12 w-12" style={{ color: invoice.primaryColor }} />}
@@ -296,7 +297,7 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
 LiveInvoicePreview.displayName = 'LiveInvoicePreview';
 
 // --- MAIN PAGE COMPONENT ---
-export default function ElaborationFacturesPage() {
+export default function ModeleFacturePage() {
   const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
@@ -472,15 +473,15 @@ export default function ElaborationFacturesPage() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl">Gestion des Factures</CardTitle>
+                        <CardTitle className="text-2xl">Modèles de Facture</CardTitle>
                         <CardDescription>
                             Créez, consultez et gérez toutes vos factures de vente.
                         </CardDescription>
                     </div>
                      <div className="flex gap-2">
                         <Button variant="outline" onClick={() => setIsTemplateModalOpen(true)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Utiliser un modèle
+                            <Palette className="mr-2 h-4 w-4" />
+                            Changer de modèle
                         </Button>
                         <Button onClick={() => handleOpenCreateSheet(initialTemplates[0])}>
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -493,10 +494,10 @@ export default function ElaborationFacturesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px] text-center font-semibold">Date d'émission</TableHead>
-                            <TableHead className="text-center font-semibold">Tiers</TableHead>
-                            <TableHead className="text-center font-semibold">Libellé</TableHead>
-                            <TableHead className="w-[150px] text-center font-semibold">Montant TTC</TableHead>
+                            <TableHead className="w-[120px] font-semibold">Date d'émission</TableHead>
+                            <TableHead className="font-semibold">Tiers</TableHead>
+                            <TableHead className="font-semibold">Libellé</TableHead>
+                            <TableHead className="w-[150px] text-right font-semibold">Montant TTC</TableHead>
                             <TableHead className="w-[200px] text-center font-semibold">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -505,15 +506,15 @@ export default function ElaborationFacturesPage() {
                             const { total } = calculateTotals(invoice);
                             return (
                                 <TableRow key={invoice.id} className="odd:bg-muted/50">
-                                    <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
-                                    <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
-                                    <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
-                                    <TableCell className="text-center">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
+                                    <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
+                                    <TableCell className="font-medium">{invoice.clientName}</TableCell>
+                                    <TableCell>{invoice.invoiceTitle}</TableCell>
+                                    <TableCell className="text-right">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(invoice)}><Pencil className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><Printer className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => generatePDF(invoice)}><Milestone className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setInvoiceToDelete(invoice)}><Trash2 className="h-4 w-4" /></Button>
                                         </div>
                                     </TableCell>
@@ -562,7 +563,7 @@ export default function ElaborationFacturesPage() {
                                 <CardHeader><CardTitle>Lignes de la facture</CardTitle></CardHeader>
                                 <CardContent>
                                     <Table>
-                                        <TableHeader><TableRow><TableHead className="font-semibold text-center">Description</TableHead><TableHead className="w-[100px] font-semibold text-center">Qté</TableHead><TableHead className="w-[150px] font-semibold text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] font-semibold text-center"></TableHead></TableRow></TableHeader>
+                                        <TableHeader><TableRow><TableHead className="font-semibold">Description</TableHead><TableHead className="w-[100px] font-semibold text-center">Qté</TableHead><TableHead className="w-[150px] font-semibold text-center">Prix U. (HT)</TableHead><TableHead className="w-[50px] font-semibold text-center"></TableHead></TableRow></TableHeader>
                                         <TableBody>
                                             {formData.lineItems.map(item => (
                                                 <TableRow key={item.id} className="odd:bg-muted/50"><TableCell><Input value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} placeholder="Ex: Prestation" disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell><Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} disabled={isViewMode} /></TableCell><TableCell className="text-center">{!isViewMode && <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>}</TableCell></TableRow>
@@ -614,9 +615,9 @@ export default function ElaborationFacturesPage() {
         <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
             <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Utiliser un modèle de facture</DialogTitle>
+                  <DialogTitle>Choisir un modèle de facture</DialogTitle>
                   <DialogDescription>
-                    Sélectionnez un modèle pour pré-remplir la facture.
+                    Sélectionnez un modèle pour commencer.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto">
