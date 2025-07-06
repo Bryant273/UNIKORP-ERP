@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -111,6 +111,8 @@ const maskAccountNumber = (number?: string) => {
     return `${number.substring(0, 4)} ... ${number.slice(-4)}`;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 // --- MAIN COMPONENT ---
 
 export default function ControleTresoreriePage() {
@@ -128,7 +130,11 @@ export default function ControleTresoreriePage() {
   const [editingTransaction, setEditingTransaction] = useState<TreasuryTransaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<TreasuryTransaction | null>(null);
   const [viewingTransaction, setViewingTransaction] = useState<TreasuryTransaction | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+
+  const totalPages = Math.ceil(transactions.length / ITEMS_PER_PAGE);
+  const currentTransactions = transactions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const selectedAccount = accounts.find(acc => acc.id === selectedAccountId)!;
 
@@ -204,6 +210,9 @@ export default function ControleTresoreriePage() {
     setTransactions(transactions.filter(t => t.id !== transactionToDelete.id));
     setTransactionToDelete(null);
     toast({ title: "Mouvement supprimé", description: "Le mouvement de trésorerie a été supprimé." });
+    if (currentTransactions.length === 1 && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
   
   const handleCreateAccount = (e: React.FormEvent) => {
@@ -221,6 +230,12 @@ export default function ControleTresoreriePage() {
   const handleNewAccountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setNewAccountFormData(prev => ({...prev, [id]: id === 'balance' ? parseFloat(value) : value }));
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
   return (
@@ -271,8 +286,8 @@ export default function ControleTresoreriePage() {
 
           {/* Bottom section */}
           <div className="flex justify-between items-end z-10">
-            <p className="text-3xl lg:text-4xl font-bold tracking-tight">
-                {selectedAccount.balance.toLocaleString('fr-FR')}
+            <p className="text-3xl lg:text-4xl tracking-tight">
+                {selectedAccount.balance.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
             </p>
             <span className="font-semibold">FCFA</span>
           </div>
@@ -334,7 +349,7 @@ export default function ControleTresoreriePage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {transactions.map(tx => (
+                    {currentTransactions.map(tx => (
                         <TableRow key={tx.id} className="odd:bg-muted/50">
                             <TableCell className="text-center">{new Date(tx.date).toLocaleDateString('fr-FR')}</TableCell>
                             <TableCell className="font-medium text-center">{tx.label}</TableCell>
@@ -345,7 +360,7 @@ export default function ControleTresoreriePage() {
                                     {tx.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="text-center">{tx.amount.toLocaleString('fr-FR')} FCFA</TableCell>
+                            <TableCell className="text-center">{tx.amount.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
                             <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-2">
                                     <Button variant="ghost" size="icon" onClick={() => setViewingTransaction(tx)}>
@@ -367,6 +382,31 @@ export default function ControleTresoreriePage() {
                 </TableBody>
             </Table>
         </CardContent>
+         <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Total de {transactions.length} mouvements. Page {currentPage} sur {totalPages}.
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       <Dialog open={isTransactionModalOpen} onOpenChange={resetTransactionModal}>

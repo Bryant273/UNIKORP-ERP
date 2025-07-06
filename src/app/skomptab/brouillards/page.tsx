@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -180,6 +181,8 @@ const calculateTotalsForEcriture = (lignes: LigneEcriture[]) => {
   return { totalDebit, totalCredit, isBalanced };
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function BrouillardsPage() {
   const [ecritures, setEcritures] = useState<Ecriture[]>(initialEcritures);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -189,9 +192,13 @@ export default function BrouillardsPage() {
   const [ecritureToValidate, setEcritureToValidate] = useState<Ecriture | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isFromTemplate, setIsFromTemplate] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   
   const [formData, setFormData] = useState<Omit<Ecriture, 'id' | 'statut' | 'saisiePar'>>(defaultEcritureData);
+
+  const totalPages = Math.ceil(ecritures.length / ITEMS_PER_PAGE);
+  const currentEcritures = ecritures.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const { totalDebit, totalCredit, isBalanced } = useMemo(() => {
     if (!formData) return { totalDebit: 0, totalCredit: 0, isBalanced: true };
@@ -226,6 +233,9 @@ export default function BrouillardsPage() {
       setEcritures(ecritures.filter(e => e.id !== ecritureToDelete.id));
       setEcritureToDelete(null);
       toast({ title: 'Écriture supprimée', description: 'L\'écriture a été retirée du brouillard.' });
+      if (currentEcritures.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     }
   };
 
@@ -347,6 +357,12 @@ export default function BrouillardsPage() {
     setIsModalOpen(true);
   };
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
 
   return (
     <>
@@ -388,12 +404,12 @@ export default function BrouillardsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ecritures.map((ecriture) => {
+              {currentEcritures.map((ecriture) => {
                 const { isBalanced } = calculateTotalsForEcriture(ecriture.lignes);
                 return (
                   <TableRow key={ecriture.id} className="odd:bg-muted/50">
                     <TableCell>{new Date(ecriture.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
-                    <TableCell className="font-mono">{ecriture.numeroPiece}</TableCell>
+                    <TableCell>{ecriture.numeroPiece}</TableCell>
                     <TableCell className="font-medium">{ecriture.libelleOperation}</TableCell>
                     <TableCell>{ecriture.saisiePar}</TableCell>
                      <TableCell className="text-center">
@@ -420,6 +436,31 @@ export default function BrouillardsPage() {
              </div>
            )}
         </CardContent>
+         <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Total de {ecritures.length} écritures. Page {currentPage} sur {totalPages}.
+          </div>
+          { totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={resetModalState}>
@@ -513,12 +554,12 @@ export default function BrouillardsPage() {
                         <div className="flex justify-between items-start">
                            {!isViewMode && <Button type="button" variant="default" onClick={addLigne} disabled={isViewMode}><PlusCircle className="mr-2 h-4 w-4"/>Ajouter une ligne</Button>}
                             <div className="w-full max-w-sm space-y-2 text-sm ml-auto">
-                                <div className="flex justify-between"><span>Total Débit:</span><span className="font-mono font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
-                                <div className="flex justify-between"><span>Total Crédit:</span><span className="font-mono font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
+                                <div className="flex justify-between"><span>Total Débit:</span><span className="font-semibold">{totalDebit.toFixed(2)} FCFA</span></div>
+                                <div className="flex justify-between"><span>Total Crédit:</span><span className="font-semibold">{totalCredit.toFixed(2)} FCFA</span></div>
                                 <Separator/>
                                 <div className={`flex justify-between font-bold ${!isBalanced ? 'text-destructive' : 'text-green-600'}`}>
                                     <span>Solde:</span>
-                                    <span className="font-mono">{(totalDebit - totalCredit).toFixed(2)} FCFA</span>
+                                    <span>{(totalDebit - totalCredit).toFixed(2)} FCFA</span>
                                 </div>
                             </div>
                         </div>

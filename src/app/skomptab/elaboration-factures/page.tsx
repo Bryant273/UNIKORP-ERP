@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -7,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -191,6 +193,7 @@ const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id
     };
 };
 
+const ITEMS_PER_PAGE = 10;
 
 // --- INVOICE PREVIEW COMPONENT ---
 
@@ -199,7 +202,7 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
     const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
     return (
-        <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
+        <div id="invoice-preview" className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black text-sm border">
             <div className="flex justify-between items-start mb-8">
                 <div>
                      {invoice.companyLogoUrl ? <img src={invoice.companyLogoUrl} alt="Logo" className="h-12" data-ai-hint="company logo" /> : <Logo className="h-12 w-12" style={{ color: invoice.primaryColor }} />}
@@ -208,7 +211,7 @@ const LiveInvoicePreview = ({ invoice }: { invoice: Omit<InvoiceData, 'id'> }) =
                 </div>
                 <div className="text-right">
                     <h2 className="text-2xl font-bold uppercase" style={{ color: invoice.primaryColor }}>FACTURE</h2>
-                    <p className="font-mono text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
+                    <p className="text-xs">{invoice.invoiceNumber || 'FACT-XXXX-000'}</p>
                     <p className="text-sm text-muted-foreground mt-1">{invoice.invoiceTitle}</p>
                 </div>
             </div>
@@ -288,9 +291,19 @@ export default function ElaborationFacturesPage() {
   const [editingInvoice, setEditingInvoice] = useState<InvoiceData | null>(null);
   const [invoiceToDelete, setInvoiceToDelete] = useState<InvoiceData | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [formData, setFormData] = useState<Omit<InvoiceData, 'id'>>(getDefaultInvoiceData(initialTemplates[0]));
   const { toast } = useToast();
+
+  const totalPages = Math.ceil(invoices.length / ITEMS_PER_PAGE);
+  const currentInvoices = invoices.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleOpenCreateSheet = (template: InvoiceTemplate) => {
     setEditingInvoice(null);
@@ -357,6 +370,9 @@ export default function ElaborationFacturesPage() {
           setInvoices(invoices.filter(inv => inv.id !== invoiceToDelete.id));
           setInvoiceToDelete(null);
           toast({ title: "Facture supprimée." });
+          if(currentInvoices.length === 1 && currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+          }
       }
   };
 
@@ -486,14 +502,14 @@ export default function ElaborationFacturesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {invoices.map((invoice) => {
+                        {currentInvoices.map((invoice) => {
                             const { total } = calculateTotals(invoice);
                             return (
                                 <TableRow key={invoice.id} className="odd:bg-muted/50">
                                     <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
                                     <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
                                     <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
-                                    <TableCell className="font-sans text-center">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
+                                    <TableCell className="text-center">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>
@@ -508,6 +524,31 @@ export default function ElaborationFacturesPage() {
                     </TableBody>
                 </Table>
             </CardContent>
+            <CardFooter className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Total de {invoices.length} factures. Page {currentPage} sur {totalPages}.
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Précédent
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Suivant
+                  </Button>
+                </div>
+              )}
+            </CardFooter>
         </Card>
 
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -599,9 +640,9 @@ export default function ElaborationFacturesPage() {
         <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
             <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Utiliser un modèle de facture</DialogTitle>
+                  <DialogTitle>Choisir un modèle de facture</DialogTitle>
                   <DialogDescription>
-                    Sélectionnez un modèle pour pré-remplir la facture.
+                    Sélectionnez un modèle pour commencer.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -103,6 +104,8 @@ const initialRapprochements: Rapprochement[] = [
   { id: 3, date: '2024-05-06', periode: 'Avril 2024', journal: 'Société Générale', journalCode: 'SG', soldeInitial: 8750.20, lignesReleve: [], lignesJournal: [] },
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export default function RapprochementBancairePage() {
   const [rapprochements, setRapprochements] = useState<Rapprochement[]>(initialRapprochements);
   const [view, setView] = useState<'list' | 'reconciliation'>('list');
@@ -121,6 +124,16 @@ export default function RapprochementBancairePage() {
   });
   const [lignesReleve, setLignesReleve] = useState<LigneReleve[]>([]);
   const [lignesJournal, setLignesJournal] = useState<LigneJournal[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(rapprochements.length / ITEMS_PER_PAGE);
+  const currentRapprochements = rapprochements.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const selectedJournal = MOCK_JOURNALS_TRESORERIE.find(j => j.code === journalCode);
   const soldeInitialJournal = selectedJournal?.soldeInitial || 0;
@@ -214,6 +227,9 @@ export default function RapprochementBancairePage() {
         setRapprochements(prev => prev.filter(r => r.id !== rapprochementToDelete.id));
         setRapprochementToDelete(null);
         toast({ title: 'Rapprochement supprimé' });
+        if(currentRapprochements.length === 1 && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
     }
   };
 
@@ -493,8 +509,8 @@ export default function RapprochementBancairePage() {
                                         <TableCell className="text-center"><Checkbox checked={ligne.lettre} onCheckedChange={() => handleLettreChange('journal', ligne.id)} disabled={isViewMode}/></TableCell>
                                         <TableCell className="text-center">{format(new Date(ligne.date), 'dd/MM/yyyy')}</TableCell>
                                         <TableCell className="text-center">{ligne.libelle}</TableCell>
-                                        <TableCell className="text-center font-mono">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
-                                        <TableCell className="text-center font-mono">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
+                                        <TableCell className="text-center">{ligne.debit > 0 ? ligne.debit.toFixed(2) : ''}</TableCell>
+                                        <TableCell className="text-center">{ligne.credit > 0 ? ligne.credit.toFixed(2) : ''}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -513,20 +529,20 @@ export default function RapprochementBancairePage() {
                     <dl className="space-y-1 text-sm">
                         <div className="flex justify-between">
                             <dt>Solde initial (reporté)</dt>
-                            <dd className="font-mono">{soldeInitialJournal.toFixed(2)}</dd>
+                            <dd>{soldeInitialJournal.toFixed(2)}</dd>
                         </div>
                          <div className="flex justify-between text-green-600">
                             <dt>Total crédits lettrés</dt>
-                            <dd className="font-mono">{lignesReleve.filter(l => l.lettre).reduce((acc, l) => acc + l.credit, 0).toFixed(2)}</dd>
+                            <dd>{lignesReleve.filter(l => l.lettre).reduce((acc, l) => acc + l.credit, 0).toFixed(2)}</dd>
                         </div>
                         <div className="flex justify-between text-red-600">
                             <dt>Total débits lettrés</dt>
-                            <dd className="font-mono">-{lignesReleve.filter(l => l.lettre).reduce((acc, l) => acc + l.debit, 0).toFixed(2)}</dd>
+                            <dd>-{lignesReleve.filter(l => l.lettre).reduce((acc, l) => acc + l.debit, 0).toFixed(2)}</dd>
                         </div>
                         <Separator/>
                         <div className="flex justify-between font-bold">
                             <dt>Nouveau Solde Relevé</dt>
-                            <dd className="font-mono">{soldeFinalReleve.toFixed(2)}</dd>
+                            <dd>{soldeFinalReleve.toFixed(2)}</dd>
                         </div>
                     </dl>
                 </div>
@@ -536,26 +552,26 @@ export default function RapprochementBancairePage() {
                      <dl className="space-y-1 text-sm">
                         <div className="flex justify-between">
                             <dt>Solde initial</dt>
-                            <dd className="font-mono">{soldeInitialJournal.toFixed(2)}</dd>
+                            <dd>{soldeInitialJournal.toFixed(2)}</dd>
                         </div>
                          <div className="flex justify-between text-green-600">
                             <dt>Total crédits lettrés</dt>
-                            <dd className="font-mono">{lignesJournal.filter(l => l.lettre).reduce((acc, l) => acc + l.credit, 0).toFixed(2)}</dd>
+                            <dd>{lignesJournal.filter(l => l.lettre).reduce((acc, l) => acc + l.credit, 0).toFixed(2)}</dd>
                         </div>
                         <div className="flex justify-between text-red-600">
                             <dt>Total débits lettrés</dt>
-                            <dd className="font-mono">-{lignesJournal.filter(l => l.lettre).reduce((acc, l) => acc + l.debit, 0).toFixed(2)}</dd>
+                            <dd>-{lignesJournal.filter(l => l.lettre).reduce((acc, l) => acc + l.debit, 0).toFixed(2)}</dd>
                         </div>
                         <Separator/>
                         <div className="flex justify-between font-bold">
                             <dt>Nouveau Solde Comptable</dt>
-                            <dd className="font-mono">{soldeFinalJournal.toFixed(2)}</dd>
+                            <dd>{soldeFinalJournal.toFixed(2)}</dd>
                         </div>
                     </dl>
                 </div>
                  <div className="space-y-2 rounded-lg border p-4 flex flex-col justify-center items-center gap-2 bg-muted/50">
                     <h3 className="font-semibold">Écart de rapprochement</h3>
-                    <p className={`text-3xl font-bold font-mono ${ecart !== 0 ? 'text-destructive' : 'text-green-600'}`}>{ecart.toFixed(2)}</p>
+                    <p className={`text-3xl font-bold ${ecart !== 0 ? 'text-destructive' : 'text-green-600'}`}>{ecart.toFixed(2)}</p>
                     {ecart === 0 && <Badge>Rapprochement équilibré</Badge>}
                 </div>
             </CardContent>
@@ -598,7 +614,7 @@ export default function RapprochementBancairePage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rapprochements.map((r) => (
+            {currentRapprochements.map((r) => (
               <TableRow key={r.id} className="odd:bg-muted/50">
                 <TableCell className="text-center">{format(new Date(r.date), 'dd/MM/yyyy')}</TableCell>
                 <TableCell className="font-medium text-center">{r.periode}</TableCell>
@@ -628,6 +644,31 @@ export default function RapprochementBancairePage() {
           </TableBody>
         </Table>
       </CardContent>
+      <CardFooter className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+            Total de {rapprochements.length} rapprochements. Page {currentPage} sur {totalPages}.
+        </div>
+        {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+            >
+                Précédent
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+            >
+                Suivant
+            </Button>
+            </div>
+        )}
+      </CardFooter>
     </Card>
     <AlertDialog open={!!rapprochementToDelete} onOpenChange={() => setRapprochementToDelete(null)}>
         <AlertDialogContent>

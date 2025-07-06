@@ -333,7 +333,7 @@ export default function SaisieComptablePage() {
                 <TableRow key={ecriture.id} className="odd:bg-muted/50">
                   <TableCell className="text-muted-foreground text-center">{startIndex + index + 1}</TableCell>
                   <TableCell>{new Date(ecriture.dateSaisie).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell className="font-mono">{ecriture.numeroCompta}</TableCell>
+                  <TableCell>{ecriture.numeroCompta}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{ecriture.journal}</Badge>
                   </TableCell>
@@ -367,7 +367,7 @@ export default function SaisieComptablePage() {
         </CardContent>
         <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Total de {ecritures.length} écritures comptables.
+            Total de {ecritures.length} écritures comptables. Page {currentPage} sur {totalPages}.
           </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
@@ -379,9 +379,6 @@ export default function SaisieComptablePage() {
               >
                 Précédent
               </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {currentPage} sur {totalPages}
-              </span>
               <Button
                 variant="outline"
                 size="sm"

@@ -73,6 +73,8 @@ const defaultFormData: Omit<DigitizedInvoice, 'id' | 'type'> = {
   fileUrl: '',
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function DigitalisationFacturesPage() {
   const [invoices, setInvoices] = useState<DigitizedInvoice[]>(initialInvoices);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,7 +89,17 @@ export default function DigitalisationFacturesPage() {
   const [processingProgress, setProcessingProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+
+  const totalPages = Math.ceil(invoices.length / ITEMS_PER_PAGE);
+  const currentInvoices = invoices.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleFileChange = (file: File | null) => {
     if (file) {
@@ -209,6 +221,9 @@ export default function DigitalisationFacturesPage() {
       setInvoices(invoices.filter((inv) => inv.id !== invoiceToDelete.id));
       setInvoiceToDelete(null);
       toast({ title: 'Facture supprimée.' });
+      if (currentInvoices.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     }
   };
   
@@ -274,15 +289,15 @@ export default function DigitalisationFacturesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {currentInvoices.map((invoice) => (
                 <TableRow key={invoice.id} className="odd:bg-muted/50">
                   <TableCell className="text-center">{new Date(invoice.dateOperation).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell className="font-mono text-center">{invoice.numeroPiece}</TableCell>
+                  <TableCell className="text-center">{invoice.numeroPiece}</TableCell>
                   <TableCell className="font-medium text-center">{invoice.tiers}</TableCell>
                   <TableCell className="flex justify-center">
                     <Badge variant={invoice.type === 'Vente' ? 'default' : 'secondary'}>{invoice.type}</Badge>
                   </TableCell>
-                  <TableCell className="text-center font-mono">{invoice.montant.toFixed(2)} FCFA</TableCell>
+                  <TableCell className="text-center">{invoice.montant.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => setViewingInvoice(invoice)}>
@@ -304,6 +319,31 @@ export default function DigitalisationFacturesPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Total de {invoices.length} factures. Page {currentPage} sur {totalPages}.
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       {/* Main modal for upload and edit */}
@@ -417,7 +457,7 @@ export default function DigitalisationFacturesPage() {
                     </div>
                     <div className="flex flex-col space-y-1.5">
                     <Label className="text-sm text-muted-foreground">Montant Total</Label>
-                    <p className="font-bold text-lg">{viewingInvoice.montant.toFixed(2)} FCFA</p>
+                    <p className="font-bold text-lg">{viewingInvoice.montant.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</p>
                     </div>
                 </div>
                 <div className="space-y-2">
