@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Roboto, Noto_Sans } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppSidebar } from '@/components/app-sidebar';

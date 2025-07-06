@@ -12,7 +12,7 @@ export default {
       fontFamily: {
         body: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
         sans: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
-        headline: ['var(--font-body)', 'sans-serif'],
+        headline: ['var(--font-body)', 'Roboto', 'Segoe UI', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
