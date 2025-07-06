@@ -83,10 +83,12 @@ function EmployesMainContent() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+    
     const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
+    const [contractForEmployee, setContractForEmployee] = useState<Employee | null>(null);
+    const [dossierForEmployee, setDossierForEmployee] = useState<Employee | null>(null);
+
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-    const [isContractModalOpen, setIsContractModalOpen] = useState(false);
-    const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState({
         matricule: true, departement: true, fonction: true, contractType: true, dateEmbauche: true, statut: true,
     });
@@ -115,7 +117,6 @@ function EmployesMainContent() {
 
     const openCreateModal = () => { setEditingEmployee(null); setIsModalOpen(true); };
     const openEditModal = (employee: Employee) => { setEditingEmployee(employee); setIsModalOpen(true); };
-    const openViewModal = (employee: Employee) => { setViewingEmployee(employee); };
 
     const handleSave = (formData: Employee) => {
         if (editingEmployee) {
@@ -252,9 +253,9 @@ function EmployesMainContent() {
                                         {visibleColumns.statut && <TableCell className="text-center"><Badge className={getStatusBadgeStyles(e.statut)}><span className={`h-2 w-2 rounded-full mr-2 ${getStatusIndicatorStyles(e.statut)}`}/>{e.statut}</Badge></TableCell>}
                                         <TableCell className="text-center">
                                             <div className="flex items-center justify-center gap-1">
-                                                <Button variant="ghost" size="icon" onClick={() => { setViewingEmployee(e); setIsContractModalOpen(true); }}><FileSignature className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => { setViewingEmployee(e); setIsDossierModalOpen(true); }}><FolderKanban className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => openViewModal(e)}><Eye className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => setContractForEmployee(e)}><FileSignature className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => setDossierForEmployee(e)}><FolderKanban className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => setViewingEmployee(e)}><Eye className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" onClick={() => openEditModal(e)}><Pencil className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setEmployeeToDelete(e)}><Trash2 className="h-4 w-4" /></Button>
                                             </div>
@@ -280,8 +281,8 @@ function EmployesMainContent() {
 
             <EmployeeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} employeeToEdit={editingEmployee} />
             <EmployeeProfileModal isOpen={!!viewingEmployee} onClose={() => setViewingEmployee(null)} employee={viewingEmployee} />
-            <ContractModal isOpen={isContractModalOpen} onClose={() => setIsContractModalOpen(false)} employee={viewingEmployee} />
-            <DossierModal isOpen={isDossierModalOpen} onClose={() => setIsDossierModalOpen(false)} employee={viewingEmployee} />
+            <ContractModal isOpen={!!contractForEmployee} onClose={() => setContractForEmployee(null)} employee={contractForEmployee} />
+            <DossierModal isOpen={!!dossierForEmployee} onClose={() => setDossierForEmployee(null)} employee={dossierForEmployee} />
 
 
             <AlertDialog open={!!employeeToDelete} onOpenChange={() => setEmployeeToDelete(null)}>
@@ -846,3 +847,5 @@ export default function EmployesPage() {
         <EmployesMainContent />
     )
 }
+
+    
