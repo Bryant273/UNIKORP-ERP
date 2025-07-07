@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Switch } from '@/components/ui/switch';
 
 // --- TYPES & MOCK DATA ---
 type ContractType = 'CDI' | 'CDD' | 'Stage' | 'Apprentissage';
@@ -97,9 +98,9 @@ type ContractVariables = {
 };
 
 const initialContracts: ContractVariables[] = [
-    { id: 'c-001', employeeId: 'emp-001', employeeName: 'Jean Dupont', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2020-03-15', FONCTION: 'Développeur Senior', SALAIRE_BASE: 350000, SI_CDI: true, SI_CDD: false, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Dupont', EMPLOYE_PRENOM: 'Jean', EMPLOYE_DATE_NAISSANCE: '1985-05-15', EMPLOYE_LIEU_NAISSANCE: 'Abidjan', EMPLOYE_ADRESSE: 'Cocody', EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: true, DUREE_ESSAI: '3 mois', QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.2', COEFFICIENT: '130', SUPERIEUR_HIERARCHIQUE: 'Directeur Technique', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: 'Respecter la charte informatique.', SI_NON_CONCURRENCE: false, DUREE_PREAVIS: '3 mois', LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '15/03/2020', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'Jean Dupont', DATE_REMISE: '15/03/2020', DATE_DPAE: '14/03/2020', DATE_VISITE_MEDICALE: '18/03/2020' },
-    { id: 'c-002', employeeId: 'emp-002', employeeName: 'Sophie Martin', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2021-09-01', FONCTION: 'Chef de projet Marketing', SALAIRE_BASE: 320000, SI_CDI: true, SI_CDD: false, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Martin', EMPLOYE_PRENOM: 'Sophie', EMPLOYE_DATE_NAISSANCE: '1990-11-20', EMPLOYE_LIEU_NAISSANCE: 'Bouaké', EMPLOYE_ADRESSE: 'Marcory', EMPLOYE_NUM_SECU: '2 90 11 98 765 432 10', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.1', COEFFICIENT: '115', SUPERIEUR_HIERARCHIQUE: 'Directeur Marketing', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: true, ZONE_DEPLACEMENT: 'territoire national', HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: '', SI_NON_CONCURRENCE: false, DUREE_PREAVIS: '3 mois', LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '01/09/2021', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'Sophie Martin', DATE_REMISE: '01/09/2021', DATE_DPAE: '31/08/2021', DATE_VISITE_MEDICALE: '03/09/2021' },
-    { id: 'c-003', employeeId: 'emp-003', employeeName: 'David Garcia', status: 'Terminé', TYPE_CONTRAT: 'CDD', DATE_DEBUT: '2024-01-20', DATE_FIN: '2024-07-19', FONCTION: 'Comptable', SALAIRE_BASE: 280000, SI_CDI: false, SI_CDD: true, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Garcia', EMPLOYE_PRENOM: 'David', EMPLOYE_DATE_NAISSANCE: '1992-02-25', EMPLOYE_LIEU_NAISSANCE: 'Yamoussoukro', EMPLOYE_ADRESSE: 'Plateau', EMPLOYE_NUM_SECU: '1 92 02 97 654 321 09', EMPLOYE_NATIONALITE: 'Française', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Technicien', CLASSIFICATION: '1.2', COEFFICIENT: '95', SUPERIEUR_HIERARCHIQUE: 'Directeur Financier', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: '', SI_NON_CONCURRENCE: false, LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '20/01/2024', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'David Garcia', DATE_REMISE: '20/01/2024', DATE_DPAE: '19/01/2024', DATE_VISITE_MEDICALE: '22/01/2024' },
+    { id: 'c-001', employeeId: 'emp-001', employeeName: 'Jean Dupont', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2020-03-15', FONCTION: 'Développeur Senior', SALAIRE_BASE: 350000, SI_CDI: true, SI_CDD: false, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Dupont', EMPLOYE_PRENOM: 'Jean', EMPLOYE_DATE_NAISSANCE: '1985-05-15', EMPLOYE_LIEU_NAISSANCE: 'Abidjan', EMPLOYE_ADRESSE: 'Cocody', EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: true, DUREE_ESSAI: '3 mois', DUREE_RENOUVELLEMENT_ESSAI: '3 mois', QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.2', COEFFICIENT: '130', SUPERIEUR_HIERARCHIQUE: 'Directeur Technique', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: 'Respecter la charte informatique.', SI_NON_CONCURRENCE: false, DUREE_PREAVIS: '3 mois', LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '2020-03-15', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'Jean Dupont', DATE_REMISE: '2020-03-15', DATE_DPAE: '2020-03-14', DATE_VISITE_MEDICALE: '2020-03-18' },
+    { id: 'c-002', employeeId: 'emp-002', employeeName: 'Sophie Martin', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2021-09-01', FONCTION: 'Chef de projet Marketing', SALAIRE_BASE: 320000, SI_CDI: true, SI_CDD: false, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Martin', EMPLOYE_PRENOM: 'Sophie', EMPLOYE_DATE_NAISSANCE: '1990-11-20', EMPLOYE_LIEU_NAISSANCE: 'Bouaké', EMPLOYE_ADRESSE: 'Marcory', EMPLOYE_NUM_SECU: '2 90 11 98 765 432 10', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.1', COEFFICIENT: '115', SUPERIEUR_HIERARCHIQUE: 'Directeur Marketing', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: true, ZONE_DEPLACEMENT: 'territoire national', HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: '', SI_NON_CONCURRENCE: false, DUREE_PREAVIS: '3 mois', LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '2021-09-01', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'Sophie Martin', DATE_REMISE: '2021-09-01', DATE_DPAE: '2021-08-31', DATE_VISITE_MEDICALE: '2021-09-03' },
+    { id: 'c-003', employeeId: 'emp-003', employeeName: 'David Garcia', status: 'Terminé', TYPE_CONTRAT: 'CDD', DATE_DEBUT: '2024-01-20', DATE_FIN: '2024-07-19', FONCTION: 'Comptable', SALAIRE_BASE: 280000, SI_CDI: false, SI_CDD: true, MOTIF_CDD: 'Remplacement de personnel', ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Garcia', EMPLOYE_PRENOM: 'David', EMPLOYE_DATE_NAISSANCE: '1992-02-25', EMPLOYE_LIEU_NAISSANCE: 'Yamoussoukro', EMPLOYE_ADRESSE: 'Plateau', EMPLOYE_NUM_SECU: '1 92 02 97 654 321 09', EMPLOYE_NATIONALITE: 'Française', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Technicien', CLASSIFICATION: '1.2', COEFFICIENT: '95', SUPERIEUR_HIERARCHIQUE: 'Directeur Financier', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: '', SI_NON_CONCURRENCE: false, LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '2024-01-20', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'David Garcia', DATE_REMISE: '2024-01-20', DATE_DPAE: '2024-01-19', DATE_VISITE_MEDICALE: '2024-01-22' },
 ];
 
 function ContratsContent() {
@@ -161,7 +162,7 @@ function ContratsContent() {
                         <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead>Type</TableHead><TableHead>Début</TableHead><TableHead>Fin</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[200px]">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {contracts.map(c => (
-                                <TableRow key={c.id}>
+                                <TableRow key={c.id} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{c.employeeName}</TableCell>
                                     <TableCell>{c.TYPE_CONTRAT}</TableCell>
                                     <TableCell>{format(new Date(c.DATE_DEBUT), 'dd/MM/yyyy')}</TableCell>
@@ -290,41 +291,127 @@ function ContractModal({ isOpen, onClose, onSave, config }: { isOpen: boolean, o
 
 function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onClose: () => void, contract: ContractVariables }) {
     const { toast } = useToast();
+    
+    if (!contract) return null;
 
     const handlePrint = () => {
         const doc = new jsPDF();
-        let y = 50; 
+        let y = 15;
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 15;
         const pageContentWidth = doc.internal.pageSize.getWidth() - margin * 2;
     
+        const companyName = "UNIKORP";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SOCIX";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const printDateTime = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
+
+        const drawHeader = () => {
+            doc.setFontSize(9); doc.setTextColor(150);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, margin, 15);
+            doc.setDrawColor(220); doc.line(margin, 18, doc.internal.pageSize.width - margin, 18);
+            doc.addImage(logoDataUri, 'PNG', margin, 22, 12, 12);
+            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+            doc.text(companyName, margin + 15, 28);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+            const rightX = doc.internal.pageSize.width - margin;
+            doc.text(`Document : Contrat de travail`, rightX, 25, { align: 'right' });
+            doc.text(`Employé : ${contract.EMPLOYE_PRENOM} ${contract.EMPLOYE_NOM}`, rightX, 30, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+            y = 50;
+        }
+
         const addText = (text: string, options: any = {}) => {
             const splitText = doc.splitTextToSize(text, pageContentWidth);
             const textHeight = doc.getTextDimensions(splitText).h;
-            if (y + textHeight > pageHeight - margin) { doc.addPage(); drawHeader(); }
+            if (y + textHeight > pageHeight - margin) {
+                doc.addPage();
+                drawHeader();
+            }
             doc.text(splitText, margin, y, options);
-            y += textHeight + 4;
+            y += doc.getTextDimensions(splitText).h + 4;
         };
 
-        const addTitle = (text: string) => { 
-            doc.setFontSize(14).setFont('helvetica', 'bold'); 
-            addText(text); 
-            doc.setFontSize(10).setFont('helvetica', 'normal'); 
+        const addTitle = (text: string) => {
+            doc.setFontSize(12).setFont('helvetica', 'bold');
+            y += 4;
+            addText(text);
+            doc.setFontSize(10).setFont('helvetica', 'normal');
         };
-        
-        const drawHeader = () => {
-            doc.setFontSize(18).text('CONTRAT DE TRAVAIL', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); 
-            y += 10;
-        }
 
         drawHeader();
         
-        addTitle('Entre les soussignés :');
-        addText(`L'EMPLOYEUR :\nDénomination sociale : ${contract.ENTREPRISE_NOM}\nAdresse : ${contract.ENTREPRISE_ADRESSE}\nReprésenté par : ${contract.REPRESENTANT_NOM}, ${contract.REPRESENTANT_FONCTION}`);
-        addText(`L'EMPLOYÉ :\nNom : ${contract.EMPLOYE_NOM}\nPrénom : ${contract.EMPLOYE_PRENOM}\nDate de naissance : ${format(new Date(contract.DATE_DEBUT), 'dd/MM/yyyy')}\nAdresse : ${contract.EMPLOYE_ADRESSE}`);
+        doc.setFont('times', 'normal');
+        doc.setFontSize(18);
+        doc.text('CONTRAT DE TRAVAIL', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+        y += 10;
+        
+        doc.setFontSize(11).setFont('helvetica', 'bold');
+        addText('Entre les soussignés :');
+        doc.setFontSize(10).setFont('helvetica', 'normal');
+        
+        addText(`L'EMPLOYEUR :\n- Dénomination sociale : ${contract.ENTREPRISE_NOM}\n- Forme Juridique : ${contract.ENTREPRISE_FORME}\n- Adresse : ${contract.ENTREPRISE_ADRESSE}\n- N° SIRET : ${contract.ENTREPRISE_SIRET}\n- Code APE : ${contract.ENTREPRISE_APE}\n- Représenté par : ${contract.REPRESENTANT_NOM}, en sa qualité de ${contract.REPRESENTANT_FONCTION}`);
+        
+        addText(`L'EMPLOYÉ :\n- Nom : ${contract.EMPLOYE_NOM}\n- Prénom : ${contract.EMPLOYE_PRENOM}\n- Date de naissance : ${contract.EMPLOYE_DATE_NAISSANCE}\n- Lieu de naissance : ${contract.EMPLOYE_LIEU_NAISSANCE}\n- Adresse : ${contract.EMPLOYE_ADRESSE}\n- Numéro de sécurité sociale : ${contract.EMPLOYE_NUM_SECU}\n- Nationalité : ${contract.EMPLOYE_NATIONALITE}`);
+        
+        y += 5;
+        doc.setDrawColor(200);
+        doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+        y += 10;
         
         addTitle('ARTICLE 1 - NATURE DU CONTRAT');
-        addText(`Il est conclu un contrat à durée ${contract.TYPE_CONTRAT}.`);
+        addText(`Il est conclu entre les parties un contrat de travail à durée ${contract.TYPE_CONTRAT} sous le régime de la convention collective ${contract.CONVENTION_COLLECTIVE}.`);
+        if (contract.SI_CDD) addText(`Durée du contrat : Du ${contract.DATE_DEBUT} au ${contract.DATE_FIN}.\nMotif de recours : ${contract.MOTIF_CDD}`);
+        if (contract.SI_PERIODE_ESSAI) addText(`Période d'essai : ${contract.DUREE_ESSAI}, renouvelable une fois pour une durée de ${contract.DUREE_RENOUVELLEMENT_ESSAI}.`);
+        
+        addTitle('ARTICLE 2 - FONCTION ET QUALIFICATION');
+        addText(`Le salarié est engagé en qualité de ${contract.FONCTION} - ${contract.QUALIFICATION_PROFESSIONNELLE}.`);
+        addText(`Classification : ${contract.CLASSIFICATION} - Coefficient ${contract.COEFFICIENT}`);
+        addText(`Rattachement hiérarchique : ${contract.SUPERIEUR_HIERARCHIQUE}`);
+
+        addTitle('ARTICLE 3 - LIEU DE TRAVAIL');
+        addText(`Le salarié exercera ses fonctions à l'adresse suivante : ${contract.LIEU_TRAVAIL}.`);
+        if (contract.SI_DEPLACEMENT) addText(`Des déplacements pourront être demandés dans le cadre de l'activité professionnelle ${contract.ZONE_DEPLACEMENT}.`);
+
+        addTitle('ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL');
+        addText(`Horaires de travail : ${contract.HORAIRES_TRAVAIL}\nDurée hebdomadaire : ${contract.DUREE_HEBDOMADAIRE} heures\nRepos hebdomadaire : ${contract.JOURS_REPOS}`);
+        if(contract.SI_TEMPS_PARTIEL) addText(`Travail à temps partiel : ${contract.NOMBRE_HEURES_PARTIEL} heures par semaine.\nRépartition : ${contract.REPARTITION_HORAIRES}`);
+
+        addTitle('ARTICLE 5 - RÉMUNÉRATION');
+        addText(`Salaire de base : ${contract.SALAIRE_BASE.toLocaleString('fr-FR')} € ${contract.PERIODICITE_SALAIRE}.`);
+        if(contract.SI_PRIMES) addText(`Primes et avantages : ${contract.LISTE_PRIMES}`);
+        if(contract.SI_AVANTAGES_NATURE) addText(`Avantages en nature : ${contract.LISTE_AVANTAGES}`);
+        addText(`Le salaire sera versé le ${contract.DATE_VERSEMENT} par ${contract.MODE_PAIEMENT}.`);
+
+        addTitle('ARTICLE 6 - CONGÉS PAYÉS');
+        addText(`Le salarié bénéficie de ${contract.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an. La période de prise des congés est du ${contract.PERIODE_CONGES}.`);
+        
+        addTitle('ARTICLE 7 - FORMATION PROFESSIONNELLE');
+        addText(`Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.`);
+        if(contract.SI_FORMATION_INITIALE) addText(`Une formation d'intégration de ${contract.DUREE_FORMATION} sera dispensée.`);
+        
+        addTitle('ARTICLE 8 - OBLIGATIONS DU SALARIÉ');
+        addText(`Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté, et à respecter les consignes de sécurité. ${contract.OBLIGATIONS_SUPPLEMENTAIRES}`);
+
+        addTitle('ARTICLE 9 - CONFIDENTIALITÉ');
+        addText(`Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.`);
+
+        addTitle('ARTICLE 10 - CLAUSE DE NON-CONCURRENCE');
+        addText(contract.SI_NON_CONCURRENCE ? `Le salarié s'interdit, pendant une durée de ${contract.DUREE_NON_CONCURRENCE} suivant la rupture du contrat, d'exercer une activité concurrente dans les secteurs suivants : ${contract.SECTEURS_CONCERNES}.` : "Non applicable.");
+
+        addTitle('ARTICLE 11 - RUPTURE DU CONTRAT');
+        if(contract.SI_CDI) addText(`Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis et d'indemnités. Préavis : ${contract.DUREE_PREAVIS}.`);
+        if(contract.SI_CDD) addText(`Le contrat prendra fin de plein droit à la date du ${contract.DATE_FIN}, sauf renouvellement ou transformation en CDI.`);
+
+        addTitle('ARTICLE 12 - DISPOSITIONS DIVERSES');
+        addText(`Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.`);
+
+        y += 15;
+        addText(`Fait à ${contract.LIEU_SIGNATURE}, le ${contract.DATE_SIGNATURE}, en deux exemplaires.`);
+        y += 15;
+        doc.text("L'EMPLOYEUR", margin, y);
+        doc.text("L'EMPLOYÉ", doc.internal.pageSize.getWidth() / 2 + margin, y);
         
         doc.save(`contrat_${contract.employeeName.replace(/\s/g, '_')}.pdf`);
         toast({ title: 'PDF du contrat généré.' });
@@ -338,7 +425,7 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
                     <DialogDescription>Contrat pour {contract.employeeName}.</DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="flex-1 p-6 border rounded-lg bg-muted/50 font-serif text-sm">
-                    <div className="bg-white p-8 max-w-3xl mx-auto shadow-lg">
+                    <div className="bg-white p-8 max-w-3xl mx-auto shadow-lg text-gray-800">
                         <h1 className="text-2xl font-bold text-center mb-6">CONTRAT DE TRAVAIL</h1>
                         <h2 className="font-bold mb-2">Entre les soussignés :</h2>
                         <div className="mb-4 pl-4">
@@ -351,13 +438,37 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
                             <h3 className="font-semibold">L'EMPLOYÉ :</h3>
                             <p>Nom : {contract.EMPLOYE_NOM}</p>
                             <p>Prénom : {contract.EMPLOYE_PRENOM}</p>
-                            <p>Date de naissance : {format(new Date(contract.DATE_DEBUT), 'dd/MM/yyyy')}</p>
+                            <p>Date de naissance : {contract.DATE_DEBUT}</p>
                             <p>Adresse : {contract.EMPLOYE_ADRESSE}</p>
                         </div>
                          <Separator className="my-6" />
                         <div className="space-y-4">
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 1 - NATURE DU CONTRAT</h3><p>Il est conclu entre les parties un contrat de travail à durée {contract.TYPE_CONTRAT}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 2 - FONCTION</h3><p>Le salarié est engagé en qualité de {contract.FONCTION}.</p></div>
+                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {contract.LIEU_TRAVAIL}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL</h3><p>La durée hebdomadaire du travail est de {contract.DUREE_HEBDOMADAIRE} heures.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {contract.SALAIRE_BASE.toLocaleString('fr-FR')} € {contract.PERIODICITE_SALAIRE}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 6 - CONGÉS PAYÉS</h3><p>Le salarié bénéficie de {contract.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 7 - FORMATION PROFESSIONNELLE</h3><p>Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 8 - OBLIGATIONS DU SALARIÉ</h3><p>Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté et à ne pas divulguer d'informations confidentielles.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 9 - CONFIDENTIALITÉ</h3><p>Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 10 - CLAUSE DE NON-CONCURRENCE</h3><p>Non applicable.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 11 - RUPTURE DU CONTRAT</h3><p>Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis et d'indemnités.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 12 - DISPOSITIONS DIVERSES</h3><p>Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.</p></div>
+                        </div>
+                         <Separator className="my-6" />
+                         <div className="mt-12 text-center">
+                            <p>Fait à {contract.LIEU_SIGNATURE}, le {contract.DATE_SIGNATURE}, en deux exemplaires.</p>
+                            <div className="flex justify-around mt-12 pt-8">
+                                <div><p className="border-t pt-2">L'EMPLOYEUR</p><p>({contract.SIGNATURE_EMPLOYEUR})</p></div>
+                                <div><p className="border-t pt-2">L'EMPLOYÉ</p><p>({contract.SIGNATURE_EMPLOYE})</p></div>
+                            </div>
+                        </div>
+                        <Separator className="my-6" />
+                        <div className="text-xs text-muted-foreground space-y-1">
+                            <p><em>Exemplaire remis au salarié le : {contract.DATE_REMISE}</em></p>
+                            <p><em>Déclaration préalable à l'embauche effectuée le : {contract.DATE_DPAE}</em></p>
+                            <p><em>Visite médicale d'embauche : {contract.DATE_VISITE_MEDICALE}</em></p>
                         </div>
                     </div>
                 </ScrollArea>
@@ -373,5 +484,3 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
 export default function ContratsPage() {
     return <ContratsContent />;
 }
-
-    
