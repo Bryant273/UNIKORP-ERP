@@ -249,16 +249,8 @@ function SidebarNavContent() {
     localStorage.setItem('sidebarOpenSections', JSON.stringify(value));
   };
 
-  if (!isMounted) {
-    return (
-      <div className="space-y-4 px-4">
-        {items.map((item) => (
-          <Skeleton key={item.title} className="h-10 w-full" />
-        ))}
-      </div>
-    );
-  }
-
+  // The skeleton is already handled in the parent AppSidebar component.
+  // We can render directly here.
   return (
     <Accordion
       type="multiple"
@@ -297,6 +289,11 @@ function SidebarNavContent() {
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const specialPages = ['/chat', '/notifications', '/settings', '/help'];
   if (pathname === '/' || specialPages.some(p => pathname.startsWith(p))) {
@@ -304,6 +301,23 @@ export function AppSidebar() {
   }
 
   const { dashboardLink, placeholder } = getNavForPath(pathname);
+
+  if (!isMounted) {
+    return (
+        <aside className="hidden w-72 flex-col border-r bg-card font-roboto sm:flex">
+             <div className="flex-1 overflow-y-auto">
+                <div className="p-4">
+                    <Skeleton className="h-9 w-full" />
+                </div>
+                <div className="space-y-4 px-4">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-full" />
+                    ))}
+                </div>
+            </div>
+        </aside>
+    );
+  }
 
   return (
     <aside className="hidden w-72 flex-col border-r bg-card font-roboto sm:flex">
