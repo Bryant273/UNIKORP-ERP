@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Fingerprint, Check, X, Clock, UserCheck, UserX, UserClock, LogOut } from 'lucide-react';
+import { Download, Fingerprint, Check, X, Clock, UserCheck, UserX, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -69,7 +69,7 @@ export default function PointagePage() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
                             <Card><CardHeader className="p-4 flex flex-row items-center justify-between"><CardTitle className="text-sm font-medium">Présents</CardTitle><UserCheck className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent className="p-4 pt-0"><div className="text-2xl font-bold">{kpis.present}</div></CardContent></Card>
                             <Card><CardHeader className="p-4 flex flex-row items-center justify-between"><CardTitle className="text-sm font-medium">Absents</CardTitle><UserX className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent className="p-4 pt-0"><div className="text-2xl font-bold">{kpis.absent}</div></CardContent></Card>
-                            <Card><CardHeader className="p-4 flex flex-row items-center justify-between"><CardTitle className="text-sm font-medium">Retards</CardTitle><UserClock className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent className="p-4 pt-0"><div className="text-2xl font-bold">{kpis.late}</div></CardContent></Card>
+                            <Card><CardHeader className="p-4 flex flex-row items-center justify-between"><CardTitle className="text-sm font-medium">Retards</CardTitle><Clock className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent className="p-4 pt-0"><div className="text-2xl font-bold">{kpis.late}</div></CardContent></Card>
                             <Card><CardHeader className="p-4 flex flex-row items-center justify-between"><CardTitle className="text-sm font-medium">Départs Anticipés</CardTitle><LogOut className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent className="p-4 pt-0"><div className="text-2xl font-bold">{kpis.early}</div></CardContent></Card>
                         </div>
                         <Table>
