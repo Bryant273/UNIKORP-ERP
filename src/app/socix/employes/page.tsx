@@ -317,7 +317,7 @@ function EmployeeModal({ isOpen, onClose, onSave, employeeToEdit }: { isOpen: bo
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-2xl"><form onSubmit={handleSubmit}><DialogHeader><DialogTitle>{employeeToEdit ? 'Modifier' : 'Ajouter'} un employé</DialogTitle></DialogHeader><div className="grid gap-4 py-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="nom">Nom</Label><Input id="nom" value={formData.nom || ''} onChange={handleChange} required/></div><div className="space-y-2"><Label htmlFor="prenom">Prénoms</Label><Input id="prenom" value={formData.prenom || ''} onChange={handleChange} required/></div><div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={formData.email || ''} onChange={handleChange} required/></div><div className="space-y-2"><Label htmlFor="telephone">Téléphone</Label><Input id="telephone" value={formData.telephone || ''} onChange={handleChange} /></div><div className="space-y-2"><Label htmlFor="poste">Poste</Label><Input id="poste" value={formData.poste || ''} onChange={handleChange} /></div><div className="space-y-2"><Label htmlFor="departement">Département</Label><Select name="departement" value={formData.departement} onValueChange={v => handleSelectChange('departement', v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="IT">IT</SelectItem><SelectItem value="MARKOS">Marketing</SelectItem><SelectItem value="SKOMPTAB">Comptabilité</SelectItem><SelectItem value="SOCIX">RH</SelectItem><SelectItem value="LOGSON">Logistique</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label htmlFor="dateEmbauche">Date d'embauche</Label><Input id="dateEmbauche" type="date" value={formData.dateEmbauche || ''} onChange={handleChange}/></div><div className="space-y-2"><Label htmlFor="contractType">Type de contrat</Label><Select name="contractType" value={formData.contractType} onValueChange={v => handleSelectChange('contractType', v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="CDI">CDI</SelectItem><SelectItem value="CDD">CDD</SelectItem><SelectItem value="Stage">Stage</SelectItem><SelectItem value="Apprentissage">Apprentissage</SelectItem></SelectContent></Select></div></div><DialogFooter><Button type="button" variant="outline" onClick={onClose}>Annuler</Button><Button type="submit">Enregistrer</Button></DialogFooter></form></DialogContent>
+            <DialogContent className="sm:max-w-2xl"><form onSubmit={handleSubmit}><DialogHeader><DialogTitle>{employeeToEdit ? 'Modifier' : 'Ajouter'} un employé</DialogTitle></DialogHeader><div className="grid gap-4 py-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="nom">Nom</Label><Input id="nom" value={formData.nom || ''} onChange={handleChange} required/></div><div className="space-y-2"><Label htmlFor="prenom">Prénoms</Label><Input id="prenom" value={formData.prenom || ''} onChange={handleChange} required/></div><div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={formData.email || ''} onChange={handleChange} required/></div><div className="space-y-2"><Label htmlFor="telephone">Téléphone</Label><Input id="telephone" value={formData.telephone || ''} onChange={handleChange} /></div><div className="space-y-2"><Label htmlFor="poste">Poste</Label><Input id="poste" value={formData.poste || ''} onChange={handleChange} /></div><div className="space-y-2"><Label htmlFor="departement">Département</Label><Select name="departement" value={formData.departement} onValueChange={v => handleSelectChange('departement', v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="IT">IT</SelectItem><SelectItem value="MARKOS">Marketing</SelectItem><SelectItem value="SKOMPTAB">Comptabilité</SelectItem><SelectItem value="SOCIX">RH</SelectItem><SelectItem value="LOGSON">Logistique</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label htmlFor="dateEmbauche">Date d'embauche</Label><Input id="dateEmbauche" type="date" value={formData.dateEmbauche || ''} onChange={handleChange}/></div><div className="space-y-2"><Label htmlFor="contractType">Type de contrat</Label><Select name="contractType" value={formData.contractType} onValueChange={v => handleSelectChange('contractType', v as ContractType)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="CDI">CDI</SelectItem><SelectItem value="CDD">CDD</SelectItem><SelectItem value="Stage">Stage</SelectItem><SelectItem value="Apprentissage">Apprentissage</SelectItem></SelectContent></Select></div></div><DialogFooter><Button type="button" variant="outline" onClick={onClose}>Annuler</Button><Button type="submit">Enregistrer</Button></DialogFooter></form></DialogContent>
         </Dialog>
     );
 }
@@ -543,75 +543,30 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
     if (!employee) return null;
 
     const { toast } = useToast();
-
-    // Re-create the full contract data based on the employee
-    const contractData: Omit<ContractVariables, 'id' | 'employeeId' | 'employeeName' | 'status'> = {
+    
+    const contractData = {
         ENTREPRISE_NOM: 'UNIKORP',
         ENTREPRISE_FORME: 'SAS',
         ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire',
-        ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345',
-        ENTREPRISE_APE: '6201Z',
         REPRESENTANT_NOM: 'Elodie Dubois',
         REPRESENTANT_FONCTION: 'PDG',
         EMPLOYE_NOM: employee.nom,
         EMPLOYE_PRENOM: employee.prenom,
-        EMPLOYE_DATE_NAISSANCE: format(new Date(employee.dateNaissance), 'dd/MM/yyyy'),
-        EMPLOYE_LIEU_NAISSANCE: 'Abidjan', // Mock data
         EMPLOYE_ADRESSE: 'Cocody', // Mock data
-        EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78', // Mock data
-        EMPLOYE_NATIONALITE: 'Ivoirienne', // Mock data
         TYPE_CONTRAT: employee.contractType,
         CONVENTION_COLLECTIVE: 'Syntec', // Mock data
         DATE_DEBUT: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
         DATE_FIN: employee.contractType === 'CDD' ? format(new Date(new Date(employee.dateEmbauche).setMonth(new Date(employee.dateEmbauche).getMonth() + 6)), 'dd/MM/yyyy') : undefined,
-        MOTIF_CDD: 'Remplacement de personnel',
-        SI_PERIODE_ESSAI: true,
-        DUREE_ESSAI: '3 mois',
-        DUREE_RENOUVELLEMENT_ESSAI: '3 mois',
         FONCTION: employee.poste,
-        QUALIFICATION_PROFESSIONNELLE: 'Cadre',
-        CLASSIFICATION: '2.2',
-        COEFFICIENT: '130',
-        SUPERIEUR_HIERARCHIQUE: 'Directeur Technique',
         LIEU_TRAVAIL: 'Siège social',
-        SI_DEPLACEMENT: false,
-        ZONE_DEPLACEMENT: 'territoire national',
-        HORAIRES_TRAVAIL: '9h-18h',
         DUREE_HEBDOMADAIRE: '40',
-        JOURS_REPOS: 'Samedi, Dimanche',
-        SI_TEMPS_PARTIEL: false,
-        NOMBRE_HEURES_PARTIEL: '',
-        REPARTITION_HORAIRES: '',
         SALAIRE_BASE: 350000,
         PERIODICITE_SALAIRE: 'mensuel',
-        SI_PRIMES: false,
-        LISTE_PRIMES: 'Prime de transport, prime de panier',
-        SI_AVANTAGES_NATURE: false,
-        LISTE_AVANTAGES: '',
-        DATE_VERSEMENT: 'le 28 de chaque mois',
-        MODE_PAIEMENT: 'virement bancaire',
         NOMBRE_JOURS_CONGES: 30,
-        PERIODE_CONGES: '1er Janvier au 31 Décembre',
-        SI_FORMATION_INITIALE: false,
-        DUREE_FORMATION: '',
-        OBLIGATIONS_SUPPLEMENTAIRES: 'Respecter la charte informatique.',
-        SI_NON_CONCURRENCE: false,
-        DUREE_NON_CONCURRENCE: '',
-        SECTEURS_CONCERNES: '',
-        ZONE_NON_CONCURRENCE: '',
-        MONTANT_CONTREPARTIE: '',
-        SI_CDI: employee.contractType === 'CDI',
-        DUREE_PREAVIS: '3 mois',
-        SI_CDD: employee.contractType !== 'CDI',
         LIEU_SIGNATURE: 'Abidjan',
         DATE_SIGNATURE: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
-        SIGNATURE_EMPLOYEUR: 'Elodie Dubois',
-        SIGNATURE_EMPLOYE: `${employee.prenom} ${employee.nom}`,
-        DATE_REMISE: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
-        DATE_DPAE: format(new Date(new Date(employee.dateEmbauche).setDate(new Date(employee.dateEmbauche).getDate() - 1)), 'dd/MM/yyyy'),
-        DATE_VISITE_MEDICALE: 'À programmer',
     };
-
+    
     const handlePrint = () => {
         const doc = new jsPDF();
         let y = 15;
@@ -670,48 +625,13 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         addText(`L'EMPLOYÉ :\n- Nom : ${contractData.EMPLOYE_NOM}\n- Prénom : ${contractData.EMPLOYE_PRENOM}\n- Adresse : ${contractData.EMPLOYE_ADRESSE}`);
         
         addTitle('ARTICLE 1 - NATURE DU CONTRAT');
-        addText(`Il est conclu entre les parties un contrat de travail à durée ${contractData.TYPE_CONTRAT} sous le régime de la convention collective ${contractData.CONVENTION_COLLECTIVE}.`);
-        if (contractData.SI_CDD) addText(`Durée du contrat : Du ${contractData.DATE_DEBUT} au ${contractData.DATE_FIN}.`);
-        if (contractData.SI_PERIODE_ESSAI) addText(`Période d'essai : ${contractData.DUREE_ESSAI}.`);
+        addText(`Il est conclu un contrat de travail à durée ${contractData.TYPE_CONTRAT}.`);
         
         addTitle('ARTICLE 2 - FONCTION ET QUALIFICATION');
         addText(`Le salarié est engagé en qualité de ${contractData.FONCTION}.`);
 
-        addTitle('ARTICLE 3 - LIEU DE TRAVAIL');
-        addText(`Le salarié exercera ses fonctions à l'adresse suivante : ${contractData.LIEU_TRAVAIL}.`);
-        
-        addTitle('ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL');
-        addText(`La durée hebdomadaire du travail est de ${contractData.DUREE_HEBDOMADAIRE} heures.`);
-
-        addTitle('ARTICLE 5 - RÉMUNÉRATION');
-        addText(`Le salaire de base est fixé à ${contractData.SALAIRE_BASE} € ${contractData.PERIODICITE_SALAIRE}.`);
-        
-        addTitle('ARTICLE 6 - CONGÉS PAYÉS');
-        addText(`Le salarié bénéficie de ${contractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.`);
-        
-        addTitle('ARTICLE 7 - FORMATION PROFESSIONNELLE');
-        addText(`Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.`);
-        
-        addTitle('ARTICLE 8 - OBLIGATIONS DU SALARIÉ');
-        addText(`Le salarié s'engage à respecter le règlement intérieur de l'entreprise.`);
-
-        addTitle('ARTICLE 9 - CONFIDENTIALITÉ');
-        addText(`Le salarié s'engage à observer la plus stricte confidentialité.`);
-
-        addTitle('ARTICLE 10 - CLAUSE DE NON-CONCURRENCE');
-        addText(`Non applicable.`);
-
-        addTitle('ARTICLE 11 - RUPTURE DU CONTRAT');
-        addText(`Le contrat peut être rompu selon les dispositions légales et conventionnelles.`);
-        
-        addTitle('ARTICLE 12 - DISPOSITIONS DIVERSES');
-        addText(`Toute modification du présent contrat devra faire l'objet d'un avenant écrit.`);
-
         y += 15;
         addText(`Fait à ${contractData.LIEU_SIGNATURE}, le ${contractData.DATE_SIGNATURE}.`);
-        y += 15;
-        doc.text("L'EMPLOYEUR", margin, y);
-        doc.text("L'EMPLOYÉ", doc.internal.pageSize.getWidth() / 2 + margin, y);
         
         doc.save(`contrat_${employee.nom}.pdf`);
         toast({ title: 'PDF du contrat généré.' });
@@ -731,45 +651,15 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
                         <div className="mb-4 pl-4">
                             <h3 className="font-semibold">L'EMPLOYEUR :</h3>
                             <p>Dénomination sociale : {contractData.ENTREPRISE_NOM}</p>
-                            <p>Adresse du siège social : {contractData.ENTREPRISE_ADRESSE}</p>
-                            <p>Représenté par : {contractData.REPRESENTANT_NOM}, {contractData.REPRESENTANT_FONCTION}</p>
+                            <p>Adresse : {contractData.ENTREPRISE_ADRESSE}</p>
                         </div>
                         <div className="mb-4 pl-4">
                             <h3 className="font-semibold">L'EMPLOYÉ :</h3>
-                            <p>Nom : {contractData.EMPLOYE_NOM}</p>
-                            <p>Prénom : {contractData.EMPLOYE_PRENOM}</p>
-                            <p>Date de naissance : {contractData.EMPLOYE_DATE_NAISSANCE}</p>
-                            <p>Adresse : {contractData.EMPLOYE_ADRESSE}</p>
+                            <p>Nom & Prénom : {employee.prenom} {employee.nom}</p>
                         </div>
                         <Separator className="my-6" />
-                        <div className="space-y-4">
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 1 - NATURE DU CONTRAT</h3><p>Il est conclu entre les parties un contrat de travail à durée {contractData.TYPE_CONTRAT}.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 2 - FONCTION</h3><p>Le salarié est engagé en qualité de {contractData.FONCTION}.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {contractData.LIEU_TRAVAIL}.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL</h3><p>La durée hebdomadaire du travail est de {contractData.DUREE_HEBDOMADAIRE} heures.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {contractData.SALAIRE_BASE.toLocaleString('fr-FR')} € {contractData.PERIODICITE_SALAIRE}.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 6 - CONGÉS PAYÉS</h3><p>Le salarié bénéficie de {contractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 7 - FORMATION PROFESSIONNELLE</h3><p>Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 8 - OBLIGATIONS DU SALARIÉ</h3><p>Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté et à ne pas divulguer d'informations confidentielles.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 9 - CONFIDENTIALITÉ</h3><p>Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 10 - CLAUSE DE NON-CONCURRENCE</h3><p>Non applicable.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 11 - RUPTURE DU CONTRAT</h3><p>Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis et d'indemnités.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 12 - DISPOSITIONS DIVERSES</h3><p>Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.</p></div>
-                        </div>
-                         <Separator className="my-6" />
-                         <div className="mt-12 text-center">
-                            <p>Fait à {contractData.LIEU_SIGNATURE}, le {contractData.DATE_SIGNATURE}, en deux exemplaires.</p>
-                            <div className="flex justify-around mt-12 pt-8">
-                                <div><p className="border-t pt-2">L'EMPLOYEUR</p><p>({contractData.SIGNATURE_EMPLOYEUR})</p></div>
-                                <div><p className="border-t pt-2">L'EMPLOYÉ</p><p>({contractData.SIGNATURE_EMPLOYE})</p></div>
-                            </div>
-                        </div>
-                        <Separator className="my-6" />
-                        <div className="text-xs text-muted-foreground space-y-1">
-                            <p><em>Exemplaire remis au salarié le : {contractData.DATE_REMISE}</em></p>
-                            <p><em>Déclaration préalable à l'embauche effectuée le : {contractData.DATE_DPAE}</em></p>
-                            <p><em>Visite médicale d'embauche : {contractData.DATE_VISITE_MEDICALE}</em></p>
-                        </div>
+                        <p>Contrat de type <strong>{contractData.TYPE_CONTRAT}</strong> à compter du <strong>{contractData.DATE_DEBUT}</strong> pour le poste de <strong>{contractData.FONCTION}</strong>.</p>
+                        {/* More contract details would be rendered here */}
                     </div>
                 </ScrollArea>
                 <DialogFooter>
@@ -826,12 +716,12 @@ function DossierModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose:
                             <AccordionItem value={category} key={category}>
                                 <AccordionTrigger>{category}</AccordionTrigger>
                                 <AccordionContent>
-                                    {category.includes('DOCUMENT') ? (
+                                    {category.includes('DOCUMENT') || category.includes('GESTION') ? (
                                         <Table>
                                             <TableHeader><TableRow><TableHead>Nom du document</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                                             <TableBody>
-                                                {(items as {name: string, date: string, action: string}[]).map(doc => (
-                                                    <TableRow key={doc.name}>
+                                                {(items as {name: string, date: string, action: string}[]).map((doc, index) => (
+                                                    <TableRow key={index}>
                                                         <TableCell>{doc.name}</TableCell>
                                                         <TableCell>{format(new Date(doc.date), 'dd/MM/yyyy')}</TableCell>
                                                         <TableCell className="text-right">
@@ -844,8 +734,8 @@ function DossierModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose:
                                         </Table>
                                     ) : (
                                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                                            {(items as {label: string, value: string}[]).map(item => (
-                                                <div key={item.label} className="flex justify-between border-b pb-1">
+                                            {(items as {label: string, value: string}[]).map((item, index) => (
+                                                <div key={index} className="flex justify-between border-b pb-1">
                                                     <span className="text-muted-foreground">{item.label}</span>
                                                     <span className="font-semibold">{item.value}</span>
                                                 </div>
