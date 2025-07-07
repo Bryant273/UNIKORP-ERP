@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -13,18 +13,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap, FileText, Heart, Users as UsersIcon, FileSignature, FolderKanban } from 'lucide-react';
+import { PlusCircle, Eye, Pencil, Trash2, Download, User, Briefcase, Building, Mail, Phone, Calendar, Settings, Search, MoreHorizontal, X, Award, TrendingUp, GraduationCap, FileText, Heart, Users as UsersIcon, FileSignature, FolderKanban, Repeat } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Logo } from '@/components/logo';
-
+import { Switch } from '@/components/ui/switch';
+import Image from 'next/image';
 
 // --- TYPES & MOCK DATA ---
 type ContractType = 'CDI' | 'CDD' | 'Stage' | 'Apprentissage';
@@ -548,23 +550,57 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         ENTREPRISE_NOM: 'UNIKORP',
         ENTREPRISE_FORME: 'SAS',
         ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire',
+        ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345',
+        ENTREPRISE_APE: '6201Z',
         REPRESENTANT_NOM: 'Elodie Dubois',
         REPRESENTANT_FONCTION: 'PDG',
         EMPLOYE_NOM: employee.nom,
         EMPLOYE_PRENOM: employee.prenom,
+        EMPLOYE_DATE_NAISSANCE: format(new Date(employee.dateNaissance), 'dd/MM/yyyy'),
+        EMPLOYE_LIEU_NAISSANCE: 'Abidjan', // Mock
         EMPLOYE_ADRESSE: 'Cocody', // Mock data
+        EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78', // Mock
+        EMPLOYE_NATIONALITE: 'Ivoirienne', // Mock
         TYPE_CONTRAT: employee.contractType,
         CONVENTION_COLLECTIVE: 'Syntec', // Mock data
         DATE_DEBUT: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
         DATE_FIN: employee.contractType === 'CDD' ? format(new Date(new Date(employee.dateEmbauche).setMonth(new Date(employee.dateEmbauche).getMonth() + 6)), 'dd/MM/yyyy') : undefined,
+        MOTIF_CDD: 'Remplacement de personnel', // Mock
+        SI_PERIODE_ESSAI: true, // Mock
+        DUREE_ESSAI: '3 mois', // Mock
+        DUREE_RENOUVELLEMENT_ESSAI: '3 mois', // Mock
         FONCTION: employee.poste,
-        LIEU_TRAVAIL: 'Siège social',
+        QUALIFICATION_PROFESSIONNELLE: 'Cadre', // Mock
+        CLASSIFICATION: '2.2', // Mock
+        COEFFICIENT: '130', // Mock
+        SUPERIEUR_HIERARCHIQUE: 'Directeur du département',
+        LIEU_TRAVAIL: 'Siège social, Abidjan',
+        SI_DEPLACEMENT: false,
+        HORAIRES_TRAVAIL: '9h-18h',
         DUREE_HEBDOMADAIRE: '40',
+        JOURS_REPOS: 'Samedi, Dimanche',
+        SI_TEMPS_PARTIEL: false,
         SALAIRE_BASE: 350000,
         PERIODICITE_SALAIRE: 'mensuel',
+        SI_PRIMES: false,
+        SI_AVANTAGES_NATURE: false,
+        DATE_VERSEMENT: 'le 28 de chaque mois',
+        MODE_PAIEMENT: 'virement bancaire',
         NOMBRE_JOURS_CONGES: 30,
+        PERIODE_CONGES: '1er Janvier au 31 Décembre',
+        SI_FORMATION_INITIALE: false,
+        OBLIGATIONS_SUPPLEMENTAIRES: 'Respecter la charte informatique.',
+        SI_NON_CONCURRENCE: false,
+        SI_CDI: employee.contractType === 'CDI',
+        DUREE_PREAVIS: '3 mois',
+        SI_CDD: employee.contractType === 'CDD',
         LIEU_SIGNATURE: 'Abidjan',
         DATE_SIGNATURE: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
+        SIGNATURE_EMPLOYEUR: 'Elodie Dubois',
+        SIGNATURE_EMPLOYE: `${employee.prenom} ${employee.nom}`,
+        DATE_REMISE: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
+        DATE_DPAE: format(new Date(new Date(employee.dateEmbauche).setDate(new Date(employee.dateEmbauche).getDate() -1)), 'dd/MM/yyyy'),
+        DATE_VISITE_MEDICALE: format(new Date(new Date(employee.dateEmbauche).setDate(new Date(employee.dateEmbauche).getDate() + 2)), 'dd/MM/yyyy'),
     };
     
     const handlePrint = () => {
@@ -595,14 +631,14 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
             y = 50;
         }
 
-        const addText = (text: string) => {
+        const addText = (text: string, options: any = {}) => {
             const splitText = doc.splitTextToSize(text, pageContentWidth);
             const textHeight = doc.getTextDimensions(splitText).h;
             if (y + textHeight > pageHeight - margin - 10) {
                 doc.addPage();
                 drawHeader();
             }
-            doc.text(splitText, margin, y);
+            doc.text(splitText, margin, y, options);
             y += doc.getTextDimensions(splitText).h + 4;
         };
 
@@ -620,19 +656,65 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         doc.text('CONTRAT DE TRAVAIL', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
         y += 10;
         
-        addTitle('Entre les soussignés :');
-        addText(`L'EMPLOYEUR :\n- Dénomination sociale : ${contractData.ENTREPRISE_NOM}\n- Forme Juridique : ${contractData.ENTREPRISE_FORME}\n- Adresse : ${contractData.ENTREPRISE_ADRESSE}\n- Représenté par : ${contractData.REPRESENTANT_NOM}, en sa qualité de ${contractData.REPRESENTANT_FONCTION}`);
-        addText(`L'EMPLOYÉ :\n- Nom : ${contractData.EMPLOYE_NOM}\n- Prénom : ${contractData.EMPLOYE_PRENOM}\n- Adresse : ${contractData.EMPLOYE_ADRESSE}`);
+        doc.setFontSize(11).setFont('helvetica', 'bold');
+        addText('Entre les soussignés :');
+        doc.setFontSize(10).setFont('helvetica', 'normal');
+        
+        addText(`L'EMPLOYEUR :\n- Dénomination sociale : ${contractData.ENTREPRISE_NOM}\n- Forme Juridique : ${contractData.ENTREPRISE_FORME}\n- Adresse : ${contractData.ENTREPRISE_ADRESSE}\n- N° SIRET : ${contractData.ENTREPRISE_SIRET}\n- Code APE : ${contractData.ENTREPRISE_APE}\n- Représenté par : ${contractData.REPRESENTANT_NOM}, en sa qualité de ${contractData.REPRESENTANT_FONCTION}`);
+        addText(`L'EMPLOYÉ :\n- Nom : ${contractData.EMPLOYE_NOM}\n- Prénom : ${contractData.EMPLOYE_PRENOM}\n- Date de naissance : ${contractData.EMPLOYE_DATE_NAISSANCE}\n- Lieu de naissance : ${contractData.EMPLOYE_LIEU_NAISSANCE}\n- Adresse : ${contractData.EMPLOYE_ADRESSE}\n- Numéro de sécurité sociale : ${contractData.EMPLOYE_NUM_SECU}\n- Nationalité : ${contractData.EMPLOYE_NATIONALITE}`);
+        
+        y += 5; doc.setDrawColor(200); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y); y += 10;
         
         addTitle('ARTICLE 1 - NATURE DU CONTRAT');
-        addText(`Il est conclu un contrat de travail à durée ${contractData.TYPE_CONTRAT}.`);
-        
+        addText(`Il est conclu entre les parties un contrat de travail à durée ${contractData.TYPE_CONTRAT} sous le régime de la convention collective ${contractData.CONVENTION_COLLECTIVE}.`);
+        if (contractData.SI_CDD) addText(`Durée du contrat : Du ${contractData.DATE_DEBUT} au ${contractData.DATE_FIN}.\nMotif de recours : ${contractData.MOTIF_CDD}`);
+        if (contractData.SI_PERIODE_ESSAI) addText(`Période d'essai : ${contractData.DUREE_ESSAI}, renouvelable une fois pour une durée de ${contractData.DUREE_RENOUVELLEMENT_ESSAI}.`);
         addTitle('ARTICLE 2 - FONCTION ET QUALIFICATION');
-        addText(`Le salarié est engagé en qualité de ${contractData.FONCTION}.`);
-
+        addText(`Le salarié est engagé en qualité de ${contractData.FONCTION} - ${contractData.QUALIFICATION_PROFESSIONNELLE}.`);
+        addText(`Classification : ${contractData.CLASSIFICATION} - Coefficient ${contractData.COEFFICIENT}`);
+        addText(`Rattachement hiérarchique : ${contractData.SUPERIEUR_HIERARCHIQUE}`);
+        addTitle('ARTICLE 3 - LIEU DE TRAVAIL');
+        addText(`Le salarié exercera ses fonctions à l'adresse suivante : ${contractData.LIEU_TRAVAIL}.`);
+        if (contractData.SI_DEPLACEMENT) addText(`Des déplacements pourront être demandés dans le cadre de l'activité professionnelle.`);
+        addTitle('ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL');
+        addText(`Horaires de travail : ${contractData.HORAIRES_TRAVAIL}\nDurée hebdomadaire : ${contractData.DUREE_HEBDOMADAIRE} heures\nRepos hebdomadaire : ${contractData.JOURS_REPOS}`);
+        if(contractData.SI_TEMPS_PARTIEL) addText(`Travail à temps partiel.`);
+        addTitle('ARTICLE 5 - RÉMUNÉRATION');
+        addText(`Salaire de base : ${contractData.SALAIRE_BASE.toLocaleString('fr-FR')} FCFA ${contractData.PERIODICITE_SALAIRE}.`);
+        if(contractData.SI_PRIMES) addText(`Primes et avantages.`);
+        if(contractData.SI_AVANTAGES_NATURE) addText(`Avantages en nature.`);
+        addText(`Le salaire sera versé le ${contractData.DATE_VERSEMENT} par ${contractData.MODE_PAIEMENT}.`);
+        addTitle('ARTICLE 6 - CONGÉS PAYÉS');
+        addText(`Le salarié bénéficie de ${contractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.`);
+        addTitle('ARTICLE 7 - FORMATION PROFESSIONNELLE');
+        addText(`Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.`);
+        if(contractData.SI_FORMATION_INITIALE) addText(`Une formation d'intégration sera dispensée.`);
+        addTitle('ARTICLE 8 - OBLIGATIONS DU SALARIÉ');
+        addText(`Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté, et à respecter les consignes de sécurité. ${contractData.OBLIGATIONS_SUPPLEMENTAIRES}`);
+        addTitle('ARTICLE 9 - CONFIDENTIALITÉ');
+        addText(`Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.`);
+        addTitle('ARTICLE 10 - CLAUSE DE NON-CONCURRENCE');
+        addText(contractData.SI_NON_CONCURRENCE ? `Une clause de non-concurrence est applicable.` : "Non applicable.");
+        addTitle('ARTICLE 11 - RUPTURE DU CONTRAT');
+        if(contractData.SI_CDI) addText(`Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis. Préavis : ${contractData.DUREE_PREAVIS}.`);
+        if(contractData.SI_CDD) addText(`Le contrat prendra fin de plein droit à la date du ${contractData.DATE_FIN}, sauf renouvellement.`);
+        addTitle('ARTICLE 12 - DISPOSITIONS DIVERSES');
+        addText(`Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.`);
         y += 15;
-        addText(`Fait à ${contractData.LIEU_SIGNATURE}, le ${contractData.DATE_SIGNATURE}.`);
-        
+        addText(`Fait à ${contractData.LIEU_SIGNATURE}, le ${contractData.DATE_SIGNATURE}, en deux exemplaires.`);
+        y += 15;
+        doc.text("L'EMPLOYEUR", margin, y);
+        doc.text("L'EMPLOYÉ", doc.internal.pageSize.getWidth() / 2 + margin, y);
+        y += 10;
+        doc.text(`(Signature de ${contractData.SIGNATURE_EMPLOYEUR})`, margin, y);
+        doc.text(`(Signature de ${contractData.SIGNATURE_EMPLOYE})`, doc.internal.pageSize.getWidth() / 2 + margin, y);
+        y += 10;
+        doc.setDrawColor(200);
+        doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+        y += 5;
+        doc.setFontSize(8).setTextColor(120);
+        addText(`Mentions obligatoires :\n- Exemplaire remis au salarié le : ${contractData.DATE_REMISE}\n- Déclaration préalable à l'embauche effectuée le : ${contractData.DATE_DPAE}\n- Visite médicale d'embauche : ${contractData.DATE_VISITE_MEDICALE}`);
+
         doc.save(`contrat_${employee.nom}.pdf`);
         toast({ title: 'PDF du contrat généré.' });
     };
@@ -658,8 +740,25 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
                             <p>Nom & Prénom : {employee.prenom} {employee.nom}</p>
                         </div>
                         <Separator className="my-6" />
-                        <p>Contrat de type <strong>{contractData.TYPE_CONTRAT}</strong> à compter du <strong>{contractData.DATE_DEBUT}</strong> pour le poste de <strong>{contractData.FONCTION}</strong>.</p>
-                        {/* More contract details would be rendered here */}
+                        <div className="space-y-4">
+                            {/* Contract articles rendered here */}
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 1 - NATURE DU CONTRAT</h3><p>Il est conclu entre les parties un contrat de travail à durée {contractData.TYPE_CONTRAT}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 2 - FONCTION</h3><p>Le salarié est engagé en qualité de {contractData.FONCTION}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {contractData.LIEU_TRAVAIL}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL</h3><p>La durée hebdomadaire du travail est de {contractData.DUREE_HEBDOMADAIRE} heures.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {contractData.SALAIRE_BASE.toLocaleString('fr-FR')} FCFA {contractData.PERIODICITE_SALAIRE}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 6 - CONGÉS PAYÉS</h3><p>Le salarié bénéficie de {contractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 7 - FORMATION PROFESSIONNELLE</h3><p>Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 8 - OBLIGATIONS DU SALARIÉ</h3><p>Le salarié s'engage à respecter le règlement intérieur de l'entreprise et à faire preuve de loyauté.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 9 - CONFIDENTIALITÉ</h3><p>Le salarié s'engage à observer la plus stricte confidentialité.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 10 - CLAUSE DE NON-CONCURRENCE</h3><p>Non applicable.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 11 - RUPTURE DU CONTRAT</h3><p>Le contrat peut être rompu sous réserve du respect des dispositions légales.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 12 - DISPOSITIONS DIVERSES</h3><p>Toute modification devra faire l'objet d'un avenant.</p></div>
+                        </div>
+                         <Separator className="my-6" />
+                         <div className="mt-12 text-center">
+                            <p>Fait à {contractData.LIEU_SIGNATURE}, le {contractData.DATE_SIGNATURE}, en deux exemplaires.</p>
+                        </div>
                     </div>
                 </ScrollArea>
                 <DialogFooter>
@@ -672,6 +771,9 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
 }
 
 function DossierModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose: () => void; employee: Employee | null }) {
+    const { toast } = useToast();
+    const [previewingDoc, setPreviewingDoc] = useState<any | null>(null);
+
     if (!employee) return null;
 
     const dossierData = {
@@ -703,50 +805,78 @@ function DossierModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose:
         ],
     };
 
+    const handlePreview = (doc: any) => {
+        setPreviewingDoc({ ...doc, employeeName: `${employee.prenom} ${employee.nom}` });
+    };
+
+    return (
+        <>
+            <Dialog open={isOpen} onOpenChange={onClose}>
+                <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Dossier Employé : {employee.prenom} {employee.nom}</DialogTitle>
+                        <DialogDescription>Consultez et gérez tous les documents et informations relatives à l'employé.</DialogDescription>
+                    </DialogHeader>
+                    <ScrollArea className="flex-1 -mx-6 px-6">
+                        <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+                            {Object.entries(dossierData).map(([category, items]) => (
+                                <AccordionItem value={category} key={category}>
+                                    <AccordionTrigger>{category}</AccordionTrigger>
+                                    <AccordionContent>
+                                        {category.includes('DOCUMENT') || category.includes('GESTION') ? (
+                                            <Table>
+                                                <TableHeader><TableRow><TableHead>Nom du document</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                                                <TableBody>
+                                                    {(items as {name: string, date: string, action: string}[]).map((doc, index) => (
+                                                        <TableRow key={index}>
+                                                            <TableCell>{doc.name}</TableCell>
+                                                            <TableCell>{format(new Date(doc.date), 'dd/MM/yyyy')}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                <Button variant="ghost" size="icon" onClick={() => handlePreview(doc)}><Eye className="h-4 w-4"/></Button>
+                                                                <Button variant="ghost" size="icon" onClick={() => toast({ title: "Fonctionnalité à venir" })}><Pencil className="h-4 w-4"/></Button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                                                {(items as {label: string, value: string}[]).map((item) => (
+                                                    <div key={item.label} className="flex justify-between border-b pb-1">
+                                                        <span className="text-muted-foreground">{item.label}</span>
+                                                        <span className="font-semibold">{item.value}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    </ScrollArea>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={onClose}>Fermer</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <DocumentPreviewModal isOpen={!!previewingDoc} onClose={() => setPreviewingDoc(null)} document={previewingDoc} />
+        </>
+    );
+}
+
+function DocumentPreviewModal({ isOpen, onClose, document }: { isOpen: boolean; onClose: () => void; document: { name: string; employeeName: string } | null }) {
+    if (!document) return null;
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Dossier Employé : {employee.prenom} {employee.nom}</DialogTitle>
-                    <DialogDescription>Consultez et gérez tous les documents et informations relatives à l'employé.</DialogDescription>
+                    <DialogTitle>Aperçu: {document.name}</DialogTitle>
+                    <DialogDescription>Document de {document.employeeName}.</DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="flex-1 -mx-6 px-6">
-                    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
-                        {Object.entries(dossierData).map(([category, items]) => (
-                            <AccordionItem value={category} key={category}>
-                                <AccordionTrigger>{category}</AccordionTrigger>
-                                <AccordionContent>
-                                    {category.includes('DOCUMENT') || category.includes('GESTION') ? (
-                                        <Table>
-                                            <TableHeader><TableRow><TableHead>Nom du document</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-                                            <TableBody>
-                                                {(items as {name: string, date: string, action: string}[]).map((doc, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>{doc.name}</TableCell>
-                                                        <TableCell>{format(new Date(doc.date), 'dd/MM/yyyy')}</TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Button variant="ghost" size="icon"><Eye className="h-4 w-4"/></Button>
-                                                            <Button variant="ghost" size="icon"><Pencil className="h-4 w-4"/></Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    ) : (
-                                        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                                            {(items as {label: string, value: string}[]).map((item, index) => (
-                                                <div key={index} className="flex justify-between border-b pb-1">
-                                                    <span className="text-muted-foreground">{item.label}</span>
-                                                    <span className="font-semibold">{item.value}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
-                </ScrollArea>
+                <div className="py-4">
+                    <Image src="https://placehold.co/800x1131.png" data-ai-hint="document contract" alt="Aperçu du document" width={800} height={1131} className="rounded-md border"/>
+                </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
                 </DialogFooter>
@@ -755,8 +885,11 @@ function DossierModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose:
     );
 }
 
+
 export default function EmployesPage() {
     return (
         <EmployesMainContent />
     )
 }
+
+    
