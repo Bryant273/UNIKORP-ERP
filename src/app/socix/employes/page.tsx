@@ -251,7 +251,7 @@ function EmployesMainContent() {
                                         {visibleColumns.contractType && <TableCell className="text-center"><Badge variant="outline">{e.contractType}</Badge></TableCell>}
                                         {visibleColumns.dateEmbauche && <TableCell className="text-center">{new Date(e.dateEmbauche).toLocaleDateString('fr-FR')}</TableCell>}
                                         {visibleColumns.statut && <TableCell className="text-center"><Badge className={getStatusBadgeStyles(e.statut)}><span className={`h-2 w-2 rounded-full mr-2 ${getStatusIndicatorStyles(e.statut)}`}/>{e.statut}</Badge></TableCell>}
-                                        <TableCell className="text-center">
+                                        <TableCell>
                                             <div className="flex items-center justify-center gap-1">
                                                 <Button variant="ghost" size="icon" onClick={() => setContractForEmployee(e)}><FileSignature className="h-4 w-4" /></Button>
                                                 <Button variant="ghost" size="icon" onClick={() => setDossierForEmployee(e)}><FolderKanban className="h-4 w-4" /></Button>
@@ -284,7 +284,6 @@ function EmployesMainContent() {
             <ContractModal isOpen={!!contractForEmployee} onClose={() => setContractForEmployee(null)} employee={contractForEmployee} />
             <DossierModal isOpen={!!dossierForEmployee} onClose={() => setDossierForEmployee(null)} employee={dossierForEmployee} />
 
-
             <AlertDialog open={!!employeeToDelete} onOpenChange={() => setEmployeeToDelete(null)}>
                 <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Supprimer cet employé ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible. Le dossier de l'employé sera archivé.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
             </AlertDialog>
@@ -296,7 +295,7 @@ function EmployesMainContent() {
 }
 
 function EmployeeModal({ isOpen, onClose, onSave, employeeToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: any) => void, employeeToEdit: Employee | null }) {
-    const [formData, setFormData] = useState<Partial<Employee>>(employeeToEdit || {});
+    const [formData, setFormData] = useState<Partial<Employee>>({});
 
     useEffect(() => {
         setFormData(employeeToEdit || {});
@@ -484,7 +483,7 @@ function EmployeeProfileModal({ isOpen, onClose, employee }: { isOpen: boolean; 
                                 <AccordionContent className="space-y-2 text-sm">
                                      <p><strong>Email :</strong> {employee.email}</p>
                                     <p><strong>Téléphone :</strong> {employee.telephone}</p>
-                                    <p><strong>Date de naissance :</strong> {new Date(employee.dateNaissance).toLocaleDateString('fr-FR')}</p>
+                                    <p><strong>Date de naissance :</strong> {format(new Date(employee.dateNaissance), 'dd/MM/yyyy')}</p>
                                     <p><strong>Statut matrimonial :</strong> {employee.statutMatrimonial}</p>
                                     <p><strong>Nombre d'enfants :</strong> {employee.nombreEnfants}</p>
                                 </AccordionContent>
@@ -555,7 +554,7 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         REPRESENTANT_FONCTION: 'Présidente Directrice Générale',
         EMPLOYE_NOM: employee.nom.toUpperCase(),
         EMPLOYE_PRENOM: employee.prenom,
-        EMPLOYE_DATE_NAISSANCE: new Date(employee.dateNaissance).toLocaleDateString('fr-FR'),
+        EMPLOYE_DATE_NAISSANCE: format(new Date(employee.dateNaissance), 'dd/MM/yyyy'),
         EMPLOYE_LIEU_NAISSANCE: 'Abidjan',
         EMPLOYE_ADRESSE: '456 Rue Imaginaire, Cocody',
         EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78',
@@ -563,7 +562,7 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         TYPE_CONTRAT: employee.contractType,
         CONVENTION_COLLECTIVE: 'Convention Collective Interprofessionnelle',
         SI_CDD: employee.contractType === 'CDD',
-        DATE_DEBUT: new Date(employee.dateEmbauche).toLocaleDateString('fr-FR'),
+        DATE_DEBUT: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
         DATE_FIN: employee.contractType === 'CDD' ? '31/12/2024' : '',
         MOTIF_CDD: 'Accroissement temporaire d\'activité',
         SI_PERIODE_ESSAI: true,
@@ -604,11 +603,11 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         SI_CDI: employee.contractType === 'CDI',
         DUREE_PREAVIS: '3 mois',
         LIEU_SIGNATURE: 'Abidjan',
-        DATE_SIGNATURE: new Date().toLocaleDateString('fr-FR'),
+        DATE_SIGNATURE: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
         SIGNATURE_EMPLOYEUR: 'Elodie Dubois',
         SIGNATURE_EMPLOYE: `${employee.prenom} ${employee.nom}`,
-        DATE_REMISE: new Date().toLocaleDateString('fr-FR'),
-        DATE_DPAE: new Date(employee.dateEmbauche).toLocaleDateString('fr-FR'),
+        DATE_REMISE: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
+        DATE_DPAE: format(new Date(employee.dateEmbauche), 'dd/MM/yyyy'),
         DATE_VISITE_MEDICALE: 'À programmer',
     };
 
@@ -623,7 +622,7 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
         const userName = "Utilisateur Unikorp";
         const moduleName = "SOCIX";
         const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
-        const printDateTime = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const printDateTime = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
 
         const drawHeader = () => {
             doc.setFontSize(9); doc.setTextColor(150);
@@ -847,5 +846,7 @@ export default function EmployesPage() {
         <EmployesMainContent />
     )
 }
+
+    
 
     
