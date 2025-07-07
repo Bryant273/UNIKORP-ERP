@@ -315,7 +315,7 @@ export function AppSidebar() {
               className="w-full justify-start gap-2 font-semibold"
             >
               <LayoutDashboard className="h-4 w-4" />
-              Accueil
+              Tableau de bord
             </Button>
           </Link>
         </div>
