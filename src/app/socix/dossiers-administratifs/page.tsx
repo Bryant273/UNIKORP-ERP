@@ -2,195 +2,209 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from '@/hooks/use-toast';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Eye, Trash2, Download, UploadCloud, Send } from 'lucide-react';
+import {
+    Folder, FolderKanban, FolderHeart, FolderClock, FolderKey,
+    ScanLine, ShieldCheck, Search, Workflow, History,
+    HardDrive, Database, Server, Settings2, Package,
+    Eye, Download
+} from 'lucide-react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
-// --- TYPES & MOCK DATA ---
-type DocumentStatus = 'Reçu' | 'Manquant' | 'En attente';
-type Document = {
-    id: string;
-    employeeName: string;
-    employeeId: string;
-    documentType: string;
-    fileName?: string;
-    uploadDate?: string;
-    status: DocumentStatus;
-};
-
-const initialDocuments: Document[] = [
-    { id: 'doc-01', employeeName: 'Jean Dupont', employeeId: 'emp-001', documentType: 'Contrat de travail', fileName: 'contrat_dupont.pdf', uploadDate: '2020-03-15', status: 'Reçu' },
-    { id: 'doc-02', employeeName: 'Jean Dupont', employeeId: 'emp-001', documentType: 'Pièce d\'identité', fileName: 'cni_dupont.pdf', uploadDate: '2020-03-15', status: 'Reçu' },
-    { id: 'doc-03', employeeName: 'Sophie Martin', employeeId: 'emp-002', documentType: 'Contrat de travail', fileName: 'contrat_martin.pdf', uploadDate: '2021-09-01', status: 'Reçu' },
-    { id: 'doc-04', employeeName: 'Sophie Martin', employeeId: 'emp-002', documentType: 'Pièce d\'identité', status: 'Manquant' },
-    { id: 'doc-05', employeeName: 'David Garcia', employeeId: 'emp-003', documentType: 'RIB', status: 'En attente' },
+// --- MOCK DATA ---
+const folderTypes = [
+    { name: 'Dossiers RH', icon: FolderHeart, count: 125, lastUpdate: '2024-07-30', bgColor: 'bg-blue-100', iconColor: 'text-blue-600', mockDocs: [
+        { id: 'rh-1', name: 'Contrat - Jean Dupont.pdf', date: '2020-03-15', size: '256 KB' },
+        { id: 'rh-2', name: 'Fiche de paie - Juillet 2024.pdf', date: '2024-07-31', size: '128 KB' },
+        { id: 'rh-3', name: 'Évaluation annuelle - Sophie M..pdf', date: '2024-06-15', size: '180 KB' },
+    ]},
+    { name: 'Dossiers Clients', icon: FolderKanban, count: 48, lastUpdate: '2024-07-28', bgColor: 'bg-green-100', iconColor: 'text-green-600', mockDocs: [
+        { id: 'cli-1', name: 'Contrat Cadre - TechCorp.pdf', date: '2023-01-10', size: '1.2 MB' },
+        { id: 'cli-2', name: 'Facture FACT-088.pdf', date: '2024-07-20', size: '98 KB' },
+    ]},
+    { name: 'Dossiers Fournisseurs', icon: FolderClock, count: 72, lastUpdate: '2024-07-29', bgColor: 'bg-orange-100', iconColor: 'text-orange-600', mockDocs: [
+        { id: 'fourn-1', name: 'BC_2024_150 - Fournisseur Omega.pdf', date: '2024-07-19', size: '75 KB' },
+    ]},
+    { name: 'Dossiers Comptables', icon: Folder, count: 1250, lastUpdate: '2024-07-31', bgColor: 'bg-purple-100', iconColor: 'text-purple-600', mockDocs: [
+        { id: 'compta-1', name: 'Justificatif - Note de frais #34.pdf', date: '2024-07-22', size: '55 KB' },
+    ]},
+    { name: 'Dossiers Juridiques', icon: FolderKey, count: 15, lastUpdate: '2024-05-10', bgColor: 'bg-red-100', iconColor: 'text-red-600', mockDocs: [
+         { id: 'jur-1', name: 'Statuts de la société - Mise à jour.pdf', date: '2022-01-01', size: '2.5 MB' },
+    ]},
 ];
 
-const mockEmployees = [
-    { id: 'emp-001', name: 'Jean Dupont' },
-    { id: 'emp-002', name: 'Sophie Martin' },
-    { id: 'emp-003', name: 'David Garcia' },
+const keyFeatures = [
+    { name: 'Numérisation & Archivage', icon: ScanLine },
+    { name: 'Droits d\'accès & Sécurité', icon: ShieldCheck },
+    { name: 'Recherche Avancée', icon: Search },
+    { name: 'Workflow de Validation', icon: Workflow },
+    { name: 'Traçabilité des modifications', icon: History },
 ];
-const documentTypes = ['Contrat de travail', 'Pièce d\'identité', 'RIB', 'Attestation de sécurité sociale', 'Photo d\'identité'];
 
-function DossiersAdministratifsContent() {
-    const [documents, setDocuments] = useState(initialDocuments);
-    const [docToDelete, setDocToDelete] = useState<Document | null>(null);
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-    const [previewingDoc, setPreviewingDoc] = useState<Document | null>(null);
+const technicalAspects = [
+    { name: 'Formats Supportés', value: 'PDF, DOCX, XLSX, PNG, JPG', icon: Package },
+    { name: 'Capacité de Stockage', value: '1 TB (85% utilisé)', icon: HardDrive },
+    { name: 'Sauvegardes', value: 'Quotidiennes, chiffrées', icon: Database },
+    { name: 'Intégration GED', value: 'API REST disponible', icon: Settings2 },
+];
+
+// --- Main Component ---
+export default function DossiersAdministratifsPage() {
     const { toast } = useToast();
+    const [explorationModal, setExplorationModal] = useState<{ isOpen: boolean; data: any }>({ isOpen: false, data: null });
+    const [previewModal, setPreviewModal] = useState<{ isOpen: boolean; doc: any }>({ isOpen: false, doc: null });
 
-    const handleUpload = (formData: any) => {
-        toast({ title: "Document ajouté (Simulation)", description: `Le fichier ${formData.file.name} a été associé.` });
-        setIsUploadModalOpen(false);
-    };
-
-    const handleDelete = () => {
-        if (docToDelete) {
-            setDocuments(prev => prev.filter(d => d.id !== docToDelete.id));
-            toast({ title: 'Document supprimé' });
-            setDocToDelete(null);
-        }
+    const handleExplore = (folder: any) => {
+        setExplorationModal({ isOpen: true, data: folder });
     };
     
-    const sendReminder = (doc: Document) => {
-        toast({
-            title: 'Rappel envoyé',
-            description: `Un rappel a été envoyé à ${doc.employeeName} pour le document manquant.`
-        });
-    };
-    
-    const handlePreview = (doc: Document) => {
-        if (doc.status === 'Reçu') {
-            setPreviewingDoc(doc);
-            setIsPreviewModalOpen(true);
-        } else {
-            toast({ title: 'Document non disponible', variant: 'destructive' });
-        }
-    }
-
-    const getStatusBadgeVariant = (status: DocumentStatus) => {
-        switch (status) {
-            case 'Reçu': return 'default';
-            case 'Manquant': return 'destructive';
-            case 'En attente': return 'secondary';
-        }
+    const handlePreview = (doc: any) => {
+        setPreviewModal({ isOpen: true, doc });
     };
 
     return (
         <>
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-2xl">Dossiers Administratifs</CardTitle>
-                            <CardDescription>Centralisez et gérez tous les documents de vos collaborateurs.</CardDescription>
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-2xl">Gestion des Dossiers Administratifs</CardTitle>
+                        <CardDescription>Vue d'ensemble de la gestion électronique des documents de l'entreprise.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            {folderTypes.map(folder => (
+                                <Card key={folder.name} className={`overflow-hidden ${folder.bgColor} border-0`}>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">{folder.name}</CardTitle>
+                                        <folder.icon className={`h-6 w-6 ${folder.iconColor}`} />
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="text-2xl font-bold">{folder.count}</div>
+                                        <p className="text-xs text-muted-foreground">Mis à jour le {format(new Date(folder.lastUpdate), 'dd/MM/yyyy')}</p>
+                                        <Button size="sm" variant="link" className="p-0 h-auto mt-2" onClick={() => handleExplore(folder)}>Explorer</Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
-                        <Button onClick={() => setIsUploadModalOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un document</Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Employé</TableHead>
-                                <TableHead>Type de document</TableHead>
-                                <TableHead>Fichier</TableHead>
-                                <TableHead className="text-center">Statut</TableHead>
-                                <TableHead className="text-center w-[200px]">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {documents.map(d => (
-                                <TableRow key={d.id}>
-                                    <TableCell className="font-medium">{d.employeeName}</TableCell>
-                                    <TableCell>{d.documentType}</TableCell>
-                                    <TableCell className="text-muted-foreground">{d.fileName || '---'}</TableCell>
-                                    <TableCell className="text-center"><Badge variant={getStatusBadgeVariant(d.status)}>{d.status}</Badge></TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex justify-center gap-1">
-                                            <Button variant="ghost" size="icon" onClick={() => handlePreview(d)} disabled={d.status !== 'Reçu'}><Eye className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" disabled={d.status !== 'Reçu'}><Download className="h-4 w-4" /></Button>
-                                            {d.status === 'Manquant' && <Button variant="ghost" size="icon" onClick={() => sendReminder(d)}><Send className="h-4 w-4" /></Button>}
-                                            <Button variant="ghost" size="icon" onClick={() => setDocToDelete(d)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                    </CardContent>
+                </Card>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                    <Card className="md:col-span-1">
+                        <CardHeader>
+                            <CardTitle>Fonctionnalités Clés</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="space-y-4">
+                                {keyFeatures.map(f => (
+                                    <li key={f.name} className="flex items-center gap-3">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                                            <f.icon className="h-5 w-5 text-primary" />
                                         </div>
+                                        <span className="font-medium text-sm">{f.name}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </CardContent>
+                    </Card>
+                    
+                    <div className="md:col-span-2 space-y-6">
+                         <Card>
+                            <CardHeader><CardTitle>Défis et Bonnes Pratiques</CardTitle></CardHeader>
+                            <CardContent>
+                                <Accordion type="single" collapsible className="w-full">
+                                    <AccordionItem value="migration"><AccordionTrigger>Migration des archives papier</AccordionTrigger><AccordionContent>Planifier une stratégie de numérisation progressive pour assurer une transition en douceur sans perturber les opérations.</AccordionContent></AccordionItem>
+                                    <AccordionItem value="formation"><AccordionTrigger>Formation des utilisateurs</AccordionTrigger><AccordionContent>Organiser des sessions de formation adaptées à chaque profil d'utilisateur pour garantir l'adoption et l'utilisation correcte de l'outil.</AccordionContent></AccordionItem>
+                                    <AccordionItem value="rgpd"><AccordionTrigger>Respect de la réglementation (RGPD)</AccordionTrigger><AccordionContent>Assurer la conformité avec les réglementations sur la protection des données personnelles et les durées légales de conservation des documents.</AccordionContent></AccordionItem>
+                                </Accordion>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                             <CardHeader><CardTitle>Spécifications Techniques</CardTitle></CardHeader>
+                             <CardContent className="grid sm:grid-cols-2 gap-4">
+                                {technicalAspects.map(t => (
+                                    <div key={t.name} className="flex items-start gap-3 rounded-md border p-3">
+                                         <t.icon className="h-5 w-5 mt-1 text-muted-foreground" />
+                                         <div><p className="font-semibold text-sm">{t.name}</p><p className="text-sm text-muted-foreground">{t.value}</p></div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modals */}
+            <ExplorationModal 
+                isOpen={explorationModal.isOpen} 
+                onClose={() => setExplorationModal({isOpen: false, data: null})} 
+                folder={explorationModal.data}
+                onPreview={handlePreview}
+            />
+            <PreviewModal 
+                isOpen={previewModal.isOpen} 
+                onClose={() => setPreviewModal({isOpen: false, doc: null})} 
+                doc={previewModal.doc}
+            />
+        </>
+    );
+}
+
+// --- Modals Components ---
+
+function ExplorationModal({ isOpen, onClose, folder, onPreview }: { isOpen: boolean, onClose: () => void, folder: any, onPreview: (doc: any) => void }) {
+    if (!folder) return null;
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2"><folder.icon className={`h-6 w-6 ${folder.iconColor}`}/> {folder.name}</DialogTitle>
+                    <DialogDescription>Liste des documents récents dans cette catégorie.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Nom du document</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Taille</TableHead><TableHead className="w-[100px] text-center">Actions</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {folder.mockDocs.map((doc: any) => (
+                                <TableRow key={doc.id}>
+                                    <TableCell className="font-medium">{doc.name}</TableCell>
+                                    <TableCell>{format(new Date(doc.date), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell className="text-right">{doc.size}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Button variant="ghost" size="icon" onClick={() => onPreview(doc)}><Eye className="h-4 w-4"/></Button>
+                                        <Button variant="ghost" size="icon"><Download className="h-4 w-4"/></Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                </CardContent>
-            </Card>
-
-            <UploadDocumentModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} onUpload={handleUpload} />
-            
-            <Dialog open={isPreviewModalOpen} onOpenChange={setIsPreviewModalOpen}>
-                <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Aperçu: {previewingDoc?.fileName}</DialogTitle>
-                        <DialogDescription>Document de {previewingDoc?.employeeName}.</DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                        <Image src="/placeholder-doc.png" alt="Document preview" width={800} height={1131} className="rounded-md border"/>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            <AlertDialog open={!!docToDelete} onOpenChange={() => setDocToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader><AlertDialogTitle>Supprimer ce document ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription></AlertDialogHeader>
-                    <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </>
-    );
-}
-
-
-function UploadDocumentModal({ isOpen, onClose, onUpload }: { isOpen: boolean, onClose: () => void, onUpload: (data: any) => void }) {
-    const [employeeId, setEmployeeId] = useState('');
-    const [documentType, setDocumentType] = useState('');
-    const [file, setFile] = useState<File | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!file || !employeeId || !documentType) return;
-        onUpload({ employeeId, documentType, file });
-    };
-    
-    const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
-    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { handleDragEvents(e); setIsDragging(true); };
-    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { handleDragEvents(e); setIsDragging(false); };
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => { handleDragEvents(e); setIsDragging(false); if (e.dataTransfer.files && e.dataTransfer.files[0]) { setFile(e.dataTransfer.files[0]); }};
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent><form onSubmit={handleSubmit}><DialogHeader><DialogTitle>Ajouter un document</DialogTitle></DialogHeader><div className="grid gap-4 py-4">
-                <div className="space-y-2"><Label htmlFor="employeeId">Employé</Label><Select name="employeeId" onValueChange={setEmployeeId}><SelectTrigger><SelectValue placeholder="Sélectionner un employé..."/></SelectTrigger><SelectContent>{mockEmployees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label htmlFor="documentType">Type de document</Label><Select name="documentType" onValueChange={setDocumentType}><SelectTrigger><SelectValue placeholder="Sélectionner un type..."/></SelectTrigger><SelectContent>{documentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
-                <div className={cn("relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors", isDragging && "border-primary bg-primary/10")} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragEvents} onDrop={handleDrop}>
-                    <UploadCloud className="w-10 h-10 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-center text-muted-foreground"><span className="font-semibold">Glissez-déposez</span> ou cliquez pour sélectionner</p>
-                    {file && <p className="mt-2 text-sm font-medium text-foreground">{file.name}</p>}
-                    <Input id="file-upload" type="file" className="sr-only" onChange={e => setFile(e.target.files?.[0] || null)} />
                 </div>
-            </div><DialogFooter><Button type="button" variant="outline" onClick={onClose}>Annuler</Button><Button type="submit" disabled={!file || !employeeId || !documentType}>Ajouter</Button></DialogFooter></form></DialogContent>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
         </Dialog>
     );
 }
 
-export default function DossiersAdministratifsPage() {
-    return <DossiersAdministratifsContent />
+function PreviewModal({ isOpen, onClose, doc }: { isOpen: boolean, onClose: () => void, doc: any }) {
+    if (!doc) return null;
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Aperçu: {doc.name}</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 bg-muted flex justify-center rounded-md">
+                    <Image src="https://placehold.co/800x1131.png" alt="Document preview" data-ai-hint="document contract" width={595} height={842} className="border shadow-md"/>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
 }
