@@ -17,11 +17,9 @@ import { PlusCircle, Eye, Pencil, Repeat, FileSignature, Download } from 'lucide
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Logo } from '@/components/logo';
-import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 // --- TYPES & MOCK DATA ---
 type ContractType = 'CDI' | 'CDD' | 'Stage' | 'Apprentissage';
@@ -65,16 +63,43 @@ type ContractVariables = {
     HORAIRES_TRAVAIL: string;
     DUREE_HEBDOMADAIRE: string;
     JOURS_REPOS: string;
+    SI_TEMPS_PARTIEL: boolean;
+    NOMBRE_HEURES_PARTIEL?: string;
+    REPARTITION_HORAIRES?: string;
     SALAIRE_BASE: number;
     PERIODICITE_SALAIRE: 'mensuel' | 'annuel';
+    SI_PRIMES: boolean;
+    LISTE_PRIMES?: string;
+    SI_AVANTAGES_NATURE: boolean;
+    LISTE_AVANTAGES?: string;
+    DATE_VERSEMENT: string;
+    MODE_PAIEMENT: string;
     NOMBRE_JOURS_CONGES: number;
+    PERIODE_CONGES: string;
+    SI_FORMATION_INITIALE: boolean;
+    DUREE_FORMATION?: string;
     OBLIGATIONS_SUPPLEMENTAIRES: string;
+    SI_NON_CONCURRENCE: boolean;
+    DUREE_NON_CONCURRENCE?: string;
+    SECTEURS_CONCERNES?: string;
+    ZONE_NON_CONCURRENCE?: string;
+    MONTANT_CONTREPARTIE?: string;
+    SI_CDI: boolean;
+    DUREE_PREAVIS?: string;
+    SI_CDD: boolean;
+    LIEU_SIGNATURE: string;
+    DATE_SIGNATURE: string;
+    SIGNATURE_EMPLOYEUR: string;
+    SIGNATURE_EMPLOYE: string;
+    DATE_REMISE: string;
+    DATE_DPAE: string;
+    DATE_VISITE_MEDICALE: string;
 };
 
 const initialContracts: ContractVariables[] = [
-    { id: 'c-001', employeeId: 'emp-001', employeeName: 'Jean Dupont', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2020-03-15', FONCTION: 'Développeur Senior', SALAIRE_BASE: 350000, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Dupont', EMPLOYE_PRENOM: 'Jean', EMPLOYE_DATE_NAISSANCE: '1985-05-15', EMPLOYE_LIEU_NAISSANCE: 'Abidjan', EMPLOYE_ADRESSE: 'Cocody', EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: true, DUREE_ESSAI: '3 mois', QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.2', COEFFICIENT: '130', SUPERIEUR_HIERARCHIQUE: 'Directeur Technique', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', PERIODICITE_SALAIRE: 'mensuel', NOMBRE_JOURS_CONGES: 30, OBLIGATIONS_SUPPLEMENTAIRES: 'Respecter la charte informatique.' },
-    { id: 'c-002', employeeId: 'emp-002', employeeName: 'Sophie Martin', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2021-09-01', FONCTION: 'Chef de projet Marketing', SALAIRE_BASE: 320000, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Martin', EMPLOYE_PRENOM: 'Sophie', EMPLOYE_DATE_NAISSANCE: '1990-11-20', EMPLOYE_LIEU_NAISSANCE: 'Bouaké', EMPLOYE_ADRESSE: 'Marcory', EMPLOYE_NUM_SECU: '2 90 11 98 765 432 10', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.1', COEFFICIENT: '115', SUPERIEUR_HIERARCHIQUE: 'Directeur Marketing', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: true, ZONE_DEPLACEMENT: 'territoire national', HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', PERIODICITE_SALAIRE: 'mensuel', NOMBRE_JOURS_CONGES: 30, OBLIGATIONS_SUPPLEMENTAIRES: '' },
-    { id: 'c-003', employeeId: 'emp-003', employeeName: 'David Garcia', status: 'Terminé', TYPE_CONTRAT: 'CDD', DATE_DEBUT: '2024-01-20', DATE_FIN: '2024-07-19', FONCTION: 'Comptable', SALAIRE_BASE: 280000, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Garcia', EMPLOYE_PRENOM: 'David', EMPLOYE_DATE_NAISSANCE: '1992-02-25', EMPLOYE_LIEU_NAISSANCE: 'Yamoussoukro', EMPLOYE_ADRESSE: 'Plateau', EMPLOYE_NUM_SECU: '1 92 02 97 654 321 09', EMPLOYE_NATIONALITE: 'Française', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Technicien', CLASSIFICATION: '1.2', COEFFICIENT: '95', SUPERIEUR_HIERARCHIQUE: 'Directeur Financier', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', PERIODICITE_SALAIRE: 'mensuel', NOMBRE_JOURS_CONGES: 30, OBLIGATIONS_SUPPLEMENTAIRES: '' },
+    { id: 'c-001', employeeId: 'emp-001', employeeName: 'Jean Dupont', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2020-03-15', FONCTION: 'Développeur Senior', SALAIRE_BASE: 350000, SI_CDI: true, SI_CDD: false, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Dupont', EMPLOYE_PRENOM: 'Jean', EMPLOYE_DATE_NAISSANCE: '1985-05-15', EMPLOYE_LIEU_NAISSANCE: 'Abidjan', EMPLOYE_ADRESSE: 'Cocody', EMPLOYE_NUM_SECU: '1 85 05 99 123 456 78', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: true, DUREE_ESSAI: '3 mois', QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.2', COEFFICIENT: '130', SUPERIEUR_HIERARCHIQUE: 'Directeur Technique', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: 'Respecter la charte informatique.', SI_NON_CONCURRENCE: false, DUREE_PREAVIS: '3 mois', LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '15/03/2020', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'Jean Dupont', DATE_REMISE: '15/03/2020', DATE_DPAE: '14/03/2020', DATE_VISITE_MEDICALE: '18/03/2020' },
+    { id: 'c-002', employeeId: 'emp-002', employeeName: 'Sophie Martin', status: 'Actif', TYPE_CONTRAT: 'CDI', DATE_DEBUT: '2021-09-01', FONCTION: 'Chef de projet Marketing', SALAIRE_BASE: 320000, SI_CDI: true, SI_CDD: false, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Martin', EMPLOYE_PRENOM: 'Sophie', EMPLOYE_DATE_NAISSANCE: '1990-11-20', EMPLOYE_LIEU_NAISSANCE: 'Bouaké', EMPLOYE_ADRESSE: 'Marcory', EMPLOYE_NUM_SECU: '2 90 11 98 765 432 10', EMPLOYE_NATIONALITE: 'Ivoirienne', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Cadre', CLASSIFICATION: '2.1', COEFFICIENT: '115', SUPERIEUR_HIERARCHIQUE: 'Directeur Marketing', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: true, ZONE_DEPLACEMENT: 'territoire national', HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: '', SI_NON_CONCURRENCE: false, DUREE_PREAVIS: '3 mois', LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '01/09/2021', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'Sophie Martin', DATE_REMISE: '01/09/2021', DATE_DPAE: '31/08/2021', DATE_VISITE_MEDICALE: '03/09/2021' },
+    { id: 'c-003', employeeId: 'emp-003', employeeName: 'David Garcia', status: 'Terminé', TYPE_CONTRAT: 'CDD', DATE_DEBUT: '2024-01-20', DATE_FIN: '2024-07-19', FONCTION: 'Comptable', SALAIRE_BASE: 280000, SI_CDI: false, SI_CDD: true, ENTREPRISE_NOM: 'UNIKORP', ENTREPRISE_FORME: 'SAS', ENTREPRISE_ADRESSE: 'Abidjan, Côte d\'Ivoire', ENTREPRISE_SIRET: 'CI-ABJ-2024-B-12345', ENTREPRISE_APE: '6201Z', REPRESENTANT_NOM: 'Elodie Dubois', REPRESENTANT_FONCTION: 'PDG', EMPLOYE_NOM: 'Garcia', EMPLOYE_PRENOM: 'David', EMPLOYE_DATE_NAISSANCE: '1992-02-25', EMPLOYE_LIEU_NAISSANCE: 'Yamoussoukro', EMPLOYE_ADRESSE: 'Plateau', EMPLOYE_NUM_SECU: '1 92 02 97 654 321 09', EMPLOYE_NATIONALITE: 'Française', CONVENTION_COLLECTIVE: 'Syntec', SI_PERIODE_ESSAI: false, QUALIFICATION_PROFESSIONNELLE: 'Technicien', CLASSIFICATION: '1.2', COEFFICIENT: '95', SUPERIEUR_HIERARCHIQUE: 'Directeur Financier', LIEU_TRAVAIL: 'Siège social', SI_DEPLACEMENT: false, HORAIRES_TRAVAIL: '9h-18h', DUREE_HEBDOMADAIRE: '40', JOURS_REPOS: 'Samedi, Dimanche', SI_TEMPS_PARTIEL: false, PERIODICITE_SALAIRE: 'mensuel', SI_PRIMES: false, SI_AVANTAGES_NATURE: false, DATE_VERSEMENT: 'le 28 de chaque mois', MODE_PAIEMENT: 'virement bancaire', NOMBRE_JOURS_CONGES: 30, PERIODE_CONGES: '1er Janvier au 31 Décembre', SI_FORMATION_INITIALE: false, OBLIGATIONS_SUPPLEMENTAIRES: '', SI_NON_CONCURRENCE: false, LIEU_SIGNATURE: 'Abidjan', DATE_SIGNATURE: '20/01/2024', SIGNATURE_EMPLOYEUR: 'Elodie Dubois', SIGNATURE_EMPLOYE: 'David Garcia', DATE_REMISE: '20/01/2024', DATE_DPAE: '19/01/2024', DATE_VISITE_MEDICALE: '22/01/2024' },
 ];
 
 function ContratsContent() {
@@ -164,14 +189,12 @@ function ContractModal({ isOpen, onClose, onSave, config }: { isOpen: boolean, o
     const [formData, setFormData] = useState<Partial<ContractVariables>>({});
 
     useEffect(() => {
-        if (isOpen) {
-            setFormData(config.contract || {});
-        }
+        setFormData(config.contract || {});
     }, [config, isOpen]);
     
     const isReadOnly = config.mode === 'view';
 
-    if (config.mode === 'view') {
+    if (isReadOnly) {
         return <ViewContractModal isOpen={isOpen} onClose={onClose} contract={config.contract as ContractVariables} />;
     }
 
@@ -230,7 +253,7 @@ function ContractModal({ isOpen, onClose, onSave, config }: { isOpen: boolean, o
                                 <AccordionTrigger>Clauses Principales</AccordionTrigger>
                                 <AccordionContent className="space-y-4">
                                      <div className="grid grid-cols-3 gap-4">
-                                        <div className="space-y-1"><Label>Type de Contrat</Label><Select name="TYPE_CONTRAT" value={formData.TYPE_CONTRAT} onValueChange={(v) => handleSelectChange('TYPE_CONTRAT', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CDI">CDI</SelectItem><SelectItem value="CDD">CDD</SelectItem><SelectItem value="Stage">Stage</SelectItem><SelectItem value="Apprentissage">Apprentissage</SelectItem></SelectContent></Select></div>
+                                        <div className="space-y-1"><Label>Type de Contrat</Label><Select name="TYPE_CONTRAT" value={formData.TYPE_CONTRAT} onValueChange={(v: ContractType) => handleSelectChange('TYPE_CONTRAT', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CDI">CDI</SelectItem><SelectItem value="CDD">CDD</SelectItem><SelectItem value="Stage">Stage</SelectItem><SelectItem value="Apprentissage">Apprentissage</SelectItem></SelectContent></Select></div>
                                         <div className="space-y-1"><Label>Date de début</Label><Input name="DATE_DEBUT" type="date" value={formData.DATE_DEBUT || ''} onChange={handleChange} /></div>
                                         {formData.TYPE_CONTRAT !== 'CDI' && <div className="space-y-1"><Label>Date de fin</Label><Input name="DATE_FIN" type="date" value={formData.DATE_FIN || ''} onChange={handleChange} /></div>}
                                     </div>
@@ -245,7 +268,7 @@ function ContractModal({ isOpen, onClose, onSave, config }: { isOpen: boolean, o
                                 <AccordionContent className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1"><Label>Salaire de base</Label><Input name="SALAIRE_BASE" type="number" value={formData.SALAIRE_BASE || ''} onChange={handleChange} /></div>
-                                        <div className="space-y-1"><Label>Périodicité</Label><Select name="PERIODICITE_SALAIRE" value={formData.PERIODICITE_SALAIRE} onValueChange={(v) => handleSelectChange('PERIODICITE_SALAIRE', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mensuel">Mensuel</SelectItem><SelectItem value="annuel">Annuel</SelectItem></SelectContent></Select></div>
+                                        <div className="space-y-1"><Label>Périodicité</Label><Select name="PERIODICITE_SALAIRE" value={formData.PERIODICITE_SALAIRE} onValueChange={(v: 'mensuel'|'annuel') => handleSelectChange('PERIODICITE_SALAIRE', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mensuel">Mensuel</SelectItem><SelectItem value="annuel">Annuel</SelectItem></SelectContent></Select></div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1"><Label>Horaires de travail</Label><Input name="HORAIRES_TRAVAIL" value={formData.HORAIRES_TRAVAIL || ''} onChange={handleChange} /></div>
@@ -270,62 +293,38 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
 
     const handlePrint = () => {
         const doc = new jsPDF();
-        let y = 15;
+        let y = 50; 
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 15;
         const pageContentWidth = doc.internal.pageSize.getWidth() - margin * 2;
     
-        const companyName = "UNIKORP";
-        const userName = "Utilisateur Unikorp";
-        const moduleName = "SOCIX";
-        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
-        const printDateTime = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
+        const addText = (text: string, options: any = {}) => {
+            const splitText = doc.splitTextToSize(text, pageContentWidth);
+            const textHeight = doc.getTextDimensions(splitText).h;
+            if (y + textHeight > pageHeight - margin) { doc.addPage(); drawHeader(); }
+            doc.text(splitText, margin, y, options);
+            y += textHeight + 4;
+        };
 
+        const addTitle = (text: string) => { 
+            doc.setFontSize(14).setFont('helvetica', 'bold'); 
+            addText(text); 
+            doc.setFontSize(10).setFont('helvetica', 'normal'); 
+        };
+        
         const drawHeader = () => {
-            doc.setFontSize(9); doc.setTextColor(150);
-            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, margin, 15);
-            doc.setDrawColor(220); doc.line(margin, 18, doc.internal.pageSize.width - margin, 18);
-            doc.addImage(logoDataUri, 'PNG', margin, 22, 12, 12);
-            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
-            doc.text(companyName, margin + 15, 28);
-            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
-            const rightX = doc.internal.pageSize.width - margin;
-            doc.text(`Document : Contrat de travail`, rightX, 25, { align: 'right' });
-            doc.text(`Employé : ${contract.EMPLOYE_PRENOM} ${contract.EMPLOYE_NOM}`, rightX, 30, { align: 'right' });
-            doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
-            y = 50; 
+            doc.setFontSize(18).text('CONTRAT DE TRAVAIL', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); 
+            y += 10;
         }
 
         drawHeader();
         
-        const addText = (text: string) => {
-            const splitText = doc.splitTextToSize(text, pageContentWidth);
-            const textHeight = doc.getTextDimensions(splitText).h;
-            if (y + textHeight > pageHeight - margin) { doc.addPage(); drawHeader(); }
-            doc.text(splitText, margin, y);
-            y += textHeight + 4;
-        };
-        const addTitle = (text: string) => { doc.setFontSize(14).setFont(undefined, 'bold'); addText(text); doc.setFontSize(10).setFont(undefined, 'normal'); };
-        
-        doc.setFont('times', 'normal').setFontSize(18).text('CONTRAT DE TRAVAIL', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 10;
         addTitle('Entre les soussignés :');
         addText(`L'EMPLOYEUR :\nDénomination sociale : ${contract.ENTREPRISE_NOM}\nAdresse : ${contract.ENTREPRISE_ADRESSE}\nReprésenté par : ${contract.REPRESENTANT_NOM}, ${contract.REPRESENTANT_FONCTION}`);
-        addText(`L'EMPLOYÉ :\nNom : ${contract.EMPLOYE_NOM}\nPrénom : ${contract.EMPLOYE_PRENOM}\nDate de naissance : ${format(new Date(contract.EMPLOYE_DATE_NAISSANCE), 'dd/MM/yyyy')}\nAdresse : ${contract.EMPLOYE_ADRESSE}`);
+        addText(`L'EMPLOYÉ :\nNom : ${contract.EMPLOYE_NOM}\nPrénom : ${contract.EMPLOYE_PRENOM}\nDate de naissance : ${format(new Date(contract.DATE_DEBUT), 'dd/MM/yyyy')}\nAdresse : ${contract.EMPLOYE_ADRESSE}`);
         
         addTitle('ARTICLE 1 - NATURE DU CONTRAT');
         addText(`Il est conclu un contrat à durée ${contract.TYPE_CONTRAT}.`);
-        
-        addTitle('ARTICLE 2 - FONCTION');
-        addText(`Le salarié est engagé en qualité de ${contract.FONCTION}.`);
-        
-        addTitle('ARTICLE 3 - LIEU DE TRAVAIL');
-        addText(`Le salarié exercera ses fonctions à ${contract.LIEU_TRAVAIL}.`);
-        
-        addTitle('ARTICLE 4 - HORAIRES');
-        addText(`La durée hebdomadaire du travail est de ${contract.DUREE_HEBDOMADAIRE} heures.`);
-
-        addTitle('ARTICLE 5 - RÉMUNÉRATION');
-        addText(`Le salaire de base est de ${contract.SALAIRE_BASE.toLocaleString('fr-FR')} FCFA.`);
         
         doc.save(`contrat_${contract.employeeName.replace(/\s/g, '_')}.pdf`);
         toast({ title: 'PDF du contrat généré.' });
@@ -345,12 +344,15 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
                         <div className="mb-4 pl-4">
                             <h3 className="font-semibold">L'EMPLOYEUR :</h3>
                             <p>Dénomination sociale : {contract.ENTREPRISE_NOM}</p>
-                            <p>Adresse : {contract.ENTREPRISE_ADRESSE}</p>
+                            <p>Adresse du siège social : {contract.ENTREPRISE_ADRESSE}</p>
+                            <p>Représenté par : {contract.REPRESENTANT_NOM}, {contract.REPRESENTANT_FONCTION}</p>
                         </div>
                         <div className="mb-4 pl-4">
                             <h3 className="font-semibold">L'EMPLOYÉ :</h3>
-                            <p>Nom & Prénom : {contract.employeeName}</p>
-                            <p>Date de naissance : {format(new Date(contract.EMPLOYE_DATE_NAISSANCE), 'dd/MM/yyyy')}</p>
+                            <p>Nom : {contract.EMPLOYE_NOM}</p>
+                            <p>Prénom : {contract.EMPLOYE_PRENOM}</p>
+                            <p>Date de naissance : {format(new Date(contract.DATE_DEBUT), 'dd/MM/yyyy')}</p>
+                            <p>Adresse : {contract.EMPLOYE_ADRESSE}</p>
                         </div>
                          <Separator className="my-6" />
                         <div className="space-y-4">
@@ -361,15 +363,15 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
                 </ScrollArea>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
-                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4" /> Imprimer le contrat</Button>
+                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4"/>Imprimer le contrat</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
 
-
 export default function ContratsPage() {
     return <ContratsContent />;
 }
 
+    
