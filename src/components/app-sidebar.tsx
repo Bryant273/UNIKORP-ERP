@@ -59,6 +59,7 @@ import {
   Repeat,
   AreaChart,
   BookHeart,
+  Fingerprint,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -152,7 +153,7 @@ const socixNav = [
     icon: CalendarDays,
     subItems: [
       { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
-      { title: 'Absences et arrêts', href: '/socix/absences-arrets', icon: UserX },
+      { title: 'Pointage', href: '/socix/absences-arrets', icon: Fingerprint },
       { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
       { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
     ]
