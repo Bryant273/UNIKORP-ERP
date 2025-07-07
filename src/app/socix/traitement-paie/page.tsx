@@ -11,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
 import { HandCoins, Check, Loader2, BarChart, FileText, Send } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 const MOCK_EMPLOYEES = [
     { id: 'emp-001', name: 'Jean Dupont', salary: 350000, status: 'Vérifié' },
@@ -164,4 +167,3 @@ export default function TraitementPaiePage() {
         </Card>
     );
 }
-
