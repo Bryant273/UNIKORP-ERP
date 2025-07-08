@@ -38,7 +38,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -58,11 +58,9 @@ import {
   Pencil,
   Trash2,
   Copy,
-  SlidersHorizontal,
   ArrowDownUp,
   TestTube2,
   ChevronsUpDown,
-  Info,
   FileText,
   List,
   Percent,
@@ -70,9 +68,15 @@ import {
   Palette,
   ShieldCheck,
   Eye,
+  Upload,
+  FileUp,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 
 // --- TYPES ---
 
@@ -155,6 +159,13 @@ export default function TraitementPaiePage() {
     const [modeleToDelete, setModeleToDelete] = useState<ModelePaie | null>(null);
     const [previewingModele, setPreviewingModele] = useState<ModelePaie | null>(null);
 
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
+    const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+
     const openModal = (modele: ModelePaie | null = null) => {
         setEditingModele(modele);
         setIsModalOpen(true);
@@ -180,6 +191,102 @@ export default function TraitementPaiePage() {
         }
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFileToUpload(e.target.files[0]);
+        }
+    };
+    
+    const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+        handleDragEvents(e);
+        if (!isImporting) setIsDragging(true);
+    };
+    
+    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        handleDragEvents(e);
+        setIsDragging(false);
+    };
+    
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        handleDragEvents(e);
+        setIsDragging(false);
+        if (isImporting) return;
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setFileToUpload(e.dataTransfer.files[0]);
+        }
+    };
+
+    const resetImportModal = () => {
+        if (isImporting) return;
+        setIsImportModalOpen(false);
+        setFileToUpload(null);
+        setImportOption('merge');
+        setIsDragging(false);
+    };
+
+    const handleImport = async () => {
+        if (!fileToUpload) {
+            toast({
+                title: "Erreur",
+                description: "Veuillez sélectionner un fichier à importer.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setIsImporting(true);
+        setImportProgress(0);
+
+        const progressInterval = setInterval(() => {
+            setImportProgress(prev => (prev < 90 ? prev + 10 : 90));
+        }, 200);
+
+        await new Promise(resolve => setTimeout(resolve, 2200));
+
+        const importedModele: ModelePaie = {
+            id: Date.now(),
+            nom: `Modèle importé de ${fileToUpload.name.split('.')[0]}`,
+            description: `Ce modèle a été importé le ${new Date().toLocaleDateString('fr-FR')}`,
+            rubriques: [
+                { id: 'r_imp_1', code: 'SAL_BASE', libelle: 'Salaire de Base Importé', type: 'Gain', ordre: 10, formule: 'salaireMensuel', visible: true, actif: true, inversable: true },
+                { id: 'r_imp_2', code: 'TRSP', libelle: 'Indemnité Transport', type: 'Gain', ordre: 30, formule: '20000', visible: true, actif: true, inversable: false },
+                { id: 'r_imp_3', code: 'I_PRES', libelle: 'Indemnité de Présence', type: 'Gain', ordre: 35, formule: 'nbJoursPresents * 1000', visible: true, actif: true, inversable: false },
+                { id: 'r_imp_4', code: 'COT_SOC', libelle: 'Cotisations Sociales Importées', type: 'Cotisation', ordre: 110, formule: 'salaireBrut * 0.15', visible: true, actif: true, inversable: false },
+            ],
+            constantes: [
+                { id: 'c_imp_1', code: 'PLAFOND_SS', libelle: 'Plafond Sécurité Sociale', valeur: 2500000, unite: 'FCFA' }
+            ],
+            variables: [
+                { id: 'v_imp_1', code: 'nbJoursPresents', libelle: 'Jours de présence', description: 'Nombre de jours de présence effective.' },
+            ],
+        };
+
+        if (importOption === 'replace') {
+            setModeles([importedModele]);
+        } else {
+            setModeles(prev => [...prev, importedModele]);
+        }
+        
+        clearInterval(progressInterval);
+        setImportProgress(100);
+
+        toast({
+            title: "Importation simulée réussie",
+            description: `Le modèle "${importedModele.nom}" a été ajouté.`,
+        });
+        
+        setTimeout(() => {
+            resetImportModal();
+            setIsImporting(false);
+            setImportProgress(0);
+        }, 1000);
+    };
+
     return (
         <>
             <Card>
@@ -189,7 +296,13 @@ export default function TraitementPaiePage() {
                             <CardTitle className="text-2xl">Paramétrage des Bulletins de Paie</CardTitle>
                             <CardDescription>Gérez les modèles qui structurent le calcul de la paie pour vos employés.</CardDescription>
                         </div>
-                        <Button onClick={() => openModal()}><PlusCircle className="mr-2 h-4 w-4"/>Créer un modèle</Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Importer
+                            </Button>
+                            <Button onClick={() => openModal()}><PlusCircle className="mr-2 h-4 w-4"/>Créer un modèle</Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -257,6 +370,85 @@ export default function TraitementPaiePage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            
+            <Dialog open={isImportModalOpen} onOpenChange={resetImportModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Importer des modèles</DialogTitle>
+                        <DialogDescription>
+                          Chargez un fichier pour ajouter de nouveaux modèles de bulletin.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-6 py-4">
+                         <div 
+                            className={cn(
+                                "relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 hover:bg-muted/50",
+                                isDragging && "border-primary bg-primary/10",
+                                isImporting && "cursor-not-allowed opacity-50"
+                            )}
+                            onDragEnter={handleDragEnter}
+                            onDragLeave={handleDragLeave}
+                            onDragOver={handleDragEvents}
+                            onDrop={handleDrop}
+                          >
+                              <Label htmlFor="file-upload" className={cn("flex flex-col items-center justify-center w-full h-full", isImporting ? "cursor-not-allowed" : "cursor-pointer")}>
+                                <FileUp className="w-10 h-10 text-muted-foreground" />
+                                <p className="mt-2 text-sm text-center text-muted-foreground">
+                                  <span className="font-semibold">Glissez-déposez un fichier</span> ou cliquez pour sélectionner
+                                </p>
+                                {fileToUpload && !isImporting && (
+                                  <p className="mt-2 text-sm font-medium text-foreground">{fileToUpload.name}</p>
+                                )}
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  Fichiers JSON, XML, CSV
+                                </p>
+                              </Label>
+                              <Input 
+                                  id="file-upload" 
+                                  type="file" 
+                                  className="sr-only" 
+                                  onChange={handleFileChange} 
+                                  accept=".json,.xml,.csv" 
+                                  disabled={isImporting}
+                              />
+                        </div>
+
+                        {isImporting && (
+                            <div className="space-y-2">
+                                <Progress value={importProgress} />
+                                <p className="text-sm text-center text-muted-foreground">Importation en cours... {Math.round(importProgress)}%</p>
+                            </div>
+                        )}
+                        
+                        {!isImporting && fileToUpload && (
+                            <div className="space-y-3">
+                                <Label>Option d'importation</Label>
+                                <RadioGroup
+                                    value={importOption}
+                                    onValueChange={(value: 'merge' | 'replace') => setImportOption(value)}
+                                    className="flex gap-4 pt-1"
+                                    disabled={isImporting}
+                                >
+                                    <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="merge" id="merge" />
+                                    <Label htmlFor="merge" className="font-normal">Fusionner</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="replace" id="replace" />
+                                    <Label htmlFor="replace" className="font-normal">Remplacer</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+                        )}
+                      </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={resetImportModal} disabled={isImporting}>Annuler</Button>
+                        <Button onClick={handleImport} disabled={!fileToUpload || isImporting}>
+                            {isImporting ? 'Importation...' : 'Importer'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
@@ -535,5 +727,3 @@ function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onC
         </Dialog>
     );
 }
-
-    
