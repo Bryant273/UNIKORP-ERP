@@ -752,3 +752,5 @@ function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onC
     );
 }
 export default TraitementPaiePage;
+
+    
