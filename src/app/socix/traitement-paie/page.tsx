@@ -16,9 +16,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Pencil, Trash2, Copy, SlidersHorizontal, ArrowDownUp, TestTube2, ChevronsUpDown, Info, FileText, List, Percent, User, Palette, ShieldCheck } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Copy, SlidersHorizontal, ArrowDownUp, TestTube2, ChevronsUpDown, Info, FileText, List, Percent, User, Palette, ShieldCheck, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Logo } from '@/components/logo';
 
 // --- TYPES ---
 
@@ -99,6 +102,7 @@ export default function TraitementPaiePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingModele, setEditingModele] = useState<ModelePaie | null>(null);
     const [modeleToDelete, setModeleToDelete] = useState<ModelePaie | null>(null);
+    const [previewingModele, setPreviewingModele] = useState<ModelePaie | null>(null);
 
     const openModal = (modele: ModelePaie | null = null) => {
         setEditingModele(modele);
@@ -146,7 +150,7 @@ export default function TraitementPaiePage() {
                                 <TableHead className="text-center">Rubriques</TableHead>
                                 <TableHead className="text-center">Constantes</TableHead>
                                 <TableHead className="text-center">Variables</TableHead>
-                                <TableHead className="text-center w-[150px]">Actions</TableHead>
+                                <TableHead className="text-center w-[200px]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -158,7 +162,10 @@ export default function TraitementPaiePage() {
                                     <TableCell className="text-center"><Badge variant="secondary">{modele.constantes.length}</Badge></TableCell>
                                     <TableCell className="text-center"><Badge variant="secondary">{modele.variables.length}</Badge></TableCell>
                                     <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => setPreviewingModele(modele)}>
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
                                             <Button variant="ghost" size="icon" onClick={() => openModal(modele)}>
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
@@ -182,6 +189,12 @@ export default function TraitementPaiePage() {
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSave}
                 modeleToEdit={editingModele}
+            />
+
+            <PayslipPreviewModal
+                isOpen={!!previewingModele}
+                onClose={() => setPreviewingModele(null)}
+                modele={previewingModele}
             />
 
             <AlertDialog open={!!modeleToDelete} onOpenChange={() => setModeleToDelete(null)}>
@@ -220,16 +233,25 @@ function PayrollModelModal({ isOpen, onClose, onSave, modeleToEdit }: { isOpen: 
                     </DialogHeader>
                     <div className="flex-1 overflow-y-auto py-4">
                         <Tabs defaultValue="rubriques" className="w-full">
-                            <TabsList className="grid w-full grid-cols-6"><TabsTrigger value="rubriques"><List className="mr-2 h-4 w-4"/>Rubriques</TabsTrigger><TabsTrigger value="constantes"><Percent className="mr-2 h-4 w-4"/>Cotisations</TabsTrigger><TabsTrigger value="variables"><User className="mr-2 h-4 w-4"/>Profils</TabsTrigger><TabsTrigger value="parametres"><Palette className="mr-2 h-4 w-4"/>Affichage</TabsTrigger><TabsTrigger value="ordre"><ShieldCheck className="mr-2 h-4 w-4"/>Validation</TabsTrigger><TabsTrigger value="simulation"><FileText className="mr-2 h-4 w-4"/>Modèles</TabsTrigger></TabsList>
-                            <TabsContent value="rubriques" className="mt-4"><RubriquesTab formData={formData} setFormData={setFormData} /></TabsContent>
-                            <TabsContent value="constantes" className="mt-4"><ConstantesTab formData={formData} setFormData={setFormData} /></TabsContent>
-                            <TabsContent value="variables" className="mt-4"><VariablesTab formData={formData} setFormData={setFormData} /></TabsContent>
-                            <TabsContent value="parametres" className="mt-4"><ParametresTab formData={formData} setFormData={setFormData} /></TabsContent>
-                            <TabsContent value="ordre" className="mt-4"><OrdreCalculTab formData={formData} setFormData={setFormData} /></TabsContent>
-                            <TabsContent value="simulation" className="mt-4"><SimulationTab formData={formData} /></TabsContent>
+                            <TabsList className="mx-6">
+                                <TabsTrigger value="rubriques"><List className="mr-2 h-4 w-4"/>Rubriques</TabsTrigger>
+                                <TabsTrigger value="constantes"><Percent className="mr-2 h-4 w-4"/>Constantes</TabsTrigger>
+                                <TabsTrigger value="variables"><User className="mr-2 h-4 w-4"/>Variables</TabsTrigger>
+                                <TabsTrigger value="parametres"><Palette className="mr-2 h-4 w-4"/>Paramètres</TabsTrigger>
+                                <TabsTrigger value="ordre"><ChevronsUpDown className="mr-2 h-4 w-4"/>Ordre de Calcul</TabsTrigger>
+                                <TabsTrigger value="simulation"><TestTube2 className="mr-2 h-4 w-4"/>Simulation</TabsTrigger>
+                            </TabsList>
+                            <div className="px-6">
+                                <TabsContent value="rubriques" className="mt-4"><RubriquesTab formData={formData} setFormData={setFormData} /></TabsContent>
+                                <TabsContent value="constantes" className="mt-4"><ConstantesTab formData={formData} setFormData={setFormData} /></TabsContent>
+                                <TabsContent value="variables" className="mt-4"><VariablesTab formData={formData} setFormData={setFormData} /></TabsContent>
+                                <TabsContent value="parametres" className="mt-4"><ParametresTab formData={formData} setFormData={setFormData} /></TabsContent>
+                                <TabsContent value="ordre" className="mt-4"><OrdreCalculTab formData={formData} setFormData={setFormData} /></TabsContent>
+                                <TabsContent value="simulation" className="mt-4"><SimulationTab formData={formData} /></TabsContent>
+                            </div>
                         </Tabs>
                     </div>
-                    <DialogFooter className="pt-4 border-t"><Button type="button" variant="outline" onClick={onClose}>Annuler</Button><Button type="submit">Enregistrer le modèle</Button></DialogFooter>
+                    <DialogFooter className="pt-4 border-t px-6"><Button type="button" variant="outline" onClick={onClose}>Annuler</Button><Button type="submit">Enregistrer le modèle</Button></DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
@@ -368,4 +390,97 @@ const SectionCard = ({ title, description, children, actions }: { title: string,
     </div>
 );
 
-    
+function PayslipPreview({ modele }: { modele: ModelePaie | null }) {
+    if (!modele) return null;
+
+    // Mock data for preview
+    const employeeData = {
+        name: 'Jean Dupont',
+        matricule: 'UNIK-076',
+        poste: 'Développeur Senior',
+        classification: '2.2 - 130',
+        dateEntree: '15/03/2020',
+        numSecu: '1 85 05 99 123 456 78',
+    };
+
+    const companyData = {
+        name: 'UNIKORP',
+        address: 'Abidjan, Côte d\'Ivoire',
+        siret: 'CI-ABJ-2024-B-12345',
+    };
+
+    const periodData = {
+        periode: format(new Date(), 'MMMM yyyy', { locale: fr }),
+        joursTravailles: 21.67
+    };
+
+    // Simulated calculation
+    const salaireBase = modele.rubriques.find(r => r.code === 'SB')?.formule === 'salaireMensuel' ? 350000 : 0;
+    const primeAnciennete = modele.rubriques.find(r => r.code === 'PA') ? salaireBase * 0.05 : 0;
+    const salaireBrut = salaireBase + primeAnciennete;
+    const cotisationCNPS = modele.rubriques.find(r => r.code === 'C01') ? salaireBrut * 0.035 : 0;
+    const totalRetenues = cotisationCNPS;
+    const netAPayer = salaireBrut - totalRetenues;
+
+    return (
+        <div className="p-2 border rounded-lg bg-background text-foreground text-xs font-sans">
+            <div className="flex justify-between items-start pb-2 mb-2 border-b">
+                <div>
+                    <h3 className="font-bold text-sm">{companyData.name}</h3>
+                    <p className="text-muted-foreground text-xs">{companyData.address}</p>
+                </div>
+                <div className="text-right">
+                    <h4 className="font-bold text-base">BULLETIN DE PAIE</h4>
+                    <p className="text-xs text-muted-foreground">{periodData.periode}</p>
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 py-2 text-xs">
+                <div>
+                    <p><strong>{employeeData.name}</strong></p>
+                    <p>{employeeData.poste}</p>
+                    <p>Matricule: {employeeData.matricule}</p>
+                </div>
+                <div className="text-right">
+                     <p>Entrée: {employeeData.dateEntree}</p>
+                     <p>Classification: {employeeData.classification}</p>
+                </div>
+            </div>
+             <Table>
+                <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Libellé</TableHead><TableHead className="text-right">Gain</TableHead><TableHead className="text-right">Retenue</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    <TableRow><TableCell>SB</TableCell><TableCell>Salaire de base</TableCell><TableCell className="text-right">{salaireBase.toLocaleString()}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>PA</TableCell><TableCell>Prime d'ancienneté</TableCell><TableCell className="text-right">{primeAnciennete.toLocaleString()}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>C01</TableCell><TableCell>Cotisation CNPS</TableCell><TableCell></TableCell><TableCell className="text-right">{cotisationCNPS.toLocaleString()}</TableCell></TableRow>
+                </TableBody>
+                <TableFooter>
+                    <TableRow><TableCell colSpan={2} className="font-bold text-right">Total Brut</TableCell><TableCell className="font-bold text-right">{salaireBrut.toLocaleString()}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={3} className="font-bold text-right">Total Retenues</TableCell><TableCell className="font-bold text-right">{totalRetenues.toLocaleString()}</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={3} className="font-bold text-lg text-right">NET À PAYER</TableCell><TableCell className="font-bold text-lg text-right">{netAPayer.toLocaleString()} FCFA</TableCell></TableRow>
+                </TableFooter>
+            </Table>
+        </div>
+    );
+}
+
+function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onClose: () => void; modele: ModelePaie | null }) {
+    if (!modele) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>Aperçu du Bulletin de Paie</DialogTitle>
+                    <DialogDescription>
+                        Modèle: {modele.nom}. Ceci est une prévisualisation basée sur des données de test.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto bg-muted/50 p-6">
+                    <PayslipPreview modele={modele} />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
