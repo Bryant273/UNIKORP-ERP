@@ -2,26 +2,77 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableFooter,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Pencil, Trash2, Copy, SlidersHorizontal, ArrowDownUp, TestTube2, ChevronsUpDown, Info, FileText, List, Percent, User, Palette, ShieldCheck, Eye } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  PlusCircle,
+  Pencil,
+  Trash2,
+  Copy,
+  SlidersHorizontal,
+  ArrowDownUp,
+  TestTube2,
+  ChevronsUpDown,
+  Info,
+  FileText,
+  List,
+  Percent,
+  User,
+  Palette,
+  ShieldCheck,
+  Eye,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Logo } from '@/components/logo';
 
 // --- TYPES ---
 
@@ -410,7 +461,7 @@ function PayslipPreview({ modele }: { modele: ModelePaie | null }) {
     };
 
     const periodData = {
-        periode: format(new Date(), 'MMMM yyyy', { locale: fr }),
+        periode: 'Juillet 2024',
         joursTravailles: 21.67
     };
 
@@ -484,3 +535,5 @@ function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onC
         </Dialog>
     );
 }
+
+    
