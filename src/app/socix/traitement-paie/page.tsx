@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FileCog, PlusCircle, Import, ChevronDown, CheckCircle, AlertTriangle, Library, Palette, ShieldCheck, User, XCircle, Settings, Edit, Trash2, GitCompareArrows, SlidersHorizontal, Download, Eye, FileText, List, Briefcase, HandCoins, Users2, FileSignature, Clock } from 'lucide-react';
+import { FileCog, PlusCircle, Import, ChevronDown, CheckCircle, AlertTriangle, Library, Palette, ShieldCheck, User, XCircle, Settings, Edit, Trash2, GitCompareArrows, SlidersHorizontal, Download, Eye, FileText, List, Briefcase, HandCoins, Users2, FileSignature, Clock, Percent } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
