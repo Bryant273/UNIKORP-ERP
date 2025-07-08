@@ -49,7 +49,7 @@ import {
   TableFooter,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Pencil, Trash2, PlusCircle, List, Percent, User, Palette, ShieldCheck, TestTube2, ChevronsUpDown, Copy, Upload, FileUp, Loader2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, PlusCircle, List, Percent, User, Palette, ShieldCheck, TestTube2, ChevronsUpDown, Copy, Upload, FileUp, Loader2, Download } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -751,3 +751,4 @@ function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onC
         </Dialog>
     );
 }
+export default TraitementPaiePage;
