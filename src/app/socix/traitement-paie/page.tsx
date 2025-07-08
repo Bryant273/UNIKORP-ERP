@@ -8,9 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FileCog, PlusCircle, Import, ChevronDown, CheckCircle, AlertTriangle, Library, Palette, ShieldCheck, User } from 'lucide-react';
+import { FileCog, PlusCircle, Import, ChevronDown, CheckCircle, AlertTriangle, Library, Palette, ShieldCheck, User, XCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+
 
 const SectionCard = ({ title, description, children, actions }: { title: string, description: string, children: React.ReactNode, actions: React.ReactNode }) => (
     <>
