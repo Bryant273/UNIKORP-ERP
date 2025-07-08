@@ -6,54 +6,336 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FileCog, PlusCircle, Import, ChevronDown, CheckCircle, AlertTriangle, Library, Palette, ShieldCheck, User, XCircle, Settings, Edit, Trash2, GitCompareArrows, SlidersHorizontal, Download, Eye, FileText, List, Briefcase, HandCoins, Users2, FileSignature, Clock, Percent } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusCircle, Pencil, Trash2, Copy, SlidersHorizontal, ArrowDownUp, TestTube2, ChevronsUpDown, Info, FileText } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+
+// --- TYPES ---
+
+type RubriqueType = 'Gain' | 'Retenue' | 'Cotisation' | 'Info';
+
+type Rubrique = {
+  id: string;
+  code: string;
+  libelle: string;
+  type: RubriqueType;
+  ordre: number;
+  formule: string;
+  visible: boolean;
+  actif: boolean;
+  inversable: boolean;
+};
+
+type Constante = {
+  id: string;
+  code: string;
+  libelle: string;
+  valeur: number;
+  unite: string;
+};
+
+type Variable = {
+  id: string;
+  code: string;
+  libelle: string;
+  description: string;
+};
+
+type ModelePaie = {
+  id: number;
+  nom: string;
+  description: string;
+  rubriques: Rubrique[];
+  constantes: Constante[];
+  variables: Variable[];
+};
 
 // --- MOCK DATA ---
-const mockEmployees = [
-    { id: 'e001', matricule: 'UNIK-076', nom: 'Dupont', prenom: 'Jean', poste: 'Développeur Senior', statutPaie: 'Validée' },
-    { id: 'e002', matricule: 'UNIK-077', nom: 'Martin', prenom: 'Sophie', poste: 'Chef de projet Marketing', statutPaie: 'Validée' },
-    { id: 'e003', matricule: 'UNIK-078', nom: 'Garcia', prenom: 'David', poste: 'Comptable', statutPaie: 'En attente' },
-    { id: 'e004', matricule: 'UNIK-042', nom: 'Petit', prenom: 'Lucas', poste: 'Développeur Junior', statutPaie: 'Erreur' },
-    { id: 'e005', matricule: 'UNIK-055', nom: 'Leroy', prenom: 'Camille', poste: 'Gestionnaire RH', statutPaie: 'Validée' },
+
+const initialModeles: ModelePaie[] = [
+  {
+    id: 1,
+    nom: 'Cadre Mensuel',
+    description: 'Modèle standard pour les employés cadres mensualisés.',
+    rubriques: [
+      { id: 'r1', code: 'SB', libelle: 'Salaire de base', type: 'Gain', ordre: 10, formule: 'salaireMensuel', visible: true, actif: true, inversable: true },
+      { id: 'r2', code: 'PA', libelle: 'Prime d\'ancienneté', type: 'Gain', ordre: 20, formule: 'SB * anciennete * 0.01', visible: true, actif: true, inversable: false },
+      { id: 'r3', code: 'C01', libelle: 'Cotisation CNPS', type: 'Cotisation', ordre: 100, formule: 'salaireBrut * TAUX_CNPS', visible: true, actif: true, inversable: false },
+    ],
+    constantes: [
+      { id: 'c1', code: 'SMIG', libelle: 'Salaire Minimum', valeur: 75000, unite: 'FCFA' },
+      { id: 'c2', code: 'TAUX_CNPS', libelle: 'Taux CNPS Salarié', valeur: 0.035, unite: '%' },
+    ],
+    variables: [
+      { id: 'v1', code: 'nbJours', libelle: 'Jours travaillés', description: 'Nombre de jours travaillés dans le mois.' },
+      { id: 'v2', code: 'anciennete', libelle: 'Ancienneté (années)', description: 'Nombre d\'années d\'ancienneté.' },
+    ],
+  },
+  {
+    id: 2,
+    nom: 'Non-Cadre Horaire',
+    description: 'Modèle pour les employés non-cadres payés à l\'heure.',
+    rubriques: [],
+    constantes: [],
+    variables: [],
+  },
 ];
 
-const mockRubriques = [
-    { code: '001', libelle: 'Salaire de base', type: 'Gain', groupe: 'Salaire', ordre: 10, statut: 'Actif' },
-    { code: '105', libelle: 'Prime d\'ancienneté', type: 'Gain', groupe: 'Primes', ordre: 20, statut: 'Actif' },
-    { code: '401', libelle: 'Cotisation retraite T1', type: 'Retenue', groupe: 'Cotisations', ordre: 100, statut: 'Actif' },
-    { code: '900', libelle: 'Acompte', type: 'Retenue', groupe: 'Avances', ordre: 200, statut: 'Inactif' },
-];
+// --- MAIN PAGE COMPONENT ---
 
-const mockCotisations = [
-    { code: 'S21.G01.00.001', libelle: 'Maladie, maternité, invalidité', organisme: 'URSSAF', type: 'Mixte', tauxSalarial: '0.75%', tauxPatronal: '13.00%', statut: 'Actif' },
-    { code: 'S21.G01.00.002', libelle: 'Retraite de base', organisme: 'AGIRC-ARRCO', type: 'Mixte', tauxSalarial: '6.90%', tauxPatronal: '8.55%', statut: 'Actif' },
-    { code: 'S21.G01.00.005', libelle: 'Chômage', organisme: 'France Travail', type: 'Patronale', tauxSalarial: '0%', tauxPatronal: '4.05%', statut: 'Actif' },
-];
+export default function TraitementPaiePage() {
+    const { toast } = useToast();
+    const [modeles, setModeles] = useState<ModelePaie[]>(initialModeles);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingModele, setEditingModele] = useState<ModelePaie | null>(null);
+    const [modeleToDelete, setModeleToDelete] = useState<ModelePaie | null>(null);
 
-const mockProfils = [
-    { nom: 'Cadre commercial', nbEmployes: 12, statut: 'Cadre', derniereMaj: '15/07/2024' },
-    { nom: 'Ouvrier qualifié', nbEmployes: 45, statut: 'Non-cadre', derniereMaj: '10/06/2024' },
-    { nom: 'Apprenti', nbEmployes: 5, statut: 'Apprenti', derniereMaj: '01/09/2023' },
-];
+    const openModal = (modele: ModelePaie | null = null) => {
+        setEditingModele(modele);
+        setIsModalOpen(true);
+    };
 
-const mockModeles = [
-    { nom: 'Modèle BTP - Cadre', secteur: 'Industrie', type: 'Public', nbElements: 45 },
-    { nom: 'Modèle Commerce - Non Cadre', secteur: 'Commerce', type: 'Mes modèles', nbElements: 38 },
-];
+    const handleSave = (formData: Omit<ModelePaie, 'id'>) => {
+        if (editingModele) {
+            setModeles(prev => prev.map(m => m.id === editingModele.id ? { ...editingModele, ...formData } : m));
+            toast({ title: "Modèle mis à jour." });
+        } else {
+            const newModele: ModelePaie = { id: Date.now(), ...formData };
+            setModeles(prev => [newModele, ...prev]);
+            toast({ title: "Nouveau modèle créé." });
+        }
+        setIsModalOpen(false);
+    };
+
+    const handleDelete = () => {
+        if (modeleToDelete) {
+            setModeles(prev => prev.filter(m => m.id !== modeleToDelete.id));
+            setModeleToDelete(null);
+            toast({ title: "Modèle supprimé." });
+        }
+    };
+
+    return (
+        <>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-2xl">Paramétrage des Bulletins de Paie</CardTitle>
+                            <CardDescription>Gérez les modèles qui structurent le calcul de la paie pour vos employés.</CardDescription>
+                        </div>
+                        <Button onClick={() => openModal()}><PlusCircle className="mr-2 h-4 w-4"/>Créer un modèle</Button>
+                    </div>
+                </CardHeader>
+                <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {modeles.map(modele => (
+                        <Card key={modele.id} className="flex flex-col">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5"/>{modele.nom}</CardTitle>
+                                <CardDescription>{modele.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex-grow space-y-2 text-sm">
+                                <div className="flex justify-between"><span className="text-muted-foreground">Rubriques</span><Badge variant="secondary">{modele.rubriques.length}</Badge></div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">Constantes</span><Badge variant="secondary">{modele.constantes.length}</Badge></div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">Variables</span><Badge variant="secondary">{modele.variables.length}</Badge></div>
+                            </CardContent>
+                            <CardFooter className="flex justify-end gap-2">
+                                <Button variant="outline" size="sm" onClick={() => openModal(modele)}>Modifier</Button>
+                                <Button variant="ghost" size="sm" onClick={() => toast({ title: "Fonctionnalité à venir" })}>Dupliquer</Button>
+                                <Button variant="destructive" size="sm" onClick={() => setModeleToDelete(modele)}>Supprimer</Button>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </CardContent>
+            </Card>
+
+            <PayrollModelModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSave}
+                modeleToEdit={editingModele}
+            />
+
+            <AlertDialog open={!!modeleToDelete} onOpenChange={() => setModeleToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader><AlertDialogTitle>Supprimer ce modèle ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible et supprimera toutes les rubriques associées.</AlertDialogDescription></AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+    );
+}
+
+// --- MODAL & SUB-COMPONENTS ---
+function PayrollModelModal({ isOpen, onClose, onSave, modeleToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: any) => void, modeleToEdit: ModelePaie | null }) {
+    const [formData, setFormData] = useState<Omit<ModelePaie, 'id'>>({ nom: '', description: '', rubriques: [], constantes: [], variables: [] });
+
+    useEffect(() => {
+        setFormData(modeleToEdit || { nom: '', description: '', rubriques: [], constantes: [], variables: [] });
+    }, [modeleToEdit, isOpen]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-6xl h-[90vh]">
+                <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                    <DialogHeader>
+                        <DialogTitle>{modeleToEdit ? 'Modifier le modèle' : 'Nouveau Modèle de Paie'}</DialogTitle>
+                        <DialogDescription>Configurez toutes les composantes de ce modèle de paie.</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto py-4">
+                        <Tabs defaultValue="rubriques" className="w-full">
+                            <TabsList className="grid w-full grid-cols-6"><TabsTrigger value="rubriques">Rubriques</TabsTrigger><TabsTrigger value="constantes">Constantes</TabsTrigger><TabsTrigger value="variables">Variables</TabsTrigger><TabsTrigger value="parametres">Paramètres</TabsTrigger><TabsTrigger value="ordre">Ordre Calcul</TabsTrigger><TabsTrigger value="simulation">Simulation</TabsTrigger></TabsList>
+                            <TabsContent value="rubriques" className="mt-4"><RubriquesTab formData={formData} setFormData={setFormData} /></TabsContent>
+                            <TabsContent value="constantes" className="mt-4"><ConstantesTab formData={formData} setFormData={setFormData} /></TabsContent>
+                            <TabsContent value="variables" className="mt-4"><VariablesTab formData={formData} setFormData={setFormData} /></TabsContent>
+                            <TabsContent value="parametres" className="mt-4"><ParametresTab formData={formData} setFormData={setFormData} /></TabsContent>
+                            <TabsContent value="ordre" className="mt-4"><OrdreCalculTab formData={formData} setFormData={setFormData} /></TabsContent>
+                            <TabsContent value="simulation" className="mt-4"><SimulationTab formData={formData} /></TabsContent>
+                        </Tabs>
+                    </div>
+                    <DialogFooter className="pt-4 border-t"><Button type="button" variant="outline" onClick={onClose}>Annuler</Button><Button type="submit">Enregistrer le modèle</Button></DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function RubriquesTab({ formData, setFormData }: { formData: Omit<ModelePaie, 'id'>, setFormData: Function }) {
+    const { toast } = useToast();
+    const getTypeBadge = (type: RubriqueType) => {
+        switch(type) {
+            case 'Gain': return <Badge variant="default" className="bg-green-600">Gain</Badge>;
+            case 'Retenue': return <Badge variant="destructive">Retenue</Badge>;
+            case 'Cotisation': return <Badge variant="secondary">Cotisation</Badge>;
+            case 'Info': return <Badge variant="outline">Info</Badge>;
+        }
+    }
+    return (
+        <SectionCard title="Rubriques de paie" description="Gérez toutes les lignes qui composeront le bulletin de paie." actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})} size="sm"><PlusCircle className="mr-2 h-4 w-4" />Ajouter</Button>}>
+            <Table>
+                <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Libellé</TableHead><TableHead>Type</TableHead><TableHead>Formule</TableHead><TableHead className="text-center">Ordre</TableHead><TableHead className="text-center">Actif</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    {formData.rubriques.map(r => <TableRow key={r.id}><TableCell>{r.code}</TableCell><TableCell>{r.libelle}</TableCell><TableCell>{getTypeBadge(r.type)}</TableCell><TableCell className="font-mono text-xs">{r.formule}</TableCell><TableCell className="text-center">{r.ordre}</TableCell><TableCell className="text-center">{r.actif ? 'Oui' : 'Non'}</TableCell></TableRow>)}
+                </TableBody>
+            </Table>
+        </SectionCard>
+    );
+}
+function ConstantesTab({ formData, setFormData }: { formData: Omit<ModelePaie, 'id'>, setFormData: Function }) {
+    const { toast } = useToast();
+    return (
+        <SectionCard title="Constantes" description="Valeurs fixes réutilisables dans toutes vos formules de calcul." actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})} size="sm"><PlusCircle className="mr-2 h-4 w-4" />Ajouter</Button>}>
+            <Table>
+                <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Libellé</TableHead><TableHead className="text-right">Valeur</TableHead><TableHead>Unité</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    {formData.constantes.map(c => <TableRow key={c.id}><TableCell>{c.code}</TableCell><TableCell>{c.libelle}</TableCell><TableCell className="text-right">{c.valeur.toLocaleString()}</TableCell><TableCell>{c.unite}</TableCell></TableRow>)}
+                </TableBody>
+            </Table>
+        </SectionCard>
+    );
+}
+function VariablesTab({ formData, setFormData }: { formData: Omit<ModelePaie, 'id'>, setFormData: Function }) {
+    const { toast } = useToast();
+    return (
+        <SectionCard title="Variables" description="Variables dynamiques liées à chaque employé ou à la période de paie." actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})} size="sm"><PlusCircle className="mr-2 h-4 w-4" />Ajouter</Button>}>
+             <Table>
+                <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Libellé</TableHead><TableHead>Description</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    {formData.variables.map(v => <TableRow key={v.id}><TableCell>{v.code}</TableCell><TableCell>{v.libelle}</TableCell><TableCell className="text-muted-foreground">{v.description}</TableCell></TableRow>)}
+                </TableBody>
+            </Table>
+        </SectionCard>
+    );
+}
+function ParametresTab({ formData, setFormData }: { formData: Omit<ModelePaie, 'id'>, setFormData: Function }) {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setFormData((prev: Omit<ModelePaie, 'id'>) => ({ ...prev, [id]: value }));
+    };
+    return (
+         <SectionCard title="Paramètres Généraux" description="Configurez le nom et la description de ce modèle de paie.">
+            <div className="space-y-4 p-4 border rounded-lg">
+                <div className="space-y-2"><Label htmlFor="nom">Nom du modèle</Label><Input id="nom" value={formData.nom} onChange={handleChange} /></div>
+                <div className="space-y-2"><Label htmlFor="description">Description</Label><Textarea id="description" value={formData.description} onChange={handleChange} /></div>
+            </div>
+        </SectionCard>
+    )
+}
+function OrdreCalculTab({ formData, setFormData }: { formData: Omit<ModelePaie, 'id'>, setFormData: Function }) {
+    return (
+        <SectionCard title="Ordre de Calcul" description="Réorganisez les rubriques pour définir l'ordre d'exécution lors du calcul du bulletin.">
+            <div className="p-4 border rounded-lg">
+                <p className="text-sm text-muted-foreground mb-4">Glissez-déposez les rubriques pour changer leur ordre de calcul (fonctionnalité à venir).</p>
+                <ul className="space-y-2">
+                    {formData.rubriques.sort((a,b) => a.ordre - b.ordre).map(r => (
+                        <li key={r.id} className="p-2 border rounded-md flex items-center justify-between bg-card">
+                            <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs text-muted-foreground w-8 text-center">{r.ordre}</span>
+                                <span className="font-semibold">{r.libelle}</span>
+                                <Badge variant={r.type === 'Gain' ? 'default' : 'destructive'} className={r.type === 'Gain' ? 'bg-green-600' : ''}>{r.type}</Badge>
+                            </div>
+                            <ChevronsUpDown className="h-4 w-4 text-muted-foreground cursor-grab"/>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </SectionCard>
+    );
+}
+function SimulationTab({ formData }: { formData: Omit<ModelePaie, 'id'>}) {
+    const { toast } = useToast();
+    const [netSouhaite, setNetSouhaite] = useState(0);
+    const [brutCalcule, setBrutCalcule] = useState<number | null>(null);
+
+    const handleInverse = () => {
+        setBrutCalcule(null);
+        if (netSouhaite > 0) {
+            setTimeout(() => setBrutCalcule(netSouhaite / 0.75), 1000);
+        }
+    };
+    return (
+        <div className="grid md:grid-cols-2 gap-6">
+            <SectionCard title="Test du Modèle" description="Saisissez des valeurs fictives pour simuler un bulletin.">
+                <div className="p-4 border rounded-lg space-y-4">
+                    {formData.variables.map(v => (
+                        <div key={v.id} className="space-y-2"><Label htmlFor={v.code}>{v.libelle}</Label><Input id={v.code} type="number" placeholder="0" /></div>
+                    ))}
+                     <Button className="w-full" onClick={() => toast({ title: "Simulation en cours...", description: "Génération d'un aperçu du bulletin."})}><TestTube2 className="mr-2 h-4 w-4"/>Tester le calcul</Button>
+                </div>
+            </SectionCard>
+            <SectionCard title="Calcul Inversé (Net → Brut)" description="Calculez le salaire brut à partir d'un net souhaité.">
+                <div className="p-4 border rounded-lg space-y-4">
+                    <div className="space-y-2"><Label htmlFor="netSouhaite">Net à payer souhaité</Label><Input id="netSouhaite" type="number" placeholder="Ex: 1 200 000" onChange={e => setNetSouhaite(Number(e.target.value))} /></div>
+                    <Button className="w-full" onClick={handleInverse}><ArrowDownUp className="mr-2 h-4 w-4"/>Calculer le brut</Button>
+                    {brutCalcule !== null &&
+                        <div className="pt-4 border-t text-center space-y-2">
+                            <p className="text-sm text-muted-foreground">Salaire Brut Requis</p>
+                            <p className="text-2xl font-bold text-primary">{brutCalcule.toLocaleString('fr-FR', {maximumFractionDigits:0})} FCFA</p>
+                        </div>
+                    }
+                </div>
+            </SectionCard>
+        </div>
+    );
+}
 
 const SectionCard = ({ title, description, children, actions }: { title: string, description: string, children: React.ReactNode, actions?: React.ReactNode }) => (
     <div className="space-y-4">
@@ -67,207 +349,3 @@ const SectionCard = ({ title, description, children, actions }: { title: string,
         {children}
     </div>
 );
-
-
-export default function TraitementPaiePage() {
-    const [employees, setEmployees] = useState(mockEmployees);
-    const [selectedPeriod, setSelectedPeriod] = useState(new Date().toISOString().substring(0, 7));
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const { toast } = useToast();
-
-    const openModal = (employee: any) => {
-        setSelectedEmployee(employee);
-        setIsModalOpen(true);
-    };
-
-    const getStatusBadge = (statut: string) => {
-        switch (statut) {
-            case 'Validée': return <Badge><CheckCircle className="mr-1 h-3 w-3" />Validée</Badge>;
-            case 'En attente': return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />En attente</Badge>;
-            case 'Erreur': return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Erreur</Badge>;
-            default: return <Badge variant="outline">{statut}</Badge>;
-        }
-    };
-    
-    return (
-        <>
-            <Card className="w-full">
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                         <div>
-                            <CardTitle className="text-2xl flex items-center gap-2">
-                                <HandCoins />
-                                Traitement de la paie
-                            </CardTitle>
-                            <CardDescription>
-                                Lancez, suivez et validez le processus de paie mensuel pour vos employés.
-                            </CardDescription>
-                        </div>
-                         <Button onClick={() => toast({title: "Fonctionnalité à venir"})} size="lg">Lancer la paie du mois</Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="mb-4 flex items-center gap-4">
-                        <Label htmlFor="period-selector">Période de paie:</Label>
-                        <Input type="month" id="period-selector" value={selectedPeriod} onChange={e => setSelectedPeriod(e.target.value)} className="w-[200px]" />
-                    </div>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Matricule</TableHead>
-                                <TableHead>Employé</TableHead>
-                                <TableHead>Poste</TableHead>
-                                <TableHead className="text-center">Statut de la paie</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {employees.map(emp => (
-                                <TableRow key={emp.id}>
-                                    <TableCell className="font-mono text-xs">{emp.matricule}</TableCell>
-                                    <TableCell className="font-medium">{emp.nom} {emp.prenom}</TableCell>
-                                    <TableCell>{emp.poste}</TableCell>
-                                    <TableCell className="text-center">{getStatusBadge(emp.statutPaie)}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="outline" size="sm" onClick={() => openModal(emp)}>
-                                            <FileCog className="mr-2 h-4 w-4" />
-                                            Gérer la paie
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-
-            <ParametrageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} employee={selectedEmployee} />
-        </>
-    );
-}
-
-// --- MODAL & SUB-COMPONENTS ---
-function ParametrageModal({ isOpen, onClose, employee }: { isOpen: boolean, onClose: () => void, employee: any }) {
-    const { toast } = useToast();
-    if (!employee) return null;
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-6xl h-[90vh]">
-                <DialogHeader>
-                    <DialogTitle>Paramétrage du Bulletin de Paie</DialogTitle>
-                    <DialogDescription>Configuration pour <span className="font-semibold">{employee.prenom} {employee.nom}</span>.</DialogDescription>
-                </DialogHeader>
-                <div className="flex-1 overflow-y-auto -mx-6 px-1">
-                    <Tabs defaultValue="rubriques" className="w-full">
-                        <TabsList className="mx-6">
-                            <TabsTrigger value="rubriques"><List className="mr-2 h-4 w-4"/>Rubriques</TabsTrigger>
-                            <TabsTrigger value="cotisations"><Percent className="mr-2 h-4 w-4"/>Cotisations</TabsTrigger>
-                            <TabsTrigger value="profils"><User className="mr-2 h-4 w-4"/>Profils</TabsTrigger>
-                            <TabsTrigger value="affichage"><Palette className="mr-2 h-4 w-4"/>Affichage</TabsTrigger>
-                            <TabsTrigger value="validation"><ShieldCheck className="mr-2 h-4 w-4"/>Validation</TabsTrigger>
-                            <TabsTrigger value="modeles"><Library className="mr-2 h-4 w-4"/>Modèles</TabsTrigger>
-                        </TabsList>
-                        <ScrollArea className="h-[calc(80vh-100px)]">
-                            <div className="p-6">
-                                <TabsContent value="rubriques">
-                                    <SectionCard
-                                        title="Gestion des rubriques"
-                                        description="Définissez chaque ligne de gain, de retenue ou d'information de vos bulletins."
-                                        actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})}><PlusCircle className="mr-2 h-4 w-4"/>Nouvelle rubrique</Button>}
-                                    >
-                                        <Table>
-                                            <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Libellé</TableHead><TableHead>Type</TableHead><TableHead>Groupe</TableHead><TableHead>Statut</TableHead></TableRow></TableHeader>
-                                            <TableBody>
-                                                {mockRubriques.map(r => <TableRow key={r.code}><TableCell>{r.code}</TableCell><TableCell>{r.libelle}</TableCell><TableCell><Badge variant={r.type === 'Gain' ? 'default' : 'destructive'}>{r.type}</Badge></TableCell><TableCell>{r.groupe}</TableCell><TableCell><Badge variant={r.statut === 'Actif' ? 'secondary' : 'outline'}>{r.statut}</Badge></TableCell></TableRow>)}
-                                            </TableBody>
-                                        </Table>
-                                    </SectionCard>
-                                </TabsContent>
-                                <TabsContent value="cotisations">
-                                    <SectionCard
-                                        title="Gestion des cotisations"
-                                        description="Configurez les taux et les bases de calcul pour chaque cotisation sociale."
-                                        actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})}><PlusCircle className="mr-2 h-4 w-4"/>Nouvelle cotisation</Button>}
-                                    >
-                                        <Table>
-                                            <TableHeader><TableRow><TableHead>Libellé</TableHead><TableHead>Organisme</TableHead><TableHead>Taux Salarial</TableHead><TableHead>Taux Patronal</TableHead></TableRow></TableHeader>
-                                            <TableBody>
-                                                {mockCotisations.map(c => <TableRow key={c.code}><TableCell>{c.libelle}</TableCell><TableCell>{c.organisme}</TableCell><TableCell>{c.tauxSalarial}</TableCell><TableCell>{c.tauxPatronal}</TableCell></TableRow>)}
-                                            </TableBody>
-                                        </Table>
-                                    </SectionCard>
-                                </TabsContent>
-                                <TabsContent value="profils">
-                                    <SectionCard
-                                        title="Gestion des profils"
-                                        description="Créez des profils pour regrouper les employés et leur appliquer des règles de paie spécifiques."
-                                        actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})}><PlusCircle className="mr-2 h-4 w-4"/>Nouveau profil</Button>}
-                                    >
-                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {mockProfils.map(p => (
-                                            <Card key={p.nom}>
-                                                <CardHeader><CardTitle className="text-base">{p.nom}</CardTitle><CardDescription>Statut: {p.statut}</CardDescription></CardHeader>
-                                                <CardContent><p>{p.nbEmployes} employés affectés</p></CardContent>
-                                                <CardFooter><p className="text-xs text-muted-foreground">M.à.j : {p.derniereMaj}</p></CardFooter>
-                                            </Card>
-                                        ))}
-                                        </div>
-                                    </SectionCard>
-                                </TabsContent>
-                                <TabsContent value="affichage">
-                                      <SectionCard
-                                        title="Personnalisation du bulletin"
-                                        description="Ajustez l'apparence visuelle des bulletins de paie générés."
-                                        actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})}>Sauvegarder modèle</Button>}
-                                    >
-                                        <div className="p-4 border rounded-lg space-y-4">
-                                            <div className="flex items-center justify-between"><Label>Modèle de base</Label><Select defaultValue="classique"><SelectTrigger className="w-[200px]"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="classique">Classique</SelectItem><SelectItem value="moderne">Moderne</SelectItem></SelectContent></Select></div>
-                                            <div className="flex items-center justify-between"><Label>Police principale</Label><Select defaultValue="arial"><SelectTrigger className="w-[200px]"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="arial">Arial</SelectItem><SelectItem value="times">Times New Roman</SelectItem></SelectContent></Select></div>
-                                            <div className="flex items-center justify-between"><Label>Couleur principale</Label><Input type="color" defaultValue="#673AB7" className="w-[200px]"/></div>
-                                        </div>
-                                    </SectionCard>
-                                </TabsContent>
-                                <TabsContent value="validation">
-                                    <SectionCard
-                                        title="Contrôle de cohérence"
-                                        description="Vérifiez la conformité et la cohérence de vos paramètres de paie."
-                                        actions={<Button onClick={() => toast({title: "Validation lancée..."})}>Lancer une validation</Button>}
-                                    >
-                                        <div className="grid md:grid-cols-3 gap-4">
-                                            <Card className="text-center bg-green-50 border-green-200"><CardHeader><CheckCircle className="mx-auto h-8 w-8 text-green-600"/><CardTitle className="mt-2 text-lg">Conforme</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">128</p><p className="text-sm text-muted-foreground">éléments validés</p></CardContent></Card>
-                                            <Card className="text-center bg-yellow-50 border-yellow-200"><CardHeader><AlertTriangle className="mx-auto h-8 w-8 text-yellow-600"/><CardTitle className="mt-2 text-lg">Avertissements</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">2</p><p className="text-sm text-muted-foreground">éléments à vérifier</p></CardContent></Card>
-                                            <Card className="text-center bg-red-50 border-red-200"><CardHeader><XCircle className="mx-auto h-8 w-8 text-red-600"/><CardTitle className="mt-2 text-lg">Erreurs</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">0</p><p className="text-sm text-muted-foreground">erreurs critiques</p></CardContent></Card>
-                                        </div>
-                                    </SectionCard>
-                                </TabsContent>
-                                <TabsContent value="modeles">
-                                    <SectionCard
-                                        title="Bibliothèque de modèles"
-                                        description="Sauvegardez et réutilisez des configurations complètes de paie."
-                                        actions={<Button onClick={() => toast({title: "Fonctionnalité à venir"})}><PlusCircle className="mr-2 h-4 w-4"/>Créer un modèle</Button>}
-                                    >
-                                       <div className="grid md:grid-cols-2 gap-4">
-                                        {mockModeles.map(m => (
-                                            <Card key={m.nom}>
-                                                <CardHeader><CardTitle className="text-base">{m.nom}</CardTitle><CardDescription>Secteur: {m.secteur}</CardDescription></CardHeader>
-                                                <CardContent><Badge variant="secondary">{m.nbElements} éléments</Badge></CardContent>
-                                                <CardFooter className="flex justify-end"><Button variant="outline" size="sm" onClick={() => toast({title: "Modèle appliqué (simulation)"})}>Appliquer</Button></CardFooter>
-                                            </Card>
-                                        ))}
-                                        </div>
-                                    </SectionCard>
-                                </TabsContent>
-                            </div>
-                        </ScrollArea>
-                    </Tabs>
-                </div>
-                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Fermer</Button>
-                    <Button onClick={onClose}>Appliquer au bulletin</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
