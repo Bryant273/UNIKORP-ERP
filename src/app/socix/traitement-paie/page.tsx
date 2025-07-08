@@ -12,16 +12,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableFooter,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -39,9 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from '@/hooks/use-toast';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -50,32 +39,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  PlusCircle,
-  Pencil,
-  Trash2,
-  Copy,
-  ArrowDownUp,
-  TestTube2,
-  ChevronsUpDown,
-  FileText,
-  List,
-  Percent,
-  User,
-  Palette,
-  ShieldCheck,
-  Eye,
-  Upload,
-  FileUp,
-  Loader2,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableFooter,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Eye, Pencil, Trash2, PlusCircle, List, Percent, User, Palette, ShieldCheck, TestTube2, ChevronsUpDown, Copy, Upload, FileUp, Loader2, Download } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 // --- TYPES ---
@@ -148,6 +128,8 @@ const initialModeles: ModelePaie[] = [
     variables: [],
   },
 ];
+
+const ITEMS_PER_PAGE = 10;
 
 // --- MAIN PAGE COMPONENT ---
 
@@ -297,7 +279,7 @@ export default function TraitementPaiePage() {
                             <CardDescription>Gérez les modèles qui structurent le calcul de la paie pour vos employés.</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
+                             <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
                                 <Upload className="mr-2 h-4 w-4" />
                                 Importer
                             </Button>
@@ -307,7 +289,7 @@ export default function TraitementPaiePage() {
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader>
+                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nom du Modèle</TableHead>
                                 <TableHead>Description</TableHead>
@@ -354,7 +336,7 @@ export default function TraitementPaiePage() {
                 onSave={handleSave}
                 modeleToEdit={editingModele}
             />
-
+            
             <PayslipPreviewModal
                 isOpen={!!previewingModele}
                 onClose={() => setPreviewingModele(null)}
@@ -376,7 +358,7 @@ export default function TraitementPaiePage() {
                     <DialogHeader>
                         <DialogTitle>Importer des modèles</DialogTitle>
                         <DialogDescription>
-                          Chargez un fichier pour ajouter de nouveaux modèles de bulletin.
+                          Chargez un fichier PRH, PDF, JSON, XML ou CSV pour ajouter de nouveaux modèles de bulletin.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-6 py-4">
@@ -400,7 +382,7 @@ export default function TraitementPaiePage() {
                                   <p className="mt-2 text-sm font-medium text-foreground">{fileToUpload.name}</p>
                                 )}
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                  Fichiers JSON, XML, CSV
+                                  Fichiers PRH, PDF, JSON, XML, CSV
                                 </p>
                               </Label>
                               <Input 
@@ -408,7 +390,7 @@ export default function TraitementPaiePage() {
                                   type="file" 
                                   className="sr-only" 
                                   onChange={handleFileChange} 
-                                  accept=".json,.xml,.csv" 
+                                  accept=".prh,.pdf,.json,.xml,.csv" 
                                   disabled={isImporting}
                               />
                         </div>
@@ -607,7 +589,7 @@ function SimulationTab({ formData }: { formData: Omit<ModelePaie, 'id'>}) {
             <SectionCard title="Calcul Inversé (Net → Brut)" description="Calculez le salaire brut à partir d'un net souhaité.">
                 <div className="p-4 border rounded-lg space-y-4">
                     <div className="space-y-2"><Label htmlFor="netSouhaite">Net à payer souhaité</Label><Input id="netSouhaite" type="number" placeholder="Ex: 1 200 000" onChange={e => setNetSouhaite(Number(e.target.value))} /></div>
-                    <Button className="w-full" onClick={handleInverse}><ArrowDownUp className="mr-2 h-4 w-4"/>Calculer le brut</Button>
+                    <Button className="w-full" onClick={handleInverse}><ChevronsUpDown className="mr-2 h-4 w-4"/>Calculer le brut</Button>
                     {brutCalcule !== null &&
                         <div className="pt-4 border-t text-center space-y-2">
                             <p className="text-sm text-muted-foreground">Salaire Brut Requis</p>
@@ -636,71 +618,79 @@ const SectionCard = ({ title, description, children, actions }: { title: string,
 function PayslipPreview({ modele }: { modele: ModelePaie | null }) {
     if (!modele) return null;
 
-    // Mock data for preview
-    const employeeData = {
-        name: 'Jean Dupont',
-        matricule: 'UNIK-076',
-        poste: 'Développeur Senior',
-        classification: '2.2 - 130',
-        dateEntree: '15/03/2020',
-        numSecu: '1 85 05 99 123 456 78',
+    const formatCurrencyFR = (value: number | undefined) => {
+        if (value === undefined) return '';
+        return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
-
-    const companyData = {
-        name: 'UNIKORP',
-        address: 'Abidjan, Côte d\'Ivoire',
-        siret: 'CI-ABJ-2024-B-12345',
-    };
-
-    const periodData = {
-        periode: 'Juillet 2024',
-        joursTravailles: 21.67
-    };
-
-    // Simulated calculation
-    const salaireBase = modele.rubriques.find(r => r.code === 'SB')?.formule === 'salaireMensuel' ? 350000 : 0;
-    const primeAnciennete = modele.rubriques.find(r => r.code === 'PA') ? salaireBase * 0.05 : 0;
-    const salaireBrut = salaireBase + primeAnciennete;
-    const cotisationCNPS = modele.rubriques.find(r => r.code === 'C01') ? salaireBrut * 0.035 : 0;
-    const totalRetenues = cotisationCNPS;
-    const netAPayer = salaireBrut - totalRetenues;
 
     return (
-        <div className="p-2 border rounded-lg bg-background text-foreground text-xs font-sans">
-            <div className="flex justify-between items-start pb-2 mb-2 border-b">
+        <div className="p-4 border rounded-lg bg-white text-black text-xs font-sans shadow-md">
+            {/* Header */}
+            <div className="flex justify-between items-start pb-2 mb-2">
                 <div>
-                    <h3 className="font-bold text-sm">{companyData.name}</h3>
-                    <p className="text-muted-foreground text-xs">{companyData.address}</p>
+                    <h3 className="font-bold text-sm">CROISIERES PRODUCTION</h3>
+                    <p className="text-muted-foreground text-xs">39 rue du faubourg Poissonnière<br/>75009 Paris</p>
                 </div>
                 <div className="text-right">
-                    <h4 className="font-bold text-base">BULLETIN DE PAIE</h4>
-                    <p className="text-xs text-muted-foreground">{periodData.periode}</p>
+                    <h4 className="font-bold text-lg">FICHE INDIVIDUELLE</h4>
+                    <p className="text-xs text-muted-foreground">Exercice : 2014</p>
+                    <p className="text-xs text-muted-foreground">Siret : 327 920 955 00041</p>
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 py-2 text-xs">
+            <div className="flex justify-between items-center py-1 mb-2 text-xs">
                 <div>
-                    <p><strong>{employeeData.name}</strong></p>
-                    <p>{employeeData.poste}</p>
-                    <p>Matricule: {employeeData.matricule}</p>
+                    <p><strong>Salarié:</strong> CHEVALIER Benoit</p>
+                    <p><strong>Période:</strong> (exercice complet)</p>
                 </div>
-                <div className="text-right">
-                     <p>Entrée: {employeeData.dateEntree}</p>
-                     <p>Classification: {employeeData.classification}</p>
-                </div>
+                <p className="text-xs text-muted-foreground">Edité le 01/12/14 à 17:38</p>
             </div>
-             <Table>
-                <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Libellé</TableHead><TableHead className="text-right">Gain</TableHead><TableHead className="text-right">Retenue</TableHead></TableRow></TableHeader>
+
+            {/* Gains */}
+            <Table>
+                <TableHeader><TableRow className="bg-muted/50"><TableHead>Qté</TableHead><TableHead>Code</TableHead><TableHead>Rubrique de paie</TableHead><TableHead className="text-right">Base</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Particularités</TableHead></TableRow></TableHeader>
                 <TableBody>
-                    <TableRow><TableCell>SB</TableCell><TableCell>Salaire de base</TableCell><TableCell className="text-right">{salaireBase.toLocaleString()}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>PA</TableCell><TableCell>Prime d'ancienneté</TableCell><TableCell className="text-right">{primeAnciennete.toLocaleString()}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>C01</TableCell><TableCell>Cotisation CNPS</TableCell><TableCell></TableCell><TableCell className="text-right">{cotisationCNPS.toLocaleString()}</TableCell></TableRow>
+                    <TableRow><TableCell>2</TableCell><TableCell>M35</TableCell><TableCell>Rémunération mensuelle</TableCell><TableCell className="text-right">{formatCurrencyFR(2000)}</TableCell><TableCell className="text-right">{formatCurrencyFR(4000)}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell></TableCell><TableCell></TableCell><TableCell className="font-bold">Total Salaire de base</TableCell><TableCell></TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(4000)}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>20</TableCell><TableCell>HSE25</TableCell><TableCell>Heures sup. 25%</TableCell><TableCell className="text-right">{formatCurrencyFR(16.48)}</TableCell><TableCell className="text-right">{formatCurrencyFR(329.66)}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>20</TableCell><TableCell></TableCell><TableCell className="font-bold">Total Heure supplémentaire</TableCell><TableCell></TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(329.66)}</TableCell><TableCell></TableCell></TableRow>
                 </TableBody>
-                <TableFooter>
-                    <TableRow><TableCell colSpan={2} className="font-bold text-right">Total Brut</TableCell><TableCell className="font-bold text-right">{salaireBrut.toLocaleString()}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell colSpan={3} className="font-bold text-right">Total Retenues</TableCell><TableCell className="font-bold text-right">{totalRetenues.toLocaleString()}</TableCell></TableRow>
-                    <TableRow><TableCell colSpan={3} className="font-bold text-lg text-right">NET À PAYER</TableCell><TableCell className="font-bold text-lg text-right">{netAPayer.toLocaleString()} FCFA</TableCell></TableRow>
-                </TableFooter>
             </Table>
+            <div className="text-right font-bold p-2 my-1 bg-muted">Salaire brut: {formatCurrencyFR(4329.66)}</div>
+
+            {/* Retenues */}
+            <Table>
+                <TableHeader><TableRow className="bg-muted/50"><TableHead>Retenue</TableHead><TableHead className="text-right">Base</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="text-right">Part salariale</TableHead><TableHead className="text-right">Part employeur</TableHead><TableHead>Part.*</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    <TableRow><TableCell>Contribution Solidarité</TableCell><TableCell className="text-right">{formatCurrencyFR(4329.66)}</TableCell><TableCell className="text-right">{formatCurrencyFR(12.98)}</TableCell><TableCell className="text-right">_</TableCell><TableCell className="text-right">{formatCurrencyFR(12.98)}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>Assurance maladie</TableCell><TableCell className="text-right">{formatCurrencyFR(4329.66)}</TableCell><TableCell className="text-right">{formatCurrencyFR(586.68)}</TableCell><TableCell className="text-right">{formatCurrencyFR(32.48)}</TableCell><TableCell className="text-right">{formatCurrencyFR(554.20)}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>Assurance vieillesse</TableCell><TableCell className="text-right">{formatCurrencyFR(4329.66)}</TableCell><TableCell className="text-right">{formatCurrencyFR(73.60)}</TableCell><TableCell className="text-right">{formatCurrencyFR(4.32)}</TableCell><TableCell className="text-right">{formatCurrencyFR(69.28)}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>CSG déductible</TableCell><TableCell className="text-right">{formatCurrencyFR(4253.90)}</TableCell><TableCell className="text-right">{formatCurrencyFR(216.94)}</TableCell><TableCell className="text-right">{formatCurrencyFR(216.94)}</TableCell><TableCell className="text-right">_</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>CSG/RDS Imposable</TableCell><TableCell className="text-right">{formatCurrencyFR(4253.90)}</TableCell><TableCell className="text-right">{formatCurrencyFR(123.36)}</TableCell><TableCell className="text-right">{formatCurrencyFR(123.36)}</TableCell><TableCell className="text-right">_</TableCell><TableCell>Imp.</TableCell></TableRow>
+                </TableBody>
+                <TableFooter><TableRow><TableCell className="font-bold">Total des charges</TableCell><TableCell></TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(1043.00)}</TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(377.10)}</TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(665.90)}</TableCell><TableCell></TableCell></TableRow></TableFooter>
+            </Table>
+            <div className="text-right font-bold p-2 my-1 bg-muted">Salaire net: {formatCurrencyFR(3952.56)}</div>
+            
+            {/* Non-soumis */}
+             <Table>
+                <TableHeader><TableRow className="bg-muted/50"><TableHead>Qté</TableHead><TableHead>Code</TableHead><TableHead>Rubrique de paie</TableHead><TableHead className="text-right">Base</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Particularités*</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    <TableRow><TableCell>2</TableCell><TableCell>CO2</TableCell><TableCell>Carte orange 2 zones</TableCell><TableCell className="text-right">{formatCurrencyFR(32.55)}</TableCell><TableCell className="text-right">{formatCurrencyFR(65.10)}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow><TableCell>36</TableCell><TableCell>TRI</TableCell><TableCell>Titre restaurant</TableCell><TableCell className="text-right">{formatCurrencyFR(-9.00)}</TableCell><TableCell className="text-right">{formatCurrencyFR(-324.00)}</TableCell><TableCell>-CE</TableCell></TableRow>
+                    <TableRow><TableCell>36</TableCell><TableCell>TRP</TableCell><TableCell>Titre restaurant part employeur</TableCell><TableCell className="text-right">{formatCurrencyFR(5.29)}</TableCell><TableCell className="text-right">{formatCurrencyFR(190.44)}</TableCell><TableCell></TableCell></TableRow>
+                </TableBody>
+                 <TableFooter><TableRow><TableCell colSpan={4} className="font-bold">Total non soumis</TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(-68.46)}</TableCell><TableCell></TableCell></TableRow></TableFooter>
+            </Table>
+            <div className="text-[10px] text-muted-foreground p-1">Particularités: Imp. - Imposable, FS - Soumis à Forfait Social, CSG - Soumis à CSG, -CE - Non inclus dans Coût Employeur</div>
+
+            {/* Final totals */}
+            <div className="flex justify-end mt-4">
+                <div className="w-1/2 max-w-xs space-y-1 text-sm">
+                    <div className="flex justify-between font-bold text-lg"><span >Net à payer</span><span>{formatCurrencyFR(3884.10)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Net imposable</span><span>{formatCurrencyFR(4075.92)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Coût employeur</span><span>{formatCurrencyFR(5251.10)}</span></div>
+                </div>
+            </div>
         </div>
     );
 }
