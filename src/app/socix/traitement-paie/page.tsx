@@ -49,7 +49,7 @@ import {
   TableFooter,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Pencil, Trash2, PlusCircle, List, Percent, User, Palette, ShieldCheck, TestTube2, ChevronsUpDown, Copy, Upload, FileUp, Loader2, Download } from 'lucide-react';
+import { Eye, Pencil, Trash2, PlusCircle, List, Percent, User, Palette, ShieldCheck, TestTube2, ChevronsUpDown, Copy, Upload, FileUp, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -133,7 +133,7 @@ const ITEMS_PER_PAGE = 10;
 
 // --- MAIN PAGE COMPONENT ---
 
-export default function TraitementPaiePage() {
+function TraitementPaiePage() {
     const { toast } = useToast();
     const [modeles, setModeles] = useState<ModelePaie[]>(initialModeles);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -173,7 +173,7 @@ export default function TraitementPaiePage() {
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setFileToUpload(e.target.files[0]);
         }
@@ -618,79 +618,113 @@ const SectionCard = ({ title, description, children, actions }: { title: string,
 function PayslipPreview({ modele }: { modele: ModelePaie | null }) {
     if (!modele) return null;
 
-    const formatCurrencyFR = (value: number | undefined) => {
-        if (value === undefined) return '';
-        return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const gains = modele.rubriques.filter(r => r.type === 'Gain').sort((a,b) => a.ordre - b.ordre);
+    const retenues = modele.rubriques.filter(r => r.type === 'Retenue').sort((a,b) => a.ordre - b.ordre);
+    const cotisations = modele.rubriques.filter(r => r.type === 'Cotisation').sort((a,b) => a.ordre - b.ordre);
+
+    const getRubriqueTypeStyles = (type: RubriqueType) => {
+        switch (type) {
+            case 'Gain': return 'text-green-600';
+            case 'Retenue': return 'text-red-600';
+            case 'Cotisation': return 'text-orange-600';
+            default: return 'text-muted-foreground';
+        }
     };
 
     return (
-        <div className="p-4 border rounded-lg bg-white text-black text-xs font-sans shadow-md">
+        <div className="p-8 border rounded-lg bg-white text-black font-sans shadow-lg max-w-4xl mx-auto">
             {/* Header */}
-            <div className="flex justify-between items-start pb-2 mb-2">
+            <header className="flex justify-between items-center pb-4 border-b">
                 <div>
-                    <h3 className="font-bold text-sm">CROISIERES PRODUCTION</h3>
-                    <p className="text-muted-foreground text-xs">39 rue du faubourg Poissonnière<br/>75009 Paris</p>
+                    <h1 className="text-xl font-bold text-gray-800">[Nom de l'entreprise]</h1>
+                    <p className="text-xs text-gray-500">[Adresse de l'entreprise]</p>
                 </div>
                 <div className="text-right">
-                    <h4 className="font-bold text-lg">FICHE INDIVIDUELLE</h4>
-                    <p className="text-xs text-muted-foreground">Exercice : 2014</p>
-                    <p className="text-xs text-muted-foreground">Siret : 327 920 955 00041</p>
+                    <h2 className="text-3xl font-bold text-primary">BULLETIN DE PAIE</h2>
+                    <p className="text-sm text-gray-600">Période du [Date Début] au [Date Fin]</p>
                 </div>
-            </div>
-            <div className="flex justify-between items-center py-1 mb-2 text-xs">
+            </header>
+
+            {/* Employee Info */}
+            <section className="grid grid-cols-2 gap-4 py-4 border-b">
                 <div>
-                    <p><strong>Salarié:</strong> CHEVALIER Benoit</p>
-                    <p><strong>Période:</strong> (exercice complet)</p>
+                    <p className="text-xs text-gray-500">SALARIÉ</p>
+                    <p className="font-semibold">[Prénom Nom]</p>
+                    <p className="text-xs text-gray-600">[Adresse]</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Edité le 01/12/14 à 17:38</p>
-            </div>
-
-            {/* Gains */}
-            <Table>
-                <TableHeader><TableRow className="bg-muted/50"><TableHead>Qté</TableHead><TableHead>Code</TableHead><TableHead>Rubrique de paie</TableHead><TableHead className="text-right">Base</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Particularités</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    <TableRow><TableCell>2</TableCell><TableCell>M35</TableCell><TableCell>Rémunération mensuelle</TableCell><TableCell className="text-right">{formatCurrencyFR(2000)}</TableCell><TableCell className="text-right">{formatCurrencyFR(4000)}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell></TableCell><TableCell></TableCell><TableCell className="font-bold">Total Salaire de base</TableCell><TableCell></TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(4000)}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>20</TableCell><TableCell>HSE25</TableCell><TableCell>Heures sup. 25%</TableCell><TableCell className="text-right">{formatCurrencyFR(16.48)}</TableCell><TableCell className="text-right">{formatCurrencyFR(329.66)}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>20</TableCell><TableCell></TableCell><TableCell className="font-bold">Total Heure supplémentaire</TableCell><TableCell></TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(329.66)}</TableCell><TableCell></TableCell></TableRow>
-                </TableBody>
-            </Table>
-            <div className="text-right font-bold p-2 my-1 bg-muted">Salaire brut: {formatCurrencyFR(4329.66)}</div>
-
-            {/* Retenues */}
-            <Table>
-                <TableHeader><TableRow className="bg-muted/50"><TableHead>Retenue</TableHead><TableHead className="text-right">Base</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="text-right">Part salariale</TableHead><TableHead className="text-right">Part employeur</TableHead><TableHead>Part.*</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    <TableRow><TableCell>Contribution Solidarité</TableCell><TableCell className="text-right">{formatCurrencyFR(4329.66)}</TableCell><TableCell className="text-right">{formatCurrencyFR(12.98)}</TableCell><TableCell className="text-right">_</TableCell><TableCell className="text-right">{formatCurrencyFR(12.98)}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>Assurance maladie</TableCell><TableCell className="text-right">{formatCurrencyFR(4329.66)}</TableCell><TableCell className="text-right">{formatCurrencyFR(586.68)}</TableCell><TableCell className="text-right">{formatCurrencyFR(32.48)}</TableCell><TableCell className="text-right">{formatCurrencyFR(554.20)}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>Assurance vieillesse</TableCell><TableCell className="text-right">{formatCurrencyFR(4329.66)}</TableCell><TableCell className="text-right">{formatCurrencyFR(73.60)}</TableCell><TableCell className="text-right">{formatCurrencyFR(4.32)}</TableCell><TableCell className="text-right">{formatCurrencyFR(69.28)}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>CSG déductible</TableCell><TableCell className="text-right">{formatCurrencyFR(4253.90)}</TableCell><TableCell className="text-right">{formatCurrencyFR(216.94)}</TableCell><TableCell className="text-right">{formatCurrencyFR(216.94)}</TableCell><TableCell className="text-right">_</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>CSG/RDS Imposable</TableCell><TableCell className="text-right">{formatCurrencyFR(4253.90)}</TableCell><TableCell className="text-right">{formatCurrencyFR(123.36)}</TableCell><TableCell className="text-right">{formatCurrencyFR(123.36)}</TableCell><TableCell className="text-right">_</TableCell><TableCell>Imp.</TableCell></TableRow>
-                </TableBody>
-                <TableFooter><TableRow><TableCell className="font-bold">Total des charges</TableCell><TableCell></TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(1043.00)}</TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(377.10)}</TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(665.90)}</TableCell><TableCell></TableCell></TableRow></TableFooter>
-            </Table>
-            <div className="text-right font-bold p-2 my-1 bg-muted">Salaire net: {formatCurrencyFR(3952.56)}</div>
-            
-            {/* Non-soumis */}
-             <Table>
-                <TableHeader><TableRow className="bg-muted/50"><TableHead>Qté</TableHead><TableHead>Code</TableHead><TableHead>Rubrique de paie</TableHead><TableHead className="text-right">Base</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Particularités*</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    <TableRow><TableCell>2</TableCell><TableCell>CO2</TableCell><TableCell>Carte orange 2 zones</TableCell><TableCell className="text-right">{formatCurrencyFR(32.55)}</TableCell><TableCell className="text-right">{formatCurrencyFR(65.10)}</TableCell><TableCell></TableCell></TableRow>
-                    <TableRow><TableCell>36</TableCell><TableCell>TRI</TableCell><TableCell>Titre restaurant</TableCell><TableCell className="text-right">{formatCurrencyFR(-9.00)}</TableCell><TableCell className="text-right">{formatCurrencyFR(-324.00)}</TableCell><TableCell>-CE</TableCell></TableRow>
-                    <TableRow><TableCell>36</TableCell><TableCell>TRP</TableCell><TableCell>Titre restaurant part employeur</TableCell><TableCell className="text-right">{formatCurrencyFR(5.29)}</TableCell><TableCell className="text-right">{formatCurrencyFR(190.44)}</TableCell><TableCell></TableCell></TableRow>
-                </TableBody>
-                 <TableFooter><TableRow><TableCell colSpan={4} className="font-bold">Total non soumis</TableCell><TableCell className="text-right font-bold">{formatCurrencyFR(-68.46)}</TableCell><TableCell></TableCell></TableRow></TableFooter>
-            </Table>
-            <div className="text-[10px] text-muted-foreground p-1">Particularités: Imp. - Imposable, FS - Soumis à Forfait Social, CSG - Soumis à CSG, -CE - Non inclus dans Coût Employeur</div>
-
-            {/* Final totals */}
-            <div className="flex justify-end mt-4">
-                <div className="w-1/2 max-w-xs space-y-1 text-sm">
-                    <div className="flex justify-between font-bold text-lg"><span >Net à payer</span><span>{formatCurrencyFR(3884.10)}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Net imposable</span><span>{formatCurrencyFR(4075.92)}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Coût employeur</span><span>{formatCurrencyFR(5251.10)}</span></div>
+                <div className="text-right">
+                    <p className="text-xs text-gray-500">MATRICULE</p>
+                    <p className="font-semibold">[Matricule]</p>
                 </div>
-            </div>
+            </section>
+
+            {/* Body */}
+            <main className="py-4">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-2/5">Description</TableHead>
+                            <TableHead className="text-center">Formule</TableHead>
+                            <TableHead className="text-right">[Montant]</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow className="bg-secondary/50">
+                            <TableCell colSpan={3} className="font-bold">GAINS</TableCell>
+                        </TableRow>
+                        {gains.map(r => (
+                            <TableRow key={r.id}>
+                                <TableCell className="font-medium">{r.libelle}</TableCell>
+                                <TableCell className="text-center font-mono text-xs">{r.formule}</TableCell>
+                                <TableCell className="text-right text-green-600 font-medium">[Montant]</TableCell>
+                            </TableRow>
+                        ))}
+                         <TableRow className="bg-muted/50 font-bold">
+                            <TableCell colSpan={2} className="text-right">Total Brut</TableCell>
+                            <TableCell className="text-right">[Total Brut]</TableCell>
+                        </TableRow>
+                        
+                        <TableRow className="bg-secondary/50">
+                            <TableCell colSpan={3} className="font-bold">COTISATIONS & RETENUES</TableCell>
+                        </TableRow>
+                        {[...cotisations, ...retenues].sort((a,b)=>a.ordre-b.ordre).map(r => (
+                            <TableRow key={r.id}>
+                                <TableCell className={cn("pl-6", getRubriqueTypeStyles(r.type))}>{r.libelle}</TableCell>
+                                <TableCell className="text-center font-mono text-xs">{r.formule}</TableCell>
+                                <TableCell className="text-right text-red-600">-[Montant]</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </main>
+
+            {/* Footer */}
+            <footer className="flex justify-end pt-4 border-t">
+                 <div className="w-1/2 max-w-xs space-y-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">Total Brut</span>
+                        <span className="font-semibold">[Total Brut]</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-gray-600">Total Retenues Salariales</span>
+                        <span className="font-semibold text-red-600">-[Total Retenues]</span>
+                    </div>
+                    <Separator/>
+                     <div className="flex justify-between font-bold text-lg">
+                        <span>Net à Payer avant impôt</span>
+                        <span>[Net avant IGR]</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-gray-600">Impôt sur le Revenu (IGR)</span>
+                        <span className="font-semibold text-red-600">-[Montant IGR]</span>
+                    </div>
+                    <Separator/>
+                     <div className="flex justify-between font-bold text-2xl text-primary p-2 bg-primary/10 rounded-md">
+                        <span>NET À PAYER</span>
+                        <span>[NET À PAYER]</span>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }
@@ -702,9 +736,9 @@ function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onC
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Aperçu du Bulletin de Paie</DialogTitle>
+                    <DialogTitle>Aperçu du Modèle de Bulletin</DialogTitle>
                     <DialogDescription>
-                        Modèle: {modele.nom}. Ceci est une prévisualisation basée sur des données de test.
+                        Aperçu de la structure du bulletin pour le modèle: <span className="font-semibold">{modele.nom}</span>.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 overflow-y-auto bg-muted/50 p-6">
