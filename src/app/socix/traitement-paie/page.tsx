@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Pencil, Trash2, Copy, SlidersHorizontal, ArrowDownUp, TestTube2, ChevronsUpDown, Info, FileText } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Copy, SlidersHorizontal, ArrowDownUp, TestTube2, ChevronsUpDown, Info, FileText, List, Percent, User, Palette, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
@@ -202,7 +202,7 @@ function PayrollModelModal({ isOpen, onClose, onSave, modeleToEdit }: { isOpen: 
                     </DialogHeader>
                     <div className="flex-1 overflow-y-auto py-4">
                         <Tabs defaultValue="rubriques" className="w-full">
-                            <TabsList className="grid w-full grid-cols-6"><TabsTrigger value="rubriques">Rubriques</TabsTrigger><TabsTrigger value="constantes">Constantes</TabsTrigger><TabsTrigger value="variables">Variables</TabsTrigger><TabsTrigger value="parametres">Paramètres</TabsTrigger><TabsTrigger value="ordre">Ordre Calcul</TabsTrigger><TabsTrigger value="simulation">Simulation</TabsTrigger></TabsList>
+                            <TabsList className="grid w-full grid-cols-6"><TabsTrigger value="rubriques"><List className="mr-2 h-4 w-4"/>Rubriques</TabsTrigger><TabsTrigger value="constantes"><Percent className="mr-2 h-4 w-4"/>Cotisations</TabsTrigger><TabsTrigger value="variables"><User className="mr-2 h-4 w-4"/>Profils</TabsTrigger><TabsTrigger value="parametres"><Palette className="mr-2 h-4 w-4"/>Affichage</TabsTrigger><TabsTrigger value="ordre"><ShieldCheck className="mr-2 h-4 w-4"/>Validation</TabsTrigger><TabsTrigger value="simulation"><FileText className="mr-2 h-4 w-4"/>Modèles</TabsTrigger></TabsList>
                             <TabsContent value="rubriques" className="mt-4"><RubriquesTab formData={formData} setFormData={setFormData} /></TabsContent>
                             <TabsContent value="constantes" className="mt-4"><ConstantesTab formData={formData} setFormData={setFormData} /></TabsContent>
                             <TabsContent value="variables" className="mt-4"><VariablesTab formData={formData} setFormData={setFormData} /></TabsContent>
