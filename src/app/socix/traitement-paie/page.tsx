@@ -137,25 +137,43 @@ export default function TraitementPaiePage() {
                         <Button onClick={() => openModal()}><PlusCircle className="mr-2 h-4 w-4"/>Créer un modèle</Button>
                     </div>
                 </CardHeader>
-                <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {modeles.map(modele => (
-                        <Card key={modele.id} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5"/>{modele.nom}</CardTitle>
-                                <CardDescription>{modele.description}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-2 text-sm">
-                                <div className="flex justify-between"><span className="text-muted-foreground">Rubriques</span><Badge variant="secondary">{modele.rubriques.length}</Badge></div>
-                                <div className="flex justify-between"><span className="text-muted-foreground">Constantes</span><Badge variant="secondary">{modele.constantes.length}</Badge></div>
-                                <div className="flex justify-between"><span className="text-muted-foreground">Variables</span><Badge variant="secondary">{modele.variables.length}</Badge></div>
-                            </CardContent>
-                            <CardFooter className="flex justify-end gap-2">
-                                <Button variant="outline" size="sm" onClick={() => openModal(modele)}>Modifier</Button>
-                                <Button variant="ghost" size="sm" onClick={() => toast({ title: "Fonctionnalité à venir" })}>Dupliquer</Button>
-                                <Button variant="destructive" size="sm" onClick={() => setModeleToDelete(modele)}>Supprimer</Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nom du Modèle</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead className="text-center">Rubriques</TableHead>
+                                <TableHead className="text-center">Constantes</TableHead>
+                                <TableHead className="text-center">Variables</TableHead>
+                                <TableHead className="text-center w-[150px]">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {modeles.map(modele => (
+                                <TableRow key={modele.id}>
+                                    <TableCell className="font-medium">{modele.nom}</TableCell>
+                                    <TableCell className="text-muted-foreground">{modele.description}</TableCell>
+                                    <TableCell className="text-center"><Badge variant="secondary">{modele.rubriques.length}</Badge></TableCell>
+                                    <TableCell className="text-center"><Badge variant="secondary">{modele.constantes.length}</Badge></TableCell>
+                                    <TableCell className="text-center"><Badge variant="secondary">{modele.variables.length}</Badge></TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Button variant="ghost" size="icon" onClick={() => openModal(modele)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" onClick={() => toast({ title: "Fonctionnalité à venir" })}>
+                                                <Copy className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" onClick={() => setModeleToDelete(modele)} className="text-destructive hover:text-destructive">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
 
@@ -349,3 +367,5 @@ const SectionCard = ({ title, description, children, actions }: { title: string,
         {children}
     </div>
 );
+
+    
