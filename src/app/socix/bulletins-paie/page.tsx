@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -15,7 +15,6 @@ import { Mail, Eye, Download, Search, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 import { Separator } from '@/components/ui/separator';
@@ -69,6 +68,37 @@ export default function BulletinsPaiePage() {
             setCurrentPage(newPage);
         }
     };
+
+    const handleDownloadPDF = (payslip: Payslip) => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text("BULLETIN DE PAIE", 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Période de ${format(new Date(payslip.periode), 'MMMM yyyy', { locale: fr })}`, 105, 26, { align: 'center' });
+        
+        doc.text(`Employé: ${payslip.employeeName}`, 14, 40);
+        doc.text(`Matricule: ${payslip.employeeId}`, 14, 46);
+
+        autoTable(doc, {
+            head: [['Libellé', 'Base', 'Taux', 'Gain', 'Retenue']],
+            body: [
+                ['Salaire de Base', payslip.salaireBrut.toLocaleString('fr-FR'), '-', payslip.salaireBrut.toLocaleString('fr-FR'), '-'],
+                ['Cotisations Sociales', payslip.salaireBrut.toLocaleString('fr-FR'), '22%', '-', payslip.cotisationsSalariales.toLocaleString('fr-FR')],
+                ['Impôt sur le Revenu', payslip.netImposable.toLocaleString('fr-FR'), '~4.5%', '-', (payslip.netImposable - payslip.netAPayer).toLocaleString('fr-FR')],
+            ],
+            startY: 55,
+            theme: 'striped',
+        });
+        
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`NET À PAYER : ${payslip.netAPayer.toLocaleString('fr-FR')} FCFA`, 196, finalY, { align: 'right' });
+
+        doc.save(`Bulletin_${payslip.employeeName.replace(' ', '_')}_${payslip.periode}.pdf`);
+        toast({ title: 'PDF du bulletin généré.' });
+    };
     
     return (
         <>
@@ -91,7 +121,7 @@ export default function BulletinsPaiePage() {
                             <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Toutes les périodes</SelectItem>
-                                {periods.map(p => <SelectItem key={p} value={p}>{format(new Date(p), 'MMMM yyyy', {locale: fr})}</SelectItem>)}
+                                {periods.map(p => <SelectItem key={p} value={p}>{format(new Date(`${p}-02`), 'MMMM yyyy', {locale: fr})}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -107,13 +137,13 @@ export default function BulletinsPaiePage() {
                             {currentPayslips.map(p => (
                                 <TableRow key={p.id}>
                                     <TableCell className="font-medium">{p.employeeName}</TableCell>
-                                    <TableCell className="text-center capitalize">{format(new Date(p.periode), 'MMMM yyyy', {locale: fr})}</TableCell>
+                                    <TableCell className="text-center capitalize">{format(new Date(`${p.periode}-02`), 'MMMM yyyy', {locale: fr})}</TableCell>
                                     <TableCell className="text-right font-bold">{p.netAPayer.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-center"><Badge variant={p.status === 'Consulté' ? 'default' : 'secondary'}>{p.status}</Badge></TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => setViewingPayslip(p)}><Eye className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => toast({title: "Fonctionnalité à venir"})}><Download className="h-4 w-4"/></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDownloadPDF(p)}><Download className="h-4 w-4"/></Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -143,172 +173,150 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
     if (!payslip) return null;
 
     const { toast } = useToast();
-    const formatCurrencyFCFA = (value: number) => `${value.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA`;
-    
+    const formatCurrencyFCFA = (value: number) => `${value.toLocaleString('fr-FR')} FCFA`;
+
     // Simulate detailed data based on the payslip prop
     const data = {
         exercice: new Date(payslip.periode).getFullYear().toString(),
         salarie: payslip.employeeName,
-        periode: format(new Date(payslip.periode), 'MMMM yyyy', { locale: fr }),
-        historique: [
-             { code: 'SB', libelle: 'Salaire de Base', base: payslip.salaireBrut, taux: '', gain: payslip.salaireBrut, retenue: 0 },
-             { code: 'C01', libelle: 'Cotisation CNPS', base: payslip.salaireBrut, taux: '3.5%', gain: 0, retenue: payslip.cotisationsSalariales },
-             { code: 'IGR', libelle: 'Impôt sur le Revenu (IGR)', base: payslip.netImposable, taux: '', gain: 0, retenue: payslip.netImposable - payslip.netAPayer },
+        matricule: payslip.employeeId,
+        periode: format(new Date(`${payslip.periode}-02`), 'MMMM yyyy', { locale: fr }),
+        bulletinNo: parseInt(payslip.id.split('-')[1]),
+        details: [
+            { code: 'SB', libelle: 'Salaire de Base', base: payslip.salaireBrut, taux: '', gain: payslip.salaireBrut, retenue: 0 },
+            { code: 'C01', libelle: 'Cotisation CNPS', base: payslip.salaireBrut, taux: '22%', gain: 0, retenue: payslip.cotisationsSalariales },
+            { code: 'IGR', libelle: 'Impôt sur le Revenu (IGR)', base: payslip.netImposable, taux: '~4.5%', gain: 0, retenue: payslip.netImposable - payslip.netAPayer },
         ],
         cumuls: {
-            heures: 169.33,
-            jours: 22,
-            brut: payslip.salaireBrut,
+            salaireBrut: payslip.salaireBrut,
             salaireNet: payslip.netAPayer,
             netImposable: payslip.netImposable,
-            chargesSalariales: payslip.cotisationsSalariales + (payslip.netImposable - payslip.netAPayer),
-            chargesPatronales: payslip.salaireBrut * 0.185,
-            get coutEmployeur() { return this.brut + this.chargesPatronales; }
+            totalRetenues: payslip.cotisationsSalariales + (payslip.netImposable - payslip.netAPayer),
+            chargesPatronales: payslip.salaireBrut * 0.185, // Simulated
+            get coutEmployeur() { return this.salaireBrut + this.chargesPatronales; }
         }
     };
     
-
-    const handlePrint = () => {
+    const handleDownload = () => {
         const doc = new jsPDF();
-        
+        const finalY = (doc as any).lastAutoTable.finalY || 10;
+
         doc.setFontSize(18);
-        doc.text("FICHE INDIVIDUELLE", 105, 20, { align: 'center' });
+        doc.text("BULLETIN DE PAIE", 105, 20, { align: 'center' });
         doc.setFontSize(10);
-        doc.text(`Exercice : ${data.exercice}`, 105, 26, { align: 'center' });
-        
-        doc.text(`Salarié: ${data.salarie}`, 14, 40);
-        doc.text(`Période: ${data.periode}`, 196, 40, { align: 'right' });
+        doc.text(`Période de ${data.periode}`, 105, 26, { align: 'center' });
 
         autoTable(doc, {
-            head: [['N°', 'Du', 'Au', 'Règlement', 'Brut', 'Net à Payer']],
-            body: data.historique.map(h => [h.no, h.du, h.au, h.reglt, formatCurrencyFCFA(h.brut), formatCurrencyFCFA(h.net)]),
-            startY: 45,
+            body: [
+                [{content: `Employé: ${data.salarie}`, styles: {halign:'left'}}, {content: `Matricule: ${data.matricule}`, styles:{halign:'right'}}]
+            ],
+            startY: 35,
+            theme: 'plain'
+        });
+        
+        autoTable(doc, {
+            head: [['Code', 'Libellé', 'Base', 'Taux', 'Gain', 'Retenue']],
+            body: data.details.map(d => [
+                d.code,
+                d.libelle,
+                d.base.toLocaleString('fr-FR'),
+                d.taux,
+                d.gain > 0 ? d.gain.toLocaleString('fr-FR') : '',
+                d.retenue > 0 ? d.retenue.toLocaleString('fr-FR') : ''
+            ]),
+            startY: (doc as any).lastAutoTable.finalY + 2,
             theme: 'striped',
         });
         
-        let finalY = (doc as any).lastAutoTable.finalY + 10;
-        
-        doc.setFontSize(12);
-        doc.text("CUMULS", 14, finalY);
-        finalY += 6;
-
-        const summaryData = [
-            ['Heures travaillées', `${data.cumuls.heures.toFixed(2)}`],
-            ['Jours travaillés', `${data.cumuls.jours}`],
-            ['Brut', formatCurrencyFCFA(data.cumuls.brut)],
-            ['Net imposable', formatCurrencyFCFA(data.cumuls.netImposable)],
-            ['Salaire net', formatCurrencyFCFA(data.cumuls.salaireNet)],
-            ['Charges salariales', formatCurrencyFCFA(data.cumuls.chargesSalariales)],
-            ['Charges patronales', formatCurrencyFCFA(data.cumuls.chargesPatronales)],
-            ['Coût employeur total', formatCurrencyFCFA(data.cumuls.coutEmployeur)],
-        ];
-
         autoTable(doc, {
-            body: summaryData,
-            startY: finalY,
-            theme: 'grid',
-            columnStyles: { 0: { fontStyle: 'bold' } }
+            body: [
+                ['Total Brut', '', '', data.cumuls.salaireBrut.toLocaleString('fr-FR'), ''],
+                ['Total Retenues', '', '', '', data.cumuls.totalRetenues.toLocaleString('fr-FR')],
+                ['NET À PAYER', '', '', '', formatCurrencyFCFA(data.cumuls.salaireNet)],
+            ],
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'plain',
+            columnStyles: { 0: { fontStyle: 'bold' }, 3: {halign: 'right'}, 4: {halign: 'right'} },
         });
 
-        doc.save(`Fiche_Individuelle_${payslip.employeeName.replace(' ', '_')}_${payslip.periode}.pdf`);
-        toast({ title: 'PDF de la fiche généré.' });
+        doc.save(`Bulletin_${payslip.employeeName.replace(' ', '_')}_${payslip.periode}.pdf`);
+        toast({ title: 'PDF du bulletin généré.' });
     };
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
                  <DialogHeader className="p-6 border-b">
-                    <DialogTitle>Fiche Individuelle - {payslip.employeeName}</DialogTitle>
-                    <DialogDescription>Période: {format(new Date(payslip.periode), 'MMMM yyyy', {locale: fr})}</DialogDescription>
+                    <DialogTitle>Bulletin de Paie - {payslip.employeeName}</DialogTitle>
+                    <DialogDescription>Période: {data.periode}</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 bg-muted/50 p-6 overflow-y-auto">
                     <div className="p-6 bg-white rounded-lg shadow-lg font-sans text-xs text-gray-800 max-w-4xl mx-auto">
-                        {/* Header */}
                         <div className="flex justify-between items-start pb-2 mb-2 border-b">
                             <div>
                                 <h3 className="font-bold text-sm">UNIKORP</h3>
                                 <p className="text-muted-foreground text-xs">Abidjan, Côte d'Ivoire</p>
                             </div>
                             <div className="text-right">
-                                <h4 className="font-bold text-base">FICHE INDIVIDUELLE</h4>
-                                <p className="text-xs text-muted-foreground">Exercice : {data.exercice}</p>
+                                <h4 className="font-bold text-base">BULLETIN DE PAIE</h4>
+                                <p className="text-xs text-muted-foreground">Période de {data.periode}</p>
                             </div>
                         </div>
 
-                        {/* Info */}
-                        <div className="flex justify-between items-center py-2 text-xs">
+                        <div className="grid grid-cols-2 gap-4 py-2 text-xs">
                             <p><strong>Salarié :</strong> {data.salarie}</p>
-                            <p><strong>Période :</strong> {data.periode}</p>
+                            <p><strong>Matricule :</strong> {data.matricule}</p>
                         </div>
+                        
+                        <Card className="mt-2">
+                            <CardContent className="p-0">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[10%]">Code</TableHead>
+                                            <TableHead>Libellé</TableHead>
+                                            <TableHead className="text-right">Base</TableHead>
+                                            <TableHead className="text-center">Taux</TableHead>
+                                            <TableHead className="text-right">Gain</TableHead>
+                                            <TableHead className="text-right">Retenue</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {data.details.map(d => (
+                                            <TableRow key={d.code}>
+                                                <TableCell>{d.code}</TableCell>
+                                                <TableCell>{d.libelle}</TableCell>
+                                                <TableCell className="text-right">{d.base.toLocaleString('fr-FR')}</TableCell>
+                                                <TableCell className="text-center">{d.taux}</TableCell>
+                                                <TableCell className="text-right font-medium text-green-700">{d.gain > 0 ? d.gain.toLocaleString('fr-FR') : ''}</TableCell>
+                                                <TableCell className="text-right font-medium text-red-700">{d.retenue > 0 ? d.retenue.toLocaleString('fr-FR') : ''}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
 
-                        <div className="grid md:grid-cols-3 gap-6 mt-2">
-                            {/* Left Column - Details */}
-                            <div className="md:col-span-2">
-                                <Card>
-                                    <CardHeader className="p-3 bg-muted/50 rounded-t-lg">
-                                        <CardTitle className="text-sm">Historique des paies</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-0">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="text-center">Du</TableHead>
-                                                    <TableHead className="text-center">Au</TableHead>
-                                                    <TableHead className="text-right">Brut</TableHead>
-                                                    <TableHead className="text-right">Net à payer</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {data.historique.map(h => (
-                                                    <TableRow key={h.code}>
-                                                        <TableCell className="text-center">{format(new Date(h.du), 'dd/MM/yy', {locale:fr})}</TableCell>
-                                                        <TableCell className="text-center">{format(new Date(h.au), 'dd/MM/yy', {locale:fr})}</TableCell>
-                                                        <TableCell className="text-right">{h.gain.toLocaleString('fr-FR')}</TableCell>
-                                                        <TableCell className="text-right font-semibold">{h.retenue.toLocaleString('fr-FR')}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                            <TableFooter>
-                                                <TableRow className="font-bold bg-muted/30">
-                                                    <TableCell colSpan={2} className="text-right">Total</TableCell>
-                                                    <TableCell className="text-right">{data.cumuls.brut.toLocaleString('fr-FR')}</TableCell>
-                                                    <TableCell className="text-right">{data.cumuls.salaireNet.toLocaleString('fr-FR')}</TableCell>
-                                                </TableRow>
-                                            </TableFooter>
-                                        </Table>
-                                    </CardContent>
-                                </Card>
-                            </div>
-
-                            {/* Right Column - Summary */}
-                            <div className="md:col-span-1">
-                                <Card>
-                                    <CardHeader className="p-3 bg-muted/50 rounded-t-lg">
-                                        <CardTitle className="text-sm">Cumuls Annuels</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-3 space-y-2">
-                                        <div className="flex justify-between"><span className="text-muted-foreground">Heures travaillées</span><span className="font-semibold">{data.cumuls.heures.toFixed(2)}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">Jours travaillés</span><span className="font-semibold">{data.cumuls.jours}</span></div>
-                                        <Separator className="my-2"/>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">Brut</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.brut)}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">Net imposable</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.netImposable)}</span></div>
-                                        <div className="flex justify-between font-bold text-primary"><span className="">Salaire net</span><span className="">{formatCurrencyFCFA(data.cumuls.salaireNet)}</span></div>
-                                        <Separator className="my-2"/>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">Charges salariales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesSalariales)}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">Charges patronales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesPatronales)}</span></div>
-                                         <Separator className="my-2" />
-                                        <div className="flex justify-between text-base"><span className="font-bold">Coût employeur total</span><span className="font-bold">{formatCurrencyFCFA(data.cumuls.coutEmployeur)}</span></div>
-                                    </CardContent>
-                                </Card>
+                        <div className="mt-4 grid grid-cols-3 gap-4">
+                            <div className="col-span-2" />
+                            <div className="col-span-1 space-y-2 text-sm">
+                                <div className="flex justify-between"><span className="text-muted-foreground">Total Brut</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.salaireBrut)}</span></div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">Total Retenues</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.totalRetenues)}</span></div>
+                                <Separator/>
+                                <div className="flex justify-between font-bold text-base"><span className="text-muted-foreground">Net Imposable</span><span>{formatCurrencyFCFA(data.cumuls.netImposable)}</span></div>
+                                <div className="flex justify-between font-bold text-lg text-primary bg-primary/10 p-2 rounded-md"><span className="">NET À PAYER</span><span className="">{formatCurrencyFCFA(data.cumuls.salaireNet)}</span></div>
                             </div>
                         </div>
+
                     </div>
                 </div>
                  <DialogFooter className="p-6 border-t">
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
-                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4"/>Imprimer la fiche</Button>
+                    <Button onClick={handleDownload}><Download className="mr-2 h-4 w-4"/>Télécharger le PDF</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
