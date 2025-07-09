@@ -11,11 +11,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Eye, Download, Search } from 'lucide-react';
+import { Mail, Eye, Download, Search, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 import { Separator } from '@/components/ui/separator';
 
@@ -141,6 +142,7 @@ export default function BulletinsPaiePage() {
 function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | null; isOpen: boolean; onClose: () => void }) {
     if (!payslip) return null;
 
+    const { toast } = useToast();
     const formatCurrencyFCFA = (value: number) => `${value.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA`;
     
     // Simulate detailed data based on the payslip prop
@@ -167,14 +169,56 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
     
 
     const handlePrint = () => {
-        // PDF generation logic here
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text("FICHE INDIVIDUELLE", 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Exercice : ${data.exercice}`, 105, 26, { align: 'center' });
+        
+        doc.text(`Salarié: ${data.salarie}`, 14, 40);
+        doc.text(`Période: ${data.periode}`, 196, 40, { align: 'right' });
+
+        autoTable(doc, {
+            head: [['N°', 'Du', 'Au', 'Règlement', 'Brut', 'Net à Payer']],
+            body: data.historique.map(h => [h.no, h.du, h.au, h.reglt, formatCurrencyFCFA(h.brut), formatCurrencyFCFA(h.net)]),
+            startY: 45,
+            theme: 'striped',
+        });
+        
+        let finalY = (doc as any).lastAutoTable.finalY + 10;
+        
+        doc.setFontSize(12);
+        doc.text("CUMULS", 14, finalY);
+        finalY += 6;
+
+        const summaryData = [
+            ['Heures travaillées', `${data.cumuls.heures.toFixed(2)}`],
+            ['Jours travaillés', `${data.cumuls.jours}`],
+            ['Brut', formatCurrencyFCFA(data.cumuls.brut)],
+            ['Net imposable', formatCurrencyFCFA(data.cumuls.netImposable)],
+            ['Salaire net', formatCurrencyFCFA(data.cumuls.salaireNet)],
+            ['Charges salariales', formatCurrencyFCFA(data.cumuls.chargesSalariales)],
+            ['Charges patronales', formatCurrencyFCFA(data.cumuls.chargesPatronales)],
+            ['Coût employeur total', formatCurrencyFCFA(data.cumuls.coutEmployeur)],
+        ];
+
+        autoTable(doc, {
+            body: summaryData,
+            startY: finalY,
+            theme: 'grid',
+            columnStyles: { 0: { fontStyle: 'bold' } }
+        });
+
+        doc.save(`Fiche_Individuelle_${payslip.employeeName.replace(' ', '_')}_${payslip.periode}.pdf`);
+        toast({ title: 'PDF de la fiche généré.' });
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
                  <DialogHeader className="p-6 border-b">
-                    <DialogTitle>Bulletin de Paie - {payslip.employeeName}</DialogTitle>
+                    <DialogTitle>Fiche Individuelle - {payslip.employeeName}</DialogTitle>
                     <DialogDescription>Période: {format(new Date(payslip.periode), 'MMMM yyyy', {locale: fr})}</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 bg-muted/50 p-6 overflow-y-auto">
@@ -202,37 +246,33 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
                             <div className="md:col-span-2">
                                 <Card>
                                     <CardHeader className="p-3 bg-muted/50 rounded-t-lg">
-                                        <CardTitle className="text-sm">Détail du bulletin</CardTitle>
+                                        <CardTitle className="text-sm">Historique des paies</CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-0">
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead className="w-16">Code</TableHead>
-                                                    <TableHead>Libellé</TableHead>
-                                                    <TableHead className="text-right">Base</TableHead>
-                                                    <TableHead className="text-center">Taux</TableHead>
-                                                    <TableHead className="text-right">Gain</TableHead>
-                                                    <TableHead className="text-right">Retenue</TableHead>
+                                                    <TableHead className="text-center">Du</TableHead>
+                                                    <TableHead className="text-center">Au</TableHead>
+                                                    <TableHead className="text-right">Brut</TableHead>
+                                                    <TableHead className="text-right">Net à payer</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
                                                 {data.historique.map(h => (
                                                     <TableRow key={h.code}>
-                                                        <TableCell>{h.code}</TableCell>
-                                                        <TableCell>{h.libelle}</TableCell>
-                                                        <TableCell className="text-right">{h.base.toLocaleString('fr-FR')}</TableCell>
-                                                        <TableCell className="text-center">{h.taux}</TableCell>
-                                                        <TableCell className="text-right">{h.gain > 0 ? h.gain.toLocaleString('fr-FR') : ''}</TableCell>
-                                                        <TableCell className="text-right">{h.retenue > 0 ? h.retenue.toLocaleString('fr-FR') : ''}</TableCell>
+                                                        <TableCell className="text-center">{format(new Date(h.du), 'dd/MM/yy', {locale:fr})}</TableCell>
+                                                        <TableCell className="text-center">{format(new Date(h.au), 'dd/MM/yy', {locale:fr})}</TableCell>
+                                                        <TableCell className="text-right">{h.gain.toLocaleString('fr-FR')}</TableCell>
+                                                        <TableCell className="text-right font-semibold">{h.retenue.toLocaleString('fr-FR')}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
                                             <TableFooter>
                                                 <TableRow className="font-bold bg-muted/30">
-                                                    <TableCell colSpan={4} className="text-right">Totaux</TableCell>
+                                                    <TableCell colSpan={2} className="text-right">Total</TableCell>
                                                     <TableCell className="text-right">{data.cumuls.brut.toLocaleString('fr-FR')}</TableCell>
-                                                    <TableCell className="text-right">{data.cumuls.chargesSalariales.toLocaleString('fr-FR')}</TableCell>
+                                                    <TableCell className="text-right">{data.cumuls.salaireNet.toLocaleString('fr-FR')}</TableCell>
                                                 </TableRow>
                                             </TableFooter>
                                         </Table>
@@ -244,7 +284,7 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
                             <div className="md:col-span-1">
                                 <Card>
                                     <CardHeader className="p-3 bg-muted/50 rounded-t-lg">
-                                        <CardTitle className="text-sm">Synthèse et Cumuls</CardTitle>
+                                        <CardTitle className="text-sm">Cumuls Annuels</CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-3 space-y-2">
                                         <div className="flex justify-between"><span className="text-muted-foreground">Heures travaillées</span><span className="font-semibold">{data.cumuls.heures.toFixed(2)}</span></div>
@@ -256,7 +296,7 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
                                         <Separator className="my-2"/>
                                         <div className="flex justify-between"><span className="text-muted-foreground">Charges salariales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesSalariales)}</span></div>
                                         <div className="flex justify-between"><span className="text-muted-foreground">Charges patronales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesPatronales)}</span></div>
-                                        <Separator className="my-2"/>
+                                         <Separator className="my-2" />
                                         <div className="flex justify-between text-base"><span className="font-bold">Coût employeur total</span><span className="font-bold">{formatCurrencyFCFA(data.cumuls.coutEmployeur)}</span></div>
                                     </CardContent>
                                 </Card>
@@ -266,7 +306,7 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
                 </div>
                  <DialogFooter className="p-6 border-t">
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
-                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4"/>Imprimer le bulletin</Button>
+                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4"/>Imprimer la fiche</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
