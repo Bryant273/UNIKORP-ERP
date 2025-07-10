@@ -12,6 +12,7 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/logo';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Indicator = {
     id: string;
@@ -78,6 +79,7 @@ const bilanSocialData: IndicatorCategory[] = [
 
 export default function BilanSocialPage() {
     const { toast } = useToast();
+    const [selectedYear, setSelectedYear] = useState<string>((new Date().getFullYear() - 1).toString());
 
     const handleExport = () => {
         const doc = new jsPDF();
@@ -87,13 +89,15 @@ export default function BilanSocialPage() {
         const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
         const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
         
-        let startY = 45;
+        let startY = 50;
         
-        bilanSocialData.forEach(category => {
-            if (startY > 250) {
+        bilanSocialData.forEach((category, index) => {
+            if (startY > 250) { // Simple page break logic
                 doc.addPage();
                 startY = 20;
             }
+            if(index > 0) startY += 5; // Add space between sections
+
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text(category.title, 14, startY);
@@ -117,7 +121,7 @@ export default function BilanSocialPage() {
                         doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
                         const rightX = doc.internal.pageSize.width - data.settings.margin.right;
                         doc.text(`État : Bilan Social Annuel`, rightX, 25, { align: 'right' });
-                        doc.text(`Exercice : 2023`, rightX, 30, { align: 'right' });
+                        doc.text(`Exercice : ${selectedYear}`, rightX, 30, { align: 'right' });
                         doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
                         doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
                     }
@@ -132,7 +136,7 @@ export default function BilanSocialPage() {
             startY = (doc as any).lastAutoTable.finalY + 15;
         });
 
-        doc.save('Bilan_Social_2023.pdf');
+        doc.save(`Bilan_Social_${selectedYear}.pdf`);
         toast({ title: 'Exportation PDF lancée.' });
     };
 
@@ -141,10 +145,22 @@ export default function BilanSocialPage() {
             <CardHeader>
                  <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl">Bilan Social</CardTitle>
-                        <CardDescription>Document de synthèse annuel sur les principales données sociales de l'entreprise.</CardDescription>
+                        <CardTitle className="text-2xl">Bilan Social de l'Année {selectedYear}</CardTitle>
+                        <CardDescription>Document de synthèse sur les principales données sociales de l'entreprise.</CardDescription>
                     </div>
-                    <Button onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Exporter le bilan</Button>
+                    <div className="flex items-center gap-2">
+                         <Select value={selectedYear} onValueChange={setSelectedYear}>
+                            <SelectTrigger className="w-[120px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="2024">2024</SelectItem>
+                                <SelectItem value="2023">2023</SelectItem>
+                                <SelectItem value="2022">2022</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Exporter le bilan</Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
