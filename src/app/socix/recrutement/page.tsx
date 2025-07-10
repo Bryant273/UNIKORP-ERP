@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Users, Download, Eye, Briefcase } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 // --- TYPES & MOCK DATA ---
 
@@ -73,6 +74,7 @@ export default function RecrutementPage() {
     const { toast } = useToast();
     const [offers, setOffers] = useState(MOCK_OFFERS);
     const [viewingOffer, setViewingOffer] = useState<JobOffer | null>(null);
+    const [previewingCv, setPreviewingCv] = useState<Candidate | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(offers.length / ITEMS_PER_PAGE);
@@ -176,13 +178,20 @@ export default function RecrutementPage() {
         isOpen={!!viewingOffer}
         onClose={() => setViewingOffer(null)}
         offer={viewingOffer}
+        onPreviewCv={setPreviewingCv}
+      />
+      
+      <CvPreviewModal
+        isOpen={!!previewingCv}
+        onClose={() => setPreviewingCv(null)}
+        candidate={previewingCv}
       />
     </>
   );
 }
 
 
-function CandidatesModal({ isOpen, onClose, offer }: { isOpen: boolean, onClose: () => void, offer: JobOffer | null }) {
+function CandidatesModal({ isOpen, onClose, offer, onPreviewCv }: { isOpen: boolean, onClose: () => void, offer: JobOffer | null, onPreviewCv: (candidate: Candidate) => void }) {
     const { toast } = useToast();
 
     if (!offer) return null;
@@ -207,7 +216,7 @@ function CandidatesModal({ isOpen, onClose, offer }: { isOpen: boolean, onClose:
                             <TableRow>
                                 <TableHead>Nom du candidat</TableHead>
                                 <TableHead className="text-center">Date de soumission</TableHead>
-                                <TableHead className="text-right">CV</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -226,9 +235,8 @@ function CandidatesModal({ isOpen, onClose, offer }: { isOpen: boolean, onClose:
                                         {format(new Date(candidate.submissionDate), 'dd/MM/yyyy')}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleDownloadCv(candidate)}>
-                                            <Download className="h-4 w-4" />
-                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => onPreviewCv(candidate)}><Eye className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => handleDownloadCv(candidate)}><Download className="h-4 w-4" /></Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -242,3 +250,30 @@ function CandidatesModal({ isOpen, onClose, offer }: { isOpen: boolean, onClose:
         </Dialog>
     );
 }
+
+function CvPreviewModal({ isOpen, onClose, candidate }: { isOpen: boolean, onClose: () => void, candidate: Candidate | null }) {
+    if (!candidate) return null;
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>CV de {candidate.name}</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 bg-muted flex justify-center rounded-md">
+                    <Image
+                        src="https://placehold.co/800x1131.png"
+                        alt={`CV de ${candidate.name}`}
+                        data-ai-hint="resume document"
+                        width={800}
+                        height={1131}
+                        className="border shadow-md max-h-[70vh] w-auto object-contain"
+                    />
+                </div>
+                 <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
