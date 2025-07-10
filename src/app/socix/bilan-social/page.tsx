@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 type Indicator = {
     id: string;
