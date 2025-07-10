@@ -152,7 +152,7 @@ const socixNav = [
     title: 'PRÉSENCES',
     icon: CalendarDays,
     subItems: [
-      { title: 'Congés payés', href: '/socix/conges-payes', icon: Plane },
+      { title: 'Congés & Absences', href: '/socix/conges-payes', icon: Plane },
       { title: 'Pointage', href: '/socix/absences-arrets', icon: Fingerprint },
       { title: 'Planning d\'équipe', href: '/socix/planning-equipe', icon: CalendarDays },
       { title: 'Validation des demandes', href: '/socix/validation-demandes', icon: CheckSquare },
@@ -162,10 +162,10 @@ const socixNav = [
     title: 'PAIE',
     icon: Wallet,
     subItems: [
-      { title: 'Traitement de la paie', href: '/socix/traitement-paie', icon: HandCoins },
+      { title: 'Paramétrage de la paie', href: '/socix/traitement-paie', icon: HandCoins },
       { title: 'Bulletins de paie', href: '/socix/bulletins-paie', icon: Mail },
       { title: 'Notes de frais', href: '/socix/notes-de-frais', icon: Receipt },
-      { title: 'Déclarations sociales', href: '/socix/declarations-sociales', icon: FileText },
+      { title: 'Déclarations sociales', href: '/skomptab/declarations-sociales', icon: FileText },
     ]
   },
   {
@@ -174,7 +174,7 @@ const socixNav = [
     subItems: [
       { title: 'Recrutement', href: '/socix/recrutement', icon: UserPlus },
       { title: 'Plans de formation', href: '/socix/plans-formation', icon: BookOpenCheck },
-      { title: 'Compétences et évaluations', href: '/socix/competences-evaluations', icon: Star },
+      { title: 'Compétences & Évaluations', href: '/socix/competences-evaluations', icon: Star },
       { title: 'Entretiens annuels', href: '/socix/entretiens-annuels', icon: MessageSquare },
     ]
   },
