@@ -4,14 +4,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Legend, Tooltip, XAxis, YAxis, CartesianGrid, LineChart, Line, ComposedChart } from "recharts";
-import { Users, TrendingUp, TrendingDown, Wallet, UserCheck, UserX, Star, Award } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, Wallet, UserCheck, UserX, Star, Award, Heart, Briefcase } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 
 const kpiData = [
   { title: "Effectif Total", value: "112", Icon: Users, change: "+2 ce mois-ci" },
   { title: "Taux de Satisfaction", value: "88%", Icon: Star, change: "+1.5% vs Q2", changeType: 'up' },
   { title: "Turnover (Annuel)", value: "5.8%", Icon: TrendingDown, change: "+1.2% vs N-1", changeType: 'up' },
-  { title: "Performance Moyenne", value: "8.2/10", Icon: Award, change: "+0.3 vs N-1", changeType: 'up' },
+  { title: "Coût RH / CA", value: "32%", Icon: Wallet, change: "-0.5% vs N-1", changeType: 'down' },
 ];
 
 const departmentData = [
@@ -120,4 +120,3 @@ export default function KpiSociauxPage() {
     </div>
   );
 }
-

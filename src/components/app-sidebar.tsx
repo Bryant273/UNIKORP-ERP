@@ -165,7 +165,7 @@ const socixNav = [
       { title: 'Paramétrage de la paie', href: '/socix/traitement-paie', icon: HandCoins },
       { title: 'Bulletins de paie', href: '/socix/bulletins-paie', icon: Mail },
       { title: 'Notes de frais', href: '/socix/notes-de-frais', icon: Receipt },
-      { title: 'Déclarations sociales', href: '/skomptab/declarations-sociales', icon: FileText },
+      { title: 'Déclarations sociales', href: '/socix/declarations-sociales', icon: FileText },
     ]
   },
   {
