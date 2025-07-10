@@ -11,6 +11,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Logo } from '@/components/logo';
 
 type Indicator = {
     id: string;
@@ -80,13 +81,13 @@ export default function BilanSocialPage() {
 
     const handleExport = () => {
         const doc = new jsPDF();
+        const companyName = "UNIKORP";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SOCIX";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
         
-        doc.setFontSize(18);
-        doc.text("Bilan Social - Année 2023", 105, 20, { align: 'center' });
-        doc.setFontSize(10);
-        doc.text(`Édité le ${format(new Date(), 'dd/MM/yyyy')} par UNIKORP`, 105, 26, { align: 'center' });
-
-        let startY = 40;
+        let startY = 45;
         
         bilanSocialData.forEach(category => {
             if (startY > 250) {
@@ -102,7 +103,30 @@ export default function BilanSocialPage() {
                 startY: startY,
                 head: [['Indicateur', 'Valeur', 'Variation N-1']],
                 body: category.indicators.map(ind => [ind.label, ind.value, ind.variation || '']),
-                theme: 'grid'
+                theme: 'grid',
+                headStyles: { fillColor: '#4A5568', textColor: '#FFFFFF' },
+                 didDrawPage: (data) => {
+                    // Header only on the first page for this multi-section document
+                    if (data.pageNumber === 1) {
+                        doc.setFontSize(9); doc.setTextColor(150);
+                        doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+                        doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+                        doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+                        doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+                        doc.text(companyName, data.settings.margin.left + 15, 28);
+                        doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+                        const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+                        doc.text(`État : Bilan Social Annuel`, rightX, 25, { align: 'right' });
+                        doc.text(`Exercice : 2023`, rightX, 30, { align: 'right' });
+                        doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+                        doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
+                    }
+                     // Footer on all pages
+                    const pageCountTotal = (doc as any).internal.getNumberOfPages();
+                    doc.setFontSize(8); doc.setTextColor(150);
+                    doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
+                },
+                 margin: { top: 50 },
             });
 
             startY = (doc as any).lastAutoTable.finalY + 15;
