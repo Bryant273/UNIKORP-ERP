@@ -29,6 +29,7 @@ type JobOffer = {
     title: string;
     status: OfferStatus;
     publicationDate: string;
+    deadline: string;
     candidates: Candidate[];
 };
 
@@ -38,6 +39,7 @@ const MOCK_OFFERS: JobOffer[] = [
         title: 'Développeur Full-Stack Senior', 
         status: 'Ouvert', 
         publicationDate: '2024-07-15',
+        deadline: '2024-08-15',
         candidates: [
             { id: 'cand-1', name: 'Alice Bertrand', submissionDate: '2024-07-20', avatarUrl: 'https://placehold.co/100x100.png', cvUrl: '#' },
             { id: 'cand-2', name: 'Charles Martin', submissionDate: '2024-07-22', avatarUrl: 'https://placehold.co/100x100.png', cvUrl: '#' },
@@ -48,6 +50,7 @@ const MOCK_OFFERS: JobOffer[] = [
         title: 'Responsable Marketing Digital', 
         status: 'Ouvert', 
         publicationDate: '2024-07-10',
+        deadline: '2024-08-10',
         candidates: [
             { id: 'cand-3', name: 'Diane Moreau', submissionDate: '2024-07-18', avatarUrl: 'https://placehold.co/100x100.png', cvUrl: '#' },
         ]
@@ -57,6 +60,7 @@ const MOCK_OFFERS: JobOffer[] = [
         title: 'Comptable Confirmé', 
         status: 'Pourvu', 
         publicationDate: '2024-06-01',
+        deadline: '2024-06-30',
         candidates: []
     },
     { 
@@ -64,6 +68,7 @@ const MOCK_OFFERS: JobOffer[] = [
         title: 'Stagiaire RH', 
         status: 'Fermé', 
         publicationDate: '2024-05-20',
+        deadline: '2024-06-20',
         candidates: []
     },
 ];
@@ -121,6 +126,7 @@ export default function RecrutementPage() {
                 <TableHead className="text-center">Statut</TableHead>
                 <TableHead className="text-center">Candidats</TableHead>
                 <TableHead className="text-center">Date de publication</TableHead>
+                <TableHead className="text-center">Date Limite</TableHead>
                 <TableHead className="w-[150px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -136,10 +142,11 @@ export default function RecrutementPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">{format(new Date(offer.publicationDate), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell className="text-center">{format(new Date(offer.deadline), 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="text-center">
                     <Button variant="outline" size="sm" onClick={() => setViewingOffer(offer)} disabled={offer.candidates.length === 0}>
                       <Eye className="mr-2 h-4 w-4" />
-                      Voir les candidatures
+                      Candidatures
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -276,4 +283,3 @@ function CvPreviewModal({ isOpen, onClose, candidate }: { isOpen: boolean, onClo
         </Dialog>
     );
 }
-

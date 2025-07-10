@@ -11,10 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { BookOpenCheck, Users, Award } from 'lucide-react';
+import { BookOpenCheck, Users, Award, Eye } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // --- MOCK DATA & TYPES ---
 type Training = {
+    id: string;
     date: Date;
     title: string;
     description: string;
@@ -23,10 +25,12 @@ type Training = {
     participants: { id: string; name: string; avatarUrl: string }[];
     syllabus: { title: string; points: string[] }[];
     skillsToAcquire: string[];
+    status: 'Planifiée' | 'Terminée' | 'Annulée';
 };
 
 const MOCK_TRAININGS: Training[] = [
     {
+        id: 'train-1',
         date: new Date(2024, 8, 16), // Septembre 16
         title: 'Formation Avancée Next.js',
         description: 'Maîtriser les Server Components et les nouvelles fonctionnalités de Next.js 14+.',
@@ -41,9 +45,11 @@ const MOCK_TRAININGS: Training[] = [
             { title: 'Jour 2: Techniques Avancées', points: ['Server Actions', 'Streaming de l\'UI', 'Optimisation des performances'] },
             { title: 'Jour 3: Déploiement & Pratique', points: ['Déploiement sur Vercel', 'Atelier pratique : construire une mini-app'] },
         ],
-        skillsToAcquire: ['Next.js App Router', 'Server Components', 'Server Actions', 'Optimisation Web']
+        skillsToAcquire: ['Next.js App Router', 'Server Components', 'Server Actions', 'Optimisation Web'],
+        status: 'Planifiée'
     },
     {
+        id: 'train-2',
         date: new Date(2024, 9, 7), // Octobre 7
         title: 'Leadership pour Nouveaux Managers',
         description: 'Acquérir les compétences de base pour manager une équipe avec succès.',
@@ -56,7 +62,25 @@ const MOCK_TRAININGS: Training[] = [
             { title: 'Jour 1: Posture et Communication', points: ['Définir son style de leadership', 'Communication efficace et feedback constructif'] },
             { title: 'Jour 2: Animation d\'équipe', points: ['Délégation et autonomisation', 'Gestion des conflits'] },
         ],
-        skillsToAcquire: ['Management', 'Leadership', 'Communication Interpersonnelle']
+        skillsToAcquire: ['Management', 'Leadership', 'Communication Interpersonnelle'],
+        status: 'Planifiée'
+    },
+    {
+        id: 'train-3',
+        date: new Date(2024, 6, 22), // Juillet 22
+        title: 'Fondamentaux de la Comptabilité',
+        description: 'Formation de base pour les non-comptables.',
+        category: 'Technique',
+        duration: '1 jour',
+        participants: [
+            { id: 'emp-005', name: 'Camille Leroy', avatarUrl: 'https://placehold.co/100x100.png' },
+        ],
+        syllabus: [
+            { title: 'Matin: Les grands principes', points: ['Lire un bilan', 'Comprendre un compte de résultat'] },
+            { title: 'Après-midi: Cas pratiques', points: ['Analyse de la rentabilité d\'un projet'] },
+        ],
+        skillsToAcquire: ['Comptabilité Générale'],
+        status: 'Terminée'
     },
 ];
 
@@ -68,6 +92,14 @@ export default function PlansFormationPage() {
             case 'Technique': return <Badge variant="secondary">Technique</Badge>;
             case 'Management': return <Badge variant="default" className="bg-purple-600">Management</Badge>;
             case 'Soft Skills': return <Badge variant="outline">Soft Skills</Badge>;
+        }
+    };
+
+     const getStatusBadge = (status: Training['status']) => {
+        switch (status) {
+            case 'Planifiée': return <Badge variant="outline">Planifiée</Badge>;
+            case 'Terminée': return <Badge className="bg-green-100 text-green-800">Terminée</Badge>;
+            case 'Annulée': return <Badge variant="destructive">Annulée</Badge>;
         }
     };
 
@@ -84,17 +116,53 @@ export default function PlansFormationPage() {
             <Card className="w-full">
                 <CardHeader>
                     <CardTitle className="text-2xl flex items-center gap-2"><BookOpenCheck /> Plans de Formation</CardTitle>
-                    <CardDescription>Consultez le calendrier des formations planifiées. Cliquez sur une date surlignée pour voir les détails.</CardDescription>
+                    <CardDescription>Consultez le calendrier des formations planifiées et la liste complète.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex justify-center">
-                    <Calendar
-                        mode="single"
-                        onDayClick={handleDateClick}
-                        className="rounded-md border p-4"
-                        locale={fr}
-                        modifiers={{ trainings: MOCK_TRAININGS.map(t => t.date) }}
-                        modifiersClassNames={{ trainings: 'border-2 border-primary rounded-full cursor-pointer' }}
-                    />
+                <CardContent className="space-y-8">
+                    <div>
+                         <h3 className="text-lg font-semibold mb-2">Calendrier des Formations</h3>
+                         <p className="text-sm text-muted-foreground mb-4">Cliquez sur une date surlignée pour voir les détails de la formation.</p>
+                        <div className="flex justify-center">
+                             <Calendar
+                                mode="single"
+                                onDayClick={handleDateClick}
+                                className="rounded-md border p-4"
+                                locale={fr}
+                                modifiers={{ trainings: MOCK_TRAININGS.map(t => t.date) }}
+                                modifiersClassNames={{ trainings: 'border-2 border-primary rounded-full cursor-pointer' }}
+                            />
+                        </div>
+                    </div>
+                     <div>
+                        <h3 className="text-lg font-semibold mb-4">Liste des Formations</h3>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Titre de la Formation</TableHead>
+                                    <TableHead>Catégorie</TableHead>
+                                    <TableHead className="text-center">Date</TableHead>
+                                    <TableHead className="text-center">Statut</TableHead>
+                                    <TableHead className="w-[150px] text-center">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {MOCK_TRAININGS.map(training => (
+                                    <TableRow key={training.id}>
+                                        <TableCell className="font-medium">{training.title}</TableCell>
+                                        <TableCell>{getCategoryBadge(training.category)}</TableCell>
+                                        <TableCell className="text-center">{format(training.date, 'dd/MM/yyyy')}</TableCell>
+                                        <TableCell className="text-center">{getStatusBadge(training.status)}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Button variant="outline" size="sm" onClick={() => setSelectedTraining(training)}>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                Voir détails
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                     </div>
                 </CardContent>
             </Card>
 
@@ -150,4 +218,3 @@ export default function PlansFormationPage() {
         </>
     );
 }
-
