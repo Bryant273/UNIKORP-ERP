@@ -218,7 +218,6 @@ const markosNav = [
     subItems: [
       { title: 'Emails marketing', href: '/markos/campagnes/emails-marketing', icon: Mail },
       { title: 'Campagnes SMS', href: '/markos/campagnes/campagnes-sms', icon: MessageSquare },
-      { title: 'Réseaux sociaux', href: '/markos/campagnes/reseaux-sociaux', icon: Users },
       { title: 'Automation marketing', href: '/markos/campagnes/automation-marketing', icon: Bot },
     ]
   },
