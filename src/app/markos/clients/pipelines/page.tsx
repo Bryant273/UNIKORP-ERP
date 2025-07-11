@@ -10,9 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Users, DollarSign, Target, Filter, ChevronDown, CheckCircle, MessageSquare, Briefcase, Phone, Mail } from 'lucide-react';
+import { PlusCircle, Users, DollarSign, Target, ChevronDown, Mail, Phone, Briefcase, MessageSquare } from 'lucide-react';
 import {
   ChartContainer,
   ChartTooltip,
@@ -21,7 +20,7 @@ import {
 import { Funnel, FunnelChart, LabelList, Tooltip, ResponsiveContainer } from "recharts";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
+import { useToast } from '@/hooks/use-toast';
 
 // --- TYPES & MOCK DATA ---
 
@@ -45,7 +44,7 @@ type Activity = {
     user: string;
 };
 
-const MOCK_OPPORTUNITIES: Opportunity[] = [
+const MOCK_OPPORTUNITIES_DATA: Opportunity[] = [
   { id: 'opp-1', title: 'Intégration ERP pour Global Corp', companyName: 'Global Corp', contactName: 'Alice Martin', value: 15000000, probability: 75, stage: 'Négociation' },
   { id: 'opp-2', title: 'Campagne Marketing Digital Q4', companyName: 'Innovatech', contactName: 'Bruno Lemaire', value: 5000000, probability: 90, stage: 'Proposition' },
   { id: 'opp-3', title: 'Développement App Mobile', companyName: 'Startup Boost', contactName: 'Carine Dubois', value: 8000000, probability: 25, stage: 'Qualification' },
@@ -76,8 +75,8 @@ const funnelChartConfig = funnelData.reduce((acc, cur) => {
 
 
 const kpiData = [
-  { title: "Valeur du Pipeline", value: `${(MOCK_OPPORTUNITIES.filter(o => o.stage !== 'Gagné' && o.stage !== 'Perdu').reduce((s, o) => s + o.value, 0)).toLocaleString('fr-FR')} FCFA`, Icon: DollarSign },
-  { title: "Deals en cours", value: MOCK_OPPORTUNITIES.filter(o => o.stage !== 'Gagné' && o.stage !== 'Perdu').length, Icon: Users },
+  { title: "Valeur du Pipeline", value: `${(MOCK_OPPORTUNITIES_DATA.filter(o => o.stage !== 'Gagné' && o.stage !== 'Perdu').reduce((s, o) => s + o.value, 0)).toLocaleString('fr-FR')} FCFA`, Icon: DollarSign },
+  { title: "Deals en cours", value: MOCK_OPPORTUNITIES_DATA.filter(o => o.stage !== 'Gagné' && o.stage !== 'Perdu').length, Icon: Users },
   { title: "Taux de Conversion Global", value: "20.8%", Icon: Target },
 ];
 
@@ -92,8 +91,10 @@ const getActivityIcon = (type: Activity['type']) => {
 
 // --- MAIN PAGE COMPONENT ---
 export default function PipelinesPage() {
-    const [opportunities, setOpportunities] = useState(MOCK_OPPORTUNITIES);
+    const [opportunities, setOpportunities] = useState(MOCK_OPPORTUNITIES_DATA);
     const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
 
     const stages = useMemo(() => {
         const stageMap = STAGES_ORDER.reduce((acc, stage) => {
@@ -108,6 +109,30 @@ export default function PipelinesPage() {
         });
         return stageMap;
     }, [opportunities]);
+
+    const handleOpenCreateModal = () => {
+        setEditingOpportunity(null);
+        setIsFormModalOpen(true);
+    };
+
+    const handleOpenEditModal = (opp: Opportunity) => {
+        setEditingOpportunity(opp);
+        setSelectedOpportunity(null);
+        setIsFormModalOpen(true);
+    };
+
+    const handleSaveOpportunity = (formData: Omit<Opportunity, 'id' | 'probability'>) => {
+        if (editingOpportunity) {
+            setOpportunities(prev => prev.map(opp => opp.id === editingOpportunity.id ? { ...editingOpportunity, ...formData } : opp));
+        } else {
+            const newOpp: Opportunity = {
+                id: `opp-${Date.now()}`,
+                ...formData,
+                probability: 10, // Default probability
+            };
+            setOpportunities(prev => [newOpp, ...prev]);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -128,7 +153,7 @@ export default function PipelinesPage() {
                                     <SelectItem value="services-pipeline">Pipeline Ventes Services</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button onClick={() => alert("Simulation d'ajout")}><PlusCircle className="mr-2 h-4 w-4"/> Nouvelle Opportunité</Button>
+                            <Button onClick={handleOpenCreateModal}><PlusCircle className="mr-2 h-4 w-4"/> Nouvelle Opportunité</Button>
                         </div>
                     </div>
                 </CardHeader>
@@ -208,14 +233,22 @@ export default function PipelinesPage() {
                 isOpen={!!selectedOpportunity} 
                 onClose={() => setSelectedOpportunity(null)} 
                 opportunity={selectedOpportunity} 
+                onEdit={handleOpenEditModal}
+            />
+
+            <OpportunityFormModal 
+                isOpen={isFormModalOpen}
+                onClose={() => setIsFormModalOpen(false)}
+                onSave={handleSaveOpportunity}
+                opportunityToEdit={editingOpportunity}
             />
         </div>
     );
 }
 
-// --- MODAL COMPONENT ---
+// --- MODAL COMPONENTS ---
 
-function OpportunityDetailModal({ isOpen, onClose, opportunity }: { isOpen: boolean, onClose: () => void, opportunity: Opportunity | null }) {
+function OpportunityDetailModal({ isOpen, onClose, opportunity, onEdit }: { isOpen: boolean, onClose: () => void, opportunity: Opportunity | null, onEdit: (opp: Opportunity) => void }) {
     if (!opportunity) return null;
 
     return (
@@ -274,9 +307,95 @@ function OpportunityDetailModal({ isOpen, onClose, opportunity }: { isOpen: bool
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
-                    <Button>Modifier l'opportunité</Button>
+                    <Button onClick={() => onEdit(opportunity)}>Modifier l'opportunité</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+
+function OpportunityFormModal({ isOpen, onClose, onSave, opportunityToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: Omit<Opportunity, 'id' | 'probability'>) => void, opportunityToEdit: Opportunity | null }) {
+    const { toast } = useToast();
+    const [formData, setFormData] = useState<Omit<Opportunity, 'id'| 'probability'>>({
+        title: '', companyName: '', contactName: '', value: 0, stage: 'Nouveau'
+    });
+
+    React.useEffect(() => {
+        if (isOpen && opportunityToEdit) {
+            setFormData(opportunityToEdit);
+        } else if (isOpen && !opportunityToEdit) {
+            setFormData({ title: '', companyName: '', contactName: '', value: 0, stage: 'Nouveau' });
+        }
+    }, [isOpen, opportunityToEdit]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: id === 'value' ? parseFloat(value) : value }));
+    };
+
+    const handleStageChange = (value: Stage) => {
+        setFormData(prev => ({...prev, stage: value}));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formData.title || !formData.companyName || formData.value <= 0) {
+            toast({ title: "Champs requis manquants", description: "Veuillez remplir le titre, l'entreprise et la valeur.", variant: "destructive" });
+            return;
+        }
+        onSave(formData);
+        onClose();
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-lg">
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>{opportunityToEdit ? "Modifier l'opportunité" : "Nouvelle Opportunité"}</DialogTitle>
+                        <DialogDescription>
+                            Remplissez les détails de l'opportunité commerciale.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="title">Titre de l'opportunité</Label>
+                            <Input id="title" value={formData.title} onChange={handleChange} required />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="companyName">Nom de l'entreprise</Label>
+                                <Input id="companyName" value={formData.companyName} onChange={handleChange} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="contactName">Nom du contact</Label>
+                                <Input id="contactName" value={formData.contactName} onChange={handleChange} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label htmlFor="value">Valeur (FCFA)</Label>
+                                <Input id="value" type="number" value={formData.value || ''} onChange={handleChange} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="stage">Étape</Label>
+                                <Select value={formData.stage} onValueChange={handleStageChange}>
+                                    <SelectTrigger id="stage"><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        {STAGES_ORDER.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Enregistrer</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
