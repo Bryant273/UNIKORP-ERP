@@ -222,16 +222,6 @@ const markosNav = [
     ]
   },
   {
-    title: 'ANALYSES',
-    icon: LineChartIcon,
-    subItems: [
-      { title: 'Performances', href: '/markos/analyses/performances', icon: Presentation },
-      { title: 'ROI marketing', href: '/markos/analyses/roi-marketing', icon: TrendingUp },
-      { title: 'Taux de conversion', href: '/markos/analyses/taux-de-conversion', icon: Percent },
-      { title: 'Rapports personnalisés', href: '/markos/analyses/rapports-personnalises', icon: FileText },
-    ]
-  },
-  {
     title: 'GESTION',
     icon: ClipboardList,
     subItems: [
@@ -239,6 +229,16 @@ const markosNav = [
       { title: 'Médiathèque', href: '/markos/gestion/mediatheque', icon: Library },
       { title: 'Landing pages', href: '/markos/gestion/landing-pages', icon: TargetIcon },
       { title: 'Calendrier éditorial', href: '/markos/gestion/calendrier-editorial', icon: Calendar },
+    ]
+  },
+  {
+    title: 'ANALYSES',
+    icon: LineChartIcon,
+    subItems: [
+      { title: 'Performances', href: '/markos/analyses/performances', icon: Presentation },
+      { title: 'ROI marketing', href: '/markos/analyses/roi-marketing', icon: TrendingUp },
+      { title: 'Taux de conversion', href: '/markos/analyses/taux-de-conversion', icon: Percent },
+      { title: 'Rapports personnalisés', href: '/markos/analyses/rapports-personnalises', icon: FileText },
     ]
   },
 ];
