@@ -19,6 +19,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Funnel, FunnelChart, LabelList, Tooltip, ResponsiveContainer } from "recharts";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 
 // --- TYPES & MOCK DATA ---
@@ -278,4 +280,3 @@ function OpportunityDetailModal({ isOpen, onClose, opportunity }: { isOpen: bool
         </Dialog>
     );
 }
-
