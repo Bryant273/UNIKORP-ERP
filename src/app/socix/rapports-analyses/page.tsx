@@ -6,7 +6,13 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, Legend, XAxis, YAxis, CartesianGrid, Pie, PieChart as RechartsPieChart } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Briefcase, TrendingUp, Star } from 'lucide-react';
+import { Users, Briefcase, TrendingUp, Star, Download } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const demographicData = [
   { age: '20-30', count: 45 },
@@ -51,11 +57,31 @@ const interviewData = [
 const interviewConfig = { count: { label: "Entretiens", color: "hsl(var(--primary))" } } satisfies ChartConfig;
 
 export default function RapportsAnalysesPage() {
+    const { toast } = useToast();
+    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+
+    const handleExport = () => {
+        toast({ title: "Fonctionnalité à venir", description: "L'export des rapports sera bientôt disponible." });
+    };
+
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-2xl">Rapports et Analyses RH</CardTitle>
-        <CardDescription>Explorez des visualisations détaillées de vos données de ressources humaines.</CardDescription>
+         <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl">Rapports et Analyses RH</CardTitle>
+             <div className="flex items-center gap-2">
+                 <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="2024">2024</SelectItem>
+                        <SelectItem value="2023">2023</SelectItem>
+                        <SelectItem value="2022">2022</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Exporter</Button>
+            </div>
+          </div>
+        <CardDescription>Explorez des visualisations détaillées de vos données RH pour l'année {selectedYear}.</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="demographics" className="w-full">

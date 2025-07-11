@@ -4,8 +4,16 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Legend, Tooltip, XAxis, YAxis, CartesianGrid, LineChart, Line, ComposedChart } from "recharts";
-import { Users, TrendingUp, TrendingDown, Wallet, UserCheck, UserX, Star, Award, Heart, Briefcase } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, Wallet, UserCheck, UserX, Star, Award, Heart, Briefcase, Download } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
+import { Logo } from '@/components/logo';
 
 const kpiData = [
   { title: "Effectif Total", value: "112", Icon: Users, change: "+2 ce mois-ci" },
@@ -55,11 +63,31 @@ const satisfactionConfig = {
 
 
 export default function KpiSociauxPage() {
+    const { toast } = useToast();
+    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+
+    const handleExport = () => {
+        toast({ title: "Fonctionnalité à venir", description: "L'export des KPI sera bientôt disponible." });
+    };
+
   return (
     <div className="flex w-full flex-col gap-6">
        <CardHeader className="px-0">
-          <CardTitle className="text-2xl">Indicateurs de Performance Sociaux (KPIs)</CardTitle>
-          <CardDescription>Visualisez les données clés relatives à vos ressources humaines pour une meilleure prise de décision.</CardDescription>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl">Indicateurs de Performance Sociaux (KPIs)</CardTitle>
+            <div className="flex items-center gap-2">
+                 <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="2024">2024</SelectItem>
+                        <SelectItem value="2023">2023</SelectItem>
+                        <SelectItem value="2022">2022</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Exporter</Button>
+            </div>
+          </div>
+          <CardDescription>Visualisez les données clés relatives à vos ressources humaines pour l'année {selectedYear}.</CardDescription>
         </CardHeader>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiData.map((kpi) => (

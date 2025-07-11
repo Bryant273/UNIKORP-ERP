@@ -6,122 +6,173 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, Clock, Coffee, Moon, Sun } from 'lucide-react';
-import { addDays, format, startOfWeek } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { Download, Sun, Coffee, Moon, Bed } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import type { ChartConfig } from "@/components/ui/chart";
+import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
+import { Logo } from '@/components/logo';
 
-// Mock Data
-const teams = [
-    { id: 'equipe-a', name: 'Équipe A' },
-    { id: 'equipe-b', name: 'Équipe B' },
-    { id: 'equipe-c', name: 'Équipe C' },
+// MOCK DATA & TYPES
+const kpiData = [
+  { title: "Heures Supplémentaires (Mois)", value: "72h" },
+  { title: "Taux de Rotation par Équipe", value: "2.5%" },
+  { title: "Couverture des Shifts", value: "98%" },
 ];
 
-const shifts = {
-    matin: { label: 'Matin (6h-14h)', icon: <Sun className="h-4 w-4 text-yellow-500"/> },
-    aprem: { label: 'Après-midi (14h-22h)', icon: <Coffee className="h-4 w-4 text-orange-500"/> },
-    nuit: { label: 'Nuit (22h-6h)', icon: <Moon className="h-4 w-4 text-blue-500"/> },
-    repos: { label: 'Repos', icon: null },
-};
+const teamHoursData = [
+  { equipe: 'Équipe A', heures: 185 },
+  { equipe: 'Équipe B', heures: 172 },
+  { equipe: 'Équipe C', heures: 191 },
+];
+const teamHoursConfig = {
+    heures: { label: "Heures Travaillées", color: "hsl(var(--primary))" }
+} satisfies ChartConfig;
 
-const generateSchedule = (weekStart: Date, teamId: string) => {
-    const day = weekStart.getDate();
-    let pattern;
-    switch(teamId) {
-        case 'equipe-a': pattern = ['matin', 'matin', 'matin', 'aprem', 'aprem', 'repos', 'repos']; break;
-        case 'equipe-b': pattern = ['repos', 'repos', 'matin', 'matin', 'matin', 'aprem', 'aprem']; break;
-        case 'equipe-c': pattern = ['aprem', 'aprem', 'repos', 'repos', 'matin', 'matin', 'matin']; break;
-        default: pattern = Array(7).fill('repos');
-    }
-    // Rotate pattern based on day to simulate change over time
-    const rotatedPattern = [...pattern.slice((day % 7)), ...pattern.slice(0, (day % 7))];
-    return rotatedPattern;
-};
+const shiftDistributionData = [
+    { equipe: 'Équipe A', matin: 40, aprem: 40, nuit: 20, repos: 10 },
+    { equipe: 'Équipe B', matin: 40, aprem: 20, nuit: 40, repos: 10 },
+    { equipe: 'Équipe C', matin: 20, aprem: 40, nuit: 40, repos: 10 },
+];
 
 
 export default function AlternanceEquipesPage() {
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedTeam, setSelectedTeam] = useState('all');
+    const { toast } = useToast();
+    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
-    const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(startOfCurrentWeek, i));
+    const handleExport = () => {
+        const doc = new jsPDF();
+        const companyName = "UNIKORP";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "SOCIX";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const printDateTime = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
 
-    const changeWeek = (direction: 'prev' | 'next') => {
-        setCurrentDate(prev => addDays(prev, direction === 'prev' ? -7 : 7));
+        const drawHeader = (data: any) => {
+            doc.setFontSize(9); doc.setTextColor(150);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+            doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+            doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+            doc.text(companyName, data.settings.margin.left + 15, 28);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+            const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+            doc.text(`État : Analyse de l'Alternance des Équipes`, rightX, 25, { align: 'right' });
+            doc.text(`Exercice : ${selectedYear}`, rightX, 30, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+            doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
+        };
+        
+        doc.setFontSize(18);
+        doc.text(`Analyse de l'Alternance des Équipes - ${selectedYear}`, 105, 20, { align: 'center' });
+        
+        let startY = 30;
+        doc.setFontSize(14);
+        doc.text('Répartition des Heures par Équipe', 14, startY);
+        autoTable(doc, {
+            head: [['Équipe', 'Heures Travaillées']],
+            body: teamHoursData.map(d => [d.equipe, d.heures]),
+            startY: startY + 5,
+            theme: 'striped'
+        });
+        
+        startY = (doc as any).lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.text('Répartition des Shifts', 14, startY);
+        autoTable(doc, {
+            head: [['Équipe', 'Matin', 'Après-midi', 'Nuit', 'Repos']],
+            body: shiftDistributionData.map(d => [d.equipe, d.matin, d.aprem, d.nuit, d.repos]),
+            startY: startY + 5,
+            theme: 'striped'
+        });
+
+        doc.save(`analyse_alternance_${selectedYear}.pdf`);
+        toast({ title: 'Exportation PDF lancée.' });
     };
-
-    const filteredTeams = selectedTeam === 'all' ? teams : teams.filter(t => t.id === selectedTeam);
 
     return (
         <Card className="w-full">
             <CardHeader>
                  <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl">Alternance des Équipes</CardTitle>
-                        <CardDescription>Gérez les plannings rotatifs, cycles de travail et horaires décalés.</CardDescription>
+                        <CardTitle className="text-2xl">Analyse de l'Alternance des Équipes</CardTitle>
+                        <CardDescription>Visualisez les données clés sur les cycles de travail et la charge par équipe.</CardDescription>
                     </div>
-                 </div>
-                 <div className="flex items-center justify-between pt-4">
-                    <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                        <SelectTrigger className="w-[220px]">
-                            <SelectValue placeholder="Toutes les équipes" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Toutes les équipes</SelectItem>
-                            {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => changeWeek('prev')}><ChevronLeft className="h-4 w-4 mr-1"/> Sem. Précédente</Button>
-                        <span className="font-semibold text-sm text-center w-40">
-                            {format(startOfCurrentWeek, 'dd MMM', {locale: fr})} - {format(addDays(startOfCurrentWeek, 6), 'dd MMM yyyy', {locale: fr})}
-                        </span>
-                        <Button variant="outline" size="sm" onClick={() => changeWeek('next')}>Sem. Suivante <ChevronRight className="h-4 w-4 ml-1"/></Button>
+                         <Select value={selectedYear} onValueChange={setSelectedYear}>
+                            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="2024">2024</SelectItem>
+                                <SelectItem value="2023">2023</SelectItem>
+                                <SelectItem value="2022">2022</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Exporter l'analyse</Button>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent>
-                <div className="border rounded-lg">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[200px]">Équipe</TableHead>
-                                {weekDays.map(day => (
-                                    <TableHead key={day.toISOString()} className="text-center capitalize">
-                                        {format(day, 'eee dd/MM', {locale: fr})}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredTeams.map(team => {
-                                const schedule = generateSchedule(startOfCurrentWeek, team.id);
-                                return (
-                                <TableRow key={team.id}>
-                                    <TableCell className="font-semibold">{team.name}</TableCell>
-                                    {schedule.map((shiftKey, index) => {
-                                        const shift = shifts[shiftKey as keyof typeof shifts];
-                                        return (
-                                            <TableCell key={`${team.id}-${index}`} className={cn("text-center", shift.label === 'Repos' && "bg-muted/50")}>
-                                                <div className="flex items-center justify-center gap-2">
-                                                    {shift.icon}
-                                                    <span className="text-xs">{shift.label}</span>
-                                                </div>
-                                            </TableCell>
-                                        )
-                                    })}
-                                </TableRow>
-                            )})}
-                        </TableBody>
-                    </Table>
+            <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-3">
+                    {kpiData.map(kpi => (
+                        <Card key={kpi.title}>
+                            <CardHeader className="p-4 flex flex-row items-center justify-between"><CardTitle className="text-sm font-medium">{kpi.title}</CardTitle></CardHeader>
+                            <CardContent className="p-4 pt-0"><div className="text-2xl font-bold">{kpi.value}</div></CardContent>
+                        </Card>
+                    ))}
                 </div>
-                 <div className="grid md:grid-cols-3 gap-4 mt-6">
-                    <Card><CardHeader><CardTitle className="text-base">Heures Supplémentaires (Semaine)</CardTitle><CardDescription>Total: <span className="font-bold">24 heures</span></CardDescription></CardHeader></Card>
-                    <Card><CardHeader><CardTitle className="text-base">Congés & RTT Posés</CardTitle><CardDescription>Total: <span className="font-bold">5 jours</span></CardDescription></CardHeader></Card>
-                    <Card><CardHeader><CardTitle className="text-base">Compétences Disponibles</CardTitle><CardDescription><Badge>Opérateur Qualifié</Badge> <Badge>Maintenance N2</Badge></CardDescription></CardHeader></Card>
-                 </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Heures Travaillées par Équipe</CardTitle>
+                            <CardDescription>Comparaison mensuelle du volume horaire.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <ChartContainer config={teamHoursConfig} className="h-[250px] w-full">
+                                <BarChart data={teamHoursData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="equipe" tickLine={false} axisLine={false} tickMargin={8} />
+                                    <YAxis unit="h" />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="heures" fill="var(--color-heures)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Répartition des Shifts</CardTitle>
+                            <CardDescription>Visualisation de l'équilibre des plannings.</CardDescription>
+                        </CardHeader>
+                         <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Équipe</TableHead>
+                                        <TableHead className="text-center">Matin</TableHead>
+                                        <TableHead className="text-center">Après-midi</TableHead>
+                                        <TableHead className="text-center">Nuit</TableHead>
+                                        <TableHead className="text-center">Repos</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {shiftDistributionData.map(d => (
+                                        <TableRow key={d.equipe}>
+                                            <TableCell className="font-medium">{d.equipe}</TableCell>
+                                            <TableCell className="text-center">{d.matin}h</TableCell>
+                                            <TableCell className="text-center">{d.aprem}h</TableCell>
+                                            <TableCell className="text-center">{d.nuit}h</TableCell>
+                                            <TableCell className="text-center">{d.repos}h</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                         </CardContent>
+                    </Card>
+                </div>
             </CardContent>
         </Card>
     );
