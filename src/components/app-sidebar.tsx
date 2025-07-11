@@ -60,6 +60,17 @@ import {
   AreaChart,
   BookHeart,
   Fingerprint,
+  Megaphone,
+  UserRound,
+  Presentation,
+  Library,
+  Newspaper,
+  Bot,
+  LineChart as LineChartIcon,
+  Pi,
+  TargetIcon,
+  Filter,
+  Activity,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -190,6 +201,49 @@ const socixNav = [
   },
 ];
 
+const markosNav = [
+  {
+    title: 'CLIENTS',
+    icon: UserRound,
+    subItems: [
+      { title: 'Prospects', href: '/markos/clients/prospects', icon: HandCoins },
+      { title: 'Clients', href: '/markos/clients', icon: Users },
+      { title: 'Segmentation', href: '/markos/clients/segmentation', icon: Filter },
+      { title: 'Pipelines', href: '/markos/clients/pipelines', icon: Activity },
+    ]
+  },
+  {
+    title: 'CAMPAGNES',
+    icon: Megaphone,
+    subItems: [
+      { title: 'Emails marketing', href: '/markos/campagnes/emails-marketing', icon: Mail },
+      { title: 'Campagnes SMS', href: '/markos/campagnes/campagnes-sms', icon: MessageSquare },
+      { title: 'Réseaux sociaux', href: '/markos/campagnes/reseaux-sociaux', icon: Users },
+      { title: 'Automation marketing', href: '/markos/campagnes/automation-marketing', icon: Bot },
+    ]
+  },
+  {
+    title: 'ANALYSES',
+    icon: LineChartIcon,
+    subItems: [
+      { title: 'Performances', href: '/markos/analyses/performances', icon: Presentation },
+      { title: 'ROI marketing', href: '/markos/analyses/roi-marketing', icon: TrendingUp },
+      { title: 'Taux de conversion', href: '/markos/analyses/taux-de-conversion', icon: Percent },
+      { title: 'Rapports personnalisés', href: '/markos/analyses/rapports-personnalises', icon: FileText },
+    ]
+  },
+  {
+    title: 'GESTION',
+    icon: ClipboardList,
+    subItems: [
+      { title: 'Templates', href: '/markos/gestion/templates', icon: Newspaper },
+      { title: 'Médiathèque', href: '/markos/gestion/mediatheque', icon: Library },
+      { title: 'Landing pages', href: '/markos/gestion/landing-pages', icon: TargetIcon },
+      { title: 'Calendrier éditorial', href: '/markos/gestion/calendrier-editorial', icon: Calendar },
+    ]
+  },
+];
+
 
 const getNavForPath = (pathname: string) => {
   if (pathname.startsWith('/skomptab')) {
@@ -204,11 +258,17 @@ const getNavForPath = (pathname: string) => {
       items: socixNav,
     };
   }
-  if (pathname.startsWith('/logson') || pathname.startsWith('/markos')) {
+   if (pathname.startsWith('/markos')) {
+    return {
+      dashboardLink: '/markos',
+      items: markosNav,
+    };
+  }
+  if (pathname.startsWith('/logson')) {
      return {
       dashboardLink: pathname,
       items: [],
-      placeholder: `Sections pour ${pathname.split('/')[1].toUpperCase()}`
+      placeholder: `Sections pour LOGSON`
     };
   }
   // Default for main dashboard and special pages
@@ -240,9 +300,14 @@ function SidebarNavContent() {
         } catch (e) {
           // Silently fail is ok, default state will be used.
         }
+      } else {
+        // If nothing is saved, open the first section by default
+        if(items.length > 0) {
+            setOpenSections([items[0].title]);
+        }
       }
     }
-  }, [isMounted]);
+  }, [isMounted, items]);
 
   const handleValueChange = (value: string[]) => {
     setOpenSections(value);
@@ -261,7 +326,10 @@ function SidebarNavContent() {
       {items.map((item) => (
         <AccordionItem value={item.title} key={item.title} className="border-b-0">
           <AccordionTrigger className="py-2 text-sm font-semibold text-muted-foreground hover:no-underline font-roboto">
-            {item.title}
+            <div className="flex items-center gap-2">
+              <item.icon className="h-4 w-4" />
+              {item.title}
+            </div>
           </AccordionTrigger>
           <AccordionContent className="pl-4">
             <ul className="space-y-1">
