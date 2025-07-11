@@ -6,10 +6,10 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Pie, PieChart as RechartsPieChart, Legend } from "recharts";
-import { type ChartConfig } from "@/components/ui/chart";
-import { DollarSign, Users, TrendingUp, Target, Handshake, Mail, MessageSquare, AtSign } from "lucide-react";
+import { DollarSign, TrendingUp, UserPlus, Percent } from "lucide-react";
 
 const kpiData = [
   { title: "Nouveaux Leads (Mois)", value: "316", Icon: UserPlus, change: "+20.1% vs M-1" },
@@ -82,7 +82,7 @@ export default function MarkosPage() {
                 <CartesianGrid horizontal={false} />
                 <YAxis dataKey="stage" type="category" tickLine={false} axisLine={false} tickMargin={8} width={100} />
                 <XAxis type="number" hide />
-                <Tooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={4} />
               </BarChart>
             </ChartContainer>
