@@ -41,9 +41,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, PlusCircle, Upload, FileUp, Download } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { useAtom } from 'jotai';
+import { clientsAtom } from '@/lib/store';
+
 
 type CompteTiers = {
   id: number;
@@ -51,12 +53,6 @@ type CompteTiers = {
   intitule: string;
   telephone: string;
 };
-
-const initialClients: CompteTiers[] = [
-  { id: 1, numero: '411CLIENT1', intitule: 'Client Alpha', telephone: '0123456789' },
-  { id: 3, numero: '411CLIENT2', intitule: 'Client Beta', telephone: '0123456788' },
-  { id: 5, numero: '411CLIENT3', intitule: 'Client Gamma', telephone: '0123456787' },
-];
 
 const defaultFormData: Omit<CompteTiers, 'id'> = {
   numero: '',
@@ -67,7 +63,7 @@ const defaultFormData: Omit<CompteTiers, 'id'> = {
 const ITEMS_PER_PAGE = 10;
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<CompteTiers[]>(initialClients);
+  const [clients, setClients] = useAtom(clientsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<CompteTiers | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
