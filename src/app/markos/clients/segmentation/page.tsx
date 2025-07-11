@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Users, BarChart, Percent, Euro, UserCheck, UserX, ShoppingBag, Mail, Eye, Trash2, Pencil } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { Bar, BarChart as RechartsBarChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { Bar, BarChart as RechartsBarChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Cell } from "recharts";
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -76,10 +76,10 @@ const segmentsData: Segment[] = [
 
 const pieChartData = segmentsData
     .filter(s => s.type === 'Dynamique')
-    .map(s => ({ name: s.name, value: s.size, fill: `var(--color-${s.id})` }));
+    .map(s => ({ name: s.name, value: s.size, fill: s.color }));
 
 const pieChartConfig = segmentsData.reduce((acc, segment) => {
-    (acc as any)[segment.id] = { label: segment.name, color: segment.color.replace('hsl(','').replace(')','') };
+    (acc as any)[segment.name] = { label: segment.name, color: segment.color };
     return acc;
 }, {
     value: { label: 'Taille' }
@@ -87,10 +87,10 @@ const pieChartConfig = segmentsData.reduce((acc, segment) => {
 
 const barChartData = segmentsData
     .filter(s => s.revenue > 0)
-    .map(s => ({ name: s.name, revenue: s.revenue, fill: `var(--color-${s.id})` }));
+    .map(s => ({ name: s.name, revenue: s.revenue, fill: s.color }));
 
 const barChartConfig = {
-    revenue: { label: "Chiffre d'Affaires", color: "hsl(var(--primary))" },
+    revenue: { label: "Chiffre d'Affaires" },
     ...pieChartConfig
 } satisfies ChartConfig;
 
@@ -195,6 +195,9 @@ export default function SegmentationPage() {
                         <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
                         <Pie data={pieChartData} dataKey="value" nameKey="name" innerRadius={60}>
                             <Legend />
+                             {pieChartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
                         </Pie>
                     </RechartsPieChart>
                 </ChartContainer>
@@ -211,7 +214,11 @@ export default function SegmentationPage() {
                          <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={8} width={100} />
                          <XAxis type="number" hide />
                          <Tooltip cursor={false} content={<ChartTooltipContent />} />
-                         <Bar dataKey="revenue" fill="var(--color-revenue)" radius={5} />
+                         <Bar dataKey="revenue" radius={5}>
+                             {barChartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                         </Bar>
                     </RechartsBarChart>
                 </ChartContainer>
             </CardContent>
