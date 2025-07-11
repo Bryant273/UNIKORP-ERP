@@ -40,7 +40,7 @@ const segmentsData: Segment[] = [
     conversionRate: '12%',
     revenue: 75000000,
     type: 'Dynamique',
-    color: 'bg-yellow-400'
+    color: 'hsl(var(--chart-1))'
   },
   { 
     id: 'seg-2', 
@@ -50,7 +50,7 @@ const segmentsData: Segment[] = [
     conversionRate: '4%',
     revenue: 2500000,
     type: 'Dynamique',
-    color: 'bg-blue-400'
+    color: 'hsl(var(--chart-2))'
   },
   { 
     id: 'seg-3', 
@@ -60,7 +60,7 @@ const segmentsData: Segment[] = [
     conversionRate: '0.5%',
     revenue: 1200000,
     type: 'Dynamique',
-    color: 'bg-red-400'
+    color: 'hsl(var(--chart-3))'
   },
   { 
     id: 'seg-4', 
@@ -70,7 +70,7 @@ const segmentsData: Segment[] = [
     conversionRate: 'N/A',
     revenue: 0,
     type: 'Statique',
-    color: 'bg-green-400'
+    color: 'hsl(var(--chart-4))'
   },
 ];
 
@@ -79,9 +79,11 @@ const pieChartData = segmentsData
     .map(s => ({ name: s.name, value: s.size, fill: `var(--color-${s.id})` }));
 
 const pieChartConfig = segmentsData.reduce((acc, segment) => {
-    (acc as any)[segment.id] = { label: segment.name, color: segment.color };
+    (acc as any)[segment.id] = { label: segment.name, color: segment.color.replace('hsl(','').replace(')','') };
     return acc;
-}, {} as ChartConfig);
+}, {
+    value: { label: 'Taille' }
+} as ChartConfig);
 
 const barChartData = segmentsData
     .filter(s => s.revenue > 0)
@@ -190,7 +192,7 @@ export default function SegmentationPage() {
             <CardContent className="flex justify-center">
                  <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
                     <RechartsPieChart>
-                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                        <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
                         <Pie data={pieChartData} dataKey="value" nameKey="name" innerRadius={60}>
                             <Legend />
                         </Pie>
@@ -350,4 +352,3 @@ function ViewMembersModal({ isOpen, onClose, segment }: { isOpen: boolean; onClo
         </Dialog>
     );
 }
-
