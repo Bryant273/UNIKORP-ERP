@@ -11,6 +11,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PlusCircle, Eye, Pencil, Copy, Trash2, Mail, LayoutTemplate, Newspaper } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Logo } from '@/components/logo';
 
 // --- TYPES & MOCK DATA ---
 type TemplateType = 'Email' | 'Page';
@@ -20,34 +27,45 @@ type Template = {
   type: TemplateType;
   lastModified: string;
   thumbnailUrl: string;
+  // New fields for editor
+  primaryColor: string;
+  companyName: string;
+  footerText: string;
 };
 
-const MOCK_TEMPLATES: Template[] = [
-  { id: 'tpl-1', name: 'Newsletter Mensuelle', type: 'Email', lastModified: '2024-07-20', thumbnailUrl: 'https://placehold.co/600x400.png' },
-  { id: 'tpl-2', name: 'Lancement Produit Alpha', type: 'Page', lastModified: '2024-07-15', thumbnailUrl: 'https://placehold.co/600x400.png' },
-  { id: 'tpl-3', name: 'Email de Bienvenue', type: 'Email', lastModified: '2024-07-18', thumbnailUrl: 'https://placehold.co/600x400.png' },
-  { id: 'tpl-4', name: 'Promotion Spéciale', type: 'Email', lastModified: '2024-07-22', thumbnailUrl: 'https://placehold.co/600x400.png' },
-  { id: 'tpl-5', name: 'Page de Confirmation', type: 'Page', lastModified: '2024-06-30', thumbnailUrl: 'https://placehold.co/600x400.png' },
-  { id: 'tpl-6', name: 'Webinaire Tech', type: 'Page', lastModified: '2024-07-25', thumbnailUrl: 'https://placehold.co/600x400.png' },
+const initialTemplates: Template[] = [
+  { id: 'tpl-1', name: 'Newsletter Mensuelle', type: 'Email', lastModified: '2024-07-20', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#3b82f6', companyName: 'UNIKORP', footerText: 'Merci de votre confiance.' },
+  { id: 'tpl-2', name: 'Lancement Produit Alpha', type: 'Page', lastModified: '2024-07-15', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#10b981', companyName: 'UNIKORP', footerText: '© 2024 UNIKORP. Tous droits réservés.' },
+  { id: 'tpl-3', name: 'Email de Bienvenue', type: 'Email', lastModified: '2024-07-18', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#673AB7', companyName: 'UNIKORP', footerText: 'Bienvenue chez nous !' },
 ];
+
+const defaultTemplateData: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'> = {
+    name: 'Nouveau Modèle',
+    type: 'Email',
+    primaryColor: '#3b82f6',
+    companyName: 'Votre Société S.A.',
+    footerText: 'Merci de votre confiance.',
+};
 
 export default function TemplatesPage() {
     const { toast } = useToast();
     const [templates, setTemplates] = useState(MOCK_TEMPLATES);
     const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
-    const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null);
+    const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
 
     const handleDelete = (id: string) => {
+        const templateToDelete = templates.find(t => t.id === id);
         if (!templateToDelete) return;
+
         setTemplates(prev => prev.filter(t => t.id !== id));
         toast({ title: 'Modèle supprimé', description: `Le modèle "${templateToDelete.name}" a bien été supprimé.` });
-        setTemplateToDelete(null);
     };
 
     const handleDuplicate = (id: string) => {
         const original = templates.find(t => t.id === id);
         if (original) {
-            const newTemplate = { 
+            const newTemplate: Template = { 
                 ...original, 
                 id: `tpl-${Date.now()}`, 
                 name: `${original.name} (Copie)`,
@@ -56,6 +74,35 @@ export default function TemplatesPage() {
             setTemplates(prev => [newTemplate, ...prev]);
             toast({ title: 'Modèle dupliqué', description: `Une copie de "${original.name}" a été créée.` });
         }
+    };
+
+    const handleOpenCreateSheet = () => {
+        setEditingTemplate(null);
+        setIsSheetOpen(true);
+    };
+
+    const handleOpenEditSheet = (template: Template) => {
+        setEditingTemplate(template);
+        setIsSheetOpen(true);
+    };
+
+    const handleSave = (data: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'>) => {
+        if (editingTemplate) {
+            setTemplates(templates.map(t => 
+                t.id === editingTemplate.id ? { ...t, ...data, lastModified: new Date().toISOString().split('T')[0] } : t
+            ));
+            toast({ title: "Modèle mis à jour" });
+        } else {
+            const newTemplate: Template = {
+                id: `tpl-${Date.now()}`,
+                lastModified: new Date().toISOString().split('T')[0],
+                thumbnailUrl: 'https://placehold.co/600x400.png',
+                ...data,
+            };
+            setTemplates(prev => [newTemplate, ...prev]);
+            toast({ title: "Modèle créé" });
+        }
+        setIsSheetOpen(false);
     };
 
     return (
@@ -67,7 +114,7 @@ export default function TemplatesPage() {
                             <CardTitle className="text-2xl flex items-center gap-2"><Newspaper /> Gestion des Modèles</CardTitle>
                             <CardDescription>Créez, modifiez et organisez vos modèles d'emails et de landing pages.</CardDescription>
                         </div>
-                        <Button onClick={() => toast({ title: 'Fonctionnalité à venir'})}><PlusCircle className="mr-2 h-4 w-4" /> Nouveau Modèle</Button>
+                        <Button onClick={handleOpenCreateSheet}><PlusCircle className="mr-2 h-4 w-4" /> Nouveau Modèle</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -95,10 +142,10 @@ export default function TemplatesPage() {
                                         <div className="flex justify-center gap-1">
                                             <Button variant="ghost" size="icon" onClick={() => setPreviewTemplate(template)}><Eye className="h-4 w-4"/></Button>
                                             <Button variant="ghost" size="icon" onClick={() => handleDuplicate(template.id)}><Copy className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => toast({ title: 'Fonctionnalité à venir'})}><Pencil className="h-4 w-4"/></Button>
-                                             <AlertDialog>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenEditSheet(template)}><Pencil className="h-4 w-4"/></Button>
+                                            <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setTemplateToDelete(template)}><Trash2 className="h-4 w-4"/></Button>
+                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4"/></Button>
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent>
                                                     <AlertDialogHeader><AlertDialogTitle>Supprimer "{template.name}" ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription></AlertDialogHeader>
@@ -124,7 +171,117 @@ export default function TemplatesPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <TemplateEditorSheet 
+                isOpen={isSheetOpen}
+                onClose={() => setIsSheetOpen(false)}
+                onSave={handleSave}
+                templateToEdit={editingTemplate}
+            />
         </>
+    );
+}
+
+// --- Live Preview Component ---
+const LiveTemplatePreview = ({ template }: { template: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'> }) => {
+    return (
+        <div className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
+            <header className="flex justify-between items-start mb-8">
+                <div>
+                     <Logo className="h-12 w-12" style={{ color: template.primaryColor }} />
+                    <h1 className="font-bold text-lg mt-2">{template.companyName}</h1>
+                </div>
+                <div className="text-right">
+                    <h2 className="text-2xl font-bold uppercase" style={{ color: template.primaryColor }}>{template.type === 'Email' ? 'Email' : 'Page'}</h2>
+                </div>
+            </header>
+            <main className="min-h-64 border-y py-8">
+                <h3 className="text-xl font-bold mb-4">Titre de l'Exemple</h3>
+                <p>Ceci est un paragraphe d'exemple pour montrer le contenu du modèle. Vous pouvez personnaliser ce texte et bien plus encore dans l'éditeur.</p>
+            </main>
+            <footer className="mt-4 text-xs text-gray-500 whitespace-pre-line text-center">
+                {template.footerText}
+            </footer>
+        </div>
+    );
+};
+LiveTemplatePreview.displayName = 'LiveTemplatePreview';
+
+// --- Editor Sheet Component ---
+function TemplateEditorSheet({ isOpen, onClose, onSave, templateToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: any) => void, templateToEdit: Template | null }) {
+    const [formData, setFormData] = useState<Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'>>(defaultTemplateData);
+    
+    useEffect(() => {
+        if (templateToEdit) {
+            setFormData(templateToEdit);
+        } else {
+            setFormData(defaultTemplateData);
+        }
+    }, [templateToEdit, isOpen]);
+
+    const handleChange = (field: keyof typeof formData, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSave = () => {
+        onSave(formData);
+    };
+
+    return (
+         <Sheet open={isOpen} onOpenChange={onClose}>
+            <SheetContent className="w-full sm:max-w-full md:w-[90vw] lg:w-[80vw] xl:w-[70vw] p-0 flex flex-col">
+                <SheetHeader className="p-6 border-b">
+                    <SheetTitle>{templateToEdit ? 'Modifier le modèle' : 'Créer un nouveau modèle'}</SheetTitle>
+                    <SheetDescription>Personnalisez les informations de base de votre modèle. L'aperçu se met à jour en temps réel.</SheetDescription>
+                </SheetHeader>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+                    <ScrollArea className="md:col-span-1 h-full">
+                        <div className="p-6 space-y-6">
+                            <Card>
+                                <CardHeader><CardTitle>Informations Générales</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name">Nom du modèle</Label>
+                                        <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="type">Type de modèle</Label>
+                                        <Select value={formData.type} onValueChange={(v: TemplateType) => handleChange('type', v)}>
+                                            <SelectTrigger><SelectValue/></SelectTrigger>
+                                            <SelectContent><SelectItem value="Email">Email</SelectItem><SelectItem value="Page">Page</SelectItem></SelectContent>
+                                        </Select>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader><CardTitle>Personnalisation</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="primaryColor">Couleur principale (Hex)</Label>
+                                        <Input id="primaryColor" value={formData.primaryColor} onChange={(e) => handleChange('primaryColor', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="companyName">Nom de votre société</Label>
+                                        <Input id="companyName" value={formData.companyName} onChange={(e) => handleChange('companyName', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="footerText">Texte du pied de page</Label>
+                                        <Textarea id="footerText" value={formData.footerText} onChange={(e) => handleChange('footerText', e.target.value)} />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </ScrollArea>
+                    <ScrollArea className="md:col-span-1 h-full bg-muted">
+                       <div className="p-8"><LiveTemplatePreview template={formData} /></div>
+                    </ScrollArea>
+                </div>
+                <SheetFooter className="p-6 border-t">
+                    <SheetClose asChild><Button variant="outline">Annuler</Button></SheetClose>
+                    <Button onClick={handleSave}>Enregistrer</Button>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
     );
 }
 
