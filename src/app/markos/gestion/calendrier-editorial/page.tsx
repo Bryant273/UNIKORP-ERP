@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import type { DateRange } from 'react-day-picker';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 
 // --- TYPES & MOCK DATA ---
