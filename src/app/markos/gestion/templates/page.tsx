@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Logo } from '@/components/logo';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // --- TYPES & MOCK DATA ---
 type TemplateType = 'Email' | 'Page';
@@ -49,7 +50,7 @@ const defaultTemplateData: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'
 
 export default function TemplatesPage() {
     const { toast } = useToast();
-    const [templates, setTemplates] = useState(MOCK_TEMPLATES);
+    const [templates, setTemplates] = useState(initialTemplates);
     const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -284,4 +285,3 @@ function TemplateEditorSheet({ isOpen, onClose, onSave, templateToEdit }: { isOp
         </Sheet>
     );
 }
-
