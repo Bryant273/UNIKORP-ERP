@@ -16,6 +16,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 
 type Report = {
@@ -210,6 +212,56 @@ const viewModalTableData = [
 ];
 
 function ViewReportModal({ isOpen, onClose, report }: { isOpen: boolean, onClose: () => void, report: Report | null }) {
+    const handleExportPDF = () => {
+        if (!report) return;
+        const doc = new jsPDF();
+        
+        const companyName = "UNIKORP";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "MARKOS";
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+        const periodString = format(new Date(), 'MMMM yyyy', { locale: fr });
+        
+        const drawHeader = (data: any) => {
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(companyName, data.settings.margin.left, 22);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+            doc.text(`Rapport: ${report.title}`, rightX, 20, { align: 'right' });
+            doc.text(`Période: ${periodString}`, rightX, 25, { align: 'right' });
+            doc.text(`Imprimé le: ${printDateTime}`, rightX, 30, { align: 'right' });
+            doc.text(`Par: ${userName}`, rightX, 35, { align: 'right' });
+        };
+
+        autoTable(doc, {
+            head: [['Graphique Principal']],
+            body: [["(Le graphique n'est pas exportable, seules les données le sont)"]],
+            startY: 45,
+            didDrawPage: drawHeader,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+        });
+
+        autoTable(doc, {
+            head: [['Données Détaillées']],
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+        });
+
+        autoTable(doc, {
+            head: [['Région', 'Leads', 'Taux de Conv.']],
+            body: viewModalTableData.map(d => [d.region, d.leads, d.conversion]),
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid',
+        });
+        
+        doc.save(`rapport_personnalise.pdf`);
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-3xl">
@@ -256,7 +308,7 @@ function ViewReportModal({ isOpen, onClose, report }: { isOpen: boolean, onClose
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
-                    <Button onClick={() => alert("Simulation d'export PDF.")}>
+                    <Button onClick={handleExportPDF}>
                         <Download className="mr-2 h-4 w-4" /> Exporter en PDF
                     </Button>
                 </DialogFooter>
