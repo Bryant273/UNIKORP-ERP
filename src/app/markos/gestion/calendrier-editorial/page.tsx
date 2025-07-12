@@ -102,10 +102,15 @@ export default function CalendrierEditorialPage() {
         const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
         
         autoTable(doc, {
-            head: [['Date', 'Type', 'Titre de la Publication']],
+            head: [['Date', 'Type', 'Titre de la Publication', 'Canaux']],
             body: events
                 .filter(e => e.date >= range.from! && e.date <= range.to!)
-                .map(e => [format(e.date, 'dd/MM/yyyy'), e.type, e.title]),
+                .map(e => [
+                    format(e.date, 'dd/MM/yyyy'), 
+                    e.type, 
+                    e.title,
+                    e.channels?.join(', ') || ''
+                ]),
             startY: 50,
             theme: 'striped',
             headStyles: { fillColor: '#1e3a8a' },
