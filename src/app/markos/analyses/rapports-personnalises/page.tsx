@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, BarChart, FileText, Eye, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -48,11 +49,25 @@ export default function RapportsPersonnalisesPage() {
     const { toast } = useToast();
     const [reports, setReports] = useState(MOCK_REPORTS);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingReport, setEditingReport] = useState<Report | null>(null);
+    const [reportToDelete, setReportToDelete] = useState<Report | null>(null);
+
+    const handleOpenModal = (report: Report | null) => {
+        setEditingReport(report);
+        setIsModalOpen(true);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        toast({ title: 'Rapport Créé (Simulation)', description: 'Votre rapport personnalisé a été sauvegardé.' });
+        toast({ title: editingReport ? 'Rapport Modifié (Simulation)' : 'Rapport Créé (Simulation)', description: 'Votre rapport personnalisé a été sauvegardé.' });
         setIsModalOpen(false);
+    };
+    
+    const handleDelete = () => {
+        if (!reportToDelete) return;
+        setReports(prev => prev.filter(r => r.id !== reportToDelete.id));
+        setReportToDelete(null);
+        toast({ title: "Rapport supprimé", description: `Le rapport "${reportToDelete.title}" a été supprimé.`});
     };
 
     return (
@@ -64,7 +79,7 @@ export default function RapportsPersonnalisesPage() {
                             <CardTitle className="text-2xl">Rapports Personnalisés</CardTitle>
                             <CardDescription>Créez, consultez et gérez vos propres rapports d'analyse marketing.</CardDescription>
                         </div>
-                        <Button onClick={() => setIsModalOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Nouveau Rapport</Button>
+                        <Button onClick={() => handleOpenModal(null)}><PlusCircle className="mr-2 h-4 w-4" /> Nouveau Rapport</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -86,9 +101,9 @@ export default function RapportsPersonnalisesPage() {
                                     <TableCell>{format(new Date(report.lastModified), 'dd/MM/yyyy', { locale: fr })}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-1">
-                                            <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => toast({ title: `Aperçu de "${report.title}"`})}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenModal(report)}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => setReportToDelete(report)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -102,7 +117,7 @@ export default function RapportsPersonnalisesPage() {
                 <DialogContent className="sm:max-w-2xl">
                     <form onSubmit={handleSubmit}>
                         <DialogHeader>
-                            <DialogTitle>Éditeur de Rapport Personnalisé</DialogTitle>
+                            <DialogTitle>{editingReport ? "Modifier le rapport" : "Éditeur de Rapport Personnalisé"}</DialogTitle>
                             <DialogDescription>Sélectionnez les métriques et les dimensions pour construire votre rapport.</DialogDescription>
                         </DialogHeader>
                         <div className="py-4 grid grid-cols-2 gap-8">
@@ -132,7 +147,7 @@ export default function RapportsPersonnalisesPage() {
                                 <h3 className="font-semibold">3. Finaliser</h3>
                                 <div className="space-y-2">
                                     <Label htmlFor="reportName">Nom du rapport</Label>
-                                    <Input id="reportName" placeholder="Ex: Analyse des leads par région" />
+                                    <Input id="reportName" placeholder="Ex: Analyse des leads par région" defaultValue={editingReport?.title || ''} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="chartType">Type de graphique</Label>
@@ -147,6 +162,19 @@ export default function RapportsPersonnalisesPage() {
                     </form>
                 </DialogContent>
             </Dialog>
+
+             <AlertDialog open={!!reportToDelete} onOpenChange={() => setReportToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce rapport ?</AlertDialogTitle>
+                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

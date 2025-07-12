@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -59,6 +60,7 @@ export default function ReseauxSociauxPage() {
     const [posts, setPosts] = useState(MOCK_POSTS);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [postToDelete, setPostToDelete] = useState<SocialPost | null>(null);
     
     const totalPages = Math.ceil(posts.length / ITEMS_PER_PAGE);
     const paginatedPosts = posts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -73,6 +75,13 @@ export default function ReseauxSociauxPage() {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
         }
+    };
+    
+    const handleDelete = () => {
+        if (!postToDelete) return;
+        setPosts(prev => prev.filter(p => p.id !== postToDelete.id));
+        setPostToDelete(null);
+        toast({ title: "Post supprimé", description: `La publication a été supprimée.`});
     };
 
     return (
@@ -101,6 +110,7 @@ export default function ReseauxSociauxPage() {
                                 <TableHead className="text-center">Date</TableHead>
                                 <TableHead className="text-center">Statut</TableHead>
                                 <TableHead className="text-center">Performance</TableHead>
+                                <TableHead className="text-center w-[120px]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -118,6 +128,11 @@ export default function ReseauxSociauxPage() {
                                                 <span className="flex items-center gap-1"><Share2 className="h-3 w-3" />{post.shares}</span>
                                             </div>
                                         )}
+                                    </TableCell>
+                                     <TableCell className="text-center">
+                                        <Button variant="ghost" size="icon" onClick={() => setPostToDelete(post)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -169,6 +184,19 @@ export default function ReseauxSociauxPage() {
                     </form>
                 </DialogContent>
             </Dialog>
+
+             <AlertDialog open={!!postToDelete} onOpenChange={() => setPostToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Supprimer cette publication ?</AlertDialogTitle>
+                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }
