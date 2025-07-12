@@ -113,8 +113,8 @@ export default function TauxDeConversionPage() {
                         {detailedConversionData.map(d => (
                             <TableRow key={d.source}>
                                 <TableCell className="font-medium">{d.source}</TableCell>
-                                <TableCell className="text-right">{d.traffic.toLocaleString()}</TableCell>
-                                <TableCell className="text-right">{d.conversions.toLocaleString()}</TableCell>
+                                <TableCell className="text-right">{d.traffic.toLocaleString('fr-FR')}</TableCell>
+                                <TableCell className="text-right">{d.conversions.toLocaleString('fr-FR')}</TableCell>
                                 <TableCell className="text-right"><Badge>{d.rate}</Badge></TableCell>
                             </TableRow>
                         ))}
