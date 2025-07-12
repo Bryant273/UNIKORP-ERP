@@ -39,6 +39,7 @@ const initialTemplates: Template[] = [
   { id: 'tpl-1', name: 'Newsletter Mensuelle', type: 'Email', lastModified: '2024-07-20', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#3b82f6', companyName: 'UNIKORP', footerText: 'Merci de votre confiance.', headerImageUrl: 'https://placehold.co/600x150.png' },
   { id: 'tpl-2', name: 'Lancement Produit Alpha', type: 'Page', lastModified: '2024-07-15', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#10b981', companyName: 'UNIKORP', footerText: '© 2024 UNIKORP. Tous droits réservés.', headerImageUrl: 'https://placehold.co/600x150.png' },
   { id: 'tpl-3', name: 'Email de Bienvenue', type: 'Email', lastModified: '2024-07-18', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#673AB7', companyName: 'UNIKORP', footerText: 'Bienvenue chez nous !' },
+  { id: 'tpl-4', name: 'Images en Ligne', type: 'Email', lastModified: '2024-07-21', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#f59e0b', companyName: 'UNIKORP', footerText: 'Offre Spéciale!', headerImageUrl: 'https://placehold.co/600x150.png' },
 ];
 
 const defaultTemplateData: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'> = {
@@ -201,7 +202,7 @@ const LiveTemplatePreview = ({ template }: { template: Omit<Template, 'id' | 'la
             <main className="min-h-64 border-y py-8">
                  {template.headerImageUrl && (
                     <div className="mb-6">
-                        <Image src={template.headerImageUrl} alt="Contenu" width={600} height={400} className="w-full h-auto object-cover rounded-md" data-ai-hint="email content"/>
+                        <Image src={template.headerImageUrl} alt="Contenu" width={600} height={150} className="w-full h-auto object-cover rounded-md" data-ai-hint="email content"/>
                     </div>
                 )}
                 <h3 className="text-xl font-bold mb-4">Titre de l'Exemple</h3>
