@@ -212,7 +212,7 @@ const viewModalTableData = [
 function ViewReportModal({ isOpen, onClose, report }: { isOpen: boolean, onClose: () => void, report: Report | null }) {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-4xl">
+            <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>{report?.title || "Aperçu du Rapport"}</DialogTitle>
                     <DialogDescription>{report?.description || "Voici un aperçu des données générées pour ce rapport."}</DialogDescription>
