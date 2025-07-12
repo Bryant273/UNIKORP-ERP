@@ -217,7 +217,7 @@ function ViewReportModal({ isOpen, onClose, report }: { isOpen: boolean, onClose
                     <DialogTitle>{report?.title || "Aperçu du Rapport"}</DialogTitle>
                     <DialogDescription>{report?.description || "Voici un aperçu des données générées pour ce rapport."}</DialogDescription>
                 </DialogHeader>
-                <div className="py-4 space-y-6">
+                <div className="max-h-[70vh] overflow-y-auto pr-2 py-4 space-y-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>Graphique Principal</CardTitle>
