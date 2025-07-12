@@ -24,6 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- TYPES & MOCK DATA ---
 type EventType = 'Article' | 'Blog' | 'LinkedIn' | 'Newsletter' | 'Webinaire' | 'Podcast' | 'Vidéo' | 'Infographie';
@@ -203,38 +204,40 @@ export default function CalendrierEditorialPage() {
             </Card>
 
             <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-lg h-[80vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>{selectedEvent?.title}</DialogTitle>
                          <DialogDescription>
                             Publication de type <Badge variant="secondary">{selectedEvent?.type}</Badge> prévue le {selectedEvent && format(selectedEvent.date, 'dd MMMM yyyy', {locale: fr})}.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4">
-                        <div>
-                            <Label className="text-sm font-semibold">Description</Label>
-                            <p className="text-sm text-muted-foreground">{selectedEvent?.description || "Aucune description."}</p>
-                        </div>
-                        <Separator/>
-                         <div>
-                            <Label className="text-sm font-semibold">Canaux</Label>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                                {selectedEvent?.channels && selectedEvent.channels.length > 0 ? (
-                                    selectedEvent.channels.map(channel => <Badge key={channel} variant="outline">{channel}</Badge>)
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">Aucun canal spécifié.</p>
-                                )}
+                    <ScrollArea className="flex-1 -mx-6 px-6">
+                        <div className="py-4 space-y-4">
+                            <div>
+                                <Label className="text-sm font-semibold">Description</Label>
+                                <p className="text-sm text-muted-foreground">{selectedEvent?.description || "Aucune description."}</p>
                             </div>
-                        </div>
-                        {selectedEvent?.visualUrl && (
+                            <Separator/>
                              <div>
-                                <Label className="text-sm font-semibold">Visuel Associé</Label>
-                                <div className="mt-2 rounded-md border overflow-hidden">
-                                     <Image src={selectedEvent.visualUrl} alt={selectedEvent.title} width={400} height={400} className="w-full h-auto object-cover" data-ai-hint="publication image"/>
+                                <Label className="text-sm font-semibold">Canaux</Label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                    {selectedEvent?.channels && selectedEvent.channels.length > 0 ? (
+                                        selectedEvent.channels.map(channel => <Badge key={channel} variant="outline">{channel}</Badge>)
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">Aucun canal spécifié.</p>
+                                    )}
                                 </div>
                             </div>
-                        )}
-                    </div>
+                            {selectedEvent?.visualUrl && (
+                                 <div>
+                                    <Label className="text-sm font-semibold">Visuel Associé</Label>
+                                    <div className="mt-2 rounded-md border overflow-hidden">
+                                         <Image src={selectedEvent.visualUrl} alt={selectedEvent.title} width={400} height={400} className="w-full h-auto object-cover" data-ai-hint="publication image"/>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
                 </DialogContent>
             </Dialog>
 
