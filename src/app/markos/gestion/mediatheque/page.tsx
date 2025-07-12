@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, Search, Library, Image as ImageIcon, Video, FileText, Download, Copy, Trash2, Eye, Loader2, FileUp } from 'lucide-react';
+import { Upload, Search, Library, Image as ImageIcon, Video, FileText, Download, Copy, Trash2, Eye, Loader2, FileUp, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
@@ -329,5 +329,3 @@ function UploadModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void
         </Dialog>
     );
 }
-
-    
