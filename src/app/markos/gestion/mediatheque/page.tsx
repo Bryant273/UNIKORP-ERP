@@ -8,9 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, Search, Library, Image as ImageIcon, Video, FileText, Download, Copy, Trash2, Eye, Loader2, FileUp, X } from 'lucide-react';
+import { Upload, Search, Library, Image as ImageIcon, Video, FileText, Download, Copy, Trash2, Eye, Loader2, FileUp, X, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
@@ -56,10 +55,27 @@ export default function MediathequePage() {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
     const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
+    const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
 
     const handleCopyUrl = (url: string) => {
         navigator.clipboard.writeText(url);
         toast({ title: 'URL copiée dans le presse-papiers.' });
+    };
+
+    const handleSaveAsset = (newAssetData: Omit<Asset, 'id' | 'uploadedAt'>) => {
+        const newAsset: Asset = {
+            id: `asset-${Date.now()}`,
+            uploadedAt: new Date().toISOString().split('T')[0],
+            ...newAssetData,
+        };
+        setAssets(prev => [newAsset, ...prev]);
+        toast({ title: 'Fichier ajouté', description: `Le fichier "${newAsset.name}" a été ajouté à la médiathèque.`});
+    };
+    
+    const handleUpdateAsset = (updatedAsset: Asset) => {
+        setAssets(prev => prev.map(a => a.id === updatedAsset.id ? updatedAsset : a));
+        setEditingAsset(null);
+        toast({ title: 'Fichier mis à jour', description: 'Le nom du fichier a été modifié.' });
     };
 
     const handleDelete = () => {
@@ -145,6 +161,7 @@ export default function MediathequePage() {
                                                          <div className="flex justify-center gap-1">
                                                             <Button variant="ghost" size="icon" onClick={() => handleCopyUrl(asset.url)}><Copy className="h-4 w-4" /></Button>
                                                             <Button variant="ghost" size="icon" onClick={() => setPreviewAsset(asset)}><Eye className="h-4 w-4" /></Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => setEditingAsset(asset)}><Pencil className="h-4 w-4" /></Button>
                                                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAssetToDelete(asset)}><Trash2 className="h-4 w-4" /></Button>
                                                         </div>
                                                     </TableCell>
@@ -162,6 +179,14 @@ export default function MediathequePage() {
             <UploadModal 
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
+                onSave={handleSaveAsset}
+            />
+            
+             <EditModal
+                isOpen={!!editingAsset}
+                onClose={() => setEditingAsset(null)}
+                asset={editingAsset}
+                onSave={handleUpdateAsset}
             />
 
             <AlertDialog open={!!assetToDelete} onOpenChange={() => setAssetToDelete(null)}>
@@ -192,7 +217,7 @@ export default function MediathequePage() {
 }
 
 
-function UploadModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+function UploadModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: () => void, onSave: (data: Omit<Asset, 'id' | 'uploadedAt'>) => void }) {
     const { toast } = useToast();
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -204,12 +229,12 @@ function UploadModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void
         setIsUploading(false);
         setUploadProgress(0);
         setIsDragging(false);
+        onClose();
     }
     
     const handleClose = () => {
         if(isUploading) return;
         reset();
-        onClose();
     }
 
     const handleFileChange = (selectedFile: File | null) => {
@@ -237,10 +262,18 @@ function UploadModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void
         setTimeout(() => {
             clearInterval(interval);
             setUploadProgress(100);
-            toast({ title: `"${file.name}" a été uploadé avec succès.` });
+            const sizeInMB = file.size / (1024*1024);
+
+            const newAssetData: Omit<Asset, 'id' | 'uploadedAt'> = {
+                name: file.name,
+                type: file.type.startsWith('image') ? 'Image' : file.type.startsWith('video') ? 'Video' : 'Document',
+                url: 'https://placehold.co/600x400.png', // Placeholder URL
+                size: `${sizeInMB.toFixed(2)} MB`
+            };
+            onSave(newAssetData);
             setTimeout(() => {
-                handleClose();
-            }, 1000);
+                reset();
+            }, 500);
         }, 3500);
     };
 
@@ -325,6 +358,43 @@ function UploadModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void
                         <span className="ml-2">{isUploading ? 'Envoi...' : 'Uploader'}</span>
                     </Button>
                 </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function EditModal({ isOpen, onClose, asset, onSave }: { isOpen: boolean, onClose: () => void, asset: Asset | null, onSave: (asset: Asset) => void }) {
+    const [name, setName] = useState('');
+    
+    React.useEffect(() => {
+        if (asset) {
+            setName(asset.name);
+        }
+    }, [asset]);
+
+    if (!asset) return null;
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave({ ...asset, name });
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>Modifier le fichier</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="fileName">Nom du fichier</Label>
+                        <Input id="fileName" value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Enregistrer</Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     );
