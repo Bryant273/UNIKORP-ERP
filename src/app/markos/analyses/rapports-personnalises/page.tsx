@@ -83,7 +83,7 @@ export default function RapportsPersonnalisesPage() {
                                         <p className="text-xs text-muted-foreground">{report.description}</p>
                                     </TableCell>
                                     <TableCell>{report.createdBy}</TableCell>
-                                    <TableCell>{format(new Date(report.lastModified), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell>{format(new Date(report.lastModified), 'dd/MM/yyyy', { locale: fr })}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-1">
                                             <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>

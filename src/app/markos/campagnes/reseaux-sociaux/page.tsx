@@ -108,7 +108,7 @@ export default function ReseauxSociauxPage() {
                                 <TableRow key={post.id}>
                                     <TableCell className="text-center">{getPlatformIcon(post.platform)}</TableCell>
                                     <TableCell className="max-w-sm truncate">{post.content}</TableCell>
-                                    <TableCell className="text-center">{format(new Date(post.publishDate), 'dd/MM/yyyy HH:mm')}</TableCell>
+                                    <TableCell className="text-center">{format(new Date(post.publishDate), 'dd/MM/yyyy HH:mm', { locale: fr })}</TableCell>
                                     <TableCell className="text-center"><Badge variant={post.status === 'Publié' ? 'default' : 'outline'}>{post.status}</Badge></TableCell>
                                     <TableCell>
                                         {post.status === 'Publié' && (
