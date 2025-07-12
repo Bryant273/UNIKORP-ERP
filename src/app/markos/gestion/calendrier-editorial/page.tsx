@@ -21,7 +21,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 import { Checkbox } from '@/components/ui/checkbox';
-
+import Image from 'next/image';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 
 // --- TYPES & MOCK DATA ---
 type EventType = 'Article' | 'Blog' | 'LinkedIn' | 'Newsletter' | 'Webinaire' | 'Podcast' | 'Vidéo' | 'Infographie';
@@ -30,19 +32,20 @@ type CalendarEvent = {
   id: string;
   date: Date;
   title: string;
+  description: string;
   type: EventType;
   channels?: Channel[];
   visualUrl?: string;
 };
 
 const MOCK_EVENTS: CalendarEvent[] = [
-  { id: 'evt-1', date: new Date(2024, 7, 5), title: 'Article: Top 5 des stratégies CRM', type: 'Article', channels: ['Blog', 'LinkedIn'] },
-  { id: 'evt-2', date: new Date(2024, 7, 7), title: 'Infographie: Le parcours client', type: 'Infographie', channels: ['LinkedIn', 'Twitter'] },
-  { id: 'evt-3', date: new Date(2024, 7, 12), title: 'Newsletter d\'août', type: 'Newsletter', channels: [] },
-  { id: 'evt-4', date: new Date(2024, 7, 19), title: 'Article: Automatiser ses relances', type: 'Article', channels: ['Blog'] },
-  { id: 'evt-5', date: new Date(2024, 7, 22), title: 'Vidéo: Démo de la nouvelle feature', type: 'Vidéo', channels: ['LinkedIn'] },
-  { id: 'evt-6', date: new Date(2024, 6, 28), title: 'Newsletter de juillet', type: 'Newsletter', channels: [] },
-  { id: 'evt-7', date: new Date(2024, 7, 15), title: 'Webinaire: Le futur du CRM', type: 'Webinaire', channels: ['LinkedIn', 'Facebook'] },
+  { id: 'evt-1', date: new Date(2024, 7, 5), title: 'Article: Top 5 des stratégies CRM', description: "Un article de fond analysant les 5 meilleures stratégies de CRM pour les PME en 2024.", type: 'Article', channels: ['Blog', 'LinkedIn'] },
+  { id: 'evt-2', date: new Date(2024, 7, 7), title: 'Infographie: Le parcours client', description: "Visualisation complète du parcours client moderne, de la découverte à la fidélisation.", type: 'Infographie', channels: ['LinkedIn', 'Twitter'], visualUrl: 'https://placehold.co/600x800.png' },
+  { id: 'evt-3', date: new Date(2024, 7, 12), title: 'Newsletter d\'août', description: "Newsletter mensuelle avec les actualités de l'entreprise, les promotions et un aperçu des nouveautés.", type: 'Newsletter', channels: [] },
+  { id: 'evt-4', date: new Date(2024, 7, 19), title: 'Article: Automatiser ses relances', description: "Guide pratique pour automatiser les relances clients et améliorer la trésorerie.", type: 'Article', channels: ['Blog'] },
+  { id: 'evt-5', date: new Date(2024, 7, 22), title: 'Vidéo: Démo de la nouvelle feature', description: "Courte vidéo de démonstration de la nouvelle fonctionnalité de reporting analytique.", type: 'Vidéo', channels: ['LinkedIn'], visualUrl: 'https://placehold.co/1280x720.png' },
+  { id: 'evt-6', date: new Date(2024, 6, 28), title: 'Newsletter de juillet', description: "Bilan du premier semestre et annonce des objectifs du S2.", type: 'Newsletter', channels: [] },
+  { id: 'evt-7', date: new Date(2024, 7, 15), title: 'Webinaire: Le futur du CRM', description: "Session en direct avec des experts sur les tendances futures du CRM et de l'IA.", type: 'Webinaire', channels: ['LinkedIn', 'Facebook'] },
 ];
 
 const eventTypes: EventType[] = ['Article', 'Blog', 'LinkedIn', 'Newsletter', 'Webinaire', 'Podcast', 'Vidéo', 'Infographie'];
@@ -62,7 +65,7 @@ const getEventTypeStyles = (type: EventType) => {
 
 export default function CalendrierEditorialPage() {
     const [events, setEvents] = useState(MOCK_EVENTS);
-    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [currentMonth, setCurrentMonth] = useState(new Date(2024, 7, 1));
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
     const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -195,15 +198,37 @@ export default function CalendrierEditorialPage() {
             </Card>
 
             <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>{selectedEvent?.title}</DialogTitle>
                          <DialogDescription>
                             Publication de type <Badge variant="secondary">{selectedEvent?.type}</Badge> prévue le {selectedEvent && format(selectedEvent.date, 'dd MMMM yyyy', {locale: fr})}.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
-                        <p>Détails de la publication ici...</p>
+                    <div className="py-4 space-y-4">
+                        <div>
+                            <Label className="text-sm font-semibold">Description</Label>
+                            <p className="text-sm text-muted-foreground">{selectedEvent?.description || "Aucune description."}</p>
+                        </div>
+                        <Separator/>
+                         <div>
+                            <Label className="text-sm font-semibold">Canaux</Label>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {selectedEvent?.channels && selectedEvent.channels.length > 0 ? (
+                                    selectedEvent.channels.map(channel => <Badge key={channel} variant="outline">{channel}</Badge>)
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">Aucun canal spécifié.</p>
+                                )}
+                            </div>
+                        </div>
+                        {selectedEvent?.visualUrl && (
+                             <div>
+                                <Label className="text-sm font-semibold">Visuel Associé</Label>
+                                <div className="mt-2 rounded-md border overflow-hidden">
+                                     <Image src={selectedEvent.visualUrl} alt={selectedEvent.title} width={400} height={400} className="w-full h-auto object-cover" data-ai-hint="publication image"/>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -224,6 +249,7 @@ function PlanningModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: 
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [channels, setChannels] = useState<Channel[]>([]);
     const [visual, setVisual] = useState<File | null>(null);
+    const [description, setDescription] = useState('');
 
     const handleChannelChange = (channel: Channel, checked: boolean) => {
         setChannels(prev => 
@@ -234,7 +260,7 @@ function PlanningModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (title && date) {
-            onSave({ title, type, date, channels, visualUrl: visual ? URL.createObjectURL(visual) : undefined });
+            onSave({ title, type, date, description, channels, visualUrl: visual ? URL.createObjectURL(visual) : undefined });
         }
     };
 
@@ -250,6 +276,10 @@ function PlanningModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: 
                         <div className="space-y-2">
                             <Label htmlFor="title">Titre</Label>
                             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Décrivez brièvement le contenu..."/>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
