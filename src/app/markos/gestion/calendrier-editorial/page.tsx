@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, PlusCircle, Calendar as CalendarIcon, Mail, Newspaper, MessageSquare, Download, Mic, Video, Presentation, BarChart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PlusCircle, Calendar as CalendarIcon, Mail, Newspaper, MessageSquare, Download, Mic, Video, Presentation, BarChart, Image as ImageIcon } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -20,24 +20,29 @@ import type { DateRange } from 'react-day-picker';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
+import { Checkbox } from '@/components/ui/checkbox';
+
 
 // --- TYPES & MOCK DATA ---
 type EventType = 'Article' | 'Blog' | 'LinkedIn' | 'Newsletter' | 'Webinaire' | 'Podcast' | 'Vidéo' | 'Infographie';
+type Channel = 'LinkedIn' | 'Facebook' | 'Blog' | 'Instagram' | 'Twitter';
 type CalendarEvent = {
   id: string;
   date: Date;
   title: string;
   type: EventType;
+  channels?: Channel[];
+  visualUrl?: string;
 };
 
 const MOCK_EVENTS: CalendarEvent[] = [
-  { id: 'evt-1', date: new Date(2024, 7, 5), title: 'Article: Top 5 des stratégies CRM', type: 'Article' },
-  { id: 'evt-2', date: new Date(2024, 7, 7), title: 'Infographie: Le parcours client', type: 'LinkedIn' },
-  { id: 'evt-3', date: new Date(2024, 7, 12), title: 'Newsletter d\'août', type: 'Newsletter' },
-  { id: 'evt-4', date: new Date(2024, 7, 19), title: 'Article: Automatiser ses relances', type: 'Article' },
-  { id: 'evt-5', date: new Date(2024, 7, 22), title: 'Vidéo: Démo de la nouvelle feature', type: 'Vidéo' },
-  { id: 'evt-6', date: new Date(2024, 6, 28), title: 'Newsletter de juillet', type: 'Newsletter' },
-  { id: 'evt-7', date: new Date(2024, 7, 15), title: 'Webinaire: Le futur du CRM', type: 'Webinaire' },
+  { id: 'evt-1', date: new Date(2024, 7, 5), title: 'Article: Top 5 des stratégies CRM', type: 'Article', channels: ['Blog', 'LinkedIn'] },
+  { id: 'evt-2', date: new Date(2024, 7, 7), title: 'Infographie: Le parcours client', type: 'Infographie', channels: ['LinkedIn', 'Twitter'] },
+  { id: 'evt-3', date: new Date(2024, 7, 12), title: 'Newsletter d\'août', type: 'Newsletter', channels: [] },
+  { id: 'evt-4', date: new Date(2024, 7, 19), title: 'Article: Automatiser ses relances', type: 'Article', channels: ['Blog'] },
+  { id: 'evt-5', date: new Date(2024, 7, 22), title: 'Vidéo: Démo de la nouvelle feature', type: 'Vidéo', channels: ['LinkedIn'] },
+  { id: 'evt-6', date: new Date(2024, 6, 28), title: 'Newsletter de juillet', type: 'Newsletter', channels: [] },
+  { id: 'evt-7', date: new Date(2024, 7, 15), title: 'Webinaire: Le futur du CRM', type: 'Webinaire', channels: ['LinkedIn', 'Facebook'] },
 ];
 
 const eventTypes: EventType[] = ['Article', 'Blog', 'LinkedIn', 'Newsletter', 'Webinaire', 'Podcast', 'Vidéo', 'Infographie'];
@@ -211,15 +216,25 @@ export default function CalendrierEditorialPage() {
 
 // --- MODAL COMPONENTS ---
 
+const CHANNELS: Channel[] = ['LinkedIn', 'Facebook', 'Blog', 'Instagram', 'Twitter'];
+
 function PlanningModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: () => void, onSave: (data: Omit<CalendarEvent, 'id'>) => void }) {
     const [title, setTitle] = useState('');
     const [type, setType] = useState<EventType>('Article');
     const [date, setDate] = useState<Date | undefined>(new Date());
+    const [channels, setChannels] = useState<Channel[]>([]);
+    const [visual, setVisual] = useState<File | null>(null);
+
+    const handleChannelChange = (channel: Channel, checked: boolean) => {
+        setChannels(prev => 
+            checked ? [...prev, channel] : prev.filter(c => c !== channel)
+        );
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (title && date) {
-            onSave({ title, type, date });
+            onSave({ title, type, date, channels, visualUrl: visual ? URL.createObjectURL(visual) : undefined });
         }
     };
 
@@ -231,33 +246,54 @@ function PlanningModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: 
                         <DialogTitle>Planifier une Publication</DialogTitle>
                         <DialogDescription>Remplissez les détails ci-dessous.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-6 py-4">
                         <div className="space-y-2">
                             <Label htmlFor="title">Titre</Label>
                             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="type">Type</Label>
-                            <Select value={type} onValueChange={(v: EventType) => setType(v)}>
-                                <SelectTrigger id="type"><SelectValue/></SelectTrigger>
-                                <SelectContent>
-                                    {eventTypes.map(type => (
-                                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Type de contenu</Label>
+                                <Select value={type} onValueChange={(v: EventType) => setType(v)}>
+                                    <SelectTrigger id="type"><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        {eventTypes.map(type => (
+                                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Date de publication</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {date ? format(date, 'dd/MM/yyyy') : <span>Choisir une date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} /></PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+                         <div className="space-y-2">
+                            <Label>Canaux de diffusion</Label>
+                            <div className="flex flex-wrap gap-4 p-4 border rounded-md">
+                                {CHANNELS.map(channel => (
+                                    <div key={channel} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id={`channel-${channel}`} 
+                                            checked={channels.includes(channel)}
+                                            onCheckedChange={(checked) => handleChannelChange(channel, !!checked)}
+                                        />
+                                        <Label htmlFor={`channel-${channel}`} className="font-normal">{channel}</Label>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                         <div className="space-y-2">
-                            <Label>Date de publication</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {date ? format(date, 'dd/MM/yyyy') : <span>Choisir une date</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} /></PopoverContent>
-                            </Popover>
+                            <Label htmlFor="visual">Visuel</Label>
+                             <Input id="visual" type="file" accept="image/*" onChange={(e) => setVisual(e.target.files?.[0] || null)} />
                         </div>
                     </div>
                     <DialogFooter>
@@ -291,4 +327,3 @@ function ExportModal({ isOpen, onClose, onExport }: { isOpen: boolean, onClose: 
         </Dialog>
     );
 }
-
