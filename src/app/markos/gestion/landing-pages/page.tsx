@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -178,7 +178,7 @@ export default function LandingPagesPage() {
 function EditModal({ isOpen, onClose, onSave, page }: { isOpen: boolean, onClose: () => void, onSave: (title: string) => void, page: LandingPage | null }) {
     const [title, setTitle] = useState('');
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isOpen) {
             setTitle(page?.title || '');
         }
