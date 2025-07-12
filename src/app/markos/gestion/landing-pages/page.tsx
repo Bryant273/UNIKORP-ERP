@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { FunnelChart, Funnel, LabelList, Tooltip, ResponsiveContainer } from 'recharts';
 import Image from 'next/image';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 // --- TYPES & MOCK DATA ---
 type PageStatus = 'Publiée' | 'Brouillon' | 'Archivée';
@@ -49,9 +51,9 @@ export default function LandingPagesPage() {
     const [pageToDelete, setPageToDelete] = useState<LandingPage | null>(null);
     const [previewingPage, setPreviewingPage] = useState<LandingPage | null>(null);
     const [statsPage, setStatsPage] = useState<LandingPage | null>(null);
-
-    const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
-    const currentPages = pages.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    
+    const activePages = useMemo(() => pages.filter(p => p.status !== 'Archivée'), [pages]);
+    const archivedPages = useMemo(() => pages.filter(p => p.status === 'Archivée'), [pages]);
 
     const handleOpenEditModal = (page: LandingPage | null) => {
         setEditingPage(page);
@@ -97,10 +99,56 @@ export default function LandingPagesPage() {
         }
     };
     
-    const handlePageChange = (newPage: number) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
+    const renderTable = (data: LandingPage[]) => {
+        const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+        const currentData = data.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+        return (
+            <>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Titre de la Page</TableHead>
+                            <TableHead className="text-center">Statut</TableHead>
+                            <TableHead className="text-right">Visiteurs</TableHead>
+                            <TableHead className="text-right">Taux de Conv.</TableHead>
+                            <TableHead className="text-center">Dernière Modif.</TableHead>
+                            <TableHead className="text-center w-[200px]">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {currentData.map(page => (
+                            <TableRow key={page.id}>
+                                <TableCell className="font-medium">{page.title}</TableCell>
+                                <TableCell className="text-center">{getStatusBadge(page.status)}</TableCell>
+                                <TableCell className="text-right">{page.visitors.toLocaleString('fr-FR')}</TableCell>
+                                <TableCell className="text-right">{page.conversionRate.toFixed(1)}%</TableCell>
+                                <TableCell className="text-center">{format(new Date(page.lastModified), 'dd/MM/yyyy')}</TableCell>
+                                <TableCell className="text-center">
+                                    <div className="flex justify-center gap-1">
+                                        <Button variant="ghost" size="icon" title="Aperçu" onClick={() => setPreviewingPage(page)}><Eye className="h-4 w-4"/></Button>
+                                        <Button variant="ghost" size="icon" title="Statistiques" onClick={() => setStatsPage(page)}><BarChart className="h-4 w-4"/></Button>
+                                        <Button variant="ghost" size="icon" title="Modifier" onClick={() => handleOpenEditModal(page)}><Pencil className="h-4 w-4"/></Button>
+                                        {page.status !== 'Archivée' && <Button variant="ghost" size="icon" title="Archiver" onClick={() => handleArchive(page.id)}><Archive className="h-4 w-4"/></Button>}
+                                        <Button variant="ghost" size="icon" title="Supprimer" onClick={() => setPageToDelete(page)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                <CardFooter className="flex items-center justify-between pt-6">
+                    <div className="text-sm text-muted-foreground">
+                        Total de {data.length} pages. Page {currentPage} sur {totalPages}.
+                    </div>
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>Précédent</Button>
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>Suivant</Button>
+                        </div>
+                    )}
+                </CardFooter>
+            </>
+        )
     };
 
     return (
@@ -116,50 +164,19 @@ export default function LandingPagesPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Titre de la Page</TableHead>
-                                <TableHead className="text-center">Statut</TableHead>
-                                <TableHead className="text-right">Visiteurs</TableHead>
-                                <TableHead className="text-right">Taux de Conv.</TableHead>
-                                <TableHead className="text-center">Dernière Modif.</TableHead>
-                                <TableHead className="text-center w-[200px]">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {currentPages.map(page => (
-                                <TableRow key={page.id}>
-                                    <TableCell className="font-medium">{page.title}</TableCell>
-                                    <TableCell className="text-center">{getStatusBadge(page.status)}</TableCell>
-                                    <TableCell className="text-right">{page.visitors.toLocaleString('fr-FR')}</TableCell>
-                                    <TableCell className="text-right">{page.conversionRate.toFixed(1)}%</TableCell>
-                                    <TableCell className="text-center">{format(new Date(page.lastModified), 'dd/MM/yyyy')}</TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex justify-center gap-1">
-                                            <Button variant="ghost" size="icon" title="Aperçu" onClick={() => setPreviewingPage(page)}><Eye className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" title="Statistiques" onClick={() => setStatsPage(page)}><BarChart className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" title="Modifier" onClick={() => handleOpenEditModal(page)}><Pencil className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" title="Archiver" onClick={() => handleArchive(page.id)}><Archive className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" title="Supprimer" onClick={() => setPageToDelete(page)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    <Tabs defaultValue="actives" className="w-full" onValueChange={() => setCurrentPage(1)}>
+                        <TabsList>
+                            <TabsTrigger value="actives">Pages Actives</TabsTrigger>
+                            <TabsTrigger value="archived">Pages Archivées</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="actives" className="mt-4">
+                            {renderTable(activePages)}
+                        </TabsContent>
+                        <TabsContent value="archived" className="mt-4">
+                            {renderTable(archivedPages)}
+                        </TabsContent>
+                    </Tabs>
                 </CardContent>
-                 <CardFooter className="flex items-center justify-between pt-6">
-                    <div className="text-sm text-muted-foreground">
-                        Total de {pages.length} pages. Page {currentPage} sur {totalPages}.
-                    </div>
-                    {totalPages > 1 && (
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Précédent</Button>
-                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Suivant</Button>
-                        </div>
-                    )}
-                </CardFooter>
             </Card>
 
             <EditModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onSave={handleSave} page={editingPage} />
