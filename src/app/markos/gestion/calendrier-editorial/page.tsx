@@ -22,7 +22,7 @@ import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 
 // --- TYPES & MOCK DATA ---
-type EventType = 'Blog' | 'LinkedIn' | 'Newsletter' | 'Article' | 'Webinaire' | 'Podcast' | 'Vidéo' | 'Infographie';
+type EventType = 'Article' | 'Blog' | 'LinkedIn' | 'Newsletter' | 'Webinaire' | 'Podcast' | 'Vidéo' | 'Infographie';
 type CalendarEvent = {
   id: string;
   date: Date;
@@ -91,6 +91,7 @@ export default function CalendrierEditorialPage() {
         const moduleName = "MARKOS";
         const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
         const periodString = `${format(range.from, 'dd/MM/yyyy')} au ${format(range.to, 'dd/MM/yyyy')}`;
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
         
         autoTable(doc, {
             head: [['Date', 'Type', 'Titre de la Publication']],
@@ -101,9 +102,22 @@ export default function CalendrierEditorialPage() {
             theme: 'striped',
             headStyles: { fillColor: '#1e3a8a' },
             didDrawPage: (data) => {
-                doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
-                doc.text(companyName, data.settings.margin.left, 28);
-                doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+                doc.setDrawColor(220);
+                doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+                
+                doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(40, 40, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text(companyName, data.settings.margin.left + 15, 28);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100);
                 const rightX = doc.internal.pageSize.width - data.settings.margin.right;
                 doc.text(`État : Calendrier Éditorial`, rightX, 25, { align: 'right' });
                 doc.text(`Période : ${periodString}`, rightX, 30, { align: 'right' });
@@ -277,3 +291,4 @@ function ExportModal({ isOpen, onClose, onExport }: { isOpen: boolean, onClose: 
         </Dialog>
     );
 }
+
