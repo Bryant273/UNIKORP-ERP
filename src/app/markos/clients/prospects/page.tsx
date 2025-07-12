@@ -137,7 +137,10 @@ export default function ProspectsPage() {
 
   const handleConvertToClient = (prospectToConvert: CompteTiers) => {
     // Add to clients list
-    setClients(prevClients => [...prevClients, prospectToConvert]);
+    setClients(prevClients => [...prevClients, {
+        ...prospectToConvert,
+        numero: `C-${prospectToConvert.numero}` // Change prefix
+    }]);
     
     // Remove from prospects list
     setProspects(prevProspects => prevProspects.filter(p => p.id !== prospectToConvert.id));
@@ -220,6 +223,13 @@ export default function ProspectsPage() {
                 ))}
               </TableBody>
             </Table>
+             {prospects.length === 0 && (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
+                 <p className="text-muted-foreground">Aucun prospect dans la base de données.</p>
+                </div>
+              )}
+        </CardContent>
+         {prospects.length > 0 &&
             <CardFooter className="flex items-center justify-between pt-6">
               <div className="text-sm text-muted-foreground">
                 Total de {prospects.length} prospects. Page {currentPage} sur {totalPages}.
@@ -245,7 +255,7 @@ export default function ProspectsPage() {
                 </div>
               )}
             </CardFooter>
-        </CardContent>
+            }
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

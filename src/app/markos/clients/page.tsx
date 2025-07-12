@@ -204,6 +204,13 @@ export default function ClientsPage() {
                 ))}
               </TableBody>
             </Table>
+            {clients.length === 0 && (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
+                 <p className="text-muted-foreground">Aucun client dans la base de données.</p>
+                </div>
+              )}
+            </CardContent>
+            {clients.length > 0 &&
             <CardFooter className="flex items-center justify-between pt-6">
               <div className="text-sm text-muted-foreground">
                 Total de {clients.length} clients. Page {currentPage} sur {totalPages}.
@@ -229,7 +236,7 @@ export default function ClientsPage() {
                 </div>
               )}
             </CardFooter>
-        </CardContent>
+            }
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
