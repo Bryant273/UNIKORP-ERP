@@ -14,6 +14,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
 
 type Report = {
     id: string;
@@ -48,19 +51,26 @@ const reportDimensions = [
 export default function RapportsPersonnalisesPage() {
     const { toast } = useToast();
     const [reports, setReports] = useState(MOCK_REPORTS);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [editingReport, setEditingReport] = useState<Report | null>(null);
+    const [viewingReport, setViewingReport] = useState<Report | null>(null);
     const [reportToDelete, setReportToDelete] = useState<Report | null>(null);
 
-    const handleOpenModal = (report: Report | null) => {
+    const handleOpenEditModal = (report: Report | null) => {
         setEditingReport(report);
-        setIsModalOpen(true);
+        setIsEditModalOpen(true);
+    };
+
+    const handleOpenViewModal = (report: Report) => {
+        setViewingReport(report);
+        setIsViewModalOpen(true);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         toast({ title: editingReport ? 'Rapport Modifié (Simulation)' : 'Rapport Créé (Simulation)', description: 'Votre rapport personnalisé a été sauvegardé.' });
-        setIsModalOpen(false);
+        setIsEditModalOpen(false);
     };
     
     const handleDelete = () => {
@@ -79,7 +89,7 @@ export default function RapportsPersonnalisesPage() {
                             <CardTitle className="text-2xl">Rapports Personnalisés</CardTitle>
                             <CardDescription>Créez, consultez et gérez vos propres rapports d'analyse marketing.</CardDescription>
                         </div>
-                        <Button onClick={() => handleOpenModal(null)}><PlusCircle className="mr-2 h-4 w-4" /> Nouveau Rapport</Button>
+                        <Button onClick={() => handleOpenEditModal(null)}><PlusCircle className="mr-2 h-4 w-4" /> Nouveau Rapport</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -101,8 +111,8 @@ export default function RapportsPersonnalisesPage() {
                                     <TableCell>{format(new Date(report.lastModified), 'dd/MM/yyyy', { locale: fr })}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-1">
-                                            <Button variant="ghost" size="icon" onClick={() => toast({ title: `Aperçu de "${report.title}"`})}><Eye className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => handleOpenModal(report)}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenViewModal(report)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(report)}><Pencil className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" onClick={() => setReportToDelete(report)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                         </div>
                                     </TableCell>
@@ -113,7 +123,7 @@ export default function RapportsPersonnalisesPage() {
                 </CardContent>
             </Card>
 
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
                 <DialogContent className="sm:max-w-2xl">
                     <form onSubmit={handleSubmit}>
                         <DialogHeader>
@@ -156,7 +166,7 @@ export default function RapportsPersonnalisesPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Annuler</Button>
+                            <Button variant="outline" type="button" onClick={() => setIsEditModalOpen(false)}>Annuler</Button>
                             <Button type="submit">Générer le rapport</Button>
                         </DialogFooter>
                     </form>
@@ -175,6 +185,82 @@ export default function RapportsPersonnalisesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            
+            <ViewReportModal 
+                isOpen={isViewModalOpen} 
+                onClose={() => setIsViewModalOpen(false)}
+                report={viewingReport} 
+            />
         </>
     );
+}
+
+
+// Mock Data for View Modal
+const viewModalChartData = [
+  { month: 'Jan', value: 380 }, { month: 'Fev', value: 410 },
+  { month: 'Mar', value: 400 }, { month: 'Avr', value: 425 },
+  { month: 'Mai', value: 460 }, { month: 'Juin', value: 450 },
+];
+const viewModalChartConfig = { value: { label: "Leads", color: "hsl(var(--primary))" } } as const;
+const viewModalTableData = [
+    { region: 'Afrique de l\'Ouest', leads: 250, conversion: '15%' },
+    { region: 'Europe', leads: 120, conversion: '12%' },
+    { region: 'Amérique du Nord', leads: 80, conversion: '10%' },
+];
+
+function ViewReportModal({ isOpen, onClose, report }: { isOpen: boolean, onClose: () => void, report: Report | null }) {
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>{report?.title || "Aperçu du Rapport"}</DialogTitle>
+                    <DialogDescription>{report?.description || "Voici un aperçu des données générées pour ce rapport."}</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Graphique Principal</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={viewModalChartConfig} className="h-[300px] w-full">
+                                <LineChart data={viewModalChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                                    <YAxis/>
+                                    <Tooltip content={<ChartTooltipContent />} />
+                                    <Line type="monotone" dataKey="value" stroke="var(--color-value)" strokeWidth={3} dot={{ r: 5 }} />
+                                </LineChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Données Détaillées</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             <Table>
+                                <TableHeader><TableRow><TableHead>Région</TableHead><TableHead className="text-right">Leads</TableHead><TableHead className="text-right">Taux de Conv.</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {viewModalTableData.map(d => (
+                                        <TableRow key={d.region}>
+                                            <TableCell>{d.region}</TableCell>
+                                            <TableCell className="text-right">{d.leads}</TableCell>
+                                            <TableCell className="text-right">{d.conversion}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                    <Button onClick={() => alert("Simulation d'export PDF.")}>
+                        <Download className="mr-2 h-4 w-4" /> Exporter en PDF
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
 }
