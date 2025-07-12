@@ -134,7 +134,7 @@ export default function CalendrierEditorialPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-7 border-t border-l rounded-lg">
-                        {weekDays.map(day => <div key={day.toISOString()} className="p-2 text-center font-semibold text-sm border-b border-r capitalize">{day}</div>)}
+                        {weekDays.map(day => <div key={day} className="p-2 text-center font-semibold text-sm border-b border-r capitalize">{day}</div>)}
                         {days.map(day => {
                             const eventsOnDay = events.filter(e => isSameDay(e.date, day));
                             return (
