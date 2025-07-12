@@ -32,11 +32,12 @@ type Template = {
   primaryColor: string;
   companyName: string;
   footerText: string;
+  headerImageUrl?: string;
 };
 
 const initialTemplates: Template[] = [
-  { id: 'tpl-1', name: 'Newsletter Mensuelle', type: 'Email', lastModified: '2024-07-20', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#3b82f6', companyName: 'UNIKORP', footerText: 'Merci de votre confiance.' },
-  { id: 'tpl-2', name: 'Lancement Produit Alpha', type: 'Page', lastModified: '2024-07-15', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#10b981', companyName: 'UNIKORP', footerText: '© 2024 UNIKORP. Tous droits réservés.' },
+  { id: 'tpl-1', name: 'Newsletter Mensuelle', type: 'Email', lastModified: '2024-07-20', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#3b82f6', companyName: 'UNIKORP', footerText: 'Merci de votre confiance.', headerImageUrl: 'https://placehold.co/600x150.png' },
+  { id: 'tpl-2', name: 'Lancement Produit Alpha', type: 'Page', lastModified: '2024-07-15', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#10b981', companyName: 'UNIKORP', footerText: '© 2024 UNIKORP. Tous droits réservés.', headerImageUrl: 'https://placehold.co/600x150.png' },
   { id: 'tpl-3', name: 'Email de Bienvenue', type: 'Email', lastModified: '2024-07-18', thumbnailUrl: 'https://placehold.co/600x400.png', primaryColor: '#673AB7', companyName: 'UNIKORP', footerText: 'Bienvenue chez nous !' },
 ];
 
@@ -46,6 +47,7 @@ const defaultTemplateData: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'
     primaryColor: '#3b82f6',
     companyName: 'Votre Société S.A.',
     footerText: 'Merci de votre confiance.',
+    headerImageUrl: 'https://placehold.co/600x150.png',
 };
 
 export default function TemplatesPage() {
@@ -187,6 +189,11 @@ export default function TemplatesPage() {
 const LiveTemplatePreview = ({ template }: { template: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'> }) => {
     return (
         <div className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
+             {template.headerImageUrl && (
+                <div className="mb-8">
+                    <Image src={template.headerImageUrl} alt="Header" width={600} height={150} className="w-full h-auto object-cover rounded-md" data-ai-hint="abstract banner"/>
+                </div>
+            )}
             <header className="flex justify-between items-start mb-8">
                 <div>
                      <Logo className="h-12 w-12" style={{ color: template.primaryColor }} />
@@ -257,6 +264,10 @@ function TemplateEditorSheet({ isOpen, onClose, onSave, templateToEdit }: { isOp
                              <Card>
                                 <CardHeader><CardTitle>Personnalisation</CardTitle></CardHeader>
                                 <CardContent className="space-y-4">
+                                     <div className="space-y-2">
+                                        <Label htmlFor="headerImageUrl">URL de l'image d'en-tête</Label>
+                                        <Input id="headerImageUrl" value={formData.headerImageUrl || ''} onChange={(e) => handleChange('headerImageUrl', e.target.value)} placeholder="https://..."/>
+                                    </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="primaryColor">Couleur principale (Hex)</Label>
                                         <Input id="primaryColor" value={formData.primaryColor} onChange={(e) => handleChange('primaryColor', e.target.value)} />
