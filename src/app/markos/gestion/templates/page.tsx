@@ -189,11 +189,6 @@ export default function TemplatesPage() {
 const LiveTemplatePreview = ({ template }: { template: Omit<Template, 'id' | 'lastModified' | 'thumbnailUrl'> }) => {
     return (
         <div className="bg-white rounded-lg shadow-md p-8 w-full mx-auto text-black font-sans text-sm border">
-             {template.headerImageUrl && (
-                <div className="mb-8">
-                    <Image src={template.headerImageUrl} alt="Header" width={600} height={150} className="w-full h-auto object-cover rounded-md" data-ai-hint="abstract banner"/>
-                </div>
-            )}
             <header className="flex justify-between items-start mb-8">
                 <div>
                      <Logo className="h-12 w-12" style={{ color: template.primaryColor }} />
@@ -204,6 +199,11 @@ const LiveTemplatePreview = ({ template }: { template: Omit<Template, 'id' | 'la
                 </div>
             </header>
             <main className="min-h-64 border-y py-8">
+                 {template.headerImageUrl && (
+                    <div className="mb-6">
+                        <Image src={template.headerImageUrl} alt="Contenu" width={600} height={400} className="w-full h-auto object-cover rounded-md" data-ai-hint="email content"/>
+                    </div>
+                )}
                 <h3 className="text-xl font-bold mb-4">Titre de l'Exemple</h3>
                 <p>Ceci est un paragraphe d'exemple pour montrer le contenu du modèle. Vous pouvez personnaliser ce texte et bien plus encore dans l'éditeur.</p>
             </main>
@@ -265,7 +265,7 @@ function TemplateEditorSheet({ isOpen, onClose, onSave, templateToEdit }: { isOp
                                 <CardHeader><CardTitle>Personnalisation</CardTitle></CardHeader>
                                 <CardContent className="space-y-4">
                                      <div className="space-y-2">
-                                        <Label htmlFor="headerImageUrl">URL de l'image d'en-tête</Label>
+                                        <Label htmlFor="headerImageUrl">URL de l'image de contenu</Label>
                                         <Input id="headerImageUrl" value={formData.headerImageUrl || ''} onChange={(e) => handleChange('headerImageUrl', e.target.value)} placeholder="https://..."/>
                                     </div>
                                     <div className="space-y-2">
