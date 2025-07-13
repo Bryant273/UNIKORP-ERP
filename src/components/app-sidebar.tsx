@@ -256,17 +256,6 @@ const markosNav = [
 
 const logsonNav = [
   {
-    title: 'STOCKS',
-    icon: Layers,
-    subItems: [
-      { title: 'Produits', href: '/logson/stocks/produits', icon: Package },
-      { title: 'Fiches de stocks', href: '/logson/stocks/fiches-de-stocks', icon: FileText },
-      { title: 'Entrepôts', href: '/logson/stocks/entrepots', icon: Warehouse },
-      { title: 'Mouvements de stock', href: '/logson/stocks/mouvements-de-stock', icon: ArrowRightLeft },
-      { title: 'Inventaire', href: '/logson/stocks/inventaire', icon: SearchIcon },
-    ],
-  },
-  {
     title: 'APPROVISIONNEMENT',
     icon: ShoppingCart,
     subItems: [
@@ -283,6 +272,17 @@ const logsonNav = [
       { title: 'Transport et expédition', href: '/logson/livraisons/transport-et-expedition', icon: Truck },
       { title: 'Suivi des livraisons', href: '/logson/livraisons/suivi-des-livraisons', icon: Map },
       { title: 'Gestion des retours', href: '/logson/livraisons/gestion-des-retours', icon: Repeat },
+    ],
+  },
+  {
+    title: 'STOCKS',
+    icon: Layers,
+    subItems: [
+      { title: 'Produits', href: '/logson/stocks/produits', icon: Package },
+      { title: 'Fiches de stocks', href: '/logson/stocks/fiches-de-stocks', icon: FileText },
+      { title: 'Entrepôts', href: '/logson/stocks/entrepots', icon: Warehouse },
+      { title: 'Mouvements de stock', href: '/logson/stocks/mouvements-de-stock', icon: ArrowRightLeft },
+      { title: 'Inventaire', href: '/logson/stocks/inventaire', icon: SearchIcon },
     ],
   },
   {
