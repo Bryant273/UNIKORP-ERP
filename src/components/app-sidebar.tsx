@@ -71,6 +71,16 @@ import {
   TargetIcon,
   Filter,
   Activity,
+  Package,
+  Warehouse,
+  Truck,
+  Layers,
+  Archive,
+  ArrowRightLeft,
+  Search as SearchIcon,
+  ShoppingCart,
+  Map,
+  BarChart as BarChartIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -244,6 +254,49 @@ const markosNav = [
   },
 ];
 
+const logsonNav = [
+  {
+    title: 'STOCKS',
+    icon: Layers,
+    subItems: [
+      { title: 'Produits', href: '/logson/stocks/produits', icon: Package },
+      { title: 'Fiches de stocks', href: '/logson/stocks/fiches-de-stocks', icon: FileText },
+      { title: 'Entrepôts', href: '/logson/stocks/entrepots', icon: Warehouse },
+      { title: 'Mouvements de stock', href: '/logson/stocks/mouvements-de-stock', icon: ArrowRightLeft },
+      { title: 'Inventaire', href: '/logson/stocks/inventaire', icon: SearchIcon },
+    ],
+  },
+  {
+    title: 'APPROVISIONNEMENT',
+    icon: ShoppingCart,
+    subItems: [
+      { title: 'Fournisseurs', href: '/logson/approvisionnement/fournisseurs', icon: Users },
+      { title: 'Commandes fournisseurs', href: '/logson/approvisionnement/commandes-fournisseurs', icon: FilePlus },
+      { title: 'Réceptions', href: '/logson/approvisionnement/receptions', icon: Archive },
+    ],
+  },
+  {
+    title: 'LIVRAISONS',
+    icon: Truck,
+    subItems: [
+      { title: 'Préparation de commandes', href: '/logson/livraisons/preparation-de-commandes', icon: ClipboardList },
+      { title: 'Transport et expédition', href: '/logson/livraisons/transport-et-expedition', icon: Truck },
+      { title: 'Suivi des livraisons', href: '/logson/livraisons/suivi-des-livraisons', icon: Map },
+      { title: 'Gestion des retours', href: '/logson/livraisons/gestion-des-retours', icon: Repeat },
+    ],
+  },
+  {
+    title: 'PILOTAGE',
+    icon: BarChartIcon,
+    subItems: [
+      { title: 'Coûts logistiques', href: '/logson/pilotage/couts-logistiques', icon: Wallet },
+      { title: 'KPI logistiques', href: '/logson/pilotage/kpi-logistiques', icon: TrendingUp },
+      { title: 'Optimisation des routes', href: '/logson/pilotage/optimisation-des-routes', icon: Map },
+      { title: 'Rapports et analyses', href: '/logson/pilotage/rapports-et-analyses', icon: FilePieChart },
+    ],
+  },
+];
+
 
 const getNavForPath = (pathname: string) => {
   if (pathname.startsWith('/skomptab')) {
@@ -266,9 +319,8 @@ const getNavForPath = (pathname: string) => {
   }
   if (pathname.startsWith('/logson')) {
      return {
-      dashboardLink: pathname,
-      items: [],
-      placeholder: `Sections pour LOGSON`
+      dashboardLink: '/logson',
+      items: logsonNav,
     };
   }
   // Default for main dashboard and special pages

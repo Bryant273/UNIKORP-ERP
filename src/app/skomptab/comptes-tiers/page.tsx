@@ -47,26 +47,20 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { useAtom } from 'jotai';
+import { clientsAtom, fournisseursAtom } from '@/lib/store';
 
-type TiersType = 'Client' | 'Fournisseur';
 
 type CompteTiers = {
   id: number;
   numero: string;
   intitule: string;
-  type: TiersType;
   telephone: string;
 };
 
-const initialComptes: CompteTiers[] = [
-  { id: 1, numero: '411CLIENT1', intitule: 'Client Alpha', type: 'Client', telephone: '0123456789' },
-  { id: 2, numero: '401FOURN1', intitule: 'Fournisseur Omega', type: 'Fournisseur', telephone: '0987654321' },
-  { id: 3, numero: '411CLIENT2', intitule: 'Client Beta', type: 'Client', telephone: '0123456788' },
-  { id: 4, numero: '401FOURN2', intitule: 'Fournisseur Gamma', type: 'Fournisseur', telephone: '0987654322' },
-  { id: 5, numero: '411CLIENT3', intitule: 'Client Gamma', type: 'Client', telephone: '0123456787' },
-];
+type TiersType = 'Client' | 'Fournisseur';
 
-const defaultFormData: Omit<CompteTiers, 'id'> = {
+const defaultFormData: Omit<CompteTiers, 'id'> & { type: TiersType } = {
   numero: '',
   intitule: '',
   type: 'Client',
@@ -76,12 +70,16 @@ const defaultFormData: Omit<CompteTiers, 'id'> = {
 const ITEMS_PER_PAGE = 10;
 
 export default function ComptesTiersPage() {
-  const [comptes, setComptes] = useState<CompteTiers[]>(initialComptes);
+  const [clients, setClients] = useAtom(clientsAtom);
+  const [fournisseurs, setFournisseurs] = useAtom(fournisseursAtom);
+
   const [activeTab, setActiveTab] = useState('clients');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCompte, setEditingCompte] = useState<CompteTiers | null>(null);
+  const [editingType, setEditingType] = useState<TiersType>('Client');
   const [formData, setFormData] = useState(defaultFormData);
   const [compteToDelete, setCompteToDelete] = useState<CompteTiers | null>(null);
+  const [deleteType, setDeleteType] = useState<TiersType | null>(null);
   const [currentPage, setCurrentPage] = useState({ clients: 1, fournisseurs: 1 });
   
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -91,9 +89,6 @@ export default function ComptesTiersPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-
-  const clients = useMemo(() => comptes.filter(c => c.type === 'Client'), [comptes]);
-  const fournisseurs = useMemo(() => comptes.filter(c => c.type === 'Fournisseur'), [comptes]);
 
   const { paginatedClients, totalClientPages } = useMemo(() => {
     const total = Math.ceil(clients.length / ITEMS_PER_PAGE);
@@ -113,7 +108,6 @@ export default function ComptesTiersPage() {
     }
   }, [fournisseurs, currentPage.fournisseurs]);
 
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -125,12 +119,13 @@ export default function ComptesTiersPage() {
     setIsModalOpen(true);
   };
   
-  const handleOpenEditModal = (compte: CompteTiers) => {
+  const handleOpenEditModal = (compte: CompteTiers, type: TiersType) => {
     setEditingCompte(compte);
+    setEditingType(type);
     setFormData({
       numero: compte.numero,
       intitule: compte.intitule,
-      type: compte.type,
+      type: type,
       telephone: compte.telephone,
     });
     setIsModalOpen(true);
@@ -143,26 +138,36 @@ export default function ComptesTiersPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const compteData = {
+      id: editingCompte ? editingCompte.id : Date.now(),
+      numero: formData.numero,
+      intitule: formData.intitule,
+      telephone: formData.telephone,
+    };
+
+    const targetAtom = formData.type === 'Client' ? setClients : setFournisseurs;
+
     if (editingCompte) {
-      setComptes(
-        comptes.map((c) =>
-          c.id === editingCompte.id ? { ...editingCompte, ...formData } : c
-        )
-      );
+      if (formData.type === editingType) {
+        targetAtom(prev => prev.map(c => c.id === compteData.id ? compteData : c));
+      } else {
+        const sourceAtom = editingType === 'Client' ? setClients : setFournisseurs;
+        sourceAtom(prev => prev.filter(c => c.id !== compteData.id));
+        targetAtom(prev => [...prev, compteData]);
+      }
     } else {
-      const newCompte: CompteTiers = {
-        id: Date.now(),
-        ...formData,
-      };
-      setComptes([...comptes, newCompte]);
+      targetAtom(prev => [...prev, compteData]);
     }
+
     handleCloseModal();
   };
 
   const handleDeleteCompte = () => {
     if (compteToDelete) {
-      setComptes(comptes.filter((c) => c.id !== compteToDelete.id));
+      const targetAtom = deleteType === 'Client' ? setClients : setFournisseurs;
+      targetAtom(prev => prev.filter(c => c.id !== compteToDelete.id));
       setCompteToDelete(null);
+      setDeleteType(null);
     }
   };
 
@@ -291,11 +296,11 @@ export default function ComptesTiersPage() {
                     <TableCell className="text-center">{compte.telephone}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(compte)}>
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(compte, type === 'clients' ? 'Client' : 'Fournisseur')}>
                             <Pencil className="h-4 w-4" />
                             <span className="sr-only">Modifier</span>
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setCompteToDelete(compte)} className="text-destructive hover:text-destructive">
+                          <Button variant="ghost" size="icon" onClick={() => { setCompteToDelete(compte); setDeleteType(type === 'clients' ? 'Client' : 'Fournisseur'); }} className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                             <span className="sr-only">Supprimer</span>
                           </Button>
