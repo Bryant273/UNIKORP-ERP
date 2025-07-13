@@ -16,7 +16,7 @@ import { TrendingUp, Percent, DollarSign, Truck, Package, PackageCheck } from "l
 const kpiData = [
   { title: "Taux de rotation des stocks", value: "6.2", Icon: TrendingUp, change: "+0.5 vs M-1" },
   { title: "Taux de livraison à temps", value: "97.8%", Icon: Percent, change: "+1.2% vs M-1" },
-  { title: "Coût par commande", value: "15.20 €", Icon: DollarSign, change: "-2% vs M-1" },
+  { title: "Coût par commande", value: "9 940 FCFA", Icon: DollarSign, change: "-2% vs M-1" },
   { title: "Précision de l'inventaire", value: "99.5%", Icon: PackageCheck, change: "+0.1% vs M-1" },
 ];
 

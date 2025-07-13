@@ -268,7 +268,7 @@ function ContractModal({ isOpen, onClose, onSave, config }: { isOpen: boolean, o
                                 <AccordionTrigger>Rémunération & Conditions</AccordionTrigger>
                                 <AccordionContent className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1"><Label>Salaire de base</Label><Input name="SALAIRE_BASE" type="number" value={formData.SALAIRE_BASE || ''} onChange={handleChange} /></div>
+                                        <div className="space-y-1"><Label>Salaire de base (FCFA)</Label><Input name="SALAIRE_BASE" type="number" value={formData.SALAIRE_BASE || ''} onChange={handleChange} /></div>
                                         <div className="space-y-1"><Label>Périodicité</Label><Select name="PERIODICITE_SALAIRE" value={formData.PERIODICITE_SALAIRE} onValueChange={(v: 'mensuel'|'annuel') => handleSelectChange('PERIODICITE_SALAIRE', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mensuel">Mensuel</SelectItem><SelectItem value="annuel">Annuel</SelectItem></SelectContent></Select></div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -352,7 +352,6 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         doc.setFontSize(10).setFont('helvetica', 'normal');
         
         addText(`L'EMPLOYEUR :\n- Dénomination sociale : ${contract.ENTREPRISE_NOM}\n- Forme Juridique : ${contract.ENTREPRISE_FORME}\n- Adresse : ${contract.ENTREPRISE_ADRESSE}\n- N° SIRET : ${contract.ENTREPRISE_SIRET}\n- Code APE : ${contract.ENTREPRISE_APE}\n- Représenté par : ${contract.REPRESENTANT_NOM}, en sa qualité de ${contract.REPRESENTANT_FONCTION}`);
-        
         addText(`L'EMPLOYÉ :\n- Nom : ${contract.EMPLOYE_NOM}\n- Prénom : ${contract.EMPLOYE_PRENOM}\n- Date de naissance : ${contract.EMPLOYE_DATE_NAISSANCE}\n- Lieu de naissance : ${contract.EMPLOYE_LIEU_NAISSANCE}\n- Adresse : ${contract.EMPLOYE_ADRESSE}\n- Numéro de sécurité sociale : ${contract.EMPLOYE_NUM_SECU}\n- Nationalité : ${contract.EMPLOYE_NATIONALITE}`);
         
         y += 5;
@@ -379,7 +378,7 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         if(contract.SI_TEMPS_PARTIEL) addText(`Travail à temps partiel : ${contract.NOMBRE_HEURES_PARTIEL} heures par semaine.\nRépartition : ${contract.REPARTITION_HORAIRES}`);
 
         addTitle('ARTICLE 5 - RÉMUNÉRATION');
-        addText(`Salaire de base : ${contract.SALAIRE_BASE.toLocaleString('fr-FR')} € ${contract.PERIODICITE_SALAIRE}.`);
+        addText(`Salaire de base : ${contract.SALAIRE_BASE.toLocaleString('fr-FR')} FCFA ${contract.PERIODICITE_SALAIRE}.`);
         if(contract.SI_PRIMES) addText(`Primes et avantages : ${contract.LISTE_PRIMES}`);
         if(contract.SI_AVANTAGES_NATURE) addText(`Avantages en nature : ${contract.LISTE_AVANTAGES}`);
         addText(`Le salaire sera versé le ${contract.DATE_VERSEMENT} par ${contract.MODE_PAIEMENT}.`);
@@ -401,8 +400,8 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         addText(contract.SI_NON_CONCURRENCE ? `Le salarié s'interdit, pendant une durée de ${contract.DUREE_NON_CONCURRENCE} suivant la rupture du contrat, d'exercer une activité concurrente dans les secteurs suivants : ${contract.SECTEURS_CONCERNES}.` : "Non applicable.");
 
         addTitle('ARTICLE 11 - RUPTURE DU CONTRAT');
-        if(contract.SI_CDI) addText(`Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis et d'indemnités. Préavis : ${contract.DUREE_PREAVIS}.`);
-        if(contract.SI_CDD) addText(`Le contrat prendra fin de plein droit à la date du ${contract.DATE_FIN}, sauf renouvellement ou transformation en CDI.`);
+        if(contract.SI_CDI) addText(`Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis. Préavis : ${contract.DUREE_PREAVIS}.`);
+        if(contract.SI_CDD) addText(`Le contrat prendra fin de plein droit à la date du ${contract.DATE_FIN}, sauf renouvellement.`);
 
         addTitle('ARTICLE 12 - DISPOSITIONS DIVERSES');
         addText(`Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.`);
@@ -412,6 +411,16 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         y += 15;
         doc.text("L'EMPLOYEUR", margin, y);
         doc.text("L'EMPLOYÉ", doc.internal.pageSize.getWidth() / 2 + margin, y);
+        
+        y += 10;
+        doc.text(`(Signature de ${contract.SIGNATURE_EMPLOYEUR})`, margin, y);
+        doc.text(`(Signature de ${contract.SIGNATURE_EMPLOYE})`, doc.internal.pageSize.getWidth() / 2 + margin, y);
+        y += 10;
+        doc.setDrawColor(200);
+        doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+        y += 5;
+        doc.setFontSize(8).setTextColor(120);
+        addText(`Mentions obligatoires :\n- Exemplaire remis au salarié le : ${contract.DATE_REMISE}\n- Déclaration préalable à l'embauche effectuée le : ${contract.DATE_DPAE}\n- Visite médicale d'embauche : ${contract.DATE_VISITE_MEDICALE}`);
         
         doc.save(`contrat_${contract.employeeName.replace(/\s/g, '_')}.pdf`);
         toast({ title: 'PDF du contrat généré.' });
@@ -431,8 +440,7 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
                         <div className="mb-4 pl-4">
                             <h3 className="font-semibold">L'EMPLOYEUR :</h3>
                             <p>Dénomination sociale : {contract.ENTREPRISE_NOM}</p>
-                            <p>Adresse du siège social : {contract.ENTREPRISE_ADRESSE}</p>
-                            <p>Représenté par : {contract.REPRESENTANT_NOM}, {contract.REPRESENTANT_FONCTION}</p>
+                            <p>Adresse : {contract.ENTREPRISE_ADRESSE}</p>
                         </div>
                         <div className="mb-4 pl-4">
                             <h3 className="font-semibold">L'EMPLOYÉ :</h3>
@@ -443,32 +451,23 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
                         </div>
                          <Separator className="my-6" />
                         <div className="space-y-4">
+                            {/* Contract articles rendered here */}
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 1 - NATURE DU CONTRAT</h3><p>Il est conclu entre les parties un contrat de travail à durée {contract.TYPE_CONTRAT}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 2 - FONCTION</h3><p>Le salarié est engagé en qualité de {contract.FONCTION}.</p></div>
                              <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {contract.LIEU_TRAVAIL}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL</h3><p>La durée hebdomadaire du travail est de {contract.DUREE_HEBDOMADAIRE} heures.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {contract.SALAIRE_BASE.toLocaleString('fr-FR')} € {contract.PERIODICITE_SALAIRE}.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {contract.SALAIRE_BASE.toLocaleString('fr-FR')} FCFA {contract.PERIODICITE_SALAIRE}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 6 - CONGÉS PAYÉS</h3><p>Le salarié bénéficie de {contract.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 7 - FORMATION PROFESSIONNELLE</h3><p>Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 8 - OBLIGATIONS DU SALARIÉ</h3><p>Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté et à ne pas divulguer d'informations confidentielles.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 9 - CONFIDENTIALITÉ</h3><p>Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 8 - OBLIGATIONS DU SALARIÉ</h3><p>Le salarié s'engage à respecter le règlement intérieur de l'entreprise et à faire preuve de loyauté.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 9 - CONFIDENTIALITÉ</h3><p>Le salarié s'engage à observer la plus stricte confidentialité.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 10 - CLAUSE DE NON-CONCURRENCE</h3><p>Non applicable.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 11 - RUPTURE DU CONTRAT</h3><p>Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis et d'indemnités.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 12 - DISPOSITIONS DIVERSES</h3><p>Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 11 - RUPTURE DU CONTRAT</h3><p>Le contrat peut être rompu sous réserve du respect des dispositions légales.</p></div>
+                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 12 - DISPOSITIONS DIVERSES</h3><p>Toute modification devra faire l'objet d'un avenant.</p></div>
                         </div>
                          <Separator className="my-6" />
                          <div className="mt-12 text-center">
                             <p>Fait à {contract.LIEU_SIGNATURE}, le {contract.DATE_SIGNATURE}, en deux exemplaires.</p>
-                            <div className="flex justify-around mt-12 pt-8">
-                                <div><p className="border-t pt-2">L'EMPLOYEUR</p><p>({contract.SIGNATURE_EMPLOYEUR})</p></div>
-                                <div><p className="border-t pt-2">L'EMPLOYÉ</p><p>({contract.SIGNATURE_EMPLOYE})</p></div>
-                            </div>
-                        </div>
-                        <Separator className="my-6" />
-                        <div className="text-xs text-muted-foreground space-y-1">
-                            <p><em>Exemplaire remis au salarié le : {contract.DATE_REMISE}</em></p>
-                            <p><em>Déclaration préalable à l'embauche effectuée le : {contract.DATE_DPAE}</em></p>
-                            <p><em>Visite médicale d'embauche : {contract.DATE_VISITE_MEDICALE}</em></p>
                         </div>
                     </div>
                 </ScrollArea>

@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Legend, Tooltip, XAxis, YAxis, CartesianGrid, LineChart, Line } from "recharts";
+import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Legend, Tooltip, XAxis, YAxis, CartesianGrid, LineChart, Line, ComposedChart } from "recharts";
 import { Users, TrendingUp, TrendingDown, Wallet, UserCheck, UserX, UserRound, GraduationCap } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 
@@ -11,7 +11,7 @@ const kpiData = [
   { title: "Effectif Total", value: "112", Icon: Users, change: "+2 ce mois-ci" },
   { title: "Taux d'Absentéisme", value: "3.1%", Icon: UserX, change: "-0.5% vs M-1", changeType: 'down' },
   { title: "Turnover (Annuel)", value: "5.8%", Icon: TrendingDown, change: "+1.2% vs N-1", changeType: 'up' },
-  { title: "Masse Salariale (Mois)", value: "89 000 FCFA", Icon: Wallet, change: "+1.5% vs M-1", changeType: 'up' },
+  { title: "Masse Salariale (Mois)", value: "89M FCFA", Icon: Wallet, change: "+1.5% vs M-1", changeType: 'up' },
 ];
 
 const agePyramidData = [

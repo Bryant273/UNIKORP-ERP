@@ -40,7 +40,7 @@ const bilanSocialData: IndicatorCategory[] = [
     {
         title: "II. Rémunérations et charges accessoires",
         indicators: [
-            { id: 'r1', label: 'Masse salariale brute annuelle', value: '1 230 000 FCFA' },
+            { id: 'r1', label: 'Masse salariale brute annuelle', value: '1,23M FCFA' },
             { id: 'r2', label: 'Rémunération moyenne mensuelle', value: '9 150 FCFA' },
             { id: 'r3', label: 'Montant des 10 plus hautes rémunérations', value: '350 000 FCFA' },
         ]

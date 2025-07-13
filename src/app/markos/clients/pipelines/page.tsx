@@ -398,4 +398,3 @@ function OpportunityFormModal({ isOpen, onClose, onSave, opportunityToEdit }: { 
         </Dialog>
     );
 }
-

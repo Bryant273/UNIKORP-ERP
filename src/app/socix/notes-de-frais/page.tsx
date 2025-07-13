@@ -30,10 +30,10 @@ type Expense = {
 };
 
 const initialExpenses: Expense[] = [
-    { id: 'exp-1', employeeName: 'Sophie Martin', submissionDate: '2024-07-22', description: 'Déjeuner client - Projet Alpha', amount: 350, status: 'Soumise', receiptUrl: 'https://placehold.co/800x1131.png' },
-    { id: 'exp-2', employeeName: 'Jean Dupont', submissionDate: '2024-07-20', description: 'Déplacement Lyon (train)', amount: 125, status: 'Approuvée' },
-    { id: 'exp-3', employeeName: 'Camille Leroy', submissionDate: '2024-07-18', description: 'Achat fournitures de bureau', amount: 55.80, status: 'Remboursée' },
-    { id: 'exp-4', employeeName: 'Lucas Petit', submissionDate: '2024-07-15', description: 'Logiciel de design', amount: 80, status: 'Refusée' },
+    { id: 'exp-1', employeeName: 'Sophie Martin', submissionDate: '2024-07-22', description: 'Déjeuner client - Projet Alpha', amount: 35000, status: 'Soumise', receiptUrl: 'https://placehold.co/800x1131.png' },
+    { id: 'exp-2', employeeName: 'Jean Dupont', submissionDate: '2024-07-20', description: 'Déplacement Lyon (train)', amount: 125000, status: 'Approuvée' },
+    { id: 'exp-3', employeeName: 'Camille Leroy', submissionDate: '2024-07-18', description: 'Achat fournitures de bureau', amount: 55800, status: 'Remboursée' },
+    { id: 'exp-4', employeeName: 'Lucas Petit', submissionDate: '2024-07-15', description: 'Logiciel de design', amount: 80000, status: 'Refusée' },
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -196,4 +196,3 @@ function ExpenseModal({ isOpen, onClose, onSave }: { isOpen: boolean, onClose: (
         </Dialog>
     );
 }
-

@@ -191,7 +191,7 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
             netImposable: payslip.netImposable,
             chargesSalariales: payslip.cotisationsSalariales + (payslip.netImposable - payslip.netAPayer),
             chargesPatronales: payslip.salaireBrut * 0.185, // Simulated
-            get coutEmployeur() { return this.salaireBrut + this.chargesPatronales; }
+            get coutEmployeur() { return this.brut + this.chargesPatronales; }
         }
     };
     
@@ -279,8 +279,8 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
                                         <Separator className="my-2"/>
                                         <div className="flex justify-between"><span className="text-muted-foreground">Charges salariales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesSalariales)}</span></div>
                                         <div className="flex justify-between"><span className="text-muted-foreground">Charges patronales</span><span className="font-semibold">{formatCurrencyFCFA(data.cumuls.chargesPatronales)}</span></div>
-                                        <Separator className="my-2"/>
-                                        <div className="flex justify-between text-base"><span className="font-bold">Coût employeur total</span><span className="font-bold">{formatCurrencyFCFA(data.cumuls.coutEmployeur)}</span></div>
+                                          <Separator className="my-2" />
+                                         <div className="flex justify-between text-base"><span className="font-bold">Coût employeur total</span><span className="font-bold">{formatCurrencyFCFA(data.cumuls.coutEmployeur)}</span></div>
                                     </CardContent>
                                 </Card>
                             </div>
