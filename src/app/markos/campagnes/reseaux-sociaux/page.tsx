@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 
 // --- TYPES & MOCK DATA ---
@@ -41,6 +43,12 @@ const MOCK_POSTS: SocialPost[] = [
   { id: 'post-2', platform: 'Facebook', content: '🚀 Découvrez notre nouveau module SOCIX pour une gestion RH simplifiée ! Gagnez du temps sur la paie, les congés et le suivi des employés. Cliquez pour une démo gratuite !', status: 'Publié', publishDate: '2024-07-23', likes: 256, comments: 34, shares: 45, engagementRate: '8.1%', visualUrl: 'https://placehold.co/1200x628.png' },
   { id: 'post-3', platform: 'Instagram', content: 'Notre équipe lors du dernier séminaire. Une journée de cohésion et d\'innovation. #TeamBuilding #UnikorpLife #Innovation', status: 'Publié', publishDate: '2024-07-21', likes: 450, comments: 22, shares: 10, engagementRate: '12.5%', visualUrl: 'https://placehold.co/1080x1080.png' },
   { id: 'post-4', platform: 'LinkedIn', content: 'Livre blanc à télécharger : "Le futur de l\'ERP Cloud et l\'impact de l\'IA sur la gestion d\'entreprise". Lien en commentaire. #IA #Cloud #LivreBlanc', status: 'Planifié', publishDate: '2024-08-05' },
+];
+
+const MOCK_COMMENTS = [
+  { id: 'c1', name: 'Alice Dubois', avatar: 'https://placehold.co/100x100.png', text: 'Très impressionnant ! Est-ce que cela s\'intègre avec d\'autres outils ?' },
+  { id: 'c2', name: 'Bruno Lemaire', avatar: 'https://placehold.co/100x100.png', text: 'Excellente initiative. Le module RH semble très prometteur.' },
+  { id: 'c3', name: 'Carine Martin', avatar: 'https://placehold.co/100x100.png', text: 'Superbe photo d\'équipe !' },
 ];
 
 const kpiData = [
@@ -230,11 +238,15 @@ function PreviewPostModal({ isOpen, onClose, post }: { isOpen: boolean, onClose:
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-lg p-0 border-0">
+            <DialogContent className="sm:max-w-2xl p-0 border-0">
                  <DialogHeader>
-                    <DialogTitle className="sr-only">Aperçu du post</DialogTitle>
+                    <DialogTitle className="sr-only">Aperçu du post : {post.platform}</DialogTitle>
                 </DialogHeader>
-                {renderPreview()}
+                <ScrollArea className="max-h-[90vh]">
+                    <div className="p-4">
+                        {renderPreview()}
+                    </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
     );
@@ -250,6 +262,20 @@ const PostHeader = () => (
     </div>
 );
 
+const Comment = ({ comment }: { comment: { id: string, name: string, avatar: string, text: string }}) => (
+    <div className="flex gap-2">
+        <Avatar className="h-8 w-8">
+            <AvatarImage src={comment.avatar} alt={comment.name} data-ai-hint="person face" />
+            <AvatarFallback>{comment.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 bg-muted rounded-lg p-2 text-xs">
+            <p className="font-semibold">{comment.name}</p>
+            <p>{comment.text}</p>
+        </div>
+    </div>
+);
+
+
 function LinkedInPreview({ post }: { post: SocialPost }) {
     return (
         <div className="bg-white rounded-lg text-black">
@@ -258,10 +284,18 @@ function LinkedInPreview({ post }: { post: SocialPost }) {
                 <p className="text-sm whitespace-pre-wrap">{post.content}</p>
             </div>
             {post.visualUrl && <Image src={post.visualUrl} alt="Post visual" width={552} height={290} className="w-full h-auto" data-ai-hint="publication image"/>}
-            <div className="p-4 flex items-center justify-around border-t">
-                <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground"><ThumbsUp className="h-5 w-5"/>J'aime</Button>
-                <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground"><MessageSquare className="h-5 w-5"/>Commenter</Button>
-                <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground"><Share2 className="h-5 w-5"/>Partager</Button>
+            <div className="p-2 px-4 flex justify-between text-xs text-muted-foreground border-y">
+                <span>{post.likes} J'aime</span>
+                <span>{post.comments} commentaires</span>
+            </div>
+            <div className="p-2 flex items-center justify-around">
+                <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground font-semibold"><ThumbsUp className="h-5 w-5"/>J'aime</Button>
+                <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground font-semibold"><MessageSquare className="h-5 w-5"/>Commenter</Button>
+                <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground font-semibold"><Share2 className="h-5 w-5"/>Partager</Button>
+            </div>
+             <div className="p-4 border-t space-y-4">
+                 <h4 className="font-semibold text-sm">Commentaires</h4>
+                {MOCK_COMMENTS.slice(0, 2).map(c => <Comment key={c.id} comment={c} />)}
             </div>
         </div>
     );
@@ -279,10 +313,14 @@ function FacebookPreview({ post }: { post: SocialPost }) {
                 <span>{post.likes} J'aime</span>
                 <span>{post.comments} commentaires</span>
             </div>
-            <div className="p-2 flex items-center justify-around border-t">
+            <div className="p-2 flex items-center justify-around border-y">
                 <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground font-semibold"><ThumbsUp className="h-5 w-5"/>J'aime</Button>
                 <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground font-semibold"><MessageSquare className="h-5 w-5"/>Commenter</Button>
                 <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground font-semibold"><Share2 className="h-5 w-5"/>Partager</Button>
+            </div>
+             <div className="p-4 border-t space-y-4">
+                 <h4 className="font-semibold text-sm">Commentaires</h4>
+                {MOCK_COMMENTS.slice(0, 2).map(c => <Comment key={c.id} comment={c} />)}
             </div>
         </div>
     );
@@ -296,15 +334,18 @@ function InstagramPreview({ post }: { post: SocialPost }) {
                 <p className="font-semibold text-sm">unikorp_official</p>
             </div>
             {post.visualUrl && <Image src={post.visualUrl} alt="Post visual" width={400} height={400} className="w-full h-auto" data-ai-hint="publication image"/>}
-            <div className="p-3">
+            <div className="p-3 space-y-1">
                 <div className="flex items-center gap-4 mb-2">
                     <Heart className="h-6 w-6"/>
                     <MessageSquare className="h-6 w-6 -scale-x-100"/>
                     <Send className="h-6 w-6"/>
                 </div>
-                 <p className="text-sm font-semibold">{post.likes} J'aime</p>
+                <p className="text-sm font-semibold">{post.likes} J'aime</p>
                 <p className="text-sm"><span className="font-semibold">unikorp_official</span> <span className="whitespace-pre-wrap">{post.content}</span></p>
-                <p className="text-xs text-gray-400 mt-1">Voir les {post.comments} commentaires</p>
+                <p className="text-xs text-gray-400 pt-1">Voir les {post.comments} commentaires</p>
+                <div className="pt-2">
+                    <Comment comment={{...MOCK_COMMENTS[2], name: "client_satisfait", avatar: 'https://placehold.co/100x100.png'}} />
+                </div>
             </div>
         </div>
     )
