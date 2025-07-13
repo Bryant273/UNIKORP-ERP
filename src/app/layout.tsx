@@ -35,6 +35,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${roboto.variable} font-sans antialiased`}
+        suppressHydrationWarning={true}
       >
         <ThemeProvider
           attribute="class"
