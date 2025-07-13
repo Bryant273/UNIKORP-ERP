@@ -231,6 +231,9 @@ function PreviewPostModal({ isOpen, onClose, post }: { isOpen: boolean, onClose:
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-lg p-0 border-0">
+                 <DialogHeader>
+                    <DialogTitle className="sr-only">Aperçu du post</DialogTitle>
+                </DialogHeader>
                 {renderPreview()}
             </DialogContent>
         </Dialog>
