@@ -50,6 +50,112 @@ export type Reception = {
   }[];
 };
 
+export type LineItem = {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+export type PreparationStatus = 'En attente' | 'En préparation' | 'Prête';
+
+export type InvoiceData = {
+  id: string;
+  invoiceTitle: string;
+  clientName: string;
+  clientAddress: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate: string;
+  lineItems: LineItem[];
+  isVatEnabled: boolean;
+  vatRate: number;
+  notes: string;
+  companyName: string;
+  companyAddress: string;
+  companyLogoUrl: string;
+  primaryColor: string;
+  preparationStatus: PreparationStatus;
+};
+
+export type InvoiceTemplate = {
+  id: string;
+  name: string;
+  primaryColor: string;
+  companyName: string;
+  companyAddress: string;
+  companyLogoUrl: string;
+  showTax: boolean;
+  footerText: string;
+};
+
+export const initialTemplates: InvoiceTemplate[] = [
+  {
+    id: 'tpl_classic',
+    name: 'Classique',
+    primaryColor: '#3b82f6', // blue-500
+    companyName: 'Votre Société S.A.',
+    companyAddress: '123 Rue de la Facture, 75001 Paris',
+    companyLogoUrl: '',
+    showTax: true,
+    footerText: 'Merci de votre confiance.\nPaiement à 30 jours net.',
+  },
+  {
+    id: 'tpl_modern',
+    name: 'Moderne',
+    primaryColor: '#10b981', // emerald-500
+    companyName: 'Tech Innovante Inc.',
+    companyAddress: '456 Avenue du Futur, Lyon',
+    companyLogoUrl: '',
+    showTax: false,
+    footerText: 'Coordonnées bancaires : FR76 ...',
+  },
+];
+
+
+const initialInvoices: InvoiceData[] = [
+  {
+    id: 'inv_1',
+    invoiceTitle: 'Prestation de développement web',
+    clientName: 'Client Alpha SARL',
+    clientAddress: '10 Rue du Commerce, 33000 Bordeaux',
+    invoiceNumber: 'FACT-2024-00123',
+    invoiceDate: '2024-07-15',
+    dueDate: '2024-08-14',
+    lineItems: [
+      { id: 'l1', description: 'Développement de site web', quantity: 1, unitPrice: 2500000 },
+      { id: 'l2', description: 'Hébergement annuel', quantity: 1, unitPrice: 300000 },
+    ],
+    isVatEnabled: true,
+    vatRate: 20,
+    notes: 'Merci de votre confiance.',
+    companyName: 'Votre Société S.A.',
+    companyAddress: '123 Rue de la Facture, 75001 Paris',
+    companyLogoUrl: '',
+    primaryColor: '#3b82f6',
+    preparationStatus: 'En attente',
+  },
+  {
+    id: 'inv_2',
+    invoiceTitle: 'Consulting SEO - Juillet 2024',
+    clientName: 'Tech Innovante Inc.',
+    clientAddress: '456 Avenue du Futur, Lyon',
+    invoiceNumber: 'FACT-2024-00124',
+    invoiceDate: '2024-07-18',
+    dueDate: '2024-08-17',
+    lineItems: [{ id: 'l3', description: 'Consulting SEO', quantity: 10, unitPrice: 150000 }],
+    isVatEnabled: true,
+    vatRate: 20,
+    notes: 'Paiement à réception.',
+    companyName: 'Tech Innovante Inc.',
+    companyAddress: '456 Avenue du Futur, Lyon',
+    companyLogoUrl: '',
+    primaryColor: '#10b981',
+    preparationStatus: 'En préparation',
+  },
+];
+
+
 const initialClients: CompteTiers[] = [
   { id: 1, numero: '411CLIENT1', intitule: 'Client Alpha', telephone: '0123456789' },
   { id: 3, numero: '411CLIENT2', intitule: 'Client Beta', telephone: '0123456788' },
@@ -84,3 +190,4 @@ export const fournisseursAtom = atom<Fournisseur[]>(initialFournisseurs);
 export const produitsAtom = atom<Produit[]>(initialProduits);
 export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
 export const receptionsAtom = atom<Reception[]>([]);
+export const invoicesAtom = atom<InvoiceData[]>(initialInvoices);

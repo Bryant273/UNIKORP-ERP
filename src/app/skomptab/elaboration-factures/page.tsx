@@ -56,69 +56,8 @@ import { Logo } from '@/components/logo';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-// --- DATA TYPES & MOCK DATA ---
-
-type LineItem = {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-};
-
-type InvoiceTemplate = {
-  id: string;
-  name: string;
-  primaryColor: string;
-  companyName: string;
-  companyAddress: string;
-  companyLogoUrl: string;
-  showTax: boolean;
-  footerText: string;
-};
-
-const initialTemplates: InvoiceTemplate[] = [
-  {
-    id: 'tpl_classic',
-    name: 'Classique',
-    primaryColor: '#3b82f6', // blue-500
-    companyName: 'Votre Société S.A.',
-    companyAddress: '123 Rue de la Facture, 75001 Paris',
-    companyLogoUrl: '',
-    showTax: true,
-    footerText: 'Merci de votre confiance.\nPaiement à 30 jours net.',
-  },
-  {
-    id: 'tpl_modern',
-    name: 'Moderne',
-    primaryColor: '#10b981', // emerald-500
-    companyName: 'Tech Innovante Inc.',
-    companyAddress: '456 Avenue du Futur, Lyon',
-    companyLogoUrl: '',
-    showTax: false,
-    footerText: 'Coordonnées bancaires : FR76 ...',
-  },
-];
-
-
-type InvoiceData = {
-  id: string;
-  invoiceTitle: string;
-  clientName: string;
-  clientAddress: string;
-  invoiceNumber: string;
-  invoiceDate: string;
-  dueDate: string;
-  lineItems: LineItem[];
-  isVatEnabled: boolean;
-  vatRate: number;
-  notes: string;
-  // From template
-  companyName: string;
-  companyAddress: string;
-  companyLogoUrl: string;
-  primaryColor: string;
-};
+import { useAtom } from 'jotai';
+import { invoicesAtom, initialTemplates, type InvoiceData, type InvoiceTemplate, type LineItem } from '@/lib/store';
 
 const calculateTotals = (invoice: Omit<InvoiceData, 'id'>) => {
     const subTotal = invoice.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
@@ -126,46 +65,6 @@ const calculateTotals = (invoice: Omit<InvoiceData, 'id'>) => {
     const total = subTotal + vatAmount;
     return { subTotal, vatAmount, total };
 };
-
-const initialInvoices: InvoiceData[] = [
-  {
-    id: 'inv_1',
-    invoiceTitle: 'Prestation de développement web',
-    clientName: 'Client Alpha SARL',
-    clientAddress: '10 Rue du Commerce, 33000 Bordeaux',
-    invoiceNumber: 'FACT-2024-00123',
-    invoiceDate: '2024-07-15',
-    dueDate: '2024-08-14',
-    lineItems: [
-      { id: 'l1', description: 'Développement de site web', quantity: 1, unitPrice: 2500000 },
-      { id: 'l2', description: 'Hébergement annuel', quantity: 1, unitPrice: 300000 },
-    ],
-    isVatEnabled: true,
-    vatRate: 20,
-    notes: 'Merci de votre confiance.',
-    companyName: 'Votre Société S.A.',
-    companyAddress: '123 Rue de la Facture, 75001 Paris',
-    companyLogoUrl: '',
-    primaryColor: '#3b82f6',
-  },
-  {
-    id: 'inv_2',
-    invoiceTitle: 'Consulting SEO - Juillet 2024',
-    clientName: 'Tech Innovante Inc.',
-    clientAddress: '456 Avenue du Futur, Lyon',
-    invoiceNumber: 'FACT-2024-00124',
-    invoiceDate: '2024-07-18',
-    dueDate: '2024-08-17',
-    lineItems: [{ id: 'l3', description: 'Consulting SEO', quantity: 10, unitPrice: 150000 }],
-    isVatEnabled: true,
-    vatRate: 20,
-    notes: 'Paiement à réception.',
-    companyName: 'Tech Innovante Inc.',
-    companyAddress: '456 Avenue du Futur, Lyon',
-    companyLogoUrl: '',
-    primaryColor: '#10b981',
-  },
-];
 
 const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id'> => {
     const today = new Date();
@@ -183,6 +82,7 @@ const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id
         dueDate: dueDate.toISOString().split('T')[0],
         lineItems: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 }],
         vatRate: 18,
+        preparationStatus: 'En attente',
         // From template
         isVatEnabled: template.showTax,
         notes: template.footerText,
@@ -285,7 +185,7 @@ LiveInvoicePreview.displayName = 'LiveInvoicePreview';
 
 // --- MAIN PAGE COMPONENT ---
 export default function ElaborationFacturesPage() {
-  const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
+  const [invoices, setInvoices] = useAtom(invoicesAtom);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<InvoiceData | null>(null);
