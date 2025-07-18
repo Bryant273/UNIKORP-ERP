@@ -5,14 +5,13 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Eye, Pencil, Trash2, Download, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Eye, Trash2, Download, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAtom } from 'jotai';
@@ -20,14 +19,6 @@ import { fournisseursAtom, produitsAtom } from '@/lib/store';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
-
-type Produit = {
-  id: number;
-  reference: string;
-  name: string;
-  stock: number;
-  unitPrice: number;
-};
 
 type LigneCommande = {
   id: string;
@@ -37,19 +28,17 @@ type LigneCommande = {
   prixUnitaire: number;
 };
 
-type CommandeStatus = 'Brouillon' | 'Validée' | 'Partiellement Reçue' | 'Reçue';
 type Commande = {
   id: number;
   numero: string;
   date: string;
   fournisseurId: number;
   lignes: LigneCommande[];
-  status: CommandeStatus;
 };
 
 const initialCommandes: Commande[] = [
-    { id: 1, numero: 'BC-2024-001', date: '2024-07-28', fournisseurId: 2, status: 'Reçue', lignes: [ { id: 'l1', produitId: 1, description: 'Serveur Dell R740', quantite: 2, prixUnitaire: 2500000 }] },
-    { id: 2, numero: 'BC-2024-002', date: '2024-07-30', fournisseurId: 4, status: 'Brouillon', lignes: [ { id: 'l2', produitId: 3, description: 'Licence Windows Server', quantite: 10, prixUnitaire: 150000 }] },
+    { id: 1, numero: 'BC-2024-001', date: '2024-07-28', fournisseurId: 2, lignes: [ { id: 'l1', produitId: 1, description: 'Serveur Dell R740', quantite: 2, prixUnitaire: 2500000 }] },
+    { id: 2, numero: 'BC-2024-002', date: '2024-07-30', fournisseurId: 4, lignes: [ { id: 'l2', produitId: 3, description: 'Licence Windows Server', quantite: 10, prixUnitaire: 150000 }] },
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -99,22 +88,63 @@ function CommandesFournisseursPage() {
         return <CommandeForm commande={editingCommande} onBack={() => setView('list')} onSave={handleSave} />;
     }
 
-    return <CommandeList commandes={commandes} onCreateNew={handleCreateNew} onEdit={handleEdit} onDelete={handleDelete} />;
+    return <CommandeList commandes={commandes} onCreateNew={handleCreateNew} onDelete={handleDelete} />;
 }
 
-function CommandeList({ commandes, onCreateNew, onEdit, onDelete }: { commandes: Commande[], onCreateNew: () => void, onEdit: (cmd: Commande) => void, onDelete: (id: number) => void }) {
+function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Commande[], onCreateNew: () => void, onDelete: (id: number) => void }) {
     const [fournisseurs] = useAtom(fournisseursAtom);
     const [commandeToDelete, setCommandeToDelete] = useState<Commande | null>(null);
+    const [commandeToView, setCommandeToView] = useState<Commande | null>(null);
+    
     const getFournisseurName = (id: number) => fournisseurs.find(f => f.id === id)?.intitule || 'Inconnu';
     const calculateTotal = (lignes: LigneCommande[]) => lignes.reduce((sum, l) => sum + l.quantite * l.prixUnitaire, 0);
 
-    const getStatusBadge = (status: CommandeStatus) => {
-        switch (status) {
-            case 'Brouillon': return <Badge variant="outline">Brouillon</Badge>;
-            case 'Validée': return <Badge>Validée</Badge>;
-            case 'Partiellement Reçue': return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Partiellement Reçue</Badge>;
-            case 'Reçue': return <Badge className="bg-green-100 text-green-800">Reçue</Badge>;
-        }
+    const handleDownloadPDF = (commande: Commande) => {
+        const doc = new jsPDF();
+        const fournisseur = fournisseurs.find(f => f.id === commande.fournisseurId);
+        
+        // Header
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text("BON DE COMMANDE", 105, 20, { align: 'center' });
+
+        // Company & Supplier info
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text("UNIKORP S.A.", 20, 40);
+        doc.text("Cocody Angré, Abidjan", 20, 45);
+        doc.text("CI-ABJ-01-XXXX", 20, 50);
+
+        doc.text(`Fournisseur:`, 140, 40);
+        doc.setFont('helvetica', 'bold');
+        doc.text(fournisseur?.intitule || 'N/A', 140, 45);
+        doc.setFont('helvetica', 'normal');
+        doc.text(fournisseur?.telephone || 'N/A', 140, 50);
+        
+        doc.setFontSize(12);
+        doc.text(`Numéro de commande: ${commande.numero}`, 20, 65);
+        doc.text(`Date: ${format(new Date(commande.date), 'dd/MM/yyyy')}`, 140, 65);
+
+        // Table
+        autoTable(doc, {
+            startY: 80,
+            head: [['Description', 'Quantité', 'Prix Unitaire', 'Total']],
+            body: commande.lignes.map(l => [l.description, l.quantite, `${l.prixUnitaire.toLocaleString('fr-FR')} FCFA`, `${(l.quantite * l.prixUnitaire).toLocaleString('fr-FR')} FCFA`]),
+            theme: 'grid',
+        });
+        
+        const finalY = (doc as any).lastAutoTable.finalY;
+        const totalCommande = calculateTotal(commande.lignes);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Total Commande:", 140, finalY + 15);
+        doc.text(`${totalCommande.toLocaleString('fr-FR')} FCFA`, 190, finalY + 15, { align: 'right' });
+        
+        // Footer
+        doc.setFontSize(8);
+        doc.text("Merci de nous faire parvenir la facture correspondante à la livraison.", 20, 280);
+
+        doc.save(`BC_${commande.numero}.pdf`);
     };
     
     return (
@@ -131,7 +161,7 @@ function CommandeList({ commandes, onCreateNew, onEdit, onDelete }: { commandes:
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead>Montant</TableHead><TableHead>Statut</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead>Montant</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {commandes.map(cmd => (
                                 <TableRow key={cmd.id}>
@@ -139,10 +169,9 @@ function CommandeList({ commandes, onCreateNew, onEdit, onDelete }: { commandes:
                                     <TableCell>{format(new Date(cmd.date), 'dd/MM/yyyy')}</TableCell>
                                     <TableCell>{getFournisseurName(cmd.fournisseurId)}</TableCell>
                                     <TableCell>{calculateTotal(cmd.lignes).toLocaleString('fr-FR')} FCFA</TableCell>
-                                    <TableCell>{getStatusBadge(cmd.status)}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-2">
-                                            <Button size="icon" variant="ghost" onClick={() => onEdit(cmd)}><Pencil className="h-4 w-4" /></Button>
+                                            <Button size="icon" variant="ghost" onClick={() => setCommandeToView(cmd)}><Eye className="h-4 w-4" /></Button>
                                             <Button size="icon" variant="ghost" onClick={() => setCommandeToDelete(cmd)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                                         </div>
                                     </TableCell>
@@ -158,6 +187,40 @@ function CommandeList({ commandes, onCreateNew, onEdit, onDelete }: { commandes:
                     <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={() => {onDelete(commandeToDelete!.id); setCommandeToDelete(null);}} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            
+            <Dialog open={!!commandeToView} onOpenChange={() => setCommandeToView(null)}>
+                <DialogContent className="sm:max-w-3xl">
+                     <DialogHeader>
+                        <DialogTitle>Détail de la Commande: {commandeToView?.numero}</DialogTitle>
+                        <DialogDescription>Fournisseur: {getFournisseurName(commandeToView?.fournisseurId || 0)} | Date: {commandeToView && format(new Date(commandeToView.date), 'dd MMMM yyyy', {locale: fr})}</DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[60vh] overflow-y-auto p-2">
+                         <Table>
+                            <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="text-center">Quantité</TableHead><TableHead className="text-right">Prix Unitaire</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {commandeToView?.lignes.map(l => (
+                                    <TableRow key={l.id}>
+                                        <TableCell>{l.description}</TableCell>
+                                        <TableCell className="text-center">{l.quantite}</TableCell>
+                                        <TableCell className="text-right">{l.prixUnitaire.toLocaleString('fr-FR')} FCFA</TableCell>
+                                        <TableCell className="text-right">{(l.quantite * l.prixUnitaire).toLocaleString('fr-FR')} FCFA</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                             <TableFooter>
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-right font-bold">Total Général</TableCell>
+                                    <TableCell className="text-right font-bold">{commandeToView && calculateTotal(commandeToView.lignes).toLocaleString('fr-FR')} FCFA</TableCell>
+                                </TableRow>
+                            </TableFooter>
+                        </Table>
+                    </div>
+                     <DialogFooter>
+                        <Button variant="outline" onClick={() => setCommandeToView(null)}>Fermer</Button>
+                        <Button onClick={() => handleDownloadPDF(commandeToView!)}><Download className="mr-2 h-4 w-4" /> Imprimer</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
@@ -167,7 +230,6 @@ function CommandeForm({ commande, onBack, onSave }: { commande: Commande | null,
     const [produits] = useAtom(produitsAtom);
     const [fournisseurId, setFournisseurId] = useState<number | undefined>(commande?.fournisseurId);
     const [lignes, setLignes] = useState<LigneCommande[]>(commande?.lignes || [{ id: `l-${Date.now()}`, produitId: null, description: '', quantite: 1, prixUnitaire: 0 }]);
-    const [status, setStatus] = useState<CommandeStatus>(commande?.status || 'Brouillon');
     
     const handleAddLine = () => setLignes(prev => [...prev, { id: `l-${Date.now()}`, produitId: null, description: '', quantite: 1, prixUnitaire: 0 }]);
     const handleRemoveLine = (id: string) => setLignes(prev => prev.filter(l => l.id !== id));
@@ -193,7 +255,7 @@ function CommandeForm({ commande, onBack, onSave }: { commande: Commande | null,
 
     const handleSubmit = () => {
         if (!fournisseurId) return;
-        onSave({ fournisseurId, lignes, status });
+        onSave({ fournisseurId, lignes });
     };
 
     return (
@@ -206,10 +268,9 @@ function CommandeForm({ commande, onBack, onSave }: { commande: Commande | null,
 
             <Card>
                 <CardHeader><CardTitle>Informations Générales</CardTitle></CardHeader>
-                <CardContent className="grid md:grid-cols-3 gap-6">
+                <CardContent className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2"><Label>Fournisseur</Label><Select value={fournisseurId?.toString()} onValueChange={v => setFournisseurId(Number(v))}><SelectTrigger><SelectValue placeholder="Sélectionnez..."/></SelectTrigger><SelectContent>{fournisseurs.map(f => <SelectItem key={f.id} value={f.id.toString()}>{f.intitule}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-2"><Label>Date</Label><Input type="date" value={commande ? commande.date : format(new Date(), 'yyyy-MM-dd')} disabled/></div>
-                    <div className="space-y-2"><Label>Statut</Label><Select value={status} onValueChange={(v: CommandeStatus) => setStatus(v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Brouillon">Brouillon</SelectItem><SelectItem value="Validée">Validée</SelectItem></SelectContent></Select></div>
                 </CardContent>
             </Card>
 
