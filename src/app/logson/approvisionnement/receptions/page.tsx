@@ -130,13 +130,11 @@ export default function ReceptionsPage() {
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="flex justify-center gap-1">
-                                                <Button size="sm" variant="outline" className="h-8" onClick={() => { setViewingCommande(cmd); setIsSummaryModalOpen(true); }}>
-                                                    <ListChecks className="mr-2 h-4 w-4" />
-                                                    Détails
+                                                <Button size="icon" variant="ghost" onClick={() => { setViewingCommande(cmd); setIsSummaryModalOpen(true); }}>
+                                                    <ListChecks className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="sm" onClick={() => handleOpenReceptionModal(cmd)} disabled={isCompleted}>
-                                                    <Truck className="mr-2 h-4 w-4" />
-                                                    Réceptionner
+                                                <Button size="icon" variant="ghost" onClick={() => handleOpenReceptionModal(cmd)} disabled={isCompleted}>
+                                                    <Truck className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </TableCell>
