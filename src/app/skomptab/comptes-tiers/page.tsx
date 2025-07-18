@@ -43,11 +43,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Trash2, PlusCircle, Upload, FileUp, Download } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Upload, Download } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import { clientsAtom, fournisseursAtom } from '@/lib/store';
 
@@ -83,13 +81,7 @@ export default function ComptesTiersPage() {
   const [deleteType, setDeleteType] = useState<TiersType | null>(null);
   const [currentPage, setCurrentPage] = useState({ clients: 1, fournisseurs: 1 });
   
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
-  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const { toast } = useToast();
-  const [isImporting, setIsImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
 
   const { paginatedClients, totalClientPages } = useMemo(() => {
     const total = Math.ceil(clients.length / ITEMS_PER_PAGE);
@@ -171,88 +163,12 @@ export default function ComptesTiersPage() {
       setDeleteType(null);
     }
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFileToUpload(e.target.files[0]);
-    }
-  };
-  
-  const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    handleDragEvents(e);
-    if (!isImporting) setIsDragging(true);
-  };
-  
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    handleDragEvents(e);
-    setIsDragging(false);
-  };
-  
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    handleDragEvents(e);
-    setIsDragging(false);
-    if (isImporting) return;
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        setFileToUpload(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleImport = async () => {
-    if (!fileToUpload) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner un fichier à importer.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsImporting(true);
-    setImportProgress(0);
-
-    const progressInterval = setInterval(() => {
-        setImportProgress(prev => (prev < 90 ? prev + 10 : 90));
-    }, 200);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2200));
-    
-    clearInterval(progressInterval);
-    setImportProgress(100);
-
-    toast({
-        title: "Importation simulée réussie",
-        description: `Le fichier ${fileToUpload.name} a été traité.`,
-    });
-    
-    setTimeout(() => {
-        resetImportModal();
-        setIsImporting(false);
-        setImportProgress(0);
-    }, 1000);
-  };
-
-  const resetImportModal = () => {
-    if (isImporting) return;
-    setIsImportModalOpen(false);
-    setFileToUpload(null);
-    setImportOption('merge');
-    setIsDragging(false);
-  };
   
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const tableData = activeTab === 'clients' ? clients : fournisseurs;
     const tableTitle = activeTab === 'clients' ? 'Clients' : 'Fournisseurs';
 
-    const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
-
-    doc.addImage(logoDataUri, 'PNG', 15, 12, 10, 10);
     doc.setFontSize(18);
     doc.text(`Liste des ${tableTitle}`, 105, 20, { align: 'center' });
     
@@ -354,10 +270,6 @@ export default function ComptesTiersPage() {
                 <Download className="mr-2 h-4 w-4" />
                 Exporter
               </Button>
-              <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
-                <Upload className="mr-2 h-4 w-4" />
-                Importer
-              </Button>
               <Button onClick={handleOpenCreateModal}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nouveau tiers
@@ -443,85 +355,6 @@ export default function ComptesTiersPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={isImportModalOpen} onOpenChange={resetImportModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Importer des comptes tiers</DialogTitle>
-            <DialogDescription>
-              Chargez un fichier (PDF, Excel) pour ajouter des clients ou fournisseurs.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-             <div 
-                className={cn(
-                    "relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 hover:bg-muted/50",
-                    isDragging && "border-primary bg-primary/10",
-                    isImporting && "cursor-not-allowed opacity-50"
-                )}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragEvents}
-                onDrop={handleDrop}
-              >
-                  <Label htmlFor="file-upload" className={cn("flex flex-col items-center justify-center w-full h-full", isImporting ? "cursor-not-allowed" : "cursor-pointer")}>
-                    <FileUp className="w-10 h-10 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-center text-muted-foreground">
-                      <span className="font-semibold">Glissez-déposez un fichier</span> ou cliquez pour sélectionner
-                    </p>
-                    {fileToUpload && !isImporting && (
-                      <p className="mt-2 text-sm font-medium text-foreground">{fileToUpload.name}</p>
-                    )}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      PDF, XLSX, XLS, CSV
-                    </p>
-                  </Label>
-                  <Input 
-                      id="file-upload" 
-                      type="file" 
-                      className="sr-only" 
-                      onChange={handleFileChange} 
-                      accept=".pdf,.xlsx,.xls,.csv" 
-                      disabled={isImporting}
-                  />
-            </div>
-
-            {isImporting && (
-                <div className="space-y-2">
-                    <Progress value={importProgress} />
-                    <p className="text-sm text-center text-muted-foreground">Importation en cours... {Math.round(importProgress)}%</p>
-                </div>
-            )}
-            
-            {!isImporting && fileToUpload && (
-                <div className="space-y-3">
-                    <Label>Option d'importation</Label>
-                    <RadioGroup
-                        value={importOption}
-                        onValueChange={(value: 'merge' | 'replace') => setImportOption(value)}
-                        className="flex gap-4 pt-1"
-                        disabled={isImporting}
-                    >
-                        <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="merge" id="merge" />
-                        <Label htmlFor="merge" className="font-normal">Fusionner</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="replace" id="replace" />
-                        <Label htmlFor="replace" className="font-normal">Remplacer</Label>
-                        </div>
-                    </RadioGroup>
-                </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={resetImportModal} disabled={isImporting}>Annuler</Button>
-            <Button onClick={handleImport} disabled={!fileToUpload || isImporting}>
-                {isImporting ? 'Importation...' : 'Importer'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
