@@ -14,7 +14,7 @@ import { commandesFournisseursAtom, receptionsAtom, fournisseursAtom, type Comma
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 
