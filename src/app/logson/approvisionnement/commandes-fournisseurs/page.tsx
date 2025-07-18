@@ -27,17 +27,10 @@ function CommandesFournisseursPage() {
     const [commandes, setCommandes] = useAtom(commandesFournisseursAtom);
     const [editingCommande, setEditingCommande] = useState<Commande | null>(null);
     
-    const [fournisseurs] = useAtom(fournisseursAtom);
-    const [produits] = useAtom(produitsAtom);
     const { toast } = useToast();
 
     const handleCreateNew = () => {
         setEditingCommande(null);
-        setView('form');
-    };
-
-    const handleEdit = (commande: Commande) => {
-        setEditingCommande(commande);
         setView('form');
     };
     
