@@ -15,37 +15,16 @@ import { PlusCircle, Eye, Trash2, Download, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAtom } from 'jotai';
-import { fournisseursAtom, produitsAtom } from '@/lib/store';
+import { fournisseursAtom, produitsAtom, commandesFournisseursAtom, type Commande, type LigneCommande } from '@/lib/store';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
-
-type LigneCommande = {
-  id: string;
-  produitId: number | null;
-  description: string;
-  quantite: number;
-  prixUnitaire: number;
-};
-
-type Commande = {
-  id: number;
-  numero: string;
-  date: string;
-  fournisseurId: number;
-  lignes: LigneCommande[];
-};
-
-const initialCommandes: Commande[] = [
-    { id: 1, numero: 'BC-2024-001', date: '2024-07-28', fournisseurId: 2, lignes: [ { id: 'l1', produitId: 1, description: 'Serveur Dell R740', quantite: 2, prixUnitaire: 2500000 }] },
-    { id: 2, numero: 'BC-2024-002', date: '2024-07-30', fournisseurId: 4, lignes: [ { id: 'l2', produitId: 3, description: 'Licence Windows Server', quantite: 10, prixUnitaire: 150000 }] },
-];
 
 const ITEMS_PER_PAGE = 10;
 
 function CommandesFournisseursPage() {
     const [view, setView] = useState<'list' | 'form'>('list');
-    const [commandes, setCommandes] = useState(initialCommandes);
+    const [commandes, setCommandes] = useAtom(commandesFournisseursAtom);
     const [editingCommande, setEditingCommande] = useState<Commande | null>(null);
     
     const [fournisseurs] = useAtom(fournisseursAtom);
@@ -234,7 +213,7 @@ function CommandeForm({ commande, onBack, onSave }: { commande: Commande | null,
     const handleAddLine = () => setLignes(prev => [...prev, { id: `l-${Date.now()}`, produitId: null, description: '', quantite: 1, prixUnitaire: 0 }]);
     const handleRemoveLine = (id: string) => setLignes(prev => prev.filter(l => l.id !== id));
     
-    const handleLineChange = (id: string, field: keyof LigneCommande, value: any) => {
+    const handleLineChange = (id: string, field: keyof Omit<LigneCommande, 'id'>, value: any) => {
         setLignes(prev => prev.map(l => {
             if (l.id === id) {
                 const updatedLine = { ...l, [field]: value };

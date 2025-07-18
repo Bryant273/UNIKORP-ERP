@@ -22,6 +22,34 @@ type Produit = {
   unitPrice: number;
 };
 
+export type LigneCommande = {
+  id: string;
+  produitId: number | null;
+  description: string;
+  quantite: number;
+  prixUnitaire: number;
+};
+
+export type Commande = {
+  id: number;
+  numero: string;
+  date: string;
+  fournisseurId: number;
+  lignes: LigneCommande[];
+};
+
+export type Reception = {
+  id: string; // Unique ID for the reception event
+  commandeId: number;
+  date: string;
+  numeroBon: string;
+  lignes: {
+    ligneCommandeId: string;
+    description: string;
+    quantiteRecue: number;
+  }[];
+};
+
 const initialClients: CompteTiers[] = [
   { id: 1, numero: '411CLIENT1', intitule: 'Client Alpha', telephone: '0123456789' },
   { id: 3, numero: '411CLIENT2', intitule: 'Client Beta', telephone: '0123456788' },
@@ -45,8 +73,14 @@ const initialProduits: Produit[] = [
     { id: 4, reference: 'PC-LEN-T14', name: 'PC Portable Lenovo ThinkPad T14', stock: 40, unitPrice: 750000 },
 ];
 
+const initialCommandes: Commande[] = [
+    { id: 1, numero: 'BC-2024-001', date: '2024-07-28', fournisseurId: 2, lignes: [ { id: 'l1', produitId: 1, description: 'Serveur Dell R740', quantite: 2, prixUnitaire: 2500000 }] },
+    { id: 2, numero: 'BC-2024-002', date: '2024-07-30', fournisseurId: 4, lignes: [ { id: 'l2', produitId: 2, description: 'Licence Windows Server', quantite: 10, prixUnitaire: 150000 }] },
+];
 
 export const clientsAtom = atom<CompteTiers[]>(initialClients);
 export const prospectsAtom = atom<CompteTiers[]>(initialProspects);
 export const fournisseursAtom = atom<Fournisseur[]>(initialFournisseurs);
 export const produitsAtom = atom<Produit[]>(initialProduits);
+export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
+export const receptionsAtom = atom<Reception[]>([]);
