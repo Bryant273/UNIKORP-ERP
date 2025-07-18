@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Truck, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type ExpeditionStatus = 'Planifiée' | 'Expédiée' | 'En transit';
 type Expedition = {
@@ -73,7 +74,14 @@ export default function TransportExpeditionPage() {
                                 <TableCell>{format(new Date(exp.dateExpedition), 'dd/MM/yyyy', { locale: fr })}</TableCell>
                                 <TableCell className="text-center">{getStatusBadge(exp.statut)}</TableCell>
                                 <TableCell className="text-center">
-                                    <Button size="sm" variant="outline"><Download className="mr-2 h-4 w-4" /> Étiquette</Button>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button size="icon" variant="ghost"><Download className="h-4 w-4" /></Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Imprimer l'étiquette d'expédition</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
                                 </TableCell>
                             </TableRow>
                         ))}

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Truck, PackageCheck, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type OrderStatus = 'En attente' | 'En préparation' | 'Prête';
 type OrderLine = {
@@ -71,11 +72,32 @@ export default function PreparationCommandesPage() {
                                 <TableCell>{format(new Date(order.date), 'dd/MM/yyyy', { locale: fr })}</TableCell>
                                 <TableCell className="text-center">{getStatusBadge(order.status)}</TableCell>
                                 <TableCell className="text-center">
-                                    <div className="flex justify-center gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => {}}><Eye className="mr-2 h-4 w-4"/> Bon de Prélèvement</Button>
-                                        {order.status === 'En attente' && <Button size="sm" onClick={() => handleAction(order.id, 'En préparation')}><PackageCheck className="mr-2 h-4 w-4"/> Démarrer</Button>}
-                                        {order.status === 'En préparation' && <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleAction(order.id, 'Prête')}><CheckCircle className="mr-2 h-4 w-4"/> Finaliser</Button>}
-                                    </div>
+                                    <TooltipProvider>
+                                        <div className="flex justify-center gap-2">
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button size="icon" variant="ghost" onClick={() => {}}><Eye className="h-4 w-4"/></Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Voir le Bon de Prélèvement</p></TooltipContent>
+                                            </Tooltip>
+                                            {order.status === 'En attente' && 
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button size="icon" variant="ghost" onClick={() => handleAction(order.id, 'En préparation')}><PackageCheck className="h-4 w-4"/></Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>Démarrer la préparation</p></TooltipContent>
+                                                </Tooltip>
+                                            }
+                                            {order.status === 'En préparation' && 
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button size="icon" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => handleAction(order.id, 'Prête')}><CheckCircle className="h-4 w-4"/></Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>Finaliser la préparation</p></TooltipContent>
+                                                </Tooltip>
+                                            }
+                                        </div>
+                                    </TooltipProvider>
                                 </TableCell>
                             </TableRow>
                         ))}

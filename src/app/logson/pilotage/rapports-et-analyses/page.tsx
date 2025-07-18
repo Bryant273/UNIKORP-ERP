@@ -56,8 +56,8 @@ export default function RapportsAnalysesPage() {
                                 <TableCell>{report.creePar}</TableCell>
                                 <TableCell className="text-center">
                                     <div className="flex justify-center gap-2">
-                                        <Button size="sm" variant="outline"><Eye className="mr-2 h-4 w-4" /> Voir</Button>
-                                        <Button size="sm" variant="secondary"><Download className="mr-2 h-4 w-4" /> Télécharger</Button>
+                                        <Button size="icon" variant="ghost"><Eye className="h-4 w-4" /></Button>
+                                        <Button size="icon" variant="ghost"><Download className="h-4 w-4" /></Button>
                                     </div>
                                 </TableCell>
                             </TableRow>
