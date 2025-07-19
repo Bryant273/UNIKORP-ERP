@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { useAtom } from 'jotai';
 import { invoicesAtom, produitsAtom, type InvoiceData, type PreparationStatus, type LineItem } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 type LignePreparation = {
     ligneCommandeId: string;
@@ -23,33 +24,47 @@ type LignePreparation = {
     quantiteALivrer: number;
 };
 
+// We add preparedItems to the InvoiceData type to store the result of the preparation
+type InvoiceWithPreparation = InvoiceData & { preparedItems?: LignePreparation[] };
+
 export default function PreparationCommandesPage() {
     const [invoices, setInvoices] = useAtom(invoicesAtom);
     const { toast } = useToast();
     
-    const [viewingInvoice, setViewingInvoice] = useState<InvoiceData | null>(null);
-    const [preparingInvoice, setPreparingInvoice] = useState<InvoiceData | null>(null);
+    const [viewingInvoice, setViewingInvoice] = useState<InvoiceWithPreparation | null>(null);
+    const [preparingInvoice, setPreparingInvoice] = useState<InvoiceWithPreparation | null>(null);
 
     const getStatusBadge = (status: PreparationStatus) => {
         switch (status) {
             case 'En attente': return <Badge variant="outline">En attente</Badge>;
             case 'En préparation': return <Badge className="bg-yellow-100 text-yellow-800">En préparation</Badge>;
             case 'Prête': return <Badge className="bg-green-100 text-green-800">Prête pour expédition</Badge>;
+            default: return <Badge variant="secondary">{status}</Badge>;
         }
     };
 
-    const handleAction = (invoiceId: string, newStatus: PreparationStatus) => {
+    const handleMarkAsReady = (invoiceId: string) => {
         setInvoices(invoices.map(inv => 
-            inv.id === invoiceId ? { ...inv, preparationStatus: newStatus } : inv
+            inv.id === invoiceId ? { ...inv, preparationStatus: 'Prête' } : inv
         ));
-        toast({ title: 'Statut mis à jour', description: `La commande est maintenant "${newStatus}".`});
+        toast({ title: 'Statut mis à jour', description: `La commande est maintenant "Prête pour expédition".`});
     };
+    
+    const handleSavePreparation = (invoiceId: string, preparedItems: LignePreparation[]) => {
+        setInvoices(invoices.map(inv => 
+            inv.id === invoiceId 
+            ? { ...inv, preparationStatus: 'En préparation', preparedItems: preparedItems.filter(p => p.quantiteALivrer > 0) } 
+            : inv
+        ));
+        toast({ title: 'Préparation enregistrée', description: 'La commande est passée "En préparation".'});
+        setPreparingInvoice(null);
+    }
 
     return (
         <>
         <Card className="w-full">
             <CardHeader>
-                <CardTitle className="text-2xl">Préparation des Commandes Clients</CardTitle>
+                <CardTitle className="text-2xl">Commandes Clients</CardTitle>
                 <CardDescription>Gérez la préparation des commandes facturées pour l'expédition.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -72,12 +87,16 @@ export default function PreparationCommandesPage() {
                                 <TableCell className="text-center">{getStatusBadge(invoice.preparationStatus)}</TableCell>
                                 <TableCell className="text-center">
                                     <div className="flex justify-center gap-2">
-                                        <Button size="icon" variant="ghost" onClick={() => setViewingInvoice(invoice)}><Eye className="h-4 w-4"/></Button>
-                                        {invoice.preparationStatus === 'En attente' && 
-                                            <Button size="icon" variant="ghost" onClick={() => setPreparingInvoice(invoice)}><PackageCheck className="h-4 w-4"/></Button>
-                                        }
+                                        <Button size="icon" variant="ghost" onClick={() => setViewingInvoice(invoice as InvoiceWithPreparation)} disabled={invoice.preparationStatus === 'En attente'}>
+                                            <Eye className="h-4 w-4"/>
+                                        </Button>
+                                        <Button size="icon" variant="ghost" onClick={() => setPreparingInvoice(invoice as InvoiceWithPreparation)} disabled={invoice.preparationStatus !== 'En attente'}>
+                                            <PackageCheck className="h-4 w-4"/>
+                                        </Button>
                                         {invoice.preparationStatus === 'En préparation' && 
-                                            <Button size="icon" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => handleAction(invoice.id, 'Prête')}><CheckCircle className="h-4 w-4"/></Button>
+                                            <Button size="icon" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => handleMarkAsReady(invoice.id)}>
+                                                <CheckCircle className="h-4 w-4"/>
+                                            </Button>
                                         }
                                     </div>
                                 </TableCell>
@@ -98,17 +117,19 @@ export default function PreparationCommandesPage() {
             isOpen={!!preparingInvoice}
             onClose={() => setPreparingInvoice(null)}
             invoice={preparingInvoice}
-            onSave={(invoiceId) => {
-                handleAction(invoiceId, 'En préparation');
-                setPreparingInvoice(null);
-            }}
+            onSave={handleSavePreparation}
         />
         </>
     );
 }
 
-function PreparationDetailsModal({ isOpen, onClose, invoice }: { isOpen: boolean, onClose: () => void, invoice: InvoiceData | null }) {
+function PreparationDetailsModal({ isOpen, onClose, invoice }: { isOpen: boolean, onClose: () => void, invoice: InvoiceWithPreparation | null }) {
     if (!invoice) return null;
+    
+    // Show prepared items if they exist, otherwise fallback to original line items
+    const itemsToShow = invoice.preparedItems && invoice.preparedItems.length > 0
+        ? invoice.preparedItems
+        : invoice.lineItems.map(item => ({ ...item, quantiteALivrer: item.quantity }));
     
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -116,17 +137,22 @@ function PreparationDetailsModal({ isOpen, onClose, invoice }: { isOpen: boolean
                 <DialogHeader>
                     <DialogTitle>Bon de Prélèvement pour Commande {invoice.invoiceNumber}</DialogTitle>
                     <DialogDescription>
-                        Client: {invoice.clientName} - Préparez les articles ci-dessous.
+                        Client: {invoice.clientName} - Prélevez les articles et quantités ci-dessous.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="max-h-[60vh] overflow-y-auto p-1">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Description Article</TableHead><TableHead className="text-right">Quantité à Prélever</TableHead></TableRow></TableHeader>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Description Article</TableHead>
+                            <TableHead className="text-right">Quantité à Prélever</TableHead>
+                          </TableRow>
+                        </TableHeader>
                         <TableBody>
-                            {invoice.lineItems.map(item => (
-                                <TableRow key={item.id}>
+                            {itemsToShow.map(item => (
+                                <TableRow key={item.ligneCommandeId || item.id}>
                                     <TableCell>{item.description}</TableCell>
-                                    <TableCell className="text-right">{item.quantity}</TableCell>
+                                    <TableCell className="text-right">{item.quantiteALivrer || item.quantity}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -140,14 +166,14 @@ function PreparationDetailsModal({ isOpen, onClose, invoice }: { isOpen: boolean
     )
 }
 
-function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, onClose: () => void, invoice: InvoiceData | null, onSave: (invoiceId: string) => void }) {
+function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, onClose: () => void, invoice: InvoiceData | null, onSave: (invoiceId: string, preparedItems: LignePreparation[]) => void }) {
     const [produits] = useAtom(produitsAtom);
     const [lignesPreparation, setLignesPreparation] = useState<LignePreparation[]>([]);
 
     React.useEffect(() => {
         if (invoice) {
             setLignesPreparation(invoice.lineItems.map(item => {
-                const produit = produits.find(p => p.name === item.description); // Assumption: description matches product name
+                const produit = produits.find(p => p.name === item.description);
                 return {
                     ligneCommandeId: item.id,
                     description: item.description,
@@ -159,7 +185,8 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
         }
     }, [invoice, produits]);
     
-    const handleQuantityChange = (ligneId: string, newQuantity: number) => {
+    const handleQuantityChange = (ligneId: string, newQuantityStr: string) => {
+        const newQuantity = parseInt(newQuantityStr) || 0;
         setLignesPreparation(prev => prev.map(ligne => {
             if (ligne.ligneCommandeId === ligneId) {
                 const quantiteMax = Math.min(ligne.quantiteCommandee, ligne.quantiteEnStock);
@@ -173,7 +200,7 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Préparation de la Livraison - Commande {invoice.invoiceNumber}</DialogTitle>
                     <DialogDescription>Vérifiez les stocks et saisissez les quantités à livrer.</DialogDescription>
@@ -199,8 +226,9 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
                                             type="number"
                                             className="text-center"
                                             value={ligne.quantiteALivrer}
-                                            onChange={(e) => handleQuantityChange(ligne.ligneCommandeId, parseInt(e.target.value) || 0)}
+                                            onChange={(e) => handleQuantityChange(ligne.ligneCommandeId, e.target.value)}
                                             max={Math.min(ligne.quantiteCommandee, ligne.quantiteEnStock)}
+                                            min="0"
                                         />
                                     </TableCell>
                                 </TableRow>
@@ -210,7 +238,7 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
                  </div>
                  <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Annuler</Button>
-                    <Button onClick={() => onSave(invoice.id)}>Confirmer la Préparation</Button>
+                    <Button onClick={() => onSave(invoice.id, lignesPreparation)}>Confirmer la Préparation</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
