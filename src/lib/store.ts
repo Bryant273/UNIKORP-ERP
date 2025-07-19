@@ -59,7 +59,30 @@ export type LineItem = {
   unitPrice: number;
 };
 
-export type PreparationStatus = 'En attente' | 'En préparation' | 'Prête' | 'En transit' | 'Livrée';
+export type PreparationStatus = 'En attente' | 'En préparation' | 'Prête' | 'Partiellement expédiée' | 'En transit' | 'Livrée';
+
+export type PreparedItem = {
+    ligneCommandeId: string;
+    description: string;
+    quantiteCommandee: number;
+    quantiteEnStock: number;
+    quantiteAPreparer: number;
+};
+
+export type ExpeditedItem = {
+  ligneCommandeId: string;
+  description: string;
+  quantiteLivree: number;
+};
+
+export type Expedition = {
+  id: string;
+  numeroBonLivraison: string;
+  dateExpedition: string;
+  dateLivraisonPrevue: string;
+  transporteur: string;
+  items: ExpeditedItem[];
+};
 
 export type InvoiceData = {
   id: string;
@@ -78,6 +101,8 @@ export type InvoiceData = {
   companyLogoUrl: string;
   primaryColor: string;
   preparationStatus: PreparationStatus;
+  preparedItems: PreparedItem[];
+  expeditions: Expedition[];
 };
 
 export type InvoiceTemplate = {
@@ -136,6 +161,8 @@ const initialInvoices: InvoiceData[] = [
     companyLogoUrl: '',
     primaryColor: '#3b82f6',
     preparationStatus: 'En attente',
+    preparedItems: [],
+    expeditions: [],
   },
   {
     id: 'inv_2',
@@ -154,6 +181,8 @@ const initialInvoices: InvoiceData[] = [
     companyLogoUrl: '',
     primaryColor: '#10b981',
     preparationStatus: 'Prête',
+    preparedItems: [],
+    expeditions: [],
   },
 ];
 

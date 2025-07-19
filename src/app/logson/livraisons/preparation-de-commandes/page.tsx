@@ -12,20 +12,11 @@ import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAtom } from 'jotai';
-import { invoicesAtom, produitsAtom, type InvoiceData, type PreparationStatus, type LineItem } from '@/lib/store';
+import { invoicesAtom, produitsAtom, type InvoiceData, type PreparationStatus, type PreparedItem } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
-type LignePreparation = {
-    ligneCommandeId: string;
-    description: string;
-    quantiteCommandee: number;
-    quantiteEnStock: number;
-    quantiteALivrer: number;
-};
-
-// We add preparedItems to the InvoiceData type to store the result of the preparation
-type InvoiceWithPreparation = InvoiceData & { preparedItems?: LignePreparation[] };
+type InvoiceWithPreparation = InvoiceData & { preparedItems?: PreparedItem[] };
 
 export default function PreparationCommandesPage() {
     const [invoices, setInvoices] = useAtom(invoicesAtom);
@@ -50,10 +41,10 @@ export default function PreparationCommandesPage() {
         toast({ title: 'Statut mis à jour', description: `La commande est maintenant "Prête pour expédition".`});
     };
     
-    const handleSavePreparation = (invoiceId: string, preparedItems: LignePreparation[]) => {
+    const handleSavePreparation = (invoiceId: string, preparedItems: PreparedItem[]) => {
         setInvoices(invoices.map(inv => 
             inv.id === invoiceId 
-            ? { ...inv, preparationStatus: 'En préparation', preparedItems: preparedItems.filter(p => p.quantiteALivrer > 0) } 
+            ? { ...inv, preparationStatus: 'En préparation', preparedItems: preparedItems.filter(p => p.quantiteAPreparer > 0) } 
             : inv
         ));
         toast({ title: 'Préparation enregistrée', description: 'La commande est passée "En préparation".'});
@@ -128,8 +119,8 @@ function PreparationDetailsModal({ isOpen, onClose, invoice }: { isOpen: boolean
     
     // Show prepared items if they exist, otherwise fallback to original line items
     const itemsToShow = invoice.preparedItems && invoice.preparedItems.length > 0
-        ? invoice.preparedItems
-        : invoice.lineItems.map(item => ({ ...item, quantiteALivrer: item.quantity }));
+        ? invoice.preparedItems.map(item => ({...item, quantiteALivrer: item.quantiteAPreparer}))
+        : invoice.lineItems.map(item => ({ ...item, quantiteALivrer: item.quantity, ligneCommandeId: item.id }));
     
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -166,9 +157,9 @@ function PreparationDetailsModal({ isOpen, onClose, invoice }: { isOpen: boolean
     )
 }
 
-function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, onClose: () => void, invoice: InvoiceData | null, onSave: (invoiceId: string, preparedItems: LignePreparation[]) => void }) {
+function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, onClose: () => void, invoice: InvoiceData | null, onSave: (invoiceId: string, preparedItems: PreparedItem[]) => void }) {
     const [produits] = useAtom(produitsAtom);
-    const [lignesPreparation, setLignesPreparation] = useState<LignePreparation[]>([]);
+    const [lignesPreparation, setLignesPreparation] = useState<PreparedItem[]>([]);
 
     React.useEffect(() => {
         if (invoice) {
@@ -179,7 +170,7 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
                     description: item.description,
                     quantiteCommandee: item.quantity,
                     quantiteEnStock: produit?.stock || 0,
-                    quantiteALivrer: 0
+                    quantiteAPreparer: 0
                 }
             }));
         }
@@ -190,7 +181,7 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
         setLignesPreparation(prev => prev.map(ligne => {
             if (ligne.ligneCommandeId === ligneId) {
                 const quantiteMax = Math.min(ligne.quantiteCommandee, ligne.quantiteEnStock);
-                return { ...ligne, quantiteALivrer: Math.max(0, Math.min(newQuantity, quantiteMax)) };
+                return { ...ligne, quantiteAPreparer: Math.max(0, Math.min(newQuantity, quantiteMax)) };
             }
             return ligne;
         }));
@@ -212,7 +203,7 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
                                 <TableHead>Description</TableHead>
                                 <TableHead className="text-center">Commandé</TableHead>
                                 <TableHead className="text-center">En Stock</TableHead>
-                                <TableHead className="w-[150px] text-center">À Livrer</TableHead>
+                                <TableHead className="w-[150px] text-center">À Préparer</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -225,7 +216,7 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
                                         <Input
                                             type="number"
                                             className="text-center"
-                                            value={ligne.quantiteALivrer}
+                                            value={ligne.quantiteAPreparer}
                                             onChange={(e) => handleQuantityChange(ligne.ligneCommandeId, e.target.value)}
                                             max={Math.min(ligne.quantiteCommandee, ligne.quantiteEnStock)}
                                             min="0"
