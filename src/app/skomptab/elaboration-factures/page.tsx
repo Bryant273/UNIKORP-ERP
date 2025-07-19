@@ -287,33 +287,40 @@ export default function ElaborationFacturesPage() {
     const formatFr = (num: number) => num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
     
     // Header
-    doc.setFontSize(20);
-    doc.setTextColor(40, 40, 40);
-    doc.text("FACTURE", 150, 20);
-    doc.setFontSize(10);
-    doc.text(invoice.invoiceNumber, 150, 26);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(invoice.invoiceTitle, 150, 32, {align: 'right'});
-    doc.setTextColor(40, 40, 40);
+    const companyName = "UNIKORP S.A.";
+    const userName = "Utilisateur Unikorp";
+    const moduleName = "SKOMPTAB";
+    const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+    const printDateTime = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(invoice.companyName, 20, 20);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text(invoice.companyAddress.replace(/\n/g, '\n'), 20, 26);
+    autoTable(doc, {
+        didDrawPage: (data) => {
+            doc.setFontSize(9); doc.setTextColor(150);
+            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+            doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+            doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+            doc.text(invoice.companyName, data.settings.margin.left + 15, 28);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+            const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+            doc.text(`FACTURE`, rightX, 25, { align: 'right' });
+            doc.text(invoice.invoiceNumber, rightX, 30, { align: 'right' });
+            doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+            doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
+        },
+        margin: { top: 50 },
+    });
     
     // Client Info & Dates
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text("FACTURÉ À:", 20, 50);
+    doc.text("FACTURÉ À:", 20, 55);
     doc.setFont('helvetica', 'normal');
-    doc.text(invoice.clientName, 20, 56);
-    doc.text(invoice.clientAddress.replace(/\n/g, '\n'), 20, 62);
+    doc.text(invoice.clientName, 20, 61);
+    doc.text(invoice.clientAddress.replace(/\n/g, '\n'), 20, 67);
     
-    doc.text(`Date de facture: ${new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}`, 150, 50);
-    doc.text(`Date d'échéance: ${new Date(invoice.dueDate).toLocaleDateString('fr-FR')}`, 150, 56);
+    doc.text(`Date de facture: ${new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}`, 150, 55);
+    doc.text(`Date d'échéance: ${new Date(invoice.dueDate).toLocaleDateString('fr-FR')}`, 150, 61);
     
     // Table
     const tableColumn = ["Description", "Qté", "P.U. HT", "Total HT"];
@@ -327,15 +334,15 @@ export default function ElaborationFacturesPage() {
     autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 75,
+        startY: 80,
         headStyles: { fillColor: invoice.primaryColor }, 
         styles: { halign: 'center' },
     });
 
     // Totals
     const finalY = (doc as any).lastAutoTable.finalY;
-    doc.setFontSize(10);
     let currentY = finalY + 10;
+    doc.setFontSize(10);
 
     doc.text(`Sous-total HT:`, 140, currentY);
     doc.text(`${formatFr(subTotal)} FCFA`, 190, currentY, { align: 'right' });
@@ -357,6 +364,13 @@ export default function ElaborationFacturesPage() {
     doc.setFontSize(9);
     doc.setTextColor(150);
     doc.text(invoice.notes.replace(/\n/g, '\n'), 20, currentY, { maxWidth: 170 });
+    
+    let footerY = doc.internal.pageSize.getHeight() - 40;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Cachet & Signature de l'entreprise", 105, footerY, { align: 'center' });
+    doc.setLineWidth(0.5);
+    doc.line(75, footerY - 5, 135, footerY - 5);
 
     doc.save(`facture-${invoice.invoiceNumber}.pdf`);
 

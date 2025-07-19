@@ -354,58 +354,43 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         addText(`L'EMPLOYEUR :\n- Dénomination sociale : ${contract.ENTREPRISE_NOM}\n- Forme Juridique : ${contract.ENTREPRISE_FORME}\n- Adresse : ${contract.ENTREPRISE_ADRESSE}\n- N° SIRET : ${contract.ENTREPRISE_SIRET}\n- Code APE : ${contract.ENTREPRISE_APE}\n- Représenté par : ${contract.REPRESENTANT_NOM}, en sa qualité de ${contract.REPRESENTANT_FONCTION}`);
         addText(`L'EMPLOYÉ :\n- Nom : ${contract.EMPLOYE_NOM}\n- Prénom : ${contract.EMPLOYE_PRENOM}\n- Date de naissance : ${contract.EMPLOYE_DATE_NAISSANCE}\n- Lieu de naissance : ${contract.EMPLOYE_LIEU_NAISSANCE}\n- Adresse : ${contract.EMPLOYE_ADRESSE}\n- Numéro de sécurité sociale : ${contract.EMPLOYE_NUM_SECU}\n- Nationalité : ${contract.EMPLOYE_NATIONALITE}`);
         
-        y += 5;
-        doc.setDrawColor(200);
-        doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
-        y += 10;
+        y += 5; doc.setDrawColor(200); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y); y += 10;
         
         addTitle('ARTICLE 1 - NATURE DU CONTRAT');
         addText(`Il est conclu entre les parties un contrat de travail à durée ${contract.TYPE_CONTRAT} sous le régime de la convention collective ${contract.CONVENTION_COLLECTIVE}.`);
         if (contract.SI_CDD) addText(`Durée du contrat : Du ${contract.DATE_DEBUT} au ${contract.DATE_FIN}.\nMotif de recours : ${contract.MOTIF_CDD}`);
         if (contract.SI_PERIODE_ESSAI) addText(`Période d'essai : ${contract.DUREE_ESSAI}, renouvelable une fois pour une durée de ${contract.DUREE_RENOUVELLEMENT_ESSAI}.`);
-        
         addTitle('ARTICLE 2 - FONCTION ET QUALIFICATION');
         addText(`Le salarié est engagé en qualité de ${contract.FONCTION} - ${contract.QUALIFICATION_PROFESSIONNELLE}.`);
         addText(`Classification : ${contract.CLASSIFICATION} - Coefficient ${contract.COEFFICIENT}`);
         addText(`Rattachement hiérarchique : ${contract.SUPERIEUR_HIERARCHIQUE}`);
-
         addTitle('ARTICLE 3 - LIEU DE TRAVAIL');
         addText(`Le salarié exercera ses fonctions à l'adresse suivante : ${contract.LIEU_TRAVAIL}.`);
-        if (contract.SI_DEPLACEMENT) addText(`Des déplacements pourront être demandés dans le cadre de l'activité professionnelle ${contract.ZONE_DEPLACEMENT}.`);
-
+        if (contract.SI_DEPLACEMENT) addText(`Des déplacements pourront être demandés dans le cadre de l'activité professionnelle.`);
         addTitle('ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL');
         addText(`Horaires de travail : ${contract.HORAIRES_TRAVAIL}\nDurée hebdomadaire : ${contract.DUREE_HEBDOMADAIRE} heures\nRepos hebdomadaire : ${contract.JOURS_REPOS}`);
-        if(contract.SI_TEMPS_PARTIEL) addText(`Travail à temps partiel : ${contract.NOMBRE_HEURES_PARTIEL} heures par semaine.\nRépartition : ${contract.REPARTITION_HORAIRES}`);
-
+        if(contract.SI_TEMPS_PARTIEL) addText(`Travail à temps partiel.`);
         addTitle('ARTICLE 5 - RÉMUNÉRATION');
         addText(`Salaire de base : ${contract.SALAIRE_BASE.toLocaleString('fr-FR')} FCFA ${contract.PERIODICITE_SALAIRE}.`);
-        if(contract.SI_PRIMES) addText(`Primes et avantages : ${contract.LISTE_PRIMES}`);
-        if(contract.SI_AVANTAGES_NATURE) addText(`Avantages en nature : ${contract.LISTE_AVANTAGES}`);
+        if(contract.SI_PRIMES) addText(`Primes et avantages.`);
+        if(contract.SI_AVANTAGES_NATURE) addText(`Avantages en nature.`);
         addText(`Le salaire sera versé le ${contract.DATE_VERSEMENT} par ${contract.MODE_PAIEMENT}.`);
-
         addTitle('ARTICLE 6 - CONGÉS PAYÉS');
-        addText(`Le salarié bénéficie de ${contract.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an. La période de prise des congés est du ${contract.PERIODE_CONGES}.`);
-        
+        addText(`Le salarié bénéficie de ${contract.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.`);
         addTitle('ARTICLE 7 - FORMATION PROFESSIONNELLE');
         addText(`Le salarié bénéficie des dispositions légales et conventionnelles en matière de formation professionnelle.`);
-        if(contract.SI_FORMATION_INITIALE) addText(`Une formation d'intégration de ${contract.DUREE_FORMATION} sera dispensée.`);
-        
+        if(contract.SI_FORMATION_INITIALE) addText(`Une formation d'intégration sera dispensée.`);
         addTitle('ARTICLE 8 - OBLIGATIONS DU SALARIÉ');
         addText(`Le salarié s'engage à respecter le règlement intérieur de l'entreprise, à faire preuve de loyauté, et à respecter les consignes de sécurité. ${contract.OBLIGATIONS_SUPPLEMENTAIRES}`);
-
         addTitle('ARTICLE 9 - CONFIDENTIALITÉ');
         addText(`Le salarié s'engage à observer la plus stricte confidentialité sur toutes les informations dont il aura connaissance dans l'exercice de ses fonctions. Cette obligation subsiste après la rupture du contrat de travail.`);
-
         addTitle('ARTICLE 10 - CLAUSE DE NON-CONCURRENCE');
-        addText(contract.SI_NON_CONCURRENCE ? `Le salarié s'interdit, pendant une durée de ${contract.DUREE_NON_CONCURRENCE} suivant la rupture du contrat, d'exercer une activité concurrente dans les secteurs suivants : ${contract.SECTEURS_CONCERNES}.` : "Non applicable.");
-
+        addText(contract.SI_NON_CONCURRENCE ? `Une clause de non-concurrence est applicable.` : "Non applicable.");
         addTitle('ARTICLE 11 - RUPTURE DU CONTRAT');
         if(contract.SI_CDI) addText(`Le contrat peut être rompu par l'une ou l'autre des parties sous réserve du respect des dispositions légales en matière de préavis. Préavis : ${contract.DUREE_PREAVIS}.`);
         if(contract.SI_CDD) addText(`Le contrat prendra fin de plein droit à la date du ${contract.DATE_FIN}, sauf renouvellement.`);
-
         addTitle('ARTICLE 12 - DISPOSITIONS DIVERSES');
         addText(`Toute modification du présent contrat devra faire l'objet d'un avenant écrit signé par les deux parties.`);
-
         y += 15;
         addText(`Fait à ${contract.LIEU_SIGNATURE}, le ${contract.DATE_SIGNATURE}, en deux exemplaires.`);
         y += 15;

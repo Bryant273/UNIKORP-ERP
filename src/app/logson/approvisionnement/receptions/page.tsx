@@ -221,47 +221,62 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
 
     const handlePrintBonReception = (reception: Reception) => {
         const doc = new jsPDF();
-        const fournisseur = fournisseurs.find(f => f.id === commande.id);
+        const fournisseur = fournisseurs.find(f => f.id === commande.fournisseurId);
 
         // Header
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text("BON DE RÉCEPTION", 105, 20, { align: 'center' });
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text("UNIKORP S.A.", 20, 40);
-        doc.text("Cocody Angré, Abidjan", 20, 45);
-        
-        doc.setFontSize(12);
-        doc.text(`N° Commande Fournisseur: ${commande.numero}`, 20, 60);
-        doc.text(`N° Bon de Réception: ${reception.numeroBon}`, 20, 66);
-        doc.text(`N° BL Fournisseur: ${reception.numeroBonFournisseur || 'N/A'}`, 130, 60);
-        doc.text(`Date de réception: ${format(new Date(reception.date), 'dd/MM/yyyy')}`, 130, 66);
-        
-        doc.setFontSize(14);
-        doc.text("1. Récapitulatif Commande", 20, 80);
+        const companyName = "UNIKORP S.A.";
+        const companyAddress = "Cocody Angré, Abidjan";
+        const companyReg = "CI-ABJ-01-XXXX";
+        const printDate = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
+
         autoTable(doc, {
-            startY: 85,
-            head: [['Description', 'Quantité Commandée']],
-            body: commande.lignes.map(l => [l.description, l.quantite]),
-            theme: 'striped',
-        });
-        
-        let lastY = (doc as any).lastAutoTable.finalY + 10;
-        doc.setFontSize(14);
-        doc.text("2. Détail de cette Réception", 20, lastY);
-        autoTable(doc, {
-            startY: lastY + 5,
-            head: [['Description', 'Quantité Reçue']],
-            body: reception.lignes.map(l => [l.description, l.quantiteRecue]),
-            theme: 'grid',
+             didDrawPage: (data) => {
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.text("BON DE RÉCEPTION", 105, 20, { align: 'center' });
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(companyName, 20, 40);
+                doc.text(companyAddress, 20, 45);
+                doc.text(companyReg, 20, 50);
+
+                doc.setFontSize(12);
+                doc.text(`N° Commande Fournisseur: ${commande.numero}`, 20, 60);
+                doc.text(`N° Bon de Réception: ${reception.numeroBon}`, 20, 66);
+                doc.text(`N° BL Fournisseur: ${reception.numeroBonFournisseur || 'N/A'}`, 130, 60);
+                doc.text(`Date de réception: ${format(new Date(reception.date), 'dd/MM/yyyy')}`, 130, 66);
+             },
+             margin: { top: 75 },
         });
 
-        lastY = (doc as any).lastAutoTable.finalY + 10;
+        // Section 1
+        autoTable(doc, {
+            head: [['1. Récapitulatif Commande']],
+            body: [
+                ['Description', 'Quantité Commandée'],
+                ...commande.lignes.map(l => [l.description, l.quantite]),
+            ],
+            startY: 75,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+        });
         
-        // Calculate balance
+        // Section 2
+        autoTable(doc, {
+            head: [['2. Détail de cette Réception']],
+            body: [
+                 ['Description', 'Quantité Reçue'],
+                ...reception.lignes.map(l => [l.description, l.quantiteRecue]),
+            ],
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            theme: 'grid',
+            headStyles: { fillColor: '#166534' },
+        });
+
+        // Section 3
         const balanceLignes = commande.lignes.map(cmdLigne => {
-            const totalRecu = receptions.filter(r => r.date <= reception.date).flatMap(r => r.lignes).filter(rLigne => rLigne.ligneCommandeId === cmdLigne.id).reduce((sum, rLigne) => sum + rLigne.quantiteRecue, 0);
+            const totalRecu = receptions.filter(r => new Date(r.date) <= new Date(reception.date)).flatMap(r => r.lignes).filter(rLigne => rLigne.ligneCommandeId === cmdLigne.id).reduce((sum, rLigne) => sum + rLigne.quantiteRecue, 0);
             return {
                 description: cmdLigne.description,
                 solde: cmdLigne.quantite - totalRecu,
@@ -269,16 +284,29 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
         }).filter(b => b.solde > 0);
 
         if (balanceLignes.length > 0) {
-            doc.setFontSize(14);
-            doc.text("3. Solde à recevoir après cette réception", 20, lastY);
             autoTable(doc, {
-                startY: lastY + 5,
-                head: [['Description', 'Quantité Restante']],
-                body: balanceLignes.map(l => [l.description, l.solde]),
+                head: [['3. Solde à recevoir après cette réception']],
+                body: [
+                     ['Description', 'Quantité Restante'],
+                     ...balanceLignes.map(l => [l.description, l.solde]),
+                ],
+                startY: (doc as any).lastAutoTable.finalY + 10,
                 theme: 'striped',
+                headStyles: { fillColor: '#f59e0b' },
             });
         }
+        
+        // Footer
+        let footerY = doc.internal.pageSize.getHeight() - 40;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Cachet & Signature de l'entreprise", 105, footerY, { align: 'center' });
+        doc.setLineWidth(0.5);
+        doc.line(75, footerY - 5, 135, footerY - 5);
 
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Document imprimé le ${printDate} via UNIKORP ®`, 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
 
         doc.save(`BR_${commande.numero}.pdf`);
     };

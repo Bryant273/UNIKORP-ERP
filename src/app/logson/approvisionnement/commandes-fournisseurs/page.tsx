@@ -75,31 +75,42 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
         const doc = new jsPDF();
         const fournisseur = fournisseurs.find(f => f.id === commande.fournisseurId);
         
-        // Header
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text("BON DE COMMANDE", 105, 20, { align: 'center' });
-
-        // Company & Supplier info
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text("UNIKORP S.A.", 20, 40);
-        doc.text("Cocody Angré, Abidjan", 20, 45);
-        doc.text("CI-ABJ-01-XXXX", 20, 50);
-
-        doc.text(`Fournisseur:`, 140, 40);
-        doc.setFont('helvetica', 'bold');
-        doc.text(fournisseur?.intitule || 'N/A', 140, 45);
-        doc.setFont('helvetica', 'normal');
-        doc.text(fournisseur?.telephone || 'N/A', 140, 50);
+        const companyName = "UNIKORP S.A.";
+        const companyAddress = "Cocody Angré, Abidjan";
+        const companyReg = "CI-ABJ-01-XXXX";
+        const printDate = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
         
-        doc.setFontSize(12);
-        doc.text(`Numéro de commande: ${commande.numero}`, 20, 65);
-        doc.text(`Date: ${format(new Date(commande.date), 'dd/MM/yyyy')}`, 140, 65);
+        // Header
+        autoTable(doc, {
+            didDrawPage: (data) => {
+                // Document Header
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.text("BON DE COMMANDE", 105, 20, { align: 'center' });
+
+                // Company & Supplier info
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(companyName, 20, 40);
+                doc.text(companyAddress, 20, 45);
+                doc.text(companyReg, 20, 50);
+
+                doc.text(`Fournisseur:`, 140, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text(fournisseur?.intitule || 'N/A', 140, 45);
+                doc.setFont('helvetica', 'normal');
+                doc.text(fournisseur?.telephone || 'N/A', 140, 50);
+                
+                doc.setFontSize(12);
+                doc.text(`Numéro de commande: ${commande.numero}`, 20, 65);
+                doc.text(`Date: ${format(new Date(commande.date), 'dd/MM/yyyy')}`, 140, 65);
+            },
+            margin: { top: 75 } // margin for content to start after header
+        });
 
         // Table
         autoTable(doc, {
-            startY: 80,
+            startY: 75,
             head: [['Description', 'Quantité', 'Prix Unitaire', 'Total']],
             body: commande.lignes.map(l => [l.description, l.quantite, `${l.prixUnitaire.toLocaleString('fr-FR')} FCFA`, `${(l.quantite * l.prixUnitaire).toLocaleString('fr-FR')} FCFA`]),
             theme: 'grid',
@@ -113,8 +124,17 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
         doc.text(`${totalCommande.toLocaleString('fr-FR')} FCFA`, 190, finalY + 15, { align: 'right' });
         
         // Footer
+        let footerY = doc.internal.pageSize.getHeight() - 40;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Cachet & Signature de l'entreprise", 105, footerY, { align: 'center' });
+        doc.setLineWidth(0.5);
+        doc.line(75, footerY - 5, 135, footerY - 5);
+
         doc.setFontSize(8);
-        doc.text("Merci de nous faire parvenir la facture correspondante à la livraison.", 20, 280);
+        doc.setTextColor(150);
+        doc.text(`Document imprimé le ${printDate} via UNIKORP ®`, 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+
 
         doc.save(`BC_${commande.numero}.pdf`);
     };
