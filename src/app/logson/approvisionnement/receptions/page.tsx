@@ -221,9 +221,7 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
 
     const handlePrintBonReception = (reception: Reception) => {
         const doc = new jsPDF();
-        const fournisseur = fournisseurs.find(f => f.id === commande.fournisseurId);
-
-        // Header
+        
         const companyName = "UNIKORP S.A.";
         const companyAddress = "Cocody Angré, Abidjan";
         const companyReg = "CI-ABJ-01-XXXX";
@@ -253,25 +251,39 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
         // Section 1
         autoTable(doc, {
             head: [['1. Récapitulatif Commande']],
-            body: [
-                ['Description', 'Quantité Commandée'],
-                ...commande.lignes.map(l => [l.description, l.quantite]),
-            ],
+            body: [['Description', 'Quantité Commandée']],
             startY: 75,
             theme: 'striped',
             headStyles: { fillColor: '#1e3a8a' },
+            didParseCell: function (data) {
+                if(data.row.index === 0 && data.section === 'body') {
+                     data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        });
+        autoTable(doc, {
+            body: commande.lignes.map(l => [l.description, l.quantite]),
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid',
         });
         
         // Section 2
         autoTable(doc, {
             head: [['2. Détail de cette Réception']],
-            body: [
-                 ['Description', 'Quantité Reçue'],
-                ...reception.lignes.map(l => [l.description, l.quantiteRecue]),
-            ],
+            body: [['Description', 'Quantité Reçue']],
             startY: (doc as any).lastAutoTable.finalY + 10,
-            theme: 'grid',
+            theme: 'striped',
             headStyles: { fillColor: '#166534' },
+            didParseCell: function (data) {
+                if(data.row.index === 0 && data.section === 'body') {
+                     data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        });
+        autoTable(doc, {
+            body: reception.lignes.map(l => [l.description, l.quantiteRecue]),
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid'
         });
 
         // Section 3
@@ -286,13 +298,20 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
         if (balanceLignes.length > 0) {
             autoTable(doc, {
                 head: [['3. Solde à recevoir après cette réception']],
-                body: [
-                     ['Description', 'Quantité Restante'],
-                     ...balanceLignes.map(l => [l.description, l.solde]),
-                ],
+                body: [['Description', 'Quantité Restante']],
                 startY: (doc as any).lastAutoTable.finalY + 10,
                 theme: 'striped',
                 headStyles: { fillColor: '#f59e0b' },
+                didParseCell: function (data) {
+                    if(data.row.index === 0 && data.section === 'body') {
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            });
+            autoTable(doc, {
+                 body: balanceLignes.map(l => [l.description, l.solde]),
+                 startY: (doc as any).lastAutoTable.finalY,
+                 theme: 'grid'
             });
         }
         
