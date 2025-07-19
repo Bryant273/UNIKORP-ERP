@@ -15,6 +15,13 @@ type Fournisseur = {
     telephone: string;
 }
 
+type Transporteur = {
+    id: number;
+    numero: string;
+    intitule: string;
+    telephone: string;
+}
+
 type Produit = {
   id: number;
   reference: string;
@@ -198,6 +205,12 @@ const initialFournisseurs: Fournisseur[] = [
   { id: 4, numero: '401FOURN2', intitule: 'Fournisseur Gamma', telephone: '0987654322' },
 ];
 
+const initialTransporteurs: Transporteur[] = [
+  { id: 1, numero: 'TR-001', intitule: 'DHL Express', telephone: '01 02 03 04 05' },
+  { id: 2, numero: 'TR-002', intitule: 'Chronopost', telephone: '06 07 08 09 10' },
+  { id: 3, numero: 'TR-003', intitule: 'Colis Privé', telephone: '09 08 07 06 05' },
+];
+
 const initialProspects: CompteTiers[] = [
     { id: 101, numero: 'PROS-001', intitule: 'Prospect Delta', telephone: '0612345678' },
     { id: 102, numero: 'PROS-002', intitule: 'Prospect Epsilon', telephone: '0623456789' },
@@ -218,6 +231,7 @@ const initialCommandes: Commande[] = [
 export const clientsAtom = atom<CompteTiers[]>(initialClients);
 export const prospectsAtom = atom<CompteTiers[]>(initialProspects);
 export const fournisseursAtom = atom<Fournisseur[]>(initialFournisseurs);
+export const transporteursAtom = atom<Transporteur[]>(initialTransporteurs);
 export const produitsAtom = atom<Produit[]>(initialProduits);
 export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
 export const receptionsAtom = atom<Reception[]>([]);

@@ -272,6 +272,7 @@ const logsonNav = [
       { title: 'Expéditions', href: '/logson/livraisons/transport-et-expedition', icon: Truck },
       { title: 'Suivi des Livraisons', href: '/logson/livraisons/suivi-des-livraisons', icon: Map },
       { title: 'Gestion des retours', href: '/logson/livraisons/gestion-des-retours', icon: Repeat },
+      { title: 'Transporteurs', href: '/logson/livraisons/transporteurs', icon: Users },
     ],
   },
   {
