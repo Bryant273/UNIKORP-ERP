@@ -9,15 +9,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Truck, Download, Eye, ListChecks } from 'lucide-react';
-import { commandesFournisseursAtom, receptionsAtom, fournisseursAtom, type Commande, type LigneCommande, type Reception } from '@/lib/store';
+import { Truck, Download, ListChecks } from 'lucide-react';
+import { commandesFournisseursAtom, receptionsAtom, fournisseursAtom, type Commande, type Reception } from '@/lib/store';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 type LigneReception = {
     ligneCommandeId: string;
@@ -35,6 +35,7 @@ export default function ReceptionsPage() {
     const [isReceptionModalOpen, setIsReceptionModalOpen] = useState(false);
     const [commandeToReceive, setCommandeToReceive] = useState<Commande | null>(null);
     const [lignesReception, setLignesReception] = useState<LigneReception[]>([]);
+    const [bonLivraisonFournisseur, setBonLivraisonFournisseur] = useState('');
 
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
     const [viewingCommande, setViewingCommande] = useState<Commande | null>(null);
@@ -58,6 +59,7 @@ export default function ReceptionsPage() {
 
     const handleOpenReceptionModal = (commande: Commande) => {
         setCommandeToReceive(commande);
+        setBonLivraisonFournisseur('');
         setLignesReception(
             commande.lignes.map(l => ({
                 ligneCommandeId: l.id,
@@ -85,6 +87,7 @@ export default function ReceptionsPage() {
             commandeId: commandeToReceive.id,
             date: new Date().toISOString().split('T')[0],
             numeroBon: `BR-${commandeToReceive.numero}-${receptions.filter(r => r.commandeId === commandeToReceive.id).length + 1}`,
+            numeroBonFournisseur: bonLivraisonFournisseur,
             lignes: lignesReception.filter(l => l.quantiteRecue > 0),
         };
 
@@ -113,19 +116,28 @@ export default function ReceptionsPage() {
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Fournisseur</TableHead><TableHead>Articles (Reçus/Commandés)</TableHead><TableHead className="text-center">Statut Réception</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>N° Commande</TableHead>
+                                <TableHead>Fournisseur</TableHead>
+                                <TableHead>Description des Articles</TableHead>
+                                <TableHead className="text-center">Statut Réception</TableHead>
+                                <TableHead className="text-center">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
                         <TableBody>
                             {commandes.map(cmd => {
                                 const statusInfo = getReceptionStatus.get(cmd.id) || { totalReceived: 0, totalOrdered: 0, status: 'En attente' };
                                 const isCompleted = statusInfo.status === 'Terminée';
+                                const productDescriptions = cmd.lignes.map(l => l.description).join(', ');
                                 return (
                                     <TableRow key={cmd.id} className={isCompleted ? 'bg-green-50' : ''}>
                                         <TableCell>{cmd.numero}</TableCell>
                                         <TableCell>{fournisseurs.find(f => f.id === cmd.fournisseurId)?.intitule}</TableCell>
-                                        <TableCell>{statusInfo.totalReceived} / {statusInfo.totalOrdered}</TableCell>
+                                        <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{productDescriptions}</TableCell>
                                         <TableCell className="text-center">
                                             <Badge variant={statusInfo.status === 'Terminée' ? 'default' : statusInfo.status === 'Partielle' ? 'secondary' : 'outline'}>
-                                                {statusInfo.status === 'Partielle' ? 'Partiellement réceptionné' : statusInfo.status === 'Terminée' ? 'Entièrement réceptionné' : 'En attente'}
+                                                {statusInfo.status === 'Partielle' ? 'Partielle' : statusInfo.status === 'Terminée' ? 'Terminée' : 'En attente'}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-center">
@@ -152,33 +164,39 @@ export default function ReceptionsPage() {
                         <DialogTitle>Confirmer la réception de la commande {commandeToReceive?.numero}</DialogTitle>
                         <DialogDescription>Saisissez les quantités réellement reçues pour chaque article.</DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-[60vh] overflow-y-auto p-2">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead className="text-center">Qté Commandée</TableHead>
-                                    <TableHead className="w-[150px] text-center">Qté Reçue</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {lignesReception.map(ligne => (
-                                    <TableRow key={ligne.ligneCommandeId}>
-                                        <TableCell>{ligne.description}</TableCell>
-                                        <TableCell className="text-center">{ligne.quantiteCommandee}</TableCell>
-                                        <TableCell>
-                                            <Input
-                                                type="number"
-                                                className="text-center"
-                                                value={ligne.quantiteRecue}
-                                                onChange={(e) => handleLigneReceptionChange(ligne.ligneCommandeId, parseInt(e.target.value) || 0)}
-                                                max={ligne.quantiteCommandee}
-                                            />
-                                        </TableCell>
+                    <div className="py-4 space-y-4">
+                        <div>
+                            <Label htmlFor="bonFournisseur">N° Bon de Livraison Fournisseur</Label>
+                            <Input id="bonFournisseur" value={bonLivraisonFournisseur} onChange={(e) => setBonLivraisonFournisseur(e.target.value)} placeholder="Ex: BL-F-2024-XYZ" />
+                        </div>
+                        <div className="max-h-[50vh] overflow-y-auto p-2 border rounded-md">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead className="text-center">Qté Commandée</TableHead>
+                                        <TableHead className="w-[150px] text-center">Qté Reçue</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {lignesReception.map(ligne => (
+                                        <TableRow key={ligne.ligneCommandeId}>
+                                            <TableCell>{ligne.description}</TableCell>
+                                            <TableCell className="text-center">{ligne.quantiteCommandee}</TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    className="text-center"
+                                                    value={ligne.quantiteRecue}
+                                                    onChange={(e) => handleLigneReceptionChange(ligne.ligneCommandeId, parseInt(e.target.value) || 0)}
+                                                    max={ligne.quantiteCommandee}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsReceptionModalOpen(false)}>Annuler</Button>
@@ -203,8 +221,9 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
 
     const handlePrintBonReception = (reception: Reception) => {
         const doc = new jsPDF();
-        const fournisseur = fournisseurs.find(f => f.id === commande.fournisseurId);
+        const fournisseur = fournisseurs.find(f => f.id === commande.id);
 
+        // Header
         doc.setFontSize(22);
         doc.setFont('helvetica', 'bold');
         doc.text("BON DE RÉCEPTION", 105, 20, { align: 'center' });
@@ -212,17 +231,55 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
         doc.setFont('helvetica', 'normal');
         doc.text("UNIKORP S.A.", 20, 40);
         doc.text("Cocody Angré, Abidjan", 20, 45);
-        doc.text(`Fournisseur: ${fournisseur?.intitule || 'N/A'}`, 140, 40);
+        
         doc.setFontSize(12);
-        doc.text(`N° Commande: ${commande.numero}`, 20, 60);
+        doc.text(`N° Commande Fournisseur: ${commande.numero}`, 20, 60);
         doc.text(`N° Bon de Réception: ${reception.numeroBon}`, 20, 66);
-        doc.text(`Date de réception: ${format(new Date(reception.date), 'dd/MM/yyyy')}`, 140, 60);
+        doc.text(`N° BL Fournisseur: ${reception.numeroBonFournisseur || 'N/A'}`, 130, 60);
+        doc.text(`Date de réception: ${format(new Date(reception.date), 'dd/MM/yyyy')}`, 130, 66);
+        
+        doc.setFontSize(14);
+        doc.text("1. Récapitulatif Commande", 20, 80);
         autoTable(doc, {
-            startY: 80,
+            startY: 85,
+            head: [['Description', 'Quantité Commandée']],
+            body: commande.lignes.map(l => [l.description, l.quantite]),
+            theme: 'striped',
+        });
+        
+        let lastY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFontSize(14);
+        doc.text("2. Détail de cette Réception", 20, lastY);
+        autoTable(doc, {
+            startY: lastY + 5,
             head: [['Description', 'Quantité Reçue']],
             body: reception.lignes.map(l => [l.description, l.quantiteRecue]),
             theme: 'grid',
         });
+
+        lastY = (doc as any).lastAutoTable.finalY + 10;
+        
+        // Calculate balance
+        const balanceLignes = commande.lignes.map(cmdLigne => {
+            const totalRecu = receptions.filter(r => r.date <= reception.date).flatMap(r => r.lignes).filter(rLigne => rLigne.ligneCommandeId === cmdLigne.id).reduce((sum, rLigne) => sum + rLigne.quantiteRecue, 0);
+            return {
+                description: cmdLigne.description,
+                solde: cmdLigne.quantite - totalRecu,
+            }
+        }).filter(b => b.solde > 0);
+
+        if (balanceLignes.length > 0) {
+            doc.setFontSize(14);
+            doc.text("3. Solde à recevoir après cette réception", 20, lastY);
+            autoTable(doc, {
+                startY: lastY + 5,
+                head: [['Description', 'Quantité Restante']],
+                body: balanceLignes.map(l => [l.description, l.solde]),
+                theme: 'striped',
+            });
+        }
+
+
         doc.save(`BR_${commande.numero}.pdf`);
     };
 
@@ -240,7 +297,7 @@ function ReceptionSummaryModal({ isOpen, onClose, commande, receptions, fourniss
                                     <CardHeader className="flex flex-row items-center justify-between p-4">
                                         <div>
                                             <CardTitle className="text-lg">{reception.numeroBon}</CardTitle>
-                                            <CardDescription>Reçu le {format(new Date(reception.date), 'dd/MM/yyyy', { locale: fr })}</CardDescription>
+                                            <CardDescription>Reçu le {format(new Date(reception.date), 'dd/MM/yyyy', { locale: fr })} (BL Fournisseur: {reception.numeroBonFournisseur || 'N/A'})</CardDescription>
                                         </div>
                                         <Button size="sm" variant="outline" onClick={() => handlePrintBonReception(reception)}>
                                             <Download className="mr-2 h-4 w-4" /> Imprimer ce bon

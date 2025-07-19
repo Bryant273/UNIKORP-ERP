@@ -43,6 +43,7 @@ export type Reception = {
   commandeId: number;
   date: string;
   numeroBon: string;
+  numeroBonFournisseur?: string;
   lignes: {
     ligneCommandeId: string;
     description: string;
