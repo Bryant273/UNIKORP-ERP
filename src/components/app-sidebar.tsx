@@ -269,8 +269,8 @@ const logsonNav = [
     icon: Truck,
     subItems: [
       { title: 'Commandes clients', href: '/logson/livraisons/preparation-de-commandes', icon: ClipboardList },
-      { title: 'Transport et expédition', href: '/logson/livraisons/transport-et-expedition', icon: Truck },
-      { title: 'Suivi des livraisons', href: '/logson/livraisons/suivi-des-livraisons', icon: Map },
+      { title: 'Expéditions', href: '/logson/livraisons/transport-et-expedition', icon: Truck },
+      { title: 'Suivi des Livraisons', href: '/logson/livraisons/suivi-des-livraisons', icon: Map },
       { title: 'Gestion des retours', href: '/logson/livraisons/gestion-des-retours', icon: Repeat },
     ],
   },

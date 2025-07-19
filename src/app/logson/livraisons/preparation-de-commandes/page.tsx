@@ -10,8 +10,6 @@ import { CheckCircle, Eye, PackageCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useAtom } from 'jotai';
 import { invoicesAtom, produitsAtom, type InvoiceData, type PreparationStatus, type LineItem } from '@/lib/store';
@@ -218,4 +216,3 @@ function PreparationSaisieModal({ isOpen, onClose, invoice, onSave }: { isOpen: 
         </Dialog>
     );
 }
-

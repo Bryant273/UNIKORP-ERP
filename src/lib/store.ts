@@ -1,3 +1,4 @@
+
 import { atom } from 'jotai';
 
 type CompteTiers = {
@@ -58,7 +59,7 @@ export type LineItem = {
   unitPrice: number;
 };
 
-export type PreparationStatus = 'En attente' | 'En préparation' | 'Prête';
+export type PreparationStatus = 'En attente' | 'En préparation' | 'Prête' | 'En transit' | 'Livrée';
 
 export type InvoiceData = {
   id: string;
@@ -152,7 +153,7 @@ const initialInvoices: InvoiceData[] = [
     companyAddress: '456 Avenue du Futur, Lyon',
     companyLogoUrl: '',
     primaryColor: '#10b981',
-    preparationStatus: 'En préparation',
+    preparationStatus: 'Prête',
   },
 ];
 

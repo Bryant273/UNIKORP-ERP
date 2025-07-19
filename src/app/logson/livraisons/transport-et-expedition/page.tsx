@@ -9,34 +9,28 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Truck, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAtom } from 'jotai';
+import { invoicesAtom, type PreparationStatus } from '@/lib/store';
+import { useToast } from '@/hooks/use-toast';
 
-type ExpeditionStatus = 'Planifiée' | 'Expédiée' | 'En transit';
-type Expedition = {
-    id: string;
-    expeditionNumero: string;
-    commandeNumero: string;
-    client: string;
-    transporteur: 'DHL' | 'Chronopost' | 'Colissimo';
-    dateExpedition: string;
-    statut: ExpeditionStatus;
-    nombreColis: number;
-};
+export default function ExpeditionPage() {
+    const [invoices, setInvoices] = useAtom(invoicesAtom);
+    const { toast } = useToast();
 
-const MOCK_EXPEDITIONS: Expedition[] = [
-    { id: 'exp-1', expeditionNumero: 'EXP-2024-112', commandeNumero: 'CMD-0803', client: 'Global Solutions', transporteur: 'Colissimo', dateExpedition: '2024-07-31', statut: 'Planifiée', nombreColis: 1 },
-    { id: 'exp-2', expeditionNumero: 'EXP-2024-111', commandeNumero: 'CMD-0801', client: 'Innovate Inc.', transporteur: 'DHL', dateExpedition: '2024-07-30', statut: 'Expédiée', nombreColis: 2 },
-    { id: 'exp-3', expeditionNumero: 'EXP-2024-110', commandeNumero: 'CMD-0795', client: 'TechCorp', transporteur: 'Chronopost', dateExpedition: '2024-07-29', statut: 'En transit', nombreColis: 1 },
-];
+    const readyForShipping = invoices.filter(inv => inv.preparationStatus === 'Prête' || inv.preparationStatus === 'En transit');
 
-export default function TransportExpeditionPage() {
-    const [expeditions, setExpeditions] = useState(MOCK_EXPEDITIONS);
+    const handlePlanShipping = (invoiceId: string) => {
+        setInvoices(invoices.map(inv => 
+            inv.id === invoiceId ? { ...inv, preparationStatus: 'En transit' } : inv
+        ));
+        toast({ title: 'Expédition Planifiée', description: 'La commande est maintenant en transit.' });
+    };
     
-    const getStatusBadge = (status: ExpeditionStatus) => {
+    const getStatusBadge = (status: PreparationStatus) => {
         switch (status) {
-            case 'Planifiée': return <Badge variant="outline">Planifiée</Badge>;
-            case 'Expédiée': return <Badge className="bg-blue-100 text-blue-800">Expédiée</Badge>;
+            case 'Prête': return <Badge className="bg-green-100 text-green-800">Prête</Badge>;
             case 'En transit': return <Badge variant="default">En transit</Badge>;
+            default: return <Badge variant="outline">{status}</Badge>;
         }
     };
 
@@ -45,48 +39,51 @@ export default function TransportExpeditionPage() {
             <CardHeader>
                  <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl">Transport et Expédition</CardTitle>
+                        <CardTitle className="text-2xl">Expéditions</CardTitle>
                         <CardDescription>Gérez les expéditions de vos commandes prêtes.</CardDescription>
                     </div>
-                    <Button><PlusCircle className="mr-2 h-4 w-4" /> Planifier une expédition</Button>
                 </div>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>N° Expédition</TableHead>
                             <TableHead>N° Commande</TableHead>
                             <TableHead>Client</TableHead>
-                            <TableHead>Transporteur</TableHead>
-                            <TableHead>Date Prévue</TableHead>
+                            <TableHead>Date Commande</TableHead>
                             <TableHead className="text-center">Statut</TableHead>
                             <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {expeditions.map(exp => (
-                            <TableRow key={exp.id}>
-                                <TableCell>{exp.expeditionNumero}</TableCell>
-                                <TableCell>{exp.commandeNumero}</TableCell>
-                                <TableCell>{exp.client}</TableCell>
-                                <TableCell><Badge variant="secondary">{exp.transporteur}</Badge></TableCell>
-                                <TableCell>{format(new Date(exp.dateExpedition), 'dd/MM/yyyy', { locale: fr })}</TableCell>
-                                <TableCell className="text-center">{getStatusBadge(exp.statut)}</TableCell>
+                        {readyForShipping.map(inv => (
+                            <TableRow key={inv.id}>
+                                <TableCell>{inv.invoiceNumber}</TableCell>
+                                <TableCell>{inv.clientName}</TableCell>
+                                <TableCell>{format(new Date(inv.invoiceDate), 'dd/MM/yyyy', { locale: fr })}</TableCell>
+                                <TableCell className="text-center">{getStatusBadge(inv.preparationStatus)}</TableCell>
                                 <TableCell className="text-center">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button size="icon" variant="ghost"><Download className="h-4 w-4" /></Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>Imprimer l'étiquette d'expédition</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                    <div className="flex justify-center gap-2">
+                                        <Button 
+                                            size="sm" 
+                                            variant="outline"
+                                            onClick={() => handlePlanShipping(inv.id)}
+                                            disabled={inv.preparationStatus === 'En transit'}
+                                        >
+                                            <Truck className="mr-2 h-4 w-4" /> Planifier
+                                        </Button>
+                                         <Button size="icon" variant="ghost"><Download className="h-4 w-4" /></Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
+                 {readyForShipping.length === 0 && (
+                    <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
+                        <p className="text-muted-foreground">Aucune commande n'est prête pour l'expédition.</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
