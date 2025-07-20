@@ -98,10 +98,17 @@ export default function FicheDeStockPage() {
     const [reportData, setReportData] = useState<StockCardLine[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<Produit | null>(null);
     const { toast } = useToast();
+    const [printDateTime, setPrintDateTime] = useState('');
 
     const handleCloseModal = () => {
         setModalStep('closed');
     };
+    
+    useEffect(() => {
+        if (modalStep === 'display') {
+            setPrintDateTime(format(new Date(), 'dd/MM/yyyy HH:mm:ss'));
+        }
+    }, [modalStep]);
 
     const handleGenerate = () => {
         if (!selectedProductId || !period?.from || !period?.to) {
@@ -123,6 +130,8 @@ export default function FicheDeStockPage() {
         const companyName = "Votre Société S.A.";
         const userName = "Utilisateur Unikorp";
         const moduleName = "LOGSON";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const periodString = period?.from ? (period.to ? `${format(period.from, 'dd LLL yy', { locale: fr })} au ${format(period.to, 'dd LLL yy', { locale: fr })}` : format(period.from, 'dd LLL yy', { locale: fr })) : 'N/A';
         
         const tableBody = reportData.map(d => [
             format(new Date(d.date), 'dd/MM/yy'), d.libelle,
@@ -143,12 +152,21 @@ export default function FicheDeStockPage() {
             theme: 'grid',
             headStyles: { halign: 'center', fillColor: [226, 232, 240] },
             didDrawPage: (data) => {
+                 doc.setFontSize(9); doc.setTextColor(150);
+                 doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+                 doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+                 doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
                  doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
-                 doc.text(companyName, data.settings.margin.left, 28);
+                 doc.text(companyName, data.settings.margin.left + 15, 28);
                  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
                  const rightX = doc.internal.pageSize.width - data.settings.margin.right;
                  doc.text(`État : Fiche de Stock - ${selectedProduct.name}`, rightX, 25, { align: 'right' });
-                 doc.text(`Période : ${period?.from ? format(period.from, 'dd/MM/yy') : ''} au ${period?.to ? format(period.to, 'dd/MM/yy') : ''}`, rightX, 30, { align: 'right' });
+                 doc.text(`Période : ${periodString}`, rightX, 30, { align: 'right' });
+                 doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+                 doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
+                 const pageCountTotal = (doc as any).internal.getNumberOfPages();
+                 doc.setFontSize(8); doc.setTextColor(150);
+                 doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
             },
             margin: { top: 50 },
         });
