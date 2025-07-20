@@ -66,7 +66,7 @@ export type LineItem = {
   unitPrice: number;
 };
 
-export type PreparationStatus = 'En attente' | 'En préparation' | 'Prête' | 'Partiellement expédiée' | 'En transit' | 'Livrée';
+export type PreparationStatus = 'En attente' | 'Prête' | 'Partiellement expédiée' | 'En transit' | 'Livrée';
 
 export type PreparedItem = {
     ligneCommandeId: string;

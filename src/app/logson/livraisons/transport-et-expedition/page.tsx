@@ -118,12 +118,62 @@ export default function ExpeditionPage() {
              margin: { top: 75 },
         });
 
+        // Section 1: This Delivery
         autoTable(doc, {
-            head: [['Description Article', 'Quantité Livrée']],
-            body: expedition.items.map(item => [item.description, item.quantiteLivree]),
+            head: [['1. Détail de cette Livraison']],
+            body: [['Description Article', 'Quantité Livrée']],
             startY: 75,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+            didParseCell: function (data) {
+                if(data.row.index === 0 && data.section === 'body') {
+                     data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        });
+        autoTable(doc, {
+            body: expedition.items.map(item => [item.description, item.quantiteLivree]),
+            startY: (doc as any).lastAutoTable.finalY,
             theme: 'grid',
         });
+        
+        // Section 2: Order balance
+        const allPreparedItems = new Map(invoice.preparedItems.map(item => [item.ligneCommandeId, {qtyPrepared: item.quantiteAPreparer, description: item.description}]));
+        const allExpeditedItems = (invoice.expeditions || [])
+            .flatMap(exp => exp.items)
+            .reduce((acc, item) => {
+                acc.set(item.ligneCommandeId, (acc.get(item.ligneCommandeId) || 0) + item.quantiteLivree);
+                return acc;
+            }, new Map<string, number>());
+        
+        const balanceLignes = Array.from(allPreparedItems.entries()).map(([ligneId, {qtyPrepared, description}]) => {
+            const alreadyExpedited = allExpeditedItems.get(ligneId) || 0;
+            return {
+                description: description,
+                solde: qtyPrepared - alreadyExpedited
+            }
+        }).filter(b => b.solde > 0);
+
+
+        if(balanceLignes.length > 0) {
+            autoTable(doc, {
+                head: [['2. Solde à livrer après cette expédition']],
+                body: [['Description Article', 'Quantité Restante']],
+                startY: (doc as any).lastAutoTable.finalY + 10,
+                theme: 'striped',
+                headStyles: { fillColor: '#f59e0b' },
+                 didParseCell: function (data) {
+                    if(data.row.index === 0 && data.section === 'body') {
+                         data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            });
+            autoTable(doc, {
+                body: balanceLignes.map(l => [l.description, l.solde]),
+                startY: (doc as any).lastAutoTable.finalY,
+                theme: 'grid'
+            });
+        }
         
         let footerY = doc.internal.pageSize.getHeight() - 40;
         doc.setFontSize(10);
@@ -134,7 +184,7 @@ export default function ExpeditionPage() {
 
         doc.setFontSize(8);
         doc.setTextColor(150);
-        doc.text(`Document imprimé le ${printDate} via UNIKORP ®`, 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+        doc.text(`Document imprimé le ${format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss")} via UNIKORP ®`, 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
 
 
         doc.save(`BL_${expedition.numeroBonLivraison}.pdf`);
@@ -182,7 +232,7 @@ export default function ExpeditionPage() {
                                                 <Button size="icon" variant="ghost" onClick={() => setViewingExpedition({ invoice: inv, expedition: inv.expeditions![inv.expeditions!.length - 1] })}><Eye className="h-4 w-4" /></Button>
                                              }
                                              {inv.expeditions && inv.expeditions.length > 0 &&
-                                                <Button size="icon" variant="ghost" onClick={() => handleDownloadPDF(inv, inv.expeditions![inv.expeditions.length - 1])}><Download className="h-4 w-4" /></Button>
+                                                <Button size="icon" variant="ghost" onClick={() => handleDownloadPDF(inv, inv.expeditions![inv.expeditions!.length - 1])}><Download className="h-4 w-4" /></Button>
                                              }
                                         </div>
                                     </TableCell>
