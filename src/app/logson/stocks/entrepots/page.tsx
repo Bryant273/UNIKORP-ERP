@@ -39,11 +39,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, PlusCircle, Warehouse, MapPin } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Warehouse, MapPin, Eye, Download } from 'lucide-react';
 import { useAtom } from 'jotai';
-import { entrepotsAtom } from '@/lib/store';
+import { entrepotsAtom, produitsAtom, type Produit } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
 type Entrepot = {
     id: number;
@@ -67,6 +70,7 @@ export default function EntrepotsPage() {
   const [editingEntrepot, setEditingEntrepot] = useState<Entrepot | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
   const [entrepotToDelete, setEntrepotToDelete] = useState<Entrepot | null>(null);
+  const [viewingEntrepot, setViewingEntrepot] = useState<Entrepot | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   
   const { toast } = useToast();
@@ -134,6 +138,24 @@ export default function EntrepotsPage() {
       setCurrentPage(newPage);
     }
   };
+  
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Liste des Entrepôts`, 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Édité le: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, 26, { align: 'center' });
+    
+    autoTable(doc, {
+        startY: 35,
+        head: [['Nom', 'Localisation', 'Capacité (m³)', 'Remplissage (%)']],
+        body: entrepots.map(e => [e.nom, e.localisation, e.capacite.toLocaleString('fr-FR'), e.tauxRemplissage]),
+        theme: 'striped',
+        headStyles: { fillColor: '#1e3a8a' },
+    });
+    doc.save('liste_entrepots.pdf');
+    toast({ title: "Exportation PDF réussie" });
+  };
 
 
   return (
@@ -145,10 +167,13 @@ export default function EntrepotsPage() {
               <CardTitle className="text-2xl">Entrepôts</CardTitle>
               <CardDescription>Gérez vos entrepôts et emplacements de stockage.</CardDescription>
             </div>
-            <Button onClick={handleOpenCreateModal}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nouvel entrepôt
-            </Button>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={handleExportPDF}><Download className="mr-2 h-4 w-4"/>Exporter</Button>
+                <Button onClick={handleOpenCreateModal}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Nouvel entrepôt
+                </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -159,7 +184,7 @@ export default function EntrepotsPage() {
                   <TableHead>Localisation</TableHead>
                   <TableHead className="text-right">Capacité</TableHead>
                   <TableHead className="w-[250px]">Taux de Remplissage</TableHead>
-                  <TableHead className="w-[100px] text-center">Actions</TableHead>
+                  <TableHead className="w-[150px] text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -176,13 +201,14 @@ export default function EntrepotsPage() {
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => setViewingEntrepot(entrepot)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(entrepot)}>
                             <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Modifier</span>
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => setEntrepotToDelete(entrepot)} className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Supprimer</span>
                           </Button>
                       </div>
                     </TableCell>
@@ -270,6 +296,108 @@ export default function EntrepotsPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ViewWarehouseModal isOpen={!!viewingEntrepot} onClose={() => setViewingEntrepot(null)} entrepot={viewingEntrepot} />
     </>
   );
 }
+
+
+function ViewWarehouseModal({ isOpen, onClose, entrepot }: { isOpen: boolean, onClose: () => void, entrepot: Entrepot | null }) {
+    const [produits] = useAtom(produitsAtom);
+    const { toast } = useToast();
+
+    const produitsDansEntrepot = useMemo(() => {
+        if (!entrepot) return [];
+        return produits.filter(p => p.entrepotId === entrepot.id);
+    }, [produits, entrepot]);
+    
+    if (!entrepot) return null;
+    
+    const handleDownloadReport = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text(`Rapport de l'Entrepôt : ${entrepot.nom}`, 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Édité le: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, 26, { align: 'center' });
+
+        autoTable(doc, {
+            body: [
+                ['Localisation', entrepot.localisation],
+                ['Capacité', `${entrepot.capacite.toLocaleString('fr-FR')} m³`],
+                ['Taux de remplissage', `${entrepot.tauxRemplissage}%`],
+            ],
+            startY: 35,
+            theme: 'grid',
+        });
+        
+        doc.setFontSize(12);
+        doc.text("Contenu du Stock", 14, (doc as any).lastAutoTable.finalY + 15);
+        autoTable(doc, {
+            head: [['Référence', 'Nom du Produit', 'Stock Actuel']],
+            body: produitsDansEntrepot.map(p => [p.reference, p.name, p.stock]),
+            startY: (doc as any).lastAutoTable.finalY + 20,
+            theme: 'striped',
+        });
+
+        doc.save(`rapport_entrepot_${entrepot.nom.replace(/\s+/g, '_')}.pdf`);
+        toast({ title: "Exportation PDF réussie" });
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Détails de l'Entrepôt : {entrepot.nom}</DialogTitle>
+                    <DialogDescription>{entrepot.localisation}</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-6">
+                     <div className="grid grid-cols-2 gap-4">
+                        <Card>
+                            <CardHeader><CardTitle className="text-base">Capacité</CardTitle></CardHeader>
+                            <CardContent><p className="text-2xl font-bold">{entrepot.capacite.toLocaleString('fr-FR')} m³</p></CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader><CardTitle className="text-base">Taux de Remplissage</CardTitle></CardHeader>
+                            <CardContent>
+                                <Progress value={entrepot.tauxRemplissage} className="h-3" />
+                                <p className="text-right text-sm font-bold mt-2">{entrepot.tauxRemplissage}%</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                     <div>
+                        <h4 className="font-semibold mb-2">Produits Stockés</h4>
+                        <div className="border rounded-md max-h-64 overflow-y-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Référence</TableHead>
+                                        <TableHead>Nom du Produit</TableHead>
+                                        <TableHead className="text-right">Stock</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {produitsDansEntrepot.length > 0 ? (
+                                        produitsDansEntrepot.map(p => (
+                                            <TableRow key={p.id}>
+                                                <TableCell className="font-mono text-xs">{p.reference}</TableCell>
+                                                <TableCell>{p.name}</TableCell>
+                                                <TableCell className="text-right font-bold">{p.stock}</TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow><TableCell colSpan={3} className="text-center h-24">Cet entrepôt est vide.</TableCell></TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                    <Button onClick={handleDownloadReport}><Download className="mr-2 h-4 w-4"/>Exporter le rapport</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
