@@ -117,6 +117,29 @@ export default function ProduitsPage() {
         toast({ title: "Exportation PDF réussie" });
     }
 
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Liste des Produits", 14, 22);
+        doc.setFontSize(10);
+        doc.text(`Date d'export: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 30);
+
+        autoTable(doc, {
+            head: [['Référence', 'Nom', 'Stock', 'Prix Unitaire', 'Entrepôt']],
+            body: produits.map(p => [
+                p.reference,
+                p.name,
+                p.stock.toString(),
+                `${p.unitPrice.toLocaleString('fr-FR')} FCFA`,
+                entrepots.find(e => e.id === p.entrepotId)?.nom || 'N/A'
+            ]),
+            startY: 40,
+        });
+
+        doc.save('liste_produits.pdf');
+        toast({ title: "Exportation de la liste réussie" });
+    };
+
     return (
         <>
             <Card className="w-full">
@@ -126,7 +149,10 @@ export default function ProduitsPage() {
                             <CardTitle className="text-2xl">Produits</CardTitle>
                             <CardDescription>Gérez votre catalogue de produits et de marchandises.</CardDescription>
                         </div>
-                        <Button onClick={handleOpenCreateModal}><PlusCircle className="mr-2 h-4 w-4" />Nouveau Produit</Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" onClick={handleExportPDF}><Download className="mr-2 h-4 w-4"/>Exporter</Button>
+                            <Button onClick={handleOpenCreateModal}><PlusCircle className="mr-2 h-4 w-4" />Nouveau Produit</Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
