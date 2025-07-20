@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText } from 'lucide-react';
+import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText, MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -78,7 +78,7 @@ const initialConversations: Conversation[] = [
 
 const EMOJIS = ['😀', '😂', '😍', '👍', '🙏', '🚀', '🎉', '💡', '🤔', '🔥', '💯', '✅'];
 
-export default function ChatPage() {
+export function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>('conv1');
   const [newMessage, setNewMessage] = useState('');
@@ -169,10 +169,10 @@ export default function ChatPage() {
   const activeContact = activeConversation ? getConversationDetails(activeConversation) : null;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+    <div className="flex flex-1 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm h-full">
       <div className="flex flex-1 overflow-hidden">
         {/* Conversations List */}
-        <div className="w-[350px] flex-shrink-0 border-r flex flex-col">
+        <div className="w-[300px] flex-shrink-0 border-r flex flex-col">
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-xl font-semibold tracking-tight">Conversations</h2>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsNewConvModalOpen(true)}>
@@ -409,5 +409,26 @@ function NewConversationModal({ isOpen, onClose, users, selectedUsers, onSelecte
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    )
+}
+
+export function ChatWidget() {
+    const [isOpen, setIsOpen] = useState(false);
+    
+    return (
+        <>
+        <Button 
+            className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 text-white"
+            onClick={() => setIsOpen(!isOpen)}
+        >
+            {isOpen ? <X className="h-8 w-8" /> : <MessageCircle className="h-8 w-8" />}
+            <span className="sr-only">Ouvrir le chat</span>
+        </Button>
+        {isOpen && (
+            <div className="fixed bottom-24 right-6 w-[80vw] h-[70vh] max-w-[900px] max-h-[700px] z-50 bg-card rounded-xl shadow-2xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-10">
+                <ChatPage />
+            </div>
+        )}
+        </>
     )
 }

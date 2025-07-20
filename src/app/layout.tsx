@@ -6,6 +6,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppHeader } from '@/components/app-header';
 import { ModuleNav } from '@/components/module-nav';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ChatWidget } from '@/components/chat-widget';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -55,6 +56,7 @@ export default function RootLayout({
               </div>
             </div>
           </div>
+          <ChatWidget />
           <Toaster />
         </ThemeProvider>
       </body>
