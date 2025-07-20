@@ -8,18 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Eye, Download } from 'lucide-react';
 import { useAtom } from 'jotai';
-import { produitsAtom } from '@/lib/store';
+import { produitsAtom, type Produit } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
-
-type Produit = {
-  id: number;
-  reference: string;
-  name: string;
-  stock: number;
-  unitPrice: number;
-};
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
 
 const defaultFormData: Omit<Produit, 'id'> = {
   reference: '',
@@ -28,10 +24,18 @@ const defaultFormData: Omit<Produit, 'id'> = {
   unitPrice: 0,
 };
 
+// Mock data for the product sheet view
+const mockProductMouvements = [
+    { date: '2024-07-28', type: 'Entrée', quantite: 10, document: 'BR-BC-2024-001-1'},
+    { date: '2024-07-30', type: 'Sortie', quantite: 2, document: 'BL-CMD-0801'},
+    { date: '2024-08-05', type: 'Sortie', quantite: 3, document: 'BL-CMD-0805'},
+];
+
 export default function ProduitsPage() {
     const [produits, setProduits] = useAtom(produitsAtom);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduit, setEditingProduit] = useState<Produit | null>(null);
+    const [viewingProduit, setViewingProduit] = useState<Produit | null>(null);
     const [formData, setFormData] = useState<Omit<Produit, 'id'>>(defaultFormData);
     const { toast } = useToast();
 
@@ -52,6 +56,10 @@ export default function ProduitsPage() {
         setIsModalOpen(true);
     };
 
+    const handleOpenViewModal = (produit: Produit) => {
+        setViewingProduit(produit);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (editingProduit) {
@@ -64,6 +72,41 @@ export default function ProduitsPage() {
         }
         setIsModalOpen(false);
     };
+
+    const handleDownloadPDF = (produit: Produit) => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text(`Fiche Produit : ${produit.reference}`, 14, 22);
+        doc.setFontSize(10);
+        doc.text(`Édité le: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 30);
+        
+        const details = [
+            ['Nom du Produit', produit.name],
+            ['Stock Actuel', produit.stock.toString()],
+            ['Prix Unitaire', `${produit.unitPrice.toLocaleString('fr-FR')} FCFA`],
+        ];
+        
+        autoTable(doc, {
+            startY: 40,
+            head: [['Caractéristique', 'Valeur']],
+            body: details,
+            theme: 'grid'
+        });
+
+        doc.setFontSize(12);
+        doc.text("Derniers Mouvements de Stock", 14, (doc as any).lastAutoTable.finalY + 15);
+        autoTable(doc, {
+            startY: (doc as any).lastAutoTable.finalY + 20,
+            head: [['Date', 'Type', 'Quantité', 'Document']],
+            body: mockProductMouvements.map(m => [m.date, m.type, m.quantite, m.document]),
+            theme: 'striped',
+        });
+
+
+        doc.save(`fiche_produit_${produit.reference}.pdf`);
+        toast({ title: "Exportation PDF réussie" });
+    }
 
     return (
         <>
@@ -97,6 +140,7 @@ export default function ProduitsPage() {
                                     <TableCell className="text-right">{p.unitPrice.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-2">
+                                            <Button size="icon" variant="ghost" onClick={() => handleOpenViewModal(p)}><Eye className="h-4 w-4" /></Button>
                                             <Button size="icon" variant="ghost" onClick={() => handleOpenEditModal(p)}><Pencil className="h-4 w-4" /></Button>
                                             <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                                         </div>
@@ -127,6 +171,63 @@ export default function ProduitsPage() {
                             <Button type="submit">Enregistrer</Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!viewingProduit} onOpenChange={() => setViewingProduit(null)}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Fiche Produit</DialogTitle>
+                    </DialogHeader>
+                    {viewingProduit && (
+                        <>
+                        <div className="py-4 space-y-6">
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div className="p-3 bg-muted rounded-lg space-y-1">
+                                    <p className="text-xs text-muted-foreground">Référence</p>
+                                    <p className="font-bold font-mono">{viewingProduit.reference}</p>
+                                </div>
+                                <div className="p-3 bg-muted rounded-lg space-y-1 col-span-2">
+                                     <p className="text-xs text-muted-foreground">Nom du produit</p>
+                                    <p className="font-bold">{viewingProduit.name}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-center">
+                                 <div className="p-3 bg-muted rounded-lg space-y-1">
+                                    <p className="text-xs text-muted-foreground">Stock Actuel</p>
+                                    <p className="font-bold text-2xl text-primary">{viewingProduit.stock}</p>
+                                </div>
+                                <div className="p-3 bg-muted rounded-lg space-y-1">
+                                    <p className="text-xs text-muted-foreground">Prix Unitaire</p>
+                                    <p className="font-bold text-2xl">{viewingProduit.unitPrice.toLocaleString('fr-FR')} FCFA</p>
+                                </div>
+                            </div>
+                            <Separator />
+                            <div>
+                                <h4 className="font-semibold mb-2">Derniers Mouvements (Exemple)</h4>
+                                <div className="border rounded-md">
+                                    <Table>
+                                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>Document</TableHead><TableHead className="text-right">Quantité</TableHead></TableRow></TableHeader>
+                                        <TableBody>
+                                            {mockProductMouvements.map(m => (
+                                                <TableRow key={m.document}>
+                                                    <TableCell>{m.date}</TableCell>
+                                                    <TableCell>{m.type}</TableCell>
+                                                    <TableCell>{m.document}</TableCell>
+                                                    <TableCell className={`text-right ${m.type === 'Entrée' ? 'text-green-600' : 'text-red-600'}`}>{m.type === 'Entrée' ? '+' : '-'}{m.quantite}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setViewingProduit(null)}>Fermer</Button>
+                            <Button onClick={() => handleDownloadPDF(viewingProduit)}><Download className="mr-2 h-4 w-4"/>Imprimer la fiche</Button>
+                        </DialogFooter>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </>
