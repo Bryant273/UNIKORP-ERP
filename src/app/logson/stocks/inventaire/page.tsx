@@ -21,6 +21,15 @@ import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 
 type InventoryStatus = 'Terminé' | 'En cours';
+
+type InventoryLine = {
+    produitId: number;
+    produitName: string;
+    stockTheorique: number;
+    stockPhysique: number;
+    ecart: number;
+};
+
 type InventoryRecord = {
     id: number;
     date: string;
@@ -29,6 +38,7 @@ type InventoryRecord = {
     status: InventoryStatus;
     ecartTotal: number;
     createdBy: string;
+    details: InventoryLine[];
 };
 
 type PhysicalCount = {
@@ -37,8 +47,15 @@ type PhysicalCount = {
 };
 
 const MOCK_INVENTORY_HISTORY: InventoryRecord[] = [
-    { id: 1, date: '2024-07-29', description: 'Inventaire journalier - Dépôt Principal', type: 'Journalier', status: 'Terminé', ecartTotal: -3, createdBy: 'Admin' },
-    { id: 2, date: '2024-06-30', description: 'Inventaire mensuel - Juin 2024', type: 'Mensuel', status: 'Terminé', ecartTotal: -12, createdBy: 'Admin' },
+    { id: 1, date: '2024-07-29', description: 'Inventaire journalier - Dépôt Principal', type: 'Journalier', status: 'Terminé', ecartTotal: -3, createdBy: 'Admin', details: [
+        { produitId: 1, produitName: 'Serveur Dell PowerEdge R740', stockTheorique: 15, stockPhysique: 15, ecart: 0 },
+        { produitId: 2, produitName: 'Licence Windows Server 2022', stockTheorique: 50, stockPhysique: 50, ecart: 0 },
+        { produitId: 3, produitName: 'Switch Cisco Catalyst 9200', stockTheorique: 25, stockPhysique: 22, ecart: -3 },
+    ]},
+    { id: 2, date: '2024-06-30', description: 'Inventaire mensuel - Juin 2024', type: 'Mensuel', status: 'Terminé', ecartTotal: -12, createdBy: 'Admin', details: [
+         { produitId: 1, produitName: 'Serveur Dell PowerEdge R740', stockTheorique: 20, stockPhysique: 20, ecart: 0 },
+         { produitId: 4, produitName: 'PC Portable Lenovo ThinkPad T14', stockTheorique: 45, stockPhysique: 33, ecart: -12 },
+    ] },
 ];
 
 type MonthlyReportData = {
@@ -58,7 +75,9 @@ export default function InventairePage() {
     const [view, setView] = useState<'list' | 'reconciliation'>('list');
     const [history, setHistory] = useState(MOCK_INVENTORY_HISTORY);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [isDailyReportModalOpen, setIsDailyReportModalOpen] = useState(false);
     const [monthlyReportData, setMonthlyReportData] = useState<MonthlyReportData | null>(null);
+    const [dailyReportData, setDailyReportData] = useState<InventoryRecord | null>(null);
 
     const groupedHistory = useMemo(() => {
         return history.reduce((acc, item) => {
@@ -83,6 +102,12 @@ export default function InventairePage() {
         });
         setIsReportModalOpen(true);
     };
+    
+    const handleOpenDailyReport = (record: InventoryRecord) => {
+        setDailyReportData(record);
+        setIsDailyReportModalOpen(true);
+    };
+
 
     if (view === 'reconciliation') {
         return <ReconciliationView onBack={() => setView('list')} />;
@@ -118,6 +143,7 @@ export default function InventairePage() {
                                                 <TableHead>Description</TableHead>
                                                 <TableHead className="text-center">Écart Total</TableHead>
                                                 <TableHead className="text-center">Statut</TableHead>
+                                                <TableHead className="text-center w-24">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -127,6 +153,9 @@ export default function InventairePage() {
                                                     <TableCell>{inv.description}</TableCell>
                                                     <TableCell className={`text-center font-bold ${inv.ecartTotal > 0 ? 'text-green-600' : inv.ecartTotal < 0 ? 'text-red-600' : ''}`}>{inv.ecartTotal > 0 ? '+' : ''}{inv.ecartTotal}</TableCell>
                                                     <TableCell className="text-center"><Badge>{inv.status}</Badge></TableCell>
+                                                    <TableCell className="text-center">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleOpenDailyReport(inv)}><Eye className="h-4 w-4"/></Button>
+                                                    </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -138,6 +167,7 @@ export default function InventairePage() {
                 </CardContent>
             </Card>
             <MonthlyReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} data={monthlyReportData} />
+            <DailyReportModal isOpen={isDailyReportModalOpen} onClose={() => setIsDailyReportModalOpen(false)} data={dailyReportData} />
         </>
     );
 }
@@ -218,6 +248,90 @@ function ReconciliationView({ onBack }: { onBack: () => void }) {
                 <Button onClick={onBack}>Valider et enregistrer l'inventaire</Button>
             </div>
         </div>
+    );
+}
+
+function DailyReportModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: () => void, data: InventoryRecord | null }) {
+    if (!data) return null;
+    const { toast } = useToast();
+    
+     const handlePrint = () => {
+        const doc = new jsPDF();
+        const companyName = "UNIKORP S.A.";
+        const userName = "Utilisateur Unikorp";
+        const moduleName = "LOGSON";
+        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
+        const printDateTime = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+        const periodString = format(new Date(data.date), 'dd/MM/yyyy', { locale: fr });
+        
+        autoTable(doc, {
+            head: [['Produit', 'Stock Théorique', 'Stock Physique', 'Écart']],
+            body: data.details.map(i => [i.produitName, i.stockTheorique, i.stockPhysique, i.ecart]),
+            startY: 50,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+            didDrawPage: (data) => {
+                doc.setFontSize(9); doc.setTextColor(150);
+                doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+                doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+                doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+                doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+                doc.text(companyName, data.settings.margin.left + 15, 28);
+                doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+                const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+                doc.text(`État : Fiche de Comptage d'Inventaire`, rightX, 25, { align: 'right' });
+                doc.text(`Période : ${periodString}`, rightX, 30, { align: 'right' });
+                doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+                doc.text(`Par : ${data.createdBy}`, rightX, 40, { align: 'right' });
+            },
+            margin: { top: 50 },
+        });
+
+        doc.save(`fiche_inventaire_${data.date}.pdf`);
+        toast({ title: 'Exportation PDF réussie.' });
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+             <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+                 <DialogHeader>
+                    <DialogTitle>Fiche de Comptage - {data.description}</DialogTitle>
+                    <DialogDescription>Inventaire effectué le {format(new Date(data.date), 'dd/MM/yyyy', { locale: fr })} par {data.createdBy}</DialogDescription>
+                </DialogHeader>
+                 <div className="flex-1 overflow-y-auto pr-2">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Produit</TableHead>
+                                <TableHead className="text-center">Stock Théorique</TableHead>
+                                <TableHead className="text-center">Stock Physique</TableHead>
+                                <TableHead className="text-center">Écart</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data.details.map(item => (
+                                <TableRow key={item.produitId}>
+                                    <TableCell>{item.produitName}</TableCell>
+                                    <TableCell className="text-center">{item.stockTheorique}</TableCell>
+                                    <TableCell className="text-center">{item.stockPhysique}</TableCell>
+                                    <TableCell className={`text-center font-bold ${item.ecart !== 0 ? 'text-red-600' : ''}`}>{item.ecart}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-right font-bold">Écart Total</TableCell>
+                                <TableCell className={`text-center font-bold text-2xl ${data.ecartTotal !== 0 ? 'text-red-600' : ''}`}>{data.ecartTotal}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                    <Button onClick={handlePrint}><Download className="mr-2 h-4 w-4" /> Imprimer la fiche</Button>
+                </DialogFooter>
+             </DialogContent>
+        </Dialog>
     );
 }
 
