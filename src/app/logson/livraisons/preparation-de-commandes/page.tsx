@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, PackageCheck } from 'lucide-react';
+import { Eye, PackageCheck, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -26,9 +26,11 @@ export default function PreparationCommandesPage() {
 
     const getStatusBadge = (status: PreparationStatus) => {
         switch (status) {
-            case 'En attente': return <Badge variant="outline">En attente</Badge>;
-            case 'En préparation': return <Badge className="bg-yellow-100 text-yellow-800">En préparation</Badge>;
+            case 'En attente': return <Badge variant="outline">En attente de préparation</Badge>;
             case 'Prête': return <Badge className="bg-green-100 text-green-800">Prête pour expédition</Badge>;
+            case 'Partiellement expédiée': return <Badge className="bg-blue-100 text-blue-800">Partiellement Expédiée</Badge>;
+            case 'En transit': return <Badge className="bg-purple-100 text-purple-800">En Transit</Badge>;
+            case 'Livrée': return <Badge className="bg-gray-100 text-gray-800"><CheckCircle className="mr-2 h-3 w-3"/>Livrée</Badge>;
             default: return <Badge variant="secondary">{status}</Badge>;
         }
     };
@@ -57,7 +59,7 @@ export default function PreparationCommandesPage() {
                             <TableHead>N° Facture / Commande</TableHead>
                             <TableHead>Client</TableHead>
                             <TableHead>Date Facture</TableHead>
-                            <TableHead className="text-center">Statut Préparation</TableHead>
+                            <TableHead className="text-center">Statut</TableHead>
                             <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
                     </TableHeader>

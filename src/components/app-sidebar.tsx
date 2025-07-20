@@ -120,6 +120,7 @@ const skomptabNav = [
       { title: 'Grand livre général', href: '/skomptab/grand-livre-general', icon: BookCopy },
       { title: 'Grand livre tiers', href: '/skomptab/grand-livre-tiers', icon: BookCopy },
       { title: 'Balance générale', href: '/skomptab/balance-generale', icon: Scale },
+      { title: 'Balance âgée', href: '/skomptab/balance-agee', icon: Scale },
       { title: 'Amortissements', href: '/skomptab/amortissements', icon: BookDown },
     ]
   },

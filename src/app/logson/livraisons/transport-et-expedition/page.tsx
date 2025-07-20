@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type InvoiceWithPreparation = InvoiceData & { preparedItems: ExpeditedItem[] };
 
@@ -27,7 +28,7 @@ export default function ExpeditionPage() {
     const [isShipModalOpen, setIsShipModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [shippingInvoice, setShippingInvoice] = useState<InvoiceWithPreparation | null>(null);
-    const [viewingExpedition, setViewingExpedition] = useState<{ invoice: InvoiceData, expedition: Expedition } | null>(null);
+    const [viewingInvoice, setViewingInvoice] = useState<InvoiceData | null>(null);
 
     const readyForShipping = invoices.filter(inv => inv.preparationStatus === 'Prête' || inv.preparationStatus === 'Partiellement expédiée');
 
@@ -85,111 +86,6 @@ export default function ExpeditionPage() {
         }
     };
 
-    const handleDownloadPDF = (invoice: InvoiceData, expedition: Expedition) => {
-        const doc = new jsPDF();
-        
-        const companyName = "UNIKORP S.A.";
-        const companyAddress = "Cocody Angré, Abidjan";
-        const companyReg = "CI-ABJ-01-XXXX";
-        const printDate = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
-
-        autoTable(doc, {
-             didDrawPage: (data) => {
-                doc.setFontSize(22);
-                doc.setFont('helvetica', 'bold');
-                doc.text("BON DE LIVRAISON", 105, 20, { align: 'center' });
-                
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.text(companyName, 20, 40);
-                doc.text(companyAddress, 20, 45);
-                doc.text(companyReg, 20, 50);
-
-                doc.setFontSize(12);
-                doc.text(`Client:`, 130, 40);
-                doc.setFont('helvetica', 'bold');
-                doc.text(invoice.clientName, 130, 45);
-
-                doc.text(`N° Commande Client: ${invoice.invoiceNumber}`, 20, 60);
-                doc.text(`N° Bon de Livraison: ${expedition.numeroBonLivraison}`, 20, 66);
-                doc.text(`Date de livraison prévue: ${format(new Date(expedition.dateLivraisonPrevue), 'dd/MM/yyyy')}`, 130, 60);
-                doc.text(`Transporteur: ${expedition.transporteur}`, 130, 66);
-             },
-             margin: { top: 75 },
-        });
-
-        // Section 1: This Delivery
-        autoTable(doc, {
-            head: [['1. Détail de cette Livraison']],
-            body: [['Description Article', 'Quantité Livrée']],
-            startY: 75,
-            theme: 'striped',
-            headStyles: { fillColor: '#1e3a8a' },
-            didParseCell: function (data) {
-                if(data.row.index === 0 && data.section === 'body') {
-                     data.cell.styles.fontStyle = 'bold';
-                }
-            }
-        });
-        autoTable(doc, {
-            body: expedition.items.map(item => [item.description, item.quantiteLivree]),
-            startY: (doc as any).lastAutoTable.finalY,
-            theme: 'grid',
-        });
-        
-        // Section 2: Order balance
-        const allPreparedItems = new Map(invoice.preparedItems.map(item => [item.ligneCommandeId, {qtyPrepared: item.quantiteAPreparer, description: item.description}]));
-        const allExpeditedItems = (invoice.expeditions || [])
-            .flatMap(exp => exp.items)
-            .reduce((acc, item) => {
-                acc.set(item.ligneCommandeId, (acc.get(item.ligneCommandeId) || 0) + item.quantiteLivree);
-                return acc;
-            }, new Map<string, number>());
-        
-        const balanceLignes = Array.from(allPreparedItems.entries()).map(([ligneId, {qtyPrepared, description}]) => {
-            const alreadyExpedited = allExpeditedItems.get(ligneId) || 0;
-            return {
-                description: description,
-                solde: qtyPrepared - alreadyExpedited
-            }
-        }).filter(b => b.solde > 0);
-
-
-        if(balanceLignes.length > 0) {
-            autoTable(doc, {
-                head: [['2. Solde à livrer après cette expédition']],
-                body: [['Description Article', 'Quantité Restante']],
-                startY: (doc as any).lastAutoTable.finalY + 10,
-                theme: 'striped',
-                headStyles: { fillColor: '#f59e0b' },
-                 didParseCell: function (data) {
-                    if(data.row.index === 0 && data.section === 'body') {
-                         data.cell.styles.fontStyle = 'bold';
-                    }
-                }
-            });
-            autoTable(doc, {
-                body: balanceLignes.map(l => [l.description, l.solde]),
-                startY: (doc as any).lastAutoTable.finalY,
-                theme: 'grid'
-            });
-        }
-        
-        let footerY = doc.internal.pageSize.getHeight() - 40;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text("Cachet & Signature du Client", 105, footerY, { align: 'center' });
-        doc.setLineWidth(0.5);
-        doc.line(75, footerY - 5, 135, footerY - 5);
-
-        doc.setFontSize(8);
-        doc.setTextColor(150);
-        doc.text(`Document imprimé le ${format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss")} via UNIKORP ®`, 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-
-
-        doc.save(`BL_${expedition.numeroBonLivraison}.pdf`);
-    };
-
     return (
         <>
             <Card className="w-full">
@@ -229,10 +125,7 @@ export default function ExpeditionPage() {
                                                 <Truck className="mr-2 h-4 w-4" /> Planifier
                                             </Button>
                                              {inv.expeditions && inv.expeditions.length > 0 && 
-                                                <Button size="icon" variant="ghost" onClick={() => setViewingExpedition({ invoice: inv, expedition: inv.expeditions![inv.expeditions!.length - 1] })}><Eye className="h-4 w-4" /></Button>
-                                             }
-                                             {inv.expeditions && inv.expeditions.length > 0 &&
-                                                <Button size="icon" variant="ghost" onClick={() => handleDownloadPDF(inv, inv.expeditions![inv.expeditions!.length - 1])}><Download className="h-4 w-4" /></Button>
+                                                <Button size="icon" variant="ghost" onClick={() => { setViewingInvoice(inv); setIsViewModalOpen(true); }}><Eye className="h-4 w-4" /></Button>
                                              }
                                         </div>
                                     </TableCell>
@@ -255,10 +148,10 @@ export default function ExpeditionPage() {
                 onSave={handleSaveExpedition}
             />
 
-            <ViewExpeditionModal
-                isOpen={!!viewingExpedition}
-                onClose={() => setViewingExpedition(null)}
-                data={viewingExpedition}
+            <ViewExpeditionsModal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                invoice={viewingInvoice}
             />
         </>
     );
@@ -380,36 +273,158 @@ function ShippingModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, 
     );
 }
 
-function ViewExpeditionModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: () => void, data: { invoice: InvoiceData, expedition: Expedition } | null }) {
-    if (!data) return null;
-    const { invoice, expedition } = data;
+function ViewExpeditionsModal({ isOpen, onClose, invoice }: { isOpen: boolean, onClose: () => void, invoice: InvoiceData | null }) {
+    if (!invoice) return null;
+
+    const handleDownloadPDF = (expedition: Expedition) => {
+        const doc = new jsPDF();
+        
+        const companyName = "UNIKORP S.A.";
+        const companyAddress = "Cocody Angré, Abidjan";
+        const companyReg = "CI-ABJ-01-XXXX";
+        const printDate = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
+
+        autoTable(doc, {
+             didDrawPage: (data) => {
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.text("BON DE LIVRAISON", 105, 20, { align: 'center' });
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(companyName, 20, 40);
+                doc.text(companyAddress, 20, 45);
+                doc.text(companyReg, 20, 50);
+
+                doc.setFontSize(12);
+                doc.text(`Client:`, 130, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text(invoice.clientName, 130, 45);
+
+                doc.text(`N° Commande Client: ${invoice.invoiceNumber}`, 20, 60);
+                doc.text(`N° Bon de Livraison: ${expedition.numeroBonLivraison}`, 20, 66);
+                doc.text(`Date de livraison prévue: ${format(new Date(expedition.dateLivraisonPrevue), 'dd/MM/yyyy')}`, 130, 60);
+                doc.text(`Transporteur: ${expedition.transporteur}`, 130, 66);
+             },
+             margin: { top: 75 },
+        });
+
+        // Section 1: This Delivery
+        autoTable(doc, {
+            head: [['1. Détail de cette Livraison']],
+            body: [['Description Article', 'Quantité Livrée']],
+            startY: 75,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+            didParseCell: function (data) {
+                if(data.row.index === 0 && data.section === 'body') {
+                     data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        });
+        autoTable(doc, {
+            body: expedition.items.map(item => [item.description, item.quantiteLivree]),
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid',
+        });
+        
+        // Section 2: Order balance
+        const allPreparedItems = new Map(invoice.preparedItems.map(item => [item.ligneCommandeId, {qtyPrepared: item.quantiteAPreparer, description: item.description}]));
+        const allExpeditedItems = (invoice.expeditions || [])
+            .flatMap(exp => exp.items)
+            .reduce((acc, item) => {
+                acc.set(item.ligneCommandeId, (acc.get(item.ligneCommandeId) || 0) + item.quantiteLivree);
+                return acc;
+            }, new Map<string, number>());
+        
+        const balanceLignes = Array.from(allPreparedItems.entries()).map(([ligneId, {qtyPrepared, description}]) => {
+            const alreadyExpedited = allExpeditedItems.get(ligneId) || 0;
+            return {
+                description: description,
+                solde: qtyPrepared - alreadyExpedited
+            }
+        }).filter(b => b.solde > 0);
+
+
+        if(balanceLignes.length > 0) {
+            autoTable(doc, {
+                head: [['2. Solde à livrer après cette expédition']],
+                body: [['Description Article', 'Quantité Restante']],
+                startY: (doc as any).lastAutoTable.finalY + 10,
+                theme: 'striped',
+                headStyles: { fillColor: '#f59e0b' },
+                 didParseCell: function (data) {
+                    if(data.row.index === 0 && data.section === 'body') {
+                         data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            });
+            autoTable(doc, {
+                body: balanceLignes.map(l => [l.description, l.solde]),
+                startY: (doc as any).lastAutoTable.finalY,
+                theme: 'grid'
+            });
+        }
+        
+        let footerY = doc.internal.pageSize.getHeight() - 40;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Cachet & Signature du Client", 105, footerY, { align: 'center' });
+        doc.setLineWidth(0.5);
+        doc.line(75, footerY - 5, 135, footerY - 5);
+
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Document imprimé le ${format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss")} via UNIKORP ®`, 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+
+
+        doc.save(`BL_${expedition.numeroBonLivraison}.pdf`);
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-xl">
+            <DialogContent className="sm:max-w-2xl">
                  <DialogHeader>
-                    <DialogTitle>Détail du Bon de Livraison: {expedition.numeroBonLivraison}</DialogTitle>
+                    <DialogTitle>Historique des Expéditions pour Commande {invoice.invoiceNumber}</DialogTitle>
                     <DialogDescription>
-                       Pour commande {invoice.invoiceNumber} - Expédié le {format(new Date(expedition.dateExpedition), 'dd/MM/yyyy', {locale: fr})}
+                       Consultez tous les bons de livraison émis pour cette commande.
                     </DialogDescription>
                 </DialogHeader>
-                 <div className="max-h-[60vh] overflow-y-auto p-1">
-                    <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Description Article</TableHead>
-                            <TableHead className="text-right">Quantité Livrée</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {expedition.items.map(item => (
-                                <TableRow key={item.ligneCommandeId}>
-                                    <TableCell>{item.description}</TableCell>
-                                    <TableCell className="text-right">{item.quantiteLivree}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
+                 <ScrollArea className="max-h-[60vh] my-4 pr-6">
+                    <div className="space-y-4">
+                        {(invoice.expeditions || []).map(expedition => (
+                            <Card key={expedition.id}>
+                                <CardHeader className="flex flex-row items-center justify-between p-4">
+                                    <div>
+                                        <CardTitle className="text-lg">{expedition.numeroBonLivraison}</CardTitle>
+                                        <CardDescription>Expédié le {format(new Date(expedition.dateExpedition), 'dd/MM/yyyy', { locale: fr })} via {expedition.transporteur}</CardDescription>
+                                    </div>
+                                    <Button size="sm" variant="outline" onClick={() => handleDownloadPDF(expedition)}>
+                                        <Download className="mr-2 h-4 w-4" /> Imprimer ce bon
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Description</TableHead>
+                                                <TableHead className="text-right">Quantité Livrée</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {expedition.items.map((item, index) => (
+                                                <TableRow key={index}>
+                                                    <TableCell>{item.description}</TableCell>
+                                                    <TableCell className="text-right">{item.quantiteLivree}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </ScrollArea>
                 <DialogFooter>
                      <Button variant="outline" onClick={onClose}>Fermer</Button>
                 </DialogFooter>

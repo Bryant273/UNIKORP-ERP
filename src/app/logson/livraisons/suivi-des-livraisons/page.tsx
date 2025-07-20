@@ -19,8 +19,8 @@ export default function SuiviLivraisonsPage() {
     const [invoices, setInvoices] = useAtom(invoicesAtom);
     const { toast } = useToast();
 
-    // We consider 'En transit' as the starting point for this page
-    const deliveries = invoices.filter(inv => inv.preparationStatus === 'En transit');
+    // We consider 'En transit' or 'Livrée' for this page
+    const deliveries = invoices.filter(inv => inv.preparationStatus === 'En transit' || inv.preparationStatus === 'Livrée');
 
     const handleMarkAsDelivered = (invoiceId: string) => {
         setInvoices(invoices.map(inv => 
@@ -41,7 +41,7 @@ export default function SuiviLivraisonsPage() {
         <Card className="w-full">
             <CardHeader>
                 <CardTitle className="text-2xl">Suivi des Livraisons</CardTitle>
-                <CardDescription>Suivez l'état de vos livraisons en temps réel.</CardDescription>
+                <CardDescription>Suivez l'état de vos livraisons en temps réel et consultez l'historique.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
