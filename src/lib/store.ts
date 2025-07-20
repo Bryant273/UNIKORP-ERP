@@ -22,12 +22,22 @@ type Transporteur = {
     telephone: string;
 }
 
+type Entrepot = {
+    id: number;
+    nom: string;
+    localisation: string;
+    capacite: number; // en m³
+    tauxRemplissage: number; // en %
+};
+
+
 type Produit = {
   id: number;
   reference: string;
   name: string;
   stock: number;
   unitPrice: number;
+  entrepotId: number;
 };
 
 export type LigneCommande = {
@@ -216,11 +226,18 @@ const initialProspects: CompteTiers[] = [
     { id: 102, numero: 'PROS-002', intitule: 'Prospect Epsilon', telephone: '0623456789' },
 ];
 
+const initialEntrepots: Entrepot[] = [
+    { id: 1, nom: 'Entrepôt Principal - Abidjan', localisation: 'Zone Industrielle, Vridi', capacite: 5000, tauxRemplissage: 85 },
+    { id: 2, nom: 'Entrepôt Secondaire - Bouaké', localisation: 'Zone Industrielle, Bouaké', capacite: 2500, tauxRemplissage: 60 },
+    { id: 3, nom: 'Entrepôt Tampon - San Pédro', localisation: 'Zone Portuaire', capacite: 1000, tauxRemplissage: 95 },
+];
+
+
 const initialProduits: Produit[] = [
-    { id: 1, reference: 'SRV-DELL-R740', name: 'Serveur Dell PowerEdge R740', stock: 15, unitPrice: 2500000 },
-    { id: 2, reference: 'SW-MS-WIN22', name: 'Licence Windows Server 2022', stock: 50, unitPrice: 150000 },
-    { id: 3, reference: 'NW-CIS-C9200', name: 'Switch Cisco Catalyst 9200', stock: 25, unitPrice: 850000 },
-    { id: 4, reference: 'PC-LEN-T14', name: 'PC Portable Lenovo ThinkPad T14', stock: 40, unitPrice: 750000 },
+    { id: 1, reference: 'SRV-DELL-R740', name: 'Serveur Dell PowerEdge R740', stock: 15, unitPrice: 2500000, entrepotId: 1 },
+    { id: 2, reference: 'SW-MS-WIN22', name: 'Licence Windows Server 2022', stock: 50, unitPrice: 150000, entrepotId: 1 },
+    { id: 3, reference: 'NW-CIS-C9200', name: 'Switch Cisco Catalyst 9200', stock: 25, unitPrice: 850000, entrepotId: 2 },
+    { id: 4, reference: 'PC-LEN-T14', name: 'PC Portable Lenovo ThinkPad T14', stock: 40, unitPrice: 750000, entrepotId: 1 },
 ];
 
 const initialCommandes: Commande[] = [
@@ -232,6 +249,7 @@ export const clientsAtom = atom<CompteTiers[]>(initialClients);
 export const prospectsAtom = atom<CompteTiers[]>(initialProspects);
 export const fournisseursAtom = atom<Fournisseur[]>(initialFournisseurs);
 export const transporteursAtom = atom<Transporteur[]>(initialTransporteurs);
+export const entrepotsAtom = atom<Entrepot[]>(initialEntrepots);
 export const produitsAtom = atom<Produit[]>(initialProduits);
 export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
 export const receptionsAtom = atom<Reception[]>([]);

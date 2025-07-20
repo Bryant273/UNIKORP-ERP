@@ -10,18 +10,20 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Pencil, Trash2, Eye, Download } from 'lucide-react';
 import { useAtom } from 'jotai';
-import { produitsAtom, type Produit } from '@/lib/store';
+import { produitsAtom, entrepotsAtom, type Produit } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const defaultFormData: Omit<Produit, 'id'> = {
   reference: '',
   name: '',
   stock: 0,
   unitPrice: 0,
+  entrepotId: 0,
 };
 
 // Mock data for the product sheet view
@@ -33,6 +35,7 @@ const mockProductMouvements = [
 
 export default function ProduitsPage() {
     const [produits, setProduits] = useAtom(produitsAtom);
+    const [entrepots] = useAtom(entrepotsAtom);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduit, setEditingProduit] = useState<Produit | null>(null);
     const [viewingProduit, setViewingProduit] = useState<Produit | null>(null);
@@ -42,6 +45,10 @@ export default function ProduitsPage() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: id === 'stock' || id === 'unitPrice' ? parseFloat(value) || 0 : value }));
+    };
+    
+    const handleSelectChange = (value: string) => {
+        setFormData(prev => ({...prev, entrepotId: Number(value) }));
     };
 
     const handleOpenCreateModal = () => {
@@ -75,6 +82,7 @@ export default function ProduitsPage() {
 
     const handleDownloadPDF = (produit: Produit) => {
         const doc = new jsPDF();
+        const entrepot = entrepots.find(e => e.id === produit.entrepotId)?.nom || 'N/A';
         
         doc.setFontSize(18);
         doc.text(`Fiche Produit : ${produit.reference}`, 14, 22);
@@ -85,6 +93,7 @@ export default function ProduitsPage() {
             ['Nom du Produit', produit.name],
             ['Stock Actuel', produit.stock.toString()],
             ['Prix Unitaire', `${produit.unitPrice.toLocaleString('fr-FR')} FCFA`],
+            ['Entrepôt', entrepot],
         ];
         
         autoTable(doc, {
@@ -126,8 +135,9 @@ export default function ProduitsPage() {
                             <TableRow>
                                 <TableHead>Référence</TableHead>
                                 <TableHead>Nom</TableHead>
-                                <TableHead className="text-center">Stock Actuel</TableHead>
+                                <TableHead className="text-center">Stock</TableHead>
                                 <TableHead className="text-right">Prix Unitaire</TableHead>
+                                <TableHead>Entrepôt</TableHead>
                                 <TableHead className="text-center">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -138,6 +148,7 @@ export default function ProduitsPage() {
                                     <TableCell className="font-medium">{p.name}</TableCell>
                                     <TableCell className="text-center">{p.stock}</TableCell>
                                     <TableCell className="text-right">{p.unitPrice.toLocaleString('fr-FR')} FCFA</TableCell>
+                                    <TableCell>{entrepots.find(e => e.id === p.entrepotId)?.nom || 'N/A'}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-2">
                                             <Button size="icon" variant="ghost" onClick={() => handleOpenViewModal(p)}><Eye className="h-4 w-4" /></Button>
@@ -164,6 +175,17 @@ export default function ProduitsPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2"><Label htmlFor="stock">Stock Initial</Label><Input id="stock" type="number" value={formData.stock} onChange={handleInputChange} required /></div>
                                 <div className="space-y-2"><Label htmlFor="unitPrice">Prix Unitaire</Label><Input id="unitPrice" type="number" value={formData.unitPrice} onChange={handleInputChange} required /></div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="entrepotId">Entrepôt de stockage</Label>
+                                <Select value={formData.entrepotId?.toString()} onValueChange={handleSelectChange}>
+                                    <SelectTrigger><SelectValue placeholder="Sélectionnez un entrepôt..."/></SelectTrigger>
+                                    <SelectContent>
+                                        {entrepots.map(e => (
+                                            <SelectItem key={e.id} value={e.id.toString()}>{e.nom}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                         <DialogFooter>
@@ -192,7 +214,7 @@ export default function ProduitsPage() {
                                     <p className="font-bold">{viewingProduit.name}</p>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 text-center">
+                            <div className="grid grid-cols-3 gap-4 text-center">
                                  <div className="p-3 bg-muted rounded-lg space-y-1">
                                     <p className="text-xs text-muted-foreground">Stock Actuel</p>
                                     <p className="font-bold text-2xl text-primary">{viewingProduit.stock}</p>
@@ -200,6 +222,10 @@ export default function ProduitsPage() {
                                 <div className="p-3 bg-muted rounded-lg space-y-1">
                                     <p className="text-xs text-muted-foreground">Prix Unitaire</p>
                                     <p className="font-bold text-2xl">{viewingProduit.unitPrice.toLocaleString('fr-FR')} FCFA</p>
+                                </div>
+                                 <div className="p-3 bg-muted rounded-lg space-y-1">
+                                    <p className="text-xs text-muted-foreground">Entrepôt</p>
+                                    <p className="font-bold text-lg">{entrepots.find(e => e.id === viewingProduit.entrepotId)?.nom || 'N/A'}</p>
                                 </div>
                             </div>
                             <Separator />

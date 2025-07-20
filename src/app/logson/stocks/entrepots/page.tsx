@@ -7,23 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Warehouse, MapPin, Eye } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-
-type Entrepot = {
-    id: string;
-    nom: string;
-    localisation: string;
-    capacite: number; // en m³
-    tauxRemplissage: number; // en %
-};
-
-const MOCK_ENTREPOTS: Entrepot[] = [
-    { id: 'ent-1', nom: 'Entrepôt Principal - Abidjan', localisation: 'Zone Industrielle, Vridi', capacite: 5000, tauxRemplissage: 85 },
-    { id: 'ent-2', nom: 'Entrepôt Secondaire - Bouaké', localisation: 'Zone Industrielle, Bouaké', capacite: 2500, tauxRemplissage: 60 },
-    { id: 'ent-3', nom: 'Entrepôt Tampon - San Pédro', localisation: 'Zone Portuaire', capacite: 1000, tauxRemplissage: 95 },
-];
+import { useAtom } from 'jotai';
+import { entrepotsAtom } from '@/lib/store';
 
 export default function EntrepotsPage() {
-    const [entrepots, setEntrepots] = useState(MOCK_ENTREPOTS);
+    const [entrepots] = useAtom(entrepotsAtom);
     
     return (
         <Card className="w-full">
