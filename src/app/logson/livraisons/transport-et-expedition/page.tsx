@@ -29,7 +29,7 @@ export default function ExpeditionPage() {
     const [shippingInvoice, setShippingInvoice] = useState<InvoiceWithPreparation | null>(null);
     const [viewingExpedition, setViewingExpedition] = useState<{ invoice: InvoiceData, expedition: Expedition } | null>(null);
 
-    const readyForShipping = invoices.filter(inv => inv.preparationStatus === 'Prête' || inv.preparationStatus === 'En transit' || inv.preparationStatus === 'Partiellement expédiée');
+    const readyForShipping = invoices.filter(inv => inv.preparationStatus === 'Prête' || inv.preparationStatus === 'Partiellement expédiée');
 
     const handleOpenShippingModal = (invoice: InvoiceData) => {
         setShippingInvoice(invoice as InvoiceWithPreparation);
@@ -85,6 +85,61 @@ export default function ExpeditionPage() {
         }
     };
 
+    const handleDownloadPDF = (invoice: InvoiceData, expedition: Expedition) => {
+        const doc = new jsPDF();
+        
+        const companyName = "UNIKORP S.A.";
+        const companyAddress = "Cocody Angré, Abidjan";
+        const companyReg = "CI-ABJ-01-XXXX";
+        const printDate = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
+
+        autoTable(doc, {
+             didDrawPage: (data) => {
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.text("BON DE LIVRAISON", 105, 20, { align: 'center' });
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(companyName, 20, 40);
+                doc.text(companyAddress, 20, 45);
+                doc.text(companyReg, 20, 50);
+
+                doc.setFontSize(12);
+                doc.text(`Client:`, 130, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text(invoice.clientName, 130, 45);
+
+                doc.text(`N° Commande Client: ${invoice.invoiceNumber}`, 20, 60);
+                doc.text(`N° Bon de Livraison: ${expedition.numeroBonLivraison}`, 20, 66);
+                doc.text(`Date de livraison prévue: ${format(new Date(expedition.dateLivraisonPrevue), 'dd/MM/yyyy')}`, 130, 60);
+                doc.text(`Transporteur: ${expedition.transporteur}`, 130, 66);
+             },
+             margin: { top: 75 },
+        });
+
+        autoTable(doc, {
+            head: [['Description Article', 'Quantité Livrée']],
+            body: expedition.items.map(item => [item.description, item.quantiteLivree]),
+            startY: 75,
+            theme: 'grid',
+        });
+        
+        let footerY = doc.internal.pageSize.getHeight() - 40;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Cachet & Signature du Client", 105, footerY, { align: 'center' });
+        doc.setLineWidth(0.5);
+        doc.line(75, footerY - 5, 135, footerY - 5);
+
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Document imprimé le ${printDate} via UNIKORP ®`, 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+
+
+        doc.save(`BL_${expedition.numeroBonLivraison}.pdf`);
+    };
+
     return (
         <>
             <Card className="w-full">
@@ -123,7 +178,12 @@ export default function ExpeditionPage() {
                                             <Button size="sm" variant="outline" onClick={() => handleOpenShippingModal(inv)}>
                                                 <Truck className="mr-2 h-4 w-4" /> Planifier
                                             </Button>
-                                             <Button size="icon" variant="ghost" onClick={() => setViewingExpedition({ invoice: inv, expedition: inv.expeditions![inv.expeditions!.length - 1] })} disabled={!inv.expeditions || inv.expeditions.length === 0}><Eye className="h-4 w-4" /></Button>
+                                             {inv.expeditions && inv.expeditions.length > 0 && 
+                                                <Button size="icon" variant="ghost" onClick={() => setViewingExpedition({ invoice: inv, expedition: inv.expeditions![inv.expeditions!.length - 1] })}><Eye className="h-4 w-4" /></Button>
+                                             }
+                                             {inv.expeditions && inv.expeditions.length > 0 &&
+                                                <Button size="icon" variant="ghost" onClick={() => handleDownloadPDF(inv, inv.expeditions![inv.expeditions.length - 1])}><Download className="h-4 w-4" /></Button>
+                                             }
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -171,7 +231,12 @@ function ShippingModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, 
                 quantiteLivree: Math.max(0, item.quantiteAPreparer - (alreadyExpedited.get(item.ligneCommandeId) || 0)),
             })).filter(item => item.quantiteLivree > 0);
             
-            setLignesLivraison(remainingToShip);
+            setLignesLivraison(remainingToShip.map(item => ({
+                ligneCommandeId: item.ligneCommandeId,
+                description: item.description,
+                quantiteLivree: item.quantiteLivree
+            })));
+
             setTransporteur('');
             setDateLivraison(format(new Date(), 'yyyy-MM-dd'));
         }
@@ -181,8 +246,12 @@ function ShippingModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, 
         const newQuantity = parseInt(newQuantityStr) || 0;
         setLignesLivraison(prev => prev.map(ligne => {
             if (ligne.ligneCommandeId === ligneId) {
-                 const originalPreparedQty = invoice?.preparedItems.find(i => i.ligneCommandeId === ligneId)?.quantiteAPreparer || 0;
-                 return { ...ligne, quantiteLivree: Math.max(0, Math.min(newQuantity, originalPreparedQty)) };
+                 const originalPreparedItem = invoice?.preparedItems.find(i => i.ligneCommandeId === ligneId);
+                 if (originalPreparedItem) {
+                     const alreadyExpeditedQty = invoice.expeditions?.flatMap(e => e.items).filter(i => i.ligneCommandeId === ligneId).reduce((sum, i) => sum + i.quantiteLivree, 0) || 0;
+                     const maxQty = originalPreparedItem.quantiteAPreparer - alreadyExpeditedQty;
+                     return { ...ligne, quantiteLivree: Math.max(0, Math.min(newQuantity, maxQty)) };
+                 }
             }
             return ligne;
         }));
@@ -228,22 +297,26 @@ function ShippingModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, 
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {lignesLivraison.map(ligne => (
+                                {lignesLivraison.map(ligne => {
+                                    const originalPreparedItem = invoice?.preparedItems.find(i => i.ligneCommandeId === ligne.ligneCommandeId);
+                                     const alreadyExpeditedQty = invoice.expeditions?.flatMap(e => e.items).filter(i => i.ligneCommandeId === ligne.ligneCommandeId).reduce((sum, i) => sum + i.quantiteLivree, 0) || 0;
+                                     const maxQty = (originalPreparedItem?.quantiteAPreparer || 0) - alreadyExpeditedQty;
+                                    return(
                                     <TableRow key={ligne.ligneCommandeId}>
                                         <TableCell>{ligne.description}</TableCell>
-                                        <TableCell className="text-center">{ligne.quantiteLivree}</TableCell>
+                                        <TableCell className="text-center">{maxQty}</TableCell>
                                         <TableCell>
                                             <Input
                                                 type="number"
                                                 className="text-center"
                                                 value={ligne.quantiteLivree}
                                                 onChange={(e) => handleQuantityChange(ligne.ligneCommandeId, e.target.value)}
-                                                max={ligne.quantiteLivree}
+                                                max={maxQty}
                                                 min="0"
                                             />
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                )})}
                             </TableBody>
                         </Table>
                     </div>

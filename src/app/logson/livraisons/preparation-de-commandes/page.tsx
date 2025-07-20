@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Eye, PackageCheck } from 'lucide-react';
+import { Eye, PackageCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { useAtom } from 'jotai';
 import { invoicesAtom, produitsAtom, type InvoiceData, type PreparationStatus, type PreparedItem } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
-import { Label } from '@/components/ui/label';
 
 type InvoiceWithPreparation = InvoiceData & { preparedItems?: PreparedItem[] };
 
@@ -33,21 +32,14 @@ export default function PreparationCommandesPage() {
             default: return <Badge variant="secondary">{status}</Badge>;
         }
     };
-
-    const handleMarkAsReady = (invoiceId: string) => {
-        setInvoices(invoices.map(inv => 
-            inv.id === invoiceId ? { ...inv, preparationStatus: 'Prête' } : inv
-        ));
-        toast({ title: 'Statut mis à jour', description: `La commande est maintenant "Prête pour expédition".`});
-    };
     
     const handleSavePreparation = (invoiceId: string, preparedItems: PreparedItem[]) => {
         setInvoices(invoices.map(inv => 
             inv.id === invoiceId 
-            ? { ...inv, preparationStatus: 'En préparation', preparedItems: preparedItems.filter(p => p.quantiteAPreparer > 0) } 
+            ? { ...inv, preparationStatus: 'Prête', preparedItems: preparedItems.filter(p => p.quantiteAPreparer > 0) } 
             : inv
         ));
-        toast({ title: 'Préparation enregistrée', description: 'La commande est passée "En préparation".'});
+        toast({ title: 'Préparation enregistrée', description: 'La commande est maintenant "Prête pour expédition".'});
         setPreparingInvoice(null);
     }
 
@@ -55,7 +47,7 @@ export default function PreparationCommandesPage() {
         <>
         <Card className="w-full">
             <CardHeader>
-                <CardTitle className="text-2xl">Commandes Clients</CardTitle>
+                <CardTitle className="text-2xl">Commandes clients</CardTitle>
                 <CardDescription>Gérez la préparation des commandes facturées pour l'expédition.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -84,11 +76,6 @@ export default function PreparationCommandesPage() {
                                         <Button size="icon" variant="ghost" onClick={() => setPreparingInvoice(invoice as InvoiceWithPreparation)} disabled={invoice.preparationStatus !== 'En attente'}>
                                             <PackageCheck className="h-4 w-4"/>
                                         </Button>
-                                        {invoice.preparationStatus === 'En préparation' && 
-                                            <Button size="icon" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => handleMarkAsReady(invoice.id)}>
-                                                <CheckCircle className="h-4 w-4"/>
-                                            </Button>
-                                        }
                                     </div>
                                 </TableCell>
                             </TableRow>

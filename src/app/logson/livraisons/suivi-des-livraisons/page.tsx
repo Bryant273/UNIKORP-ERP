@@ -20,7 +20,7 @@ export default function SuiviLivraisonsPage() {
     const { toast } = useToast();
 
     // We consider 'En transit' as the starting point for this page
-    const deliveries = invoices.filter(inv => inv.preparationStatus === 'En transit' || inv.preparationStatus === 'Livrée');
+    const deliveries = invoices.filter(inv => inv.preparationStatus === 'En transit');
 
     const handleMarkAsDelivered = (invoiceId: string) => {
         setInvoices(invoices.map(inv => 
@@ -59,7 +59,7 @@ export default function SuiviLivraisonsPage() {
                             <TableRow key={inv.id}>
                                 <TableCell>{inv.invoiceNumber}</TableCell>
                                 <TableCell>{inv.clientName}</TableCell>
-                                <TableCell>DHL</TableCell>
+                                <TableCell>{inv.expeditions?.[inv.expeditions.length - 1]?.transporteur || 'N/A'}</TableCell>
                                 <TableCell className="text-center">
                                     {getStatusBadge(inv.preparationStatus as PreparationStatus)}
                                 </TableCell>

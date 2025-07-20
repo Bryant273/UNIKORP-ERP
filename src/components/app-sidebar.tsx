@@ -421,7 +421,7 @@ export function AppSidebar() {
     return null;
   }
 
-  const { dashboardLink, placeholder } = getNavForPath(pathname);
+  const { dashboardLink } = getNavForPath(pathname);
 
   if (!isMounted) {
     return (
@@ -455,9 +455,6 @@ export function AppSidebar() {
           </Link>
         </div>
         <SidebarNavContent />
-        {placeholder && (
-          <div className="p-4 text-sm text-muted-foreground">{placeholder}</div>
-        )}
       </div>
     </aside>
   );
