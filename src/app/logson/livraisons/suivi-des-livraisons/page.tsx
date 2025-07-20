@@ -50,6 +50,7 @@ export default function SuiviLivraisonsPage() {
                             <TableHead>N° Commande</TableHead>
                             <TableHead>Client</TableHead>
                             <TableHead>Transporteur (Simulé)</TableHead>
+                            <TableHead>Dernier BL</TableHead>
                             <TableHead className="text-center">Statut</TableHead>
                             <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
@@ -60,6 +61,7 @@ export default function SuiviLivraisonsPage() {
                                 <TableCell>{inv.invoiceNumber}</TableCell>
                                 <TableCell>{inv.clientName}</TableCell>
                                 <TableCell>{inv.expeditions?.[inv.expeditions.length - 1]?.transporteur || 'N/A'}</TableCell>
+                                <TableCell className="font-mono text-xs">{inv.expeditions?.[inv.expeditions.length - 1]?.numeroBonLivraison}</TableCell>
                                 <TableCell className="text-center">
                                     {getStatusBadge(inv.preparationStatus as PreparationStatus)}
                                 </TableCell>

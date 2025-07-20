@@ -106,7 +106,6 @@ export default function PreparationCommandesPage() {
 function PreparationDetailsModal({ isOpen, onClose, invoice }: { isOpen: boolean, onClose: () => void, invoice: InvoiceWithPreparation | null }) {
     if (!invoice) return null;
     
-    // Show prepared items if they exist, otherwise fallback to original line items
     const itemsToShow = invoice.preparedItems && invoice.preparedItems.length > 0
         ? invoice.preparedItems.map(item => ({...item, quantiteALivrer: item.quantiteAPreparer}))
         : invoice.lineItems.map(item => ({ ...item, quantiteALivrer: item.quantity, ligneCommandeId: item.id }));

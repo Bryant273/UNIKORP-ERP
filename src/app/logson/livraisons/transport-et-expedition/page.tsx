@@ -10,7 +10,7 @@ import { PlusCircle, Truck, Download, Eye, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAtom } from 'jotai';
-import { invoicesAtom, type InvoiceData, type PreparationStatus, type ExpeditedItem, type Expedition } from '@/lib/store';
+import { invoicesAtom, transporteursAtom, type InvoiceData, type PreparationStatus, type ExpeditedItem, type Expedition } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Logo } from '@/components/logo';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type InvoiceWithPreparation = InvoiceData & { preparedItems: ExpeditedItem[] };
 
@@ -30,7 +31,7 @@ export default function ExpeditionPage() {
     const [shippingInvoice, setShippingInvoice] = useState<InvoiceWithPreparation | null>(null);
     const [viewingInvoice, setViewingInvoice] = useState<InvoiceData | null>(null);
 
-    const readyForShipping = invoices.filter(inv => inv.preparationStatus === 'Prête' || inv.preparationStatus === 'Partiellement expédiée');
+    const readyForShipping = invoices.filter(inv => ['Prête', 'Partiellement expédiée'].includes(inv.preparationStatus));
 
     const handleOpenShippingModal = (invoice: InvoiceData) => {
         setShippingInvoice(invoice as InvoiceWithPreparation);
@@ -44,7 +45,7 @@ export default function ExpeditionPage() {
             const existingExpeditions = inv.expeditions || [];
             const newExpedition: Expedition = {
                 id: `exp-${Date.now()}`,
-                numeroBonLivraison: `BL-${inv.invoiceNumber}-${existingExpeditions.length + 1}`,
+                numeroBonLivraison: `BL-${inv.invoiceNumber.split('-').pop()}-${existingExpeditions.length + 1}`,
                 ...expedition
             };
             
@@ -110,7 +111,7 @@ export default function ExpeditionPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {readyForShipping.map(inv => (
+                            {invoices.map(inv => (
                                 <TableRow key={inv.id}>
                                     <TableCell>{inv.invoiceNumber}</TableCell>
                                     <TableCell>{inv.clientName}</TableCell>
@@ -121,9 +122,11 @@ export default function ExpeditionPage() {
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-2">
-                                            <Button size="sm" variant="outline" onClick={() => handleOpenShippingModal(inv)}>
-                                                <Truck className="mr-2 h-4 w-4" /> Planifier
-                                            </Button>
+                                            { (inv.preparationStatus === 'Prête' || inv.preparationStatus === 'Partiellement expédiée') &&
+                                                <Button size="sm" variant="outline" onClick={() => handleOpenShippingModal(inv)}>
+                                                    <Truck className="mr-2 h-4 w-4" /> Planifier
+                                                </Button>
+                                            }
                                              {inv.expeditions && inv.expeditions.length > 0 && 
                                                 <Button size="icon" variant="ghost" onClick={() => { setViewingInvoice(inv); setIsViewModalOpen(true); }}><Eye className="h-4 w-4" /></Button>
                                              }
@@ -133,7 +136,7 @@ export default function ExpeditionPage() {
                             ))}
                         </TableBody>
                     </Table>
-                     {readyForShipping.length === 0 && (
+                     {invoices.filter(inv => inv.preparationStatus !== 'En attente').length === 0 && (
                         <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
                             <p className="text-muted-foreground">Aucune commande n'est prête pour l'expédition.</p>
                         </div>
@@ -158,6 +161,7 @@ export default function ExpeditionPage() {
 }
 
 function ShippingModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, onClose: () => void, invoice: InvoiceWithPreparation | null, onSave: (invoiceId: string, expedition: Omit<Expedition, 'id' | 'numeroBonLivraison'>) => void }) {
+    const [transporteurs] = useAtom(transporteursAtom);
     const [transporteur, setTransporteur] = useState('');
     const [dateLivraison, setDateLivraison] = useState('');
     const [lignesLivraison, setLignesLivraison] = useState<ExpeditedItem[]>([]);
@@ -223,7 +227,16 @@ function ShippingModal({ isOpen, onClose, invoice, onSave }: { isOpen: boolean, 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="transporteur">Transporteur</Label>
-                            <Input id="transporteur" value={transporteur} onChange={e => setTransporteur(e.target.value)} placeholder="Ex: DHL, Chronopost..." />
+                            <Select onValueChange={setTransporteur} value={transporteur}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Sélectionnez un transporteur..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {transporteurs.map(t => (
+                                        <SelectItem key={t.id} value={t.intitule}>{t.intitule}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="dateLivraison">Date de livraison prévue</Label>
@@ -309,62 +322,12 @@ function ViewExpeditionsModal({ isOpen, onClose, invoice }: { isOpen: boolean, o
              margin: { top: 75 },
         });
 
-        // Section 1: This Delivery
         autoTable(doc, {
-            head: [['1. Détail de cette Livraison']],
-            body: [['Description Article', 'Quantité Livrée']],
-            startY: 75,
-            theme: 'striped',
-            headStyles: { fillColor: '#1e3a8a' },
-            didParseCell: function (data) {
-                if(data.row.index === 0 && data.section === 'body') {
-                     data.cell.styles.fontStyle = 'bold';
-                }
-            }
-        });
-        autoTable(doc, {
+            head: [['Description Article', 'Quantité Livrée']],
             body: expedition.items.map(item => [item.description, item.quantiteLivree]),
-            startY: (doc as any).lastAutoTable.finalY,
+            startY: 75,
             theme: 'grid',
         });
-        
-        // Section 2: Order balance
-        const allPreparedItems = new Map(invoice.preparedItems.map(item => [item.ligneCommandeId, {qtyPrepared: item.quantiteAPreparer, description: item.description}]));
-        const allExpeditedItems = (invoice.expeditions || [])
-            .flatMap(exp => exp.items)
-            .reduce((acc, item) => {
-                acc.set(item.ligneCommandeId, (acc.get(item.ligneCommandeId) || 0) + item.quantiteLivree);
-                return acc;
-            }, new Map<string, number>());
-        
-        const balanceLignes = Array.from(allPreparedItems.entries()).map(([ligneId, {qtyPrepared, description}]) => {
-            const alreadyExpedited = allExpeditedItems.get(ligneId) || 0;
-            return {
-                description: description,
-                solde: qtyPrepared - alreadyExpedited
-            }
-        }).filter(b => b.solde > 0);
-
-
-        if(balanceLignes.length > 0) {
-            autoTable(doc, {
-                head: [['2. Solde à livrer après cette expédition']],
-                body: [['Description Article', 'Quantité Restante']],
-                startY: (doc as any).lastAutoTable.finalY + 10,
-                theme: 'striped',
-                headStyles: { fillColor: '#f59e0b' },
-                 didParseCell: function (data) {
-                    if(data.row.index === 0 && data.section === 'body') {
-                         data.cell.styles.fontStyle = 'bold';
-                    }
-                }
-            });
-            autoTable(doc, {
-                body: balanceLignes.map(l => [l.description, l.solde]),
-                startY: (doc as any).lastAutoTable.finalY,
-                theme: 'grid'
-            });
-        }
         
         let footerY = doc.internal.pageSize.getHeight() - 40;
         doc.setFontSize(10);
