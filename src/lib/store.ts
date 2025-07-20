@@ -31,7 +31,7 @@ export type Entrepot = {
 };
 
 
-type Produit = {
+export type Produit = {
   id: number;
   reference: string;
   name: string;
@@ -132,6 +132,19 @@ export type InvoiceTemplate = {
   showTax: boolean;
   footerText: string;
 };
+
+export type MouvementType = 'Entrée' | 'Sortie' | 'Transfert';
+export type Mouvement = {
+    id: string;
+    date: string;
+    produitId: number;
+    type: MouvementType;
+    quantite: number;
+    document: string;
+    entrepotSourceId?: number;
+    entrepotDestId?: number;
+};
+
 
 export const initialTemplates: InvoiceTemplate[] = [
   {
@@ -245,6 +258,12 @@ const initialCommandes: Commande[] = [
     { id: 2, numero: 'BC-2024-002', date: '2024-07-30', fournisseurId: 4, lignes: [ { id: 'l2', produitId: 2, description: 'Licence Windows Server', quantite: 10, prixUnitaire: 150000 }] },
 ];
 
+const initialMouvements: Mouvement[] = [
+    { id: 'mvt-1', date: '2024-07-31T10:00:00Z', produitId: 1, type: 'Sortie', quantite: 2, document: 'BL-CMD-0801', entrepotSourceId: 1 },
+    { id: 'mvt-2', date: '2024-07-30T14:15:00Z', produitId: 2, type: 'Entrée', quantite: 10, document: 'BR-BC-2024-002', entrepotDestId: 1 },
+    { id: 'mvt-3', date: '2024-07-29T09:30:00Z', produitId: 3, type: 'Transfert', quantite: 5, document: 'BT-ABJ-BKE-01', entrepotSourceId: 2, entrepotDestId: 1 },
+];
+
 export const clientsAtom = atom<CompteTiers[]>(initialClients);
 export const prospectsAtom = atom<CompteTiers[]>(initialProspects);
 export const fournisseursAtom = atom<Fournisseur[]>(initialFournisseurs);
@@ -254,3 +273,4 @@ export const produitsAtom = atom<Produit[]>(initialProduits);
 export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
 export const receptionsAtom = atom<Reception[]>([]);
 export const invoicesAtom = atom<InvoiceData[]>(initialInvoices);
+export const mouvementsAtom = atom<Mouvement[]>(initialMouvements);
