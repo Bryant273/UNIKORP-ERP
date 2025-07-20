@@ -281,10 +281,10 @@ const logsonNav = [
     icon: Layers,
     subItems: [
       { title: 'Produits', href: '/logson/stocks/produits', icon: Package },
-      { title: 'Fiches de stocks', href: '/logson/stocks/fiches-de-stocks', icon: FileText },
+      { title: 'Inventaire', href: '/logson/stocks/inventaire', icon: SearchIcon },
       { title: 'Entrepôts', href: '/logson/stocks/entrepots', icon: Warehouse },
       { title: 'Mouvements de stock', href: '/logson/stocks/mouvements-de-stock', icon: ArrowRightLeft },
-      { title: 'Inventaire', href: '/logson/stocks/inventaire', icon: SearchIcon },
+      { title: 'Fiches de stocks', href: '/logson/stocks/fiches-de-stocks', icon: FileText },
     ],
   },
   {
