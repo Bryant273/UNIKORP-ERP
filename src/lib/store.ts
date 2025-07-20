@@ -22,7 +22,7 @@ type Transporteur = {
     telephone: string;
 }
 
-type Entrepot = {
+export type Entrepot = {
     id: number;
     nom: string;
     localisation: string;
