@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -223,9 +223,10 @@ function ReconciliationView({ onBack }: { onBack: () => void }) {
 
 function MonthlyReportModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: () => void, data: MonthlyReportData | null }) {
     const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState('');
+    
     if (!data) return null;
     
-    const [searchTerm, setSearchTerm] = useState('');
     const filteredItems = data.items.filter(item => item.produitName.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const handlePrint = () => {
@@ -312,4 +313,3 @@ function MonthlyReportModal({ isOpen, onClose, data }: { isOpen: boolean, onClos
         </Dialog>
     );
 }
-
