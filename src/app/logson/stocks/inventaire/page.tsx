@@ -252,8 +252,8 @@ function ReconciliationView({ onBack }: { onBack: () => void }) {
 }
 
 function DailyReportModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: () => void, data: InventoryRecord | null }) {
-    if (!data) return null;
     const { toast } = useToast();
+    if (!data) return null;
     
      const handlePrint = () => {
         const doc = new jsPDF();
@@ -427,3 +427,4 @@ function MonthlyReportModal({ isOpen, onClose, data }: { isOpen: boolean, onClos
         </Dialog>
     );
 }
+
