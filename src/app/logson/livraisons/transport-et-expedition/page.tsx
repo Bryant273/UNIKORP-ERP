@@ -322,13 +322,67 @@ function ViewExpeditionsModal({ isOpen, onClose, invoice }: { isOpen: boolean, o
              margin: { top: 75 },
         });
 
+        // Section 1: Commande
         autoTable(doc, {
-            head: [['Description Article', 'Quantité Livrée']],
-            body: expedition.items.map(item => [item.description, item.quantiteLivree]),
+            head: [['1. Récapitulatif Commande']],
+            body: [['Description', 'Quantité Commandée']],
             startY: 75,
+            theme: 'striped',
+            headStyles: { fillColor: '#1e3a8a' },
+            didParseCell: (data) => { if(data.row.index === 0 && data.section === 'body') data.cell.styles.fontStyle = 'bold'; }
+        });
+        autoTable(doc, {
+            body: invoice.lineItems.map(l => [l.description, l.quantity]),
+            startY: (doc as any).lastAutoTable.finalY,
             theme: 'grid',
         });
+
+        // Section 2: Cette Livraison
+        autoTable(doc, {
+            head: [['2. Détail de cette Livraison']],
+            body: [['Description', 'Quantité Livrée']],
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            theme: 'striped',
+            headStyles: { fillColor: '#166534' },
+            didParseCell: (data) => { if(data.row.index === 0 && data.section === 'body') data.cell.styles.fontStyle = 'bold'; }
+        });
+        autoTable(doc, {
+            body: expedition.items.map(item => [item.description, item.quantiteLivree]),
+            startY: (doc as any).lastAutoTable.finalY,
+            theme: 'grid'
+        });
+
+        // Section 3: Solde à livrer
+        const allExpeditedItems = (invoice.expeditions || [])
+            .filter(e => new Date(e.dateExpedition) <= new Date(expedition.dateExpedition))
+            .flatMap(e => e.items)
+            .reduce((acc, item) => {
+                acc.set(item.ligneCommandeId, (acc.get(item.ligneCommandeId) || 0) + item.quantiteLivree);
+                return acc;
+            }, new Map<string, number>());
         
+        const balanceItems = invoice.lineItems.map(cmdLine => ({
+            description: cmdLine.description,
+            solde: cmdLine.quantity - (allExpeditedItems.get(cmdLine.id) || 0)
+        })).filter(b => b.solde > 0);
+        
+        if (balanceItems.length > 0) {
+            autoTable(doc, {
+                head: [['3. Solde à livrer après cette expédition']],
+                body: [['Description', 'Quantité Restante']],
+                startY: (doc as any).lastAutoTable.finalY + 10,
+                theme: 'striped',
+                headStyles: { fillColor: '#f59e0b' },
+                didParseCell: (data) => { if(data.row.index === 0 && data.section === 'body') data.cell.styles.fontStyle = 'bold'; }
+            });
+            autoTable(doc, {
+                body: balanceItems.map(l => [l.description, l.solde]),
+                startY: (doc as any).lastAutoTable.finalY,
+                theme: 'grid'
+            });
+        }
+        
+        // Footer
         let footerY = doc.internal.pageSize.getHeight() - 40;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
