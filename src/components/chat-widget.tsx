@@ -12,8 +12,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText, MessageCircle, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText, MessageCircle, X, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,23 +29,27 @@ type Message = {
   text: string;
   senderId: string;
   timestamp: string;
+  isUnread?: boolean;
 };
+
+type ContactType = 'Client' | 'Fournisseur' | 'Interne';
 
 type Conversation = {
   id: string;
   name?: string; // For group chats
   userIds: string[];
   messages: Message[];
+  contactType?: ContactType;
 };
 
 const currentUser = { id: 'user0', name: 'Moi', avatarUrl: 'https://placehold.co/100x100.png' };
 
 const users: Record<string, User> = {
   user0: { id: 'user0', name: 'Utilisateur Actuel', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
-  user1: { id: 'user1', name: 'Alice Dubois', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
-  user2: { id: 'user2', name: 'Bruno Lemaire', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
-  user3: { id: 'user3', name: 'Carine Martin', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
-  user4: { id: 'user4', name: 'David Garcia', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
+  user1: { id: 'user1', name: 'Jean Dupont', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
+  user2: { id: 'user2', name: 'Marie Martin', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
+  user3: { id: 'user3', name: 'Pierre Durand', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
+  user4: { id: 'user4', name: 'Équipe Support', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
 };
 
 const initialConversations: Conversation[] = [
@@ -53,41 +57,45 @@ const initialConversations: Conversation[] = [
     id: 'conv1',
     userIds: ['user0', 'user1'],
     messages: [
-      { id: 'msg1', text: 'Bonjour Alice, tu as pu jeter un oeil au rapport financier ?', senderId: 'user0', timestamp: '10:00' },
-      { id: 'msg2', text: 'Salut ! Oui, je viens de le finir. Tout semble en ordre.', senderId: 'user1', timestamp: '10:01' },
-      { id: 'msg3', text: 'Parfait, merci pour ta réactivité !', senderId: 'user0', timestamp: '10:02' },
+      { id: 'msg1', text: 'Bonjour, j\'ai une question sur ma commande...', senderId: 'user1', timestamp: '14:30', isUnread: true },
     ],
+    contactType: 'Client',
   },
   {
     id: 'conv2',
     userIds: ['user0', 'user2'],
     messages: [
-      { id: 'msg4', text: 'Salut Bruno, on se synchronise pour la démo client de demain ?', senderId: 'user0', timestamp: 'Hier' },
-      { id: 'msg5', text: 'Oui, bonne idée. Je suis dispo à 14h.', senderId: 'user2', timestamp: 'Hier' },
+      { id: 'msg2', text: 'Merci pour votre aide !', senderId: 'user2', timestamp: '12:15', isUnread: true },
     ],
+    contactType: 'Client'
   },
   {
     id: 'conv3',
-    name: "Projet Marketing Q3",
-    userIds: ['user0', 'user1', 'user3'],
+    userIds: ['user0', 'user3'],
     messages: [
-        { id: 'msg6', text: 'N\'oubliez pas la réunion marketing à 11h.', senderId: 'user3', timestamp: '09:30' }
-    ]
+        { id: 'msg3', text: 'Parfait, je vous tiens au courant', senderId: 'user0', timestamp: '11:45', isUnread: true },
+    ],
+    contactType: 'Fournisseur',
+  },
+  {
+    id: 'conv4',
+    name: "Équipe Support",
+    userIds: ['user0', 'user4'],
+    messages: [
+        { id: 'msg4', text: 'Réunion prévue à 15h', senderId: 'user4', timestamp: '09:30' }
+    ],
+    contactType: 'Interne',
   },
 ];
 
 const EMOJIS = ['😀', '😂', '😍', '👍', '🙏', '🚀', '🎉', '💡', '🤔', '🔥', '💯', '✅'];
 
-export function ChatPage() {
+function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
-  const [isNewConvModalOpen, setIsNewConvModalOpen] = useState(false);
-  const [newConvSelectedUsers, setNewConvSelectedUsers] = useState<string[]>([]);
-  const [newConvGroupName, setNewConvGroupName] = useState('');
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -120,67 +128,51 @@ export function ChatPage() {
     setNewMessage('');
   };
 
-  const handleCreateConversation = () => {
-    if (newConvSelectedUsers.length === 0) {
-      toast({ title: 'Erreur', description: 'Veuillez sélectionner au moins un utilisateur.', variant: 'destructive' });
-      return;
-    }
-
-    if (newConvSelectedUsers.length > 1 && !newConvGroupName.trim()) {
-      toast({ title: 'Erreur', description: 'Veuillez donner un nom au groupe.', variant: 'destructive' });
-      return;
-    }
-
-    const newConv: Conversation = {
-        id: `conv-${Date.now()}`,
-        userIds: [...newConvSelectedUsers, currentUser.id],
-        messages: [],
-        ...(newConvSelectedUsers.length > 1 && { name: newConvGroupName })
-    };
-    
-    setConversations(prev => [newConv, ...prev]);
-    setSelectedConversationId(newConv.id);
-    setIsNewConvModalOpen(false);
-    setNewConvSelectedUsers([]);
-    setNewConvGroupName('');
-  };
-
   const getConversationDetails = useCallback((conv: Conversation) => {
     const otherUserIds = conv.userIds.filter(id => id !== currentUser.id);
-    if (conv.name) { // Group chat
+    if (conv.name) {
         return {
             name: conv.name,
-            avatarUrl: 'https://placehold.co/100x100.png',
+            avatarUrl: users[otherUserIds[0]]?.avatarUrl || 'https://placehold.co/100x100.png',
             isGroup: true,
             isOnline: false,
         };
-    } else { // Private chat
+    } else {
         const otherUser = users[otherUserIds[0]];
         return {
-            name: otherUser.name,
-            avatarUrl: otherUser.avatarUrl,
+            name: otherUser?.name || 'Inconnu',
+            avatarUrl: otherUser?.avatarUrl || 'https://placehold.co/100x100.png',
             isGroup: false,
-            isOnline: otherUser.isOnline,
+            isOnline: otherUser?.isOnline || false,
         };
     }
   }, []);
 
   const activeConversation = conversations.find(c => c.id === selectedConversationId);
   const activeContact = activeConversation ? getConversationDetails(activeConversation) : null;
+  
+  const handleSelectConversation = (convId: string) => {
+    setSelectedConversationId(convId);
+    setConversations(prev => prev.map(conv => {
+        if (conv.id === convId) {
+            return {
+                ...conv,
+                messages: conv.messages.map(m => ({ ...m, isUnread: false }))
+            }
+        }
+        return conv;
+    }))
+  };
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm h-full">
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 flex-col overflow-hidden bg-card text-card-foreground h-full">
+      <div className="flex flex-1 overflow-hidden h-full">
         {/* Conversations List */}
-        <div className={cn(
-            "flex-shrink-0 border-r flex flex-col transition-all duration-300 w-full md:w-[280px]",
-            selectedConversationId && "hidden md:flex"
-        )}>
+        <div className="w-[320px] flex-shrink-0 border-r flex flex-col bg-background/50 h-full">
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-xl font-semibold tracking-tight">Conversations</h2>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsNewConvModalOpen(true)}>
+            <h2 className="text-xl font-semibold tracking-tight">Messages</h2>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast({ title: 'Nouvelle conversation' })}>
               <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">Nouvelle conversation</span>
             </Button>
           </div>
           <div className="p-4 border-b">
@@ -194,25 +186,33 @@ export function ChatPage() {
               {conversations.map(conv => {
                 const details = getConversationDetails(conv);
                 const lastMessage = conv.messages[conv.messages.length - 1];
+                const isUnread = lastMessage?.isUnread && lastMessage?.senderId !== currentUser.id;
                 return (
                   <button
                     key={conv.id}
-                    onClick={() => setSelectedConversationId(conv.id)}
+                    onClick={() => handleSelectConversation(conv.id)}
                     className={cn(
-                      'w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-muted',
+                      'w-full text-left p-3 rounded-lg flex items-start gap-3 transition-colors hover:bg-muted',
                       selectedConversationId === conv.id && 'bg-primary/10'
                     )}
                   >
-                    <Avatar className="h-12 w-12 border-2 border-primary/20">
+                    <Avatar className="h-10 w-10">
                       <AvatarImage src={details.avatarUrl} alt={details.name} data-ai-hint={details.isGroup ? "group chat" : "person face"} />
-                      <AvatarFallback>{details.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{details.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 truncate">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-semibold">{details.name}</h3>
-                        <span className="text-xs text-muted-foreground">{lastMessage?.timestamp}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">{lastMessage?.text || "Aucun message"}</p>
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-semibold text-sm flex items-center gap-2">
+                                {details.name} 
+                                {conv.contactType === 'Client' && <MessageCircle className="h-3 w-3 text-blue-500"/>}
+                            </h3>
+                            <span className="text-xs text-muted-foreground">{lastMessage?.timestamp}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <p className="text-sm text-muted-foreground truncate">{lastMessage?.senderId === currentUser.id ? 'Vous: ' : ''}{lastMessage?.text || "Aucun message"}</p>
+                            {isUnread && <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 ml-2" />}
+                        </div>
+                        {conv.contactType && <p className="text-xs text-muted-foreground capitalize">{conv.contactType}</p>}
                     </div>
                   </button>
                 );
@@ -222,17 +222,37 @@ export function ChatPage() {
         </div>
 
         {/* Chat Window */}
-        <div className={cn(
-            "flex flex-1 flex-col transition-all duration-300",
-            !selectedConversationId && "hidden md:flex"
-        )}>
-          {activeConversation && activeContact ? (
+        <div className="flex flex-1 flex-col h-full">
+          {!activeConversation || !activeContact ? (
+            <div className="flex-1 h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/30">
+                <div className="text-center p-8 border-b w-full">
+                    <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                            <div className="h-10 w-10 rounded-full bg-muted border flex items-center justify-center">
+                                <span className="text-lg font-bold">?</span>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold">Sélectionner une conversation</h3>
+                                <p className="text-xs text-muted-foreground">Choisissez une conversation pour commencer</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            <Button variant="ghost" size="icon"><X className="h-5 w-5"/></Button>
+                            <Button variant="ghost" size="icon"><Trash2 className="h-5 w-5"/></Button>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                    <div className="h-16 w-16 rounded-full bg-muted border flex items-center justify-center mb-4">
+                        <MessageCircle className="h-8 w-8 text-muted-foreground"/>
+                    </div>
+                    <p>Sélectionnez une conversation pour commencer à discuter</p>
+                </div>
+            </div>
+          ) : (
             <>
               {/* Chat Header */}
               <div className="flex items-center gap-4 border-b p-4">
-                 <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelectedConversationId(null)}>
-                    <X className="h-5 w-5" />
-                 </Button>
                 <Avatar>
                   <AvatarImage src={activeContact.avatarUrl} alt={activeContact.name} data-ai-hint={activeContact.isGroup ? "group chat" : "person face"} />
                   <AvatarFallback>{activeContact.name.charAt(0)}</AvatarFallback>
@@ -252,9 +272,6 @@ export function ChatPage() {
                 <div className="ml-auto flex gap-2">
                   <Button variant="ghost" size="icon"><Phone className="h-5 w-5" /></Button>
                   <Button variant="ghost" size="icon"><Video className="h-5 w-5" /></Button>
-                   <Button variant="ghost" size="icon" className="hidden md:flex" onClick={() => setSelectedConversationId(null)}>
-                    <X className="h-5 w-5" />
-                 </Button>
                 </div>
               </div>
 
@@ -296,7 +313,6 @@ export function ChatPage() {
                     <PopoverTrigger asChild>
                       <Button type="button" variant="ghost" size="icon" className="text-muted-foreground">
                         <Smile className="h-5 w-5" />
-                        <span className="sr-only">Ajouter un émoji</span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-2">
@@ -316,112 +332,17 @@ export function ChatPage() {
                     autoComplete="off"
                     className="flex-1"
                   />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                       <Button type="button" variant="ghost" size="icon" className="text-muted-foreground">
-                            <Paperclip className="h-5 w-5" />
-                            <span className="sr-only">Joindre un fichier</span>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                            <FileImage className="mr-2 h-4 w-4"/> Image ou Vidéo
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                            <FileText className="mr-2 h-4 w-4"/> Document
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => toast({ title: `Fichier "${e.target.files?.[0].name}" sélectionné.`})} />
                   <Button type="submit" size="icon" disabled={!newMessage.trim()}>
                     <Send className="h-5 w-5" />
-                    <span className="sr-only">Envoyer</span>
                   </Button>
                 </form>
               </div>
             </>
-          ) : (
-             <div className="flex-1 h-full items-center justify-center text-muted-foreground">
-              <p>Sélectionnez une conversation pour commencer à discuter.</p>
-            </div>
           )}
         </div>
       </div>
-      <NewConversationModal
-        isOpen={isNewConvModalOpen}
-        onClose={() => setIsNewConvModalOpen(false)}
-        users={Object.values(users).filter(u => u.id !== currentUser.id)}
-        selectedUsers={newConvSelectedUsers}
-        onSelectedUsersChange={setNewConvSelectedUsers}
-        groupName={newConvGroupName}
-        onGroupNameChange={setNewConvGroupName}
-        onCreate={handleCreateConversation}
-      />
     </div>
   );
-}
-
-
-function NewConversationModal({ isOpen, onClose, users, selectedUsers, onSelectedUsersChange, groupName, onGroupNameChange, onCreate }: any) {
-    const handleUserToggle = (userId: string) => {
-        onSelectedUsersChange((prev: string[]) => 
-            prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-        );
-    }
-    
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Nouvelle Conversation</DialogTitle>
-                    <DialogDescription>
-                        Sélectionnez des utilisateurs pour démarrer une conversation privée ou un groupe.
-                    </DialogDescription>
-                </DialogHeader>
-                <Tabs defaultValue="private">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="private" onClick={() => onSelectedUsersChange([])}><User className="mr-2 h-4 w-4"/> Privée</TabsTrigger>
-                        <TabsTrigger value="group" onClick={() => onSelectedUsersChange([])}><Users className="mr-2 h-4 w-4"/> Groupe</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="private">
-                        <ScrollArea className="h-64 mt-4">
-                            {users.map((user: User) => (
-                                <div key={user.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer" onClick={() => { onSelectedUsersChange([user.id]); onCreate(); }}>
-                                    <Avatar><AvatarImage src={user.avatarUrl} /><AvatarFallback>{user.name[0]}</AvatarFallback></Avatar>
-                                    <span>{user.name}</span>
-                                </div>
-                            ))}
-                        </ScrollArea>
-                    </TabsContent>
-                    <TabsContent value="group">
-                         <div className="space-y-4 mt-4">
-                             <div>
-                                <Label htmlFor="groupName">Nom du groupe</Label>
-                                <Input id="groupName" value={groupName} onChange={(e) => onGroupNameChange(e.target.value)} placeholder="Ex: Projet Alpha"/>
-                            </div>
-                            <ScrollArea className="h-56">
-                                <div className="space-y-2">
-                                {users.map((user: User) => (
-                                    <div key={user.id} className="flex items-center gap-3 p-2 rounded-lg">
-                                        <Checkbox id={`user-${user.id}`} checked={selectedUsers.includes(user.id)} onCheckedChange={() => handleUserToggle(user.id)} />
-                                        <Label htmlFor={`user-${user.id}`} className="flex items-center gap-3 cursor-pointer">
-                                            <Avatar><AvatarImage src={user.avatarUrl} /><AvatarFallback>{user.name[0]}</AvatarFallback></Avatar>
-                                            <span>{user.name}</span>
-                                        </Label>
-                                    </div>
-                                ))}
-                                </div>
-                            </ScrollArea>
-                         </div>
-                    </TabsContent>
-                </Tabs>
-                <DialogFooter>
-                   <Button variant="outline" onClick={onClose}>Annuler</Button>
-                   <Button onClick={onCreate}>Créer le groupe</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
 }
 
 export function ChatWidget() {
@@ -430,17 +351,17 @@ export function ChatWidget() {
     return (
         <>
         <Button 
-            className="fixed bottom-4 right-4 h-12 w-12 rounded-full shadow-lg z-50 text-white"
+            className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 text-white"
             onClick={() => setIsOpen(!isOpen)}
         >
             {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
             <span className="sr-only">Ouvrir le chat</span>
         </Button>
-        {isOpen && (
-            <div className="fixed bottom-20 right-4 w-[90vw] h-[75vh] max-w-xl max-h-[550px] z-50 bg-card rounded-xl shadow-2xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-10">
-                <ChatPage />
-            </div>
-        )}
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent className="w-[90vw] max-w-4xl h-[85vh] p-0 gap-0">
+                 <ChatPage />
+            </DialogContent>
+        </Dialog>
         </>
     )
 }
