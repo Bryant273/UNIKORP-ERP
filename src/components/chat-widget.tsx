@@ -80,7 +80,7 @@ const EMOJIS = ['😀', '😂', '😍', '👍', '🙏', '🚀', '🎉', '💡', 
 
 export function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>('conv1');
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isNewConvModalOpen, setIsNewConvModalOpen] = useState(false);
   const [newConvSelectedUsers, setNewConvSelectedUsers] = useState<string[]>([]);
@@ -172,7 +172,10 @@ export function ChatPage() {
     <div className="flex flex-1 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm h-full">
       <div className="flex flex-1 overflow-hidden">
         {/* Conversations List */}
-        <div className="w-[300px] flex-shrink-0 border-r flex flex-col">
+        <div className={cn(
+            "flex-shrink-0 border-r flex flex-col transition-all duration-300",
+            selectedConversationId ? "w-0 md:w-[300px]" : "w-full"
+        )}>
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-xl font-semibold tracking-tight">Conversations</h2>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsNewConvModalOpen(true)}>
@@ -219,11 +222,17 @@ export function ChatPage() {
         </div>
 
         {/* Chat Window */}
-        <div className="flex flex-1 flex-col">
+        <div className={cn(
+            "flex flex-1 flex-col transition-all duration-300",
+            selectedConversationId ? "w-full" : "w-0"
+        )}>
           {activeConversation && activeContact ? (
             <>
               {/* Chat Header */}
               <div className="flex items-center gap-4 border-b p-4">
+                 <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelectedConversationId(null)}>
+                    <X className="h-5 w-5" />
+                 </Button>
                 <Avatar>
                   <AvatarImage src={activeContact.avatarUrl} alt={activeContact.name} data-ai-hint={activeContact.isGroup ? "group chat" : "person face"} />
                   <AvatarFallback>{activeContact.name.charAt(0)}</AvatarFallback>
@@ -243,6 +252,9 @@ export function ChatPage() {
                 <div className="ml-auto flex gap-2">
                   <Button variant="ghost" size="icon"><Phone className="h-5 w-5" /></Button>
                   <Button variant="ghost" size="icon"><Video className="h-5 w-5" /></Button>
+                   <Button variant="ghost" size="icon" className="hidden md:flex" onClick={() => setSelectedConversationId(null)}>
+                    <X className="h-5 w-5" />
+                 </Button>
                 </div>
               </div>
 
@@ -329,7 +341,7 @@ export function ChatPage() {
               </div>
             </>
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
+             <div className="flex-1 hidden md:flex h-full items-center justify-center text-muted-foreground">
               <p>Sélectionnez une conversation pour commencer à discuter.</p>
             </div>
           )}
@@ -418,14 +430,14 @@ export function ChatWidget() {
     return (
         <>
         <Button 
-            className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 text-white"
+            className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 text-white"
             onClick={() => setIsOpen(!isOpen)}
         >
-            {isOpen ? <X className="h-8 w-8" /> : <MessageCircle className="h-8 w-8" />}
+            {isOpen ? <X className="h-7 w-7" /> : <MessageCircle className="h-7 w-7" />}
             <span className="sr-only">Ouvrir le chat</span>
         </Button>
         {isOpen && (
-            <div className="fixed bottom-24 right-6 w-[80vw] h-[70vh] max-w-[900px] max-h-[700px] z-50 bg-card rounded-xl shadow-2xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-10">
+            <div className="fixed bottom-20 right-4 w-[90vw] h-[75vh] max-w-3xl max-h-[600px] z-50 bg-card rounded-xl shadow-2xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-10">
                 <ChatPage />
             </div>
         )}
