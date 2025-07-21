@@ -1,3 +1,4 @@
+
 'use client';
 import {
   DropdownMenu,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { User, Settings, LifeBuoy, LogOut, Zap } from 'lucide-react';
+import { User, Settings, LifeBuoy, LogOut, Zap, Bell } from 'lucide-react';
 import Link from 'next/link';
 
 export function UserNav() {
@@ -41,6 +42,12 @@ export function UserNav() {
               <span>Profil</span>
             </Link>
           </DropdownMenuItem>
+           <DropdownMenuItem asChild>
+            <Link href="/notifications">
+              <Bell className="mr-2 h-4 w-4" />
+              <span>Notifications</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>
             <Zap className="mr-2 h-4 w-4" />
             <span>Actions</span>
@@ -51,12 +58,14 @@ export function UserNav() {
               <span>Paramètres</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <LifeBuoy className="mr-2 h-4 w-4" />
-            <span>Support</span>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+         <DropdownMenuItem asChild>
+            <Link href="/help">
+              <LifeBuoy className="mr-2 h-4 w-4" />
+              <span>Support</span>
+            </Link>
+          </DropdownMenuItem>
         <DropdownMenuItem>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Déconnexion</span>

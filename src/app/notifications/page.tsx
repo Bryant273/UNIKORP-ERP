@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,7 +27,7 @@ const allNotifications: Notification[] = [
     { id: '1', type: 'invoice', title: 'Nouvelle facture reçue', description: 'Facture #F2024-155 de Fournisseur Gamma.', timestamp: '2024-07-26T10:30:00Z', read: false },
     { id: '2', type: 'user', title: 'Nouveau membre dans SOCIX', description: 'Sophie Martin a rejoint le module RH.', timestamp: '2024-07-26T08:15:00Z', read: false },
     { id: '3', type: 'system', title: 'Mise à jour système', description: 'Le module LOGSON a été mis à jour en v2.1.', timestamp: '2024-07-25T14:00:00Z', read: true },
-    { id: '4', type: 'invoice', title: 'Paiement en retard', description: 'La facture #FACT-088 est en retard de 3 jours.', timestamp: '2024-07-23T09:00:00Z', read: true },
+    { id: '4', type: 'invoice', title: 'Paiement en retard', description: 'La facture #FACT-088 est en retard de 3 jours.', timestamp: '2024-07-25T09:00:00Z', read: true },
     { id: '5', type: 'system', title: 'Maintenance programmée', description: 'Une maintenance est prévue ce soir à 23h.', timestamp: '2024-07-22T18:00:00Z', read: true },
     { id: '6', type: 'user', title: 'Demande d\'accès', description: 'David Garcia demande l\'accès au module MARKOS.', timestamp: '2024-07-22T11:45:00Z', read: true },
     { id: '7', type: 'invoice', title: 'Facture payée', description: 'Le paiement de la facture #FACT-085 a été reçu.', timestamp: '2024-07-21T16:20:00Z', read: true },
