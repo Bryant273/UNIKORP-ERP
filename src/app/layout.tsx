@@ -20,7 +20,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'Unikorp Central',
+  title: 'Unikorp',
   description: 'The unified ERP solution for modern business.',
   icons: {
     icon: '/logo.svg',

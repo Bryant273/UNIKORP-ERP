@@ -14,7 +14,7 @@ const helpData = [
         module: 'Présentation Générale',
         icon: BookCopy,
         items: [
-            { q: "Qu'est-ce que Unikorp Central ?", a: "Unikorp Central est une solution ERP intégrée conçue pour unifier la gestion de votre entreprise. Elle combine la finance, les ressources humaines, le marketing et la logistique en une seule plateforme." },
+            { q: "Qu'est-ce que Unikorp ?", a: "Unikorp est une solution ERP intégrée conçue pour unifier la gestion de votre entreprise. Elle combine la finance, les ressources humaines, le marketing et la logistique en une seule plateforme." },
             { q: "Comment naviguer entre les modules ?", a: "Utilisez la barre de navigation principale en haut de l'écran pour basculer entre les modules SKOMPTAB, SOCIX, MARKOS et LOGSON. Le menu latéral gauche s'adaptera pour afficher les fonctionnalités spécifiques au module sélectionné." },
         ]
     },
@@ -58,7 +58,7 @@ export default function HelpPage() {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Centre d'Aide & Procédures</CardTitle>
-        <CardDescription>Trouvez des réponses à vos questions et découvrez comment utiliser Unikorp Central.</CardDescription>
+        <CardDescription>Trouvez des réponses à vos questions et découvrez comment utiliser Unikorp.</CardDescription>
       </CardHeader>
       <CardContent>
         <Accordion type="multiple" defaultValue={['Présentation Générale']} className="w-full">
