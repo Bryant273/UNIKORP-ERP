@@ -6,14 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText, MessageCircle, X, Trash2 } from 'lucide-react';
+import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText, MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,7 +27,8 @@ type Message = {
   isUnread?: boolean;
 };
 
-type ContactType = 'Client' | 'Fournisseur' | 'Interne';
+type ContactType = 'Client' | 'Fournisseur' | 'Interne' | 'Partenaire';
+type Channel = 'WhatsApp' | 'Messenger' | 'Instagram' | 'LinkedIn' | 'Email';
 
 type Conversation = {
   id: string;
@@ -40,16 +36,18 @@ type Conversation = {
   userIds: string[];
   messages: Message[];
   contactType?: ContactType;
+  channel?: Channel;
 };
 
 const currentUser = { id: 'user0', name: 'Moi', avatarUrl: 'https://placehold.co/100x100.png' };
 
 const users: Record<string, User> = {
-  user0: { id: 'user0', name: 'Utilisateur Actuel', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
-  user1: { id: 'user1', name: 'Jean Dupont', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
-  user2: { id: 'user2', name: 'Marie Martin', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
-  user3: { id: 'user3', name: 'Pierre Durand', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
-  user4: { id: 'user4', name: 'Équipe Support', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
+  'user0': { id: 'user0', name: 'Utilisateur Actuel', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
+  'user1': { id: 'user1', name: 'Jean Dupont', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
+  'user2': { id: 'user2', name: 'Marie Martin', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
+  'user3': { id: 'user3', name: 'Pierre Durand', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
+  'user4': { id: 'user4', name: 'Équipe Support', avatarUrl: 'https://placehold.co/100x100.png', isOnline: true },
+  'user5': { id: 'user5', name: 'Sophie André', avatarUrl: 'https://placehold.co/100x100.png', isOnline: false },
 };
 
 const initialConversations: Conversation[] = [
@@ -57,9 +55,10 @@ const initialConversations: Conversation[] = [
     id: 'conv1',
     userIds: ['user0', 'user1'],
     messages: [
-      { id: 'msg1', text: 'Bonjour, j\'ai une question sur ma commande...', senderId: 'user1', timestamp: '14:30', isUnread: true },
+      { id: 'msg1', text: "Bonjour, j'ai une question sur ma commande...", senderId: 'user1', timestamp: '14:30', isUnread: true },
     ],
     contactType: 'Client',
+    channel: 'WhatsApp'
   },
   {
     id: 'conv2',
@@ -67,15 +66,17 @@ const initialConversations: Conversation[] = [
     messages: [
       { id: 'msg2', text: 'Merci pour votre aide !', senderId: 'user2', timestamp: '12:15', isUnread: true },
     ],
-    contactType: 'Client'
+    contactType: 'Client',
+    channel: 'Messenger',
   },
   {
     id: 'conv3',
     userIds: ['user0', 'user3'],
     messages: [
-        { id: 'msg3', text: 'Parfait, je vous tiens au courant', senderId: 'user0', timestamp: '11:45', isUnread: true },
+        { id: 'msg3', text: 'Parfait, je vous tiens au courant', senderId: 'user0', timestamp: '11:45' },
     ],
     contactType: 'Fournisseur',
+    channel: 'Instagram',
   },
   {
     id: 'conv4',
@@ -85,6 +86,16 @@ const initialConversations: Conversation[] = [
         { id: 'msg4', text: 'Réunion prévue à 15h', senderId: 'user4', timestamp: '09:30' }
     ],
     contactType: 'Interne',
+    channel: 'LinkedIn'
+  },
+  {
+    id: 'conv5',
+    userIds: ['user0', 'user5'],
+    messages: [
+      { id: 'msg5', text: 'Nouvelle collaboration possible ?', senderId: 'user5', timestamp: '16:20', isUnread: true },
+    ],
+    contactType: 'Partenaire',
+    channel: 'WhatsApp',
   },
 ];
 
@@ -170,7 +181,7 @@ function ChatPage() {
         {/* Conversations List */}
         <div className="w-[320px] flex-shrink-0 border-r flex flex-col bg-background/50 h-full">
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-xl font-semibold tracking-tight">Messages</h2>
+            <h2 className="text-xl font-semibold tracking-tight">Communications</h2>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast({ title: 'Nouvelle conversation' })}>
               <PlusCircle className="h-5 w-5" />
             </Button>
@@ -196,23 +207,25 @@ function ChatPage() {
                       selectedConversationId === conv.id && 'bg-primary/10'
                     )}
                   >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={details.avatarUrl} alt={details.name} data-ai-hint={details.isGroup ? "group chat" : "person face"} />
-                      <AvatarFallback>{details.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={details.avatarUrl} alt={details.name} data-ai-hint={details.isGroup ? "group chat" : "person face"} />
+                          <AvatarFallback>{details.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        {details.isOnline && <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-background"/>}
+                    </div>
                     <div className="flex-1 truncate">
                         <div className="flex justify-between items-center">
                             <h3 className="font-semibold text-sm flex items-center gap-2">
-                                {details.name} 
-                                {conv.contactType === 'Client' && <MessageCircle className="h-3 w-3 text-blue-500"/>}
+                                {details.name}
                             </h3>
                             <span className="text-xs text-muted-foreground">{lastMessage?.timestamp}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <p className="text-sm text-muted-foreground truncate">{lastMessage?.senderId === currentUser.id ? 'Vous: ' : ''}{lastMessage?.text || "Aucun message"}</p>
-                            {isUnread && <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 ml-2" />}
+                            {isUnread && <div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 ml-2" />}
                         </div>
-                        {conv.contactType && <p className="text-xs text-muted-foreground capitalize">{conv.contactType}</p>}
+                        {conv.contactType && <p className="text-xs text-muted-foreground capitalize">{conv.contactType} • {conv.channel}</p>}
                     </div>
                   </button>
                 );
@@ -224,25 +237,30 @@ function ChatPage() {
         {/* Chat Window */}
         <div className="flex flex-1 flex-col h-full">
           {!activeConversation || !activeContact ? (
-            <div className="flex-1 h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/30">
-                <div className="p-4 border-b w-full">
-                    <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                            <div className="h-10 w-10 rounded-full bg-muted border flex items-center justify-center">
-                                <span className="text-lg font-bold">?</span>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold">Sélectionner une conversation</h3>
-                                <p className="text-xs text-muted-foreground">Choisissez une discussion pour commencer</p>
-                            </div>
+             <div className="flex-1 h-full flex flex-col bg-muted/30">
+                <div className="flex items-center justify-between p-4 border-b">
+                    <div className="flex items-center gap-2">
+                        <div className="h-10 w-10 rounded-full bg-muted border flex items-center justify-center">
+                            <span className="text-lg font-bold text-muted-foreground">?</span>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold">Sélectionner une conversation</h3>
+                            <p className="text-xs text-muted-foreground">Choisissez une conversation pour commencer</p>
                         </div>
                     </div>
                 </div>
-                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <div className="h-16 w-16 rounded-full bg-muted border flex items-center justify-center mb-4">
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                    <div className="h-16 w-16 rounded-full bg-background border flex items-center justify-center mb-4">
                         <MessageCircle className="h-8 w-8 text-muted-foreground"/>
                     </div>
-                    <p>Sélectionnez une conversation pour commencer à discuter</p>
+                    <h2 className="text-xl font-bold">Communication Unifiée</h2>
+                    <p className="text-muted-foreground mt-2 max-w-sm">Gérez toutes vos conversations depuis un seul endroit</p>
+                    <div className="mt-6 text-left text-sm text-muted-foreground space-y-2">
+                        <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500"/> WhatsApp Business</p>
+                        <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500"/> Facebook Messenger</p>
+                        <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500"/> Instagram Direct</p>
+                        <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500"/> LinkedIn Messages</p>
+                    </div>
                 </div>
             </div>
           ) : (
@@ -358,10 +376,10 @@ export function ChatWidget() {
             <span className="sr-only">Ouvrir le chat</span>
         </Button>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="w-[90vw] max-w-xl h-[85vh] p-0 gap-0">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">Fenêtre de discussion</DialogTitle>
-                    <DialogDescription className="sr-only">
+            <DialogContent className="w-[90vw] max-w-5xl h-[85vh] p-0 gap-0">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>Fenêtre de discussion</DialogTitle>
+                    <DialogDescription>
                         Consultez vos conversations et répondez à vos contacts.
                     </DialogDescription>
                 </DialogHeader>
