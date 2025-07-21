@@ -173,8 +173,8 @@ export function ChatPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Conversations List */}
         <div className={cn(
-            "flex-shrink-0 border-r flex flex-col transition-all duration-300",
-            selectedConversationId ? "w-0 md:w-[300px]" : "w-full"
+            "flex-shrink-0 border-r flex flex-col transition-all duration-300 w-full md:w-[280px]",
+            selectedConversationId && "hidden md:flex"
         )}>
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-xl font-semibold tracking-tight">Conversations</h2>
@@ -224,7 +224,7 @@ export function ChatPage() {
         {/* Chat Window */}
         <div className={cn(
             "flex flex-1 flex-col transition-all duration-300",
-            selectedConversationId ? "w-full" : "w-0"
+            !selectedConversationId && "hidden md:flex"
         )}>
           {activeConversation && activeContact ? (
             <>
@@ -341,7 +341,7 @@ export function ChatPage() {
               </div>
             </>
           ) : (
-             <div className="flex-1 hidden md:flex h-full items-center justify-center text-muted-foreground">
+             <div className="flex-1 h-full items-center justify-center text-muted-foreground">
               <p>Sélectionnez une conversation pour commencer à discuter.</p>
             </div>
           )}
@@ -430,14 +430,14 @@ export function ChatWidget() {
     return (
         <>
         <Button 
-            className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 text-white"
+            className="fixed bottom-4 right-4 h-12 w-12 rounded-full shadow-lg z-50 text-white"
             onClick={() => setIsOpen(!isOpen)}
         >
-            {isOpen ? <X className="h-7 w-7" /> : <MessageCircle className="h-7 w-7" />}
+            {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
             <span className="sr-only">Ouvrir le chat</span>
         </Button>
         {isOpen && (
-            <div className="fixed bottom-20 right-4 w-[90vw] h-[75vh] max-w-3xl max-h-[600px] z-50 bg-card rounded-xl shadow-2xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-10">
+            <div className="fixed bottom-20 right-4 w-[90vw] h-[75vh] max-w-xl max-h-[550px] z-50 bg-card rounded-xl shadow-2xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-10">
                 <ChatPage />
             </div>
         )}
