@@ -1,9 +1,9 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Bell, FileText, UserPlus, Megaphone } from 'lucide-react';
+import { Bell, FileText, UserPlus, Megaphone, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 type Notification = {
   id: string;
@@ -62,14 +63,33 @@ function timeSince(date: Date): string {
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState(allNotifications);
     const [filter, setFilter] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const handleMarkAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
 
-    const filteredNotifications = notifications.filter(n => {
-        if (filter === 'all') return true;
-        if (filter === 'unread') return !n.read;
-        return n.type === filter;
-    })
+    const filteredNotifications = useMemo(() => {
+        return notifications.filter(n => {
+            const statusFilter = filter === 'all' ? true : (filter === 'unread' ? !n.read : n.type === filter);
+            const searchFilter = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || n.description.toLowerCase().includes(searchTerm.toLowerCase());
+            return statusFilter && searchFilter;
+        });
+    }, [notifications, filter, searchTerm]);
+    
+    const groupedNotifications = useMemo(() => {
+        return filteredNotifications.reduce((acc, notif) => {
+            const date = new Date(notif.timestamp).toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+            if (!acc[date]) {
+                acc[date] = [];
+            }
+            acc[date].push(notif);
+            return acc;
+        }, {} as Record<string, Notification[]>);
+    }, [filteredNotifications]);
+
 
   return (
     <Card className="w-full">
@@ -80,47 +100,60 @@ export default function NotificationsPage() {
                 <CardDescription>Consultez, filtrez et gérez toutes vos notifications.</CardDescription>
             </div>
              <div className="flex items-center gap-4">
-                <Select value={filter} onValueChange={setFilter}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filtrer..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Toutes</SelectItem>
-                        <SelectItem value="unread">Non lues</SelectItem>
-                        <SelectItem value="invoice">Factures</SelectItem>
-                        <SelectItem value="user">Utilisateurs</SelectItem>
-                        <SelectItem value="system">Système</SelectItem>
-                    </SelectContent>
-                </Select>
                 <Button onClick={handleMarkAllRead} disabled={notifications.every(n => n.read)}>
                     Tout marquer comme lu
                 </Button>
             </div>
         </div>
+         <div className="flex items-center gap-4 mt-4">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Rechercher une notification..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            </div>
+            <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filtrer..." />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    <SelectItem value="unread">Non lues</SelectItem>
+                    <SelectItem value="invoice">Factures</SelectItem>
+                    <SelectItem value="user">Utilisateurs</SelectItem>
+                    <SelectItem value="system">Système</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-            {filteredNotifications.length > 0 ? (
-                filteredNotifications.map(notif => (
-                    <div key={notif.id} className={cn("flex items-start gap-4 p-4 rounded-lg border", !notif.read && "bg-primary/5")}>
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                            <NotificationIcon type={notif.type}/>
+        <div className="space-y-6">
+            {Object.keys(groupedNotifications).length > 0 ? (
+                Object.entries(groupedNotifications).map(([date, notifs]) => (
+                    <div key={date}>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">{date}</h3>
+                         <div className="space-y-4">
+                            {notifs.map(notif => (
+                                <div key={notif.id} className={cn("flex items-start gap-4 p-4 rounded-lg border", !notif.read && "bg-primary/5")}>
+                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                        <NotificationIcon type={notif.type}/>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-semibold">{notif.title}</p>
+                                            <p className="text-xs text-muted-foreground">{timeSince(new Date(notif.timestamp))}</p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">{notif.description}</p>
+                                    </div>
+                                    {!notif.read && (
+                                        <div className="h-2.5 w-2.5 rounded-full bg-primary mt-1.5" title="Non lu" />
+                                    )}
+                                </div>
+                            ))}
                         </div>
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                                <p className="font-semibold">{notif.title}</p>
-                                <p className="text-xs text-muted-foreground">{timeSince(new Date(notif.timestamp))}</p>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{notif.description}</p>
-                        </div>
-                        {!notif.read && (
-                            <div className="h-2.5 w-2.5 rounded-full bg-primary mt-1.5" title="Non lu" />
-                        )}
                     </div>
                 ))
             ) : (
                 <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                    <p className="text-muted-foreground">Aucune notification pour ce filtre.</p>
+                    <p className="text-muted-foreground">Aucune notification pour les filtres sélectionnés.</p>
                 </div>
             )}
         </div>
