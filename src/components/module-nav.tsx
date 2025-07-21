@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -49,15 +50,15 @@ export function ModuleNav() {
   };
 
   return (
-    <nav className="bg-background border-b px-4 sm:px-6">
+    <nav className="bg-[#5D5CDE] border-b px-4 sm:px-6">
       <div className="flex items-center gap-4">
         {navLinks.map((link) => (
           <Link href={link.href} key={link.href}>
             <div
               className={cn(
-                'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary rounded-t-md',
+                'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white rounded-t-md',
                 isActive(link.href) &&
-                  'border-b-2 border-primary text-primary'
+                  'bg-white text-primary'
               )}
             >
               <link.icon className="h-4 w-4" />

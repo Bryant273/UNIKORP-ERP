@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from './ui/button';
 import { Bell, ChevronDown, HelpCircle, FileText, UserPlus, Megaphone } from 'lucide-react';
@@ -32,7 +33,7 @@ const initialNotifications: Notification[] = [
 
 const NotificationIcon = ({ type }: { type: Notification['type'] }) => {
     switch (type) {
-        case 'invoice': return <FileText className="h-5 w-5 text-primary" />;
+        case 'invoice': return <FileText className="h-5 w-5 text-blue-500" />;
         case 'user': return <UserPlus className="h-5 w-5 text-green-500" />;
         case 'system': return <Megaphone className="h-5 w-5 text-purple-500" />;
         default: return <Bell className="h-5 w-5" />;
@@ -56,7 +57,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-primary px-4 text-primary-foreground sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-[#2D3748] px-4 text-primary-foreground sm:px-6">
       <div className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-white" />
         <Button variant="ghost" className="hover:bg-white/10 hover:text-primary-foreground">
