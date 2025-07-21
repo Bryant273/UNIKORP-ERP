@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText, MessageCircle, X } from 'lucide-react';
+import { Send, Phone, Video, Search, PlusCircle, Smile, Paperclip, Users, User, FileImage, FileText, MessageCircle, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
