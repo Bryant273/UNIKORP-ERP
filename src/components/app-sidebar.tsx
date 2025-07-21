@@ -417,7 +417,7 @@ export function AppSidebar() {
     setIsMounted(true);
   }, []);
 
-  const specialPages = ['/chat', '/notifications', '/settings', '/help'];
+  const specialPages = ['/chat', '/notifications', '/settings', '/help', '/support', '/actions'];
   if (pathname === '/' || specialPages.some(p => pathname.startsWith(p))) {
     return null;
   }
