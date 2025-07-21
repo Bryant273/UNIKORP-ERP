@@ -225,7 +225,7 @@ function ChatPage() {
         <div className="flex flex-1 flex-col h-full">
           {!activeConversation || !activeContact ? (
             <div className="flex-1 h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/30">
-                <div className="text-center p-8 border-b w-full">
+                <div className="p-4 border-b w-full">
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-2">
                             <div className="h-10 w-10 rounded-full bg-muted border flex items-center justify-center">
@@ -233,12 +233,8 @@ function ChatPage() {
                             </div>
                             <div>
                                 <h3 className="font-semibold">Sélectionner une conversation</h3>
-                                <p className="text-xs text-muted-foreground">Choisissez une conversation pour commencer</p>
+                                <p className="text-xs text-muted-foreground">Choisissez une discussion pour commencer</p>
                             </div>
-                        </div>
-                        <div className="flex items-center">
-                            <Button variant="ghost" size="icon"><X className="h-5 w-5"/></Button>
-                            <Button variant="ghost" size="icon"><Trash2 className="h-5 w-5"/></Button>
                         </div>
                     </div>
                 </div>
@@ -272,6 +268,10 @@ function ChatPage() {
                 <div className="ml-auto flex gap-2">
                   <Button variant="ghost" size="icon"><Phone className="h-5 w-5" /></Button>
                   <Button variant="ghost" size="icon"><Video className="h-5 w-5" /></Button>
+                   <Button variant="ghost" size="icon" onClick={() => setSelectedConversationId(null)}>
+                        <X className="h-5 w-5" />
+                        <span className="sr-only">Fermer la conversation</span>
+                    </Button>
                 </div>
               </div>
 
@@ -351,14 +351,20 @@ export function ChatWidget() {
     return (
         <>
         <Button 
-            className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 text-white"
+            className="fixed bottom-4 right-4 h-12 w-12 rounded-full shadow-lg z-50 text-white"
             onClick={() => setIsOpen(!isOpen)}
         >
             {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
             <span className="sr-only">Ouvrir le chat</span>
         </Button>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="w-[90vw] max-w-4xl h-[85vh] p-0 gap-0">
+            <DialogContent className="w-[90vw] max-w-xl h-[85vh] p-0 gap-0">
+                <DialogHeader>
+                    <DialogTitle className="sr-only">Fenêtre de discussion</DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Consultez vos conversations et répondez à vos contacts.
+                    </DialogDescription>
+                </DialogHeader>
                  <ChatPage />
             </DialogContent>
         </Dialog>
