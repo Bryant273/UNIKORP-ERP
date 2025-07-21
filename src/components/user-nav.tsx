@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { User, Settings, LifeBuoy, LogOut, Zap, Bell, History, MessageSquareQuestion } from 'lucide-react';
+import { User, Settings, LifeBuoy, LogOut, Zap, Bell, History, MessageCircleQuestion } from 'lucide-react';
 import Link from 'next/link';
 
 export function UserNav() {
@@ -70,7 +70,7 @@ export function UserNav() {
           </DropdownMenuItem>
            <DropdownMenuItem asChild>
             <Link href="/support">
-              <MessageSquareQuestion className="mr-2 h-4 w-4" />
+              <MessageCircleQuestion className="mr-2 h-4 w-4" />
               <span>Contacter le Support</span>
             </Link>
           </DropdownMenuItem>
