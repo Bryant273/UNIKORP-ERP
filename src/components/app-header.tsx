@@ -56,7 +56,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/10 bg-header-bg px-4 text-primary-foreground sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-primary px-4 text-primary-foreground sm:px-6">
       <div className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-white" />
         <Button variant="ghost" className="hover:bg-white/10 hover:text-primary-foreground">
@@ -75,7 +75,7 @@ export function AppHeader() {
         {mounted ? (
           <Switch
             id="dark-mode-toggle"
-            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-white/20"
+            className="data-[state=checked]:bg-white/20 data-[state=unchecked]:bg-white/20"
             checked={theme === 'dark'}
             onCheckedChange={(checked) => {
               setTheme(checked ? 'dark' : 'light');
