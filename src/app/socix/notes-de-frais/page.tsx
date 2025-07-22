@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -91,7 +90,7 @@ export default function NotesDeFraisPage() {
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead>Date Soumission</TableHead><TableHead>Description</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[100px]">Actions</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead>Date Soumission</TableHead><TableHead>Description</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[250px]">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {currentExpenses.map(exp => (
                                 <TableRow key={exp.id} className="odd:bg-muted/50">
@@ -101,14 +100,16 @@ export default function NotesDeFraisPage() {
                                     <TableCell className="text-right font-bold">{exp.amount.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-center">{getStatusBadge(exp.status)}</TableCell>
                                     <TableCell className="text-center">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleAction(exp.id, 'Approuvée')}><Check className="mr-2 h-4 w-4"/>Approuver</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleAction(exp.id, 'Refusée')} className="text-destructive"><X className="mr-2 h-4 w-4"/>Refuser</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleAction(exp.id, 'Remboursée')}><Receipt className="mr-2 h-4 w-4"/>Marquer comme remboursée</DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        {exp.status === 'Soumise' ? (
+                                            <div className="flex justify-center gap-2">
+                                                <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleAction(exp.id, 'Refusée')}><X className="mr-2 h-4 w-4"/>Refuser</Button>
+                                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleAction(exp.id, 'Approuvée')}><Check className="mr-2 h-4 w-4"/>Approuver</Button>
+                                            </div>
+                                        ) : exp.status === 'Approuvée' ? (
+                                            <Button size="sm" variant="default" onClick={() => handleAction(exp.id, 'Remboursée')}><Receipt className="mr-2 h-4 w-4"/>Rembourser</Button>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">-</span>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}
