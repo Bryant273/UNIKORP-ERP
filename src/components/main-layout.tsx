@@ -5,6 +5,7 @@ import { AppHeader } from './app-header';
 import { AppSidebar } from './app-sidebar';
 import { ModuleNav } from './module-nav';
 import { ChatWidget } from './chat-widget';
+import { cn } from '@/lib/utils';
 
 const noLayoutPaths = ['/login', '/super-admin', '/employee-dashboard'];
 
@@ -27,7 +28,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       ) : (
-        <main className="flex-1 overflow-y-auto bg-background/80">
+        <main className={cn(
+          "flex-1 overflow-y-auto bg-background/80",
+          (pathname === '/login' || pathname === '/') && "flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900"
+          )}>
           {children}
         </main>
       )}
