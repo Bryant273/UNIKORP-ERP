@@ -37,13 +37,6 @@ const chartConfig = {
 export default function RoiMarketingPage() {
   return (
     <div className="space-y-6">
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-2xl">Analyse du ROI Marketing</CardTitle>
-                <CardDescription>Évaluez la rentabilité de vos investissements marketing.</CardDescription>
-            </CardHeader>
-        </Card>
-
         <div className="grid gap-4 md:grid-cols-3">
             {kpiData.map(kpi => (
                 <Card key={kpi.title}>
@@ -74,7 +67,7 @@ export default function RoiMarketingPage() {
                         </TableRow></TableHeader>
                         <TableBody>
                             {roiByCampaignData.map(c => (
-                                <TableRow key={c.id}>
+                                <TableRow key={c.id} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{c.name}</TableCell>
                                     <TableCell className="text-right">{c.budget.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-right">{c.revenu.toLocaleString('fr-FR')} FCFA</TableCell>

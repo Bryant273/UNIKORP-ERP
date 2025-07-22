@@ -104,7 +104,7 @@ export default function RapportsPersonnalisesPage() {
                         </TableRow></TableHeader>
                         <TableBody>
                             {reports.map(report => (
-                                <TableRow key={report.id}>
+                                <TableRow key={report.id} className="odd:bg-muted/50">
                                     <TableCell>
                                         <p className="font-medium">{report.title}</p>
                                         <p className="text-xs text-muted-foreground">{report.description}</p>
@@ -295,7 +295,7 @@ function ViewReportModal({ isOpen, onClose, report }: { isOpen: boolean, onClose
                                 <TableHeader><TableRow><TableHead>Région</TableHead><TableHead className="text-right">Leads</TableHead><TableHead className="text-right">Taux de Conv.</TableHead></TableRow></TableHeader>
                                 <TableBody>
                                     {viewModalTableData.map(d => (
-                                        <TableRow key={d.region}>
+                                        <TableRow key={d.region} className="odd:bg-muted/50">
                                             <TableCell>{d.region}</TableCell>
                                             <TableCell className="text-right">{d.leads}</TableCell>
                                             <TableCell className="text-right">{d.conversion}</TableCell>

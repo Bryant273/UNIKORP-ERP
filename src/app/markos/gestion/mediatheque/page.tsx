@@ -143,7 +143,7 @@ export default function MediathequePage() {
                                                 </TableCell>
                                             </TableRow>
                                             {groupedAssets[date].map(asset => (
-                                                <TableRow key={asset.id}>
+                                                <TableRow key={asset.id} className="odd:bg-muted/50">
                                                     <TableCell>
                                                         <Image src={asset.url} alt={asset.name} width={48} height={48} className="rounded-md aspect-square object-cover border" data-ai-hint="media asset"/>
                                                     </TableCell>
@@ -208,7 +208,7 @@ export default function MediathequePage() {
                         <DialogTitle>Aperçu : {previewAsset?.name}</DialogTitle>
                     </DialogHeader>
                     <div className="py-4 flex justify-center bg-muted rounded-md">
-                        <Image src={previewAsset?.url || 'https://placehold.co/1200x800.png'} alt={previewAsset?.name || ''} width={800} height={600} className="w-auto h-auto max-w-full max-h-[70vh] rounded-md border" data-ai-hint="media asset"/>
+                        {previewAsset?.fileUrl && <Image src={previewAsset.fileUrl} alt={previewAsset?.name || ''} width={800} height={600} className="w-auto h-auto max-w-full max-h-[70vh] rounded-md border" data-ai-hint="media asset"/>}
                     </div>
                 </DialogContent>
             </Dialog>

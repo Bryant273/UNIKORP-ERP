@@ -47,13 +47,6 @@ const detailedConversionData = [
 export default function TauxDeConversionPage() {
   return (
     <div className="space-y-6">
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-2xl">Analyse des Taux de Conversion</CardTitle>
-                <CardDescription>Suivez et analysez l'efficacité de vos différents points de conversion.</CardDescription>
-            </CardHeader>
-        </Card>
-
         <div className="grid gap-4 md:grid-cols-3">
             {kpiData.map(kpi => (
                 <Card key={kpi.title}>
@@ -111,7 +104,7 @@ export default function TauxDeConversionPage() {
                     <TableHeader><TableRow><TableHead>Source de trafic / Campagne</TableHead><TableHead className="text-right">Visiteurs</TableHead><TableHead className="text-right">Conversions</TableHead><TableHead className="text-right">Taux de Conversion</TableHead></TableRow></TableHeader>
                     <TableBody>
                         {detailedConversionData.map(d => (
-                            <TableRow key={d.source}>
+                            <TableRow key={d.source} className="odd:bg-muted/50">
                                 <TableCell className="font-medium">{d.source}</TableCell>
                                 <TableCell className="text-right">{d.traffic.toLocaleString('fr-FR')}</TableCell>
                                 <TableCell className="text-right">{d.conversions.toLocaleString('fr-FR')}</TableCell>

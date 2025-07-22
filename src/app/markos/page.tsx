@@ -8,7 +8,7 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Pie, PieChart as RechartsPieChart, Legend } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Pie, PieChart as RechartsPieChart, Legend, ResponsiveContainer } from "recharts";
 import { DollarSign, TrendingUp, UserPlus, Percent } from "lucide-react";
 
 const kpiData = [
@@ -20,7 +20,7 @@ const kpiData = [
 
 const leadsBySourceData = [
     { name: 'Organique', value: 400, fill: 'hsl(var(--chart-1))' },
-    { name: 'Publicité Payante', value: 300, fill: 'hsl(var(--chart-2))' },
+    { name: 'Payant', value: 300, fill: 'hsl(var(--chart-2))' },
     { name: 'Réseaux Sociaux', value: 200, fill: 'hsl(var(--chart-3))' },
     { name: 'Emailing', value: 278, fill: 'hsl(var(--chart-4))' },
     { name: 'Référents', value: 189, fill: 'hsl(var(--chart-5))' },
@@ -28,7 +28,7 @@ const leadsBySourceData = [
 const leadsBySourceConfig = {
   value: { label: "Leads" },
   Organique: { label: "Organique", color: "hsl(var(--chart-1))" },
-  'Publicité Payante': { label: "Publicité", color: "hsl(var(--chart-2))" },
+  Payant: { label: "Publicité", color: "hsl(var(--chart-2))" },
   'Réseaux Sociaux': { label: "Réseaux Sociaux", color: "hsl(var(--chart-3))" },
   Emailing: { label: "Emailing", color: "hsl(var(--chart-4))" },
   Référents: { label: "Référents", color: "hsl(var(--chart-5))" },
@@ -37,7 +37,7 @@ const leadsBySourceConfig = {
 const conversionFunnelData = [
   { stage: 'Visiteurs', value: 15000 },
   { stage: 'Prospects', value: 316 },
-  { stage: 'Prospects Qualifiés', value: 80 },
+  { stage: 'Qualifiés', value: 80 },
   { stage: 'Clients', value: 12 },
 ];
 const conversionFunnelConfig = {
@@ -78,13 +78,15 @@ export default function MarkosPage() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={conversionFunnelConfig} className="h-[300px] w-full">
-              <BarChart data={conversionFunnelData} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid horizontal={false} />
-                <YAxis dataKey="stage" type="category" tickLine={false} axisLine={false} tickMargin={8} width={100} />
-                <XAxis type="number" hide />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" fill="var(--color-value)" radius={4} />
-              </BarChart>
+              <ResponsiveContainer>
+                  <BarChart data={conversionFunnelData} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid horizontal={false} />
+                    <YAxis dataKey="stage" type="category" tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                    <XAxis type="number" hide />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="value" fill="var(--color-value)" radius={4} />
+                  </BarChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>

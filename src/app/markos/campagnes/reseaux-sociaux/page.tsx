@@ -128,7 +128,7 @@ export default function ReseauxSociauxPage() {
                         </TableHeader>
                         <TableBody>
                             {paginatedPosts.map(post => (
-                                <TableRow key={post.id}>
+                                <TableRow key={post.id} className="odd:bg-muted/50">
                                     <TableCell className="text-center">{getPlatformIcon(post.platform)}</TableCell>
                                     <TableCell className="max-w-sm truncate">{post.content}</TableCell>
                                     <TableCell className="text-center">{format(new Date(post.publishDate), 'dd/MM/yyyy HH:mm', { locale: fr })}</TableCell>

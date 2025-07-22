@@ -35,13 +35,6 @@ const channelPerformanceData = [
 export default function PerformancesPage() {
   return (
     <div className="space-y-6">
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-2xl">Performances Marketing</CardTitle>
-                <CardDescription>Analyse de la performance du tunnel de conversion et des canaux d'acquisition.</CardDescription>
-            </CardHeader>
-        </Card>
-
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {kpiData.map(kpi => (
                 <Card key={kpi.title}>
@@ -68,7 +61,7 @@ export default function PerformancesPage() {
                         <TableHeader><TableRow><TableHead>Canal</TableHead><TableHead className="text-right">Leads</TableHead><TableHead className="text-right">MQLs</TableHead><TableHead className="text-right">Taux de Conv. (Lead > MQL)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {channelPerformanceData.map(d => (
-                                <TableRow key={d.channel}>
+                                <TableRow key={d.channel} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{d.channel}</TableCell>
                                     <TableCell className="text-right">{d.leads}</TableCell>
                                     <TableCell className="text-right">{d.mql}</TableCell>
