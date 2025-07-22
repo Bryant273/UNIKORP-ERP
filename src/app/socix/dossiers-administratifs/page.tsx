@@ -124,35 +124,33 @@ export default function DossiersAdministratifsPage() {
                         <Select value={filters.statut} onValueChange={v => setFilters(f => ({...f, statut: v}))}><SelectTrigger className="w-[180px]"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">Tous les statuts</SelectItem><SelectItem value="Validé">Validé</SelectItem><SelectItem value="En attente">En attente</SelectItem><SelectItem value="Archivé">Archivé</SelectItem></SelectContent></Select>
                     </div>
                     {/* Table */}
-                    <div className="border rounded-lg">
-                        <Table>
-                            <TableHeader><TableRow>
-                                <TableHead>Nom du Document</TableHead>
-                                <TableHead className="text-center">Catégorie</TableHead>
-                                <TableHead className="text-center">Employé</TableHead>
-                                <TableHead className="text-center">Date d'ajout</TableHead>
-                                <TableHead className="text-center">Statut</TableHead>
-                                <TableHead className="w-[150px] text-center">Actions</TableHead>
-                            </TableRow></TableHeader>
-                            <TableBody>
-                                {paginatedDocuments.map(doc => (
-                                    <TableRow key={doc.id}>
-                                        <TableCell className="font-medium">{doc.nom}</TableCell>
-                                        <TableCell className="text-center"><Badge variant="outline">{doc.categorie}</Badge></TableCell>
-                                        <TableCell className="text-center">{doc.employe}</TableCell>
-                                        <TableCell className="text-center">{format(new Date(doc.dateAjout), 'dd/MM/yyyy')}</TableCell>
-                                        <TableCell className="text-center"><Badge className={getStatusBadgeStyles(doc.statut)}>{doc.statut}</Badge></TableCell>
-                                        <TableCell className="text-center">
-                                            <div className="flex justify-center gap-1">
-                                                <Button variant="ghost" size="icon" onClick={() => setPreviewingDoc(doc)}><Eye className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc)}><Download className="h-4 w-4" /></Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
+                    <Table>
+                        <TableHeader><TableRow>
+                            <TableHead>Nom du Document</TableHead>
+                            <TableHead className="text-center">Catégorie</TableHead>
+                            <TableHead className="text-center">Employé</TableHead>
+                            <TableHead className="text-center">Date d'ajout</TableHead>
+                            <TableHead className="text-center">Statut</TableHead>
+                            <TableHead className="w-[150px] text-center">Actions</TableHead>
+                        </TableRow></TableHeader>
+                        <TableBody>
+                            {paginatedDocuments.map(doc => (
+                                <TableRow key={doc.id}>
+                                    <TableCell className="font-medium">{doc.nom}</TableCell>
+                                    <TableCell className="text-center"><Badge variant="outline">{doc.categorie}</Badge></TableCell>
+                                    <TableCell className="text-center">{doc.employe}</TableCell>
+                                    <TableCell className="text-center">{format(new Date(doc.dateAjout), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell className="text-center"><Badge className={getStatusBadgeStyles(doc.statut)}>{doc.statut}</Badge></TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex justify-center gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => setPreviewingDoc(doc)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc)}><Download className="h-4 w-4" /></Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
                 <CardFooter className="flex items-center justify-between pt-6">
                     <div className="text-sm text-muted-foreground">
