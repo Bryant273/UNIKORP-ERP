@@ -55,7 +55,7 @@ export default function OptimisationRoutesPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {routes.map(route => (
-                            <Card key={route.id}>
+                            <Card key={route.id} className="odd:bg-muted/50">
                                 <CardHeader className="flex flex-row items-center justify-between">
                                     <div>
                                         <CardTitle className="text-lg flex items-center gap-2"><Truck className="h-5 w-5"/>{route.name}</CardTitle>

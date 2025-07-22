@@ -124,7 +124,7 @@ export default function LogsonPage() {
                     <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Client</TableHead><TableHead>Transporteur</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader>
                     <TableBody>
                         {recentOrdersData.map(order => (
-                            <TableRow key={order.id}>
+                            <TableRow key={order.id} className="odd:bg-muted/50">
                                 <TableCell className="font-mono text-sm">{order.id}</TableCell>
                                 <TableCell>{order.client}</TableCell>
                                 <TableCell>{order.transporteur}</TableCell>

@@ -101,7 +101,7 @@ export default function GestionRetoursPage() {
                     </TableHeader>
                     <TableBody>
                         {paginatedRetours.map(retour => (
-                            <TableRow key={retour.id}>
+                            <TableRow key={retour.id} className="odd:bg-muted/50">
                                 <TableCell>{retour.retourNumero}</TableCell>
                                 <TableCell>{retour.blNumero}</TableCell>
                                 <TableCell>{retour.client}</TableCell>
@@ -112,13 +112,11 @@ export default function GestionRetoursPage() {
                                 </TableCell>
                             </TableRow>
                         ))}
+                         {retours.length === 0 && (
+                            <TableRow><TableCell colSpan={6} className="text-center h-24">Aucun retour enregistré pour le moment.</TableCell></TableRow>
+                        )}
                     </TableBody>
                 </Table>
-                 {retours.length === 0 && (
-                    <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
-                        <p className="text-muted-foreground">Aucun retour enregistré pour le moment.</p>
-                    </div>
-                )}
             </CardContent>
             {totalPages > 1 && (
                 <CardFooter className="flex justify-between items-center">

@@ -121,7 +121,7 @@ export default function RapportsAnalysesPage() {
                     </TableHeader>
                     <TableBody>
                         {reports.map(report => (
-                            <TableRow key={report.id}>
+                            <TableRow key={report.id} className="odd:bg-muted/50">
                                 <TableCell className="font-medium">{report.titre}</TableCell>
                                 <TableCell>{format(new Date(report.dateCreation), 'dd/MM/yyyy', { locale: fr })}</TableCell>
                                 <TableCell>{report.creePar}</TableCell>

@@ -163,14 +163,14 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead>Montant</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {paginatedCommandes.length > 0 ? paginatedCommandes.map(cmd => (
-                                <TableRow key={cmd.id}>
+                                <TableRow key={cmd.id} className="odd:bg-muted/50">
                                     <TableCell>{cmd.numero}</TableCell>
                                     <TableCell>{format(new Date(cmd.date), 'dd/MM/yyyy')}</TableCell>
                                     <TableCell>{getFournisseurName(cmd.fournisseurId)}</TableCell>
-                                    <TableCell>{calculateTotal(cmd.lignes).toLocaleString('fr-FR')} FCFA</TableCell>
+                                    <TableCell className="text-right">{calculateTotal(cmd.lignes).toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex justify-center gap-2">
                                             <Button size="icon" variant="ghost" onClick={() => setCommandeToView(cmd)}><Eye className="h-4 w-4" /></Button>
@@ -320,12 +320,12 @@ function CommandeForm({ commande, onBack, onSave }: { commande: Commande | null,
                                     </TableCell>
                                     <TableCell><Input type="number" value={l.quantite} onChange={e => handleLineChange(l.id, 'quantite', Number(e.target.value))}/></TableCell>
                                     <TableCell><Input type="number" value={l.prixUnitaire} onChange={e => handleLineChange(l.id, 'prixUnitaire', Number(e.target.value))}/></TableCell>
-                                    <TableCell>{(l.quantite * l.prixUnitaire).toLocaleString('fr-FR')} FCFA</TableCell>
+                                    <TableCell className="text-right">{total.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell><Button variant="ghost" size="icon" onClick={() => handleRemoveLine(l.id)}><Trash2 className="h-4 w-4"/></Button></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
-                        <ShadTableFooter><TableRow><TableCell colSpan={3} className="text-right font-bold">Total</TableCell><TableCell className="font-bold">{total.toLocaleString('fr-FR')} FCFA</TableCell><TableCell/></TableRow></ShadTableFooter>
+                        <ShadTableFooter><TableRow><TableCell colSpan={3} className="text-right font-bold">Total</TableCell><TableCell className="font-bold text-right">{total.toLocaleString('fr-FR')} FCFA</TableCell><TableCell/></TableRow></ShadTableFooter>
                     </Table>
                     <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-4"><PlusCircle className="mr-2 h-4 w-4"/>Ajouter une ligne</Button>
                 </CardContent>

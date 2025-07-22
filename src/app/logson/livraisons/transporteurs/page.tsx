@@ -192,13 +192,11 @@ export default function TransporteursPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {transporteurs.length === 0 && (
+                  <TableRow><TableCell colSpan={4} className="h-24 text-center">Aucun transporteur dans la base de données.</TableCell></TableRow>
+                )}
               </TableBody>
             </Table>
-            {transporteurs.length === 0 && (
-                <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
-                 <p className="text-muted-foreground">Aucun transporteur dans la base de données.</p>
-                </div>
-              )}
         </CardContent>
          {transporteurs.length > 0 &&
             <CardFooter className="flex items-center justify-between pt-6">

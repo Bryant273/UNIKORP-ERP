@@ -87,7 +87,7 @@ export default function CoutsLogistiquesPage() {
                         <TableHeader><TableRow><TableHead>Type de Coût</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-right">% du Total</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {costData.map(d => (
-                                <TableRow key={d.type}>
+                                <TableRow key={d.type} className="odd:bg-muted/50">
                                     <TableCell className="font-medium flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
                                         {d.type}

@@ -182,7 +182,7 @@ export default function ProduitsPage() {
                         </TableHeader>
                         <TableBody>
                             {paginatedProduits.map(p => (
-                                <TableRow key={p.id}>
+                                <TableRow key={p.id} className="odd:bg-muted/50">
                                     <TableCell className="font-mono">{p.reference}</TableCell>
                                     <TableCell className="font-medium">{p.name}</TableCell>
                                     <TableCell className="text-center">{p.stock}</TableCell>

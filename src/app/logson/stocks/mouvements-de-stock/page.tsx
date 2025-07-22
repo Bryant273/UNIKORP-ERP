@@ -116,7 +116,7 @@ export default function MouvementsDeStockPage() {
                         </TableHeader>
                         <TableBody>
                             {paginatedMouvements.map(mvt => (
-                                <TableRow key={mvt.id}>
+                                <TableRow key={mvt.id} className="odd:bg-muted/50">
                                     <TableCell>{format(new Date(mvt.date), 'dd/MM/yyyy HH:mm', { locale: fr })}</TableCell>
                                     <TableCell className="font-medium">{produits.find(p => p.id === mvt.produitId)?.name}</TableCell>
                                     <TableCell>{mvt.document}</TableCell>
@@ -125,13 +125,11 @@ export default function MouvementsDeStockPage() {
                                     <TableCell>{getEntrepotDescription(mvt)}</TableCell>
                                 </TableRow>
                             ))}
+                            {mouvements.length === 0 && (
+                               <TableRow><TableCell colSpan={6} className="h-24 text-center">Aucun mouvement de stock enregistré.</TableCell></TableRow>
+                            )}
                         </TableBody>
                     </Table>
-                    {mouvements.length === 0 && (
-                        <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
-                            <p className="text-muted-foreground">Aucun mouvement de stock enregistré.</p>
-                        </div>
-                    )}
                 </CardContent>
                  {mouvements.length > 0 &&
                     <CardFooter className="flex items-center justify-between pt-6">
