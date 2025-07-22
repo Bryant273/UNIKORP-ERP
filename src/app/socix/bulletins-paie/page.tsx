@@ -42,131 +42,9 @@ const initialPayslips: Payslip[] = [
 
 const ITEMS_PER_PAGE = 10;
 
-export default function BulletinsPaiePage() {
-    const { toast } = useToast();
-    const [payslips] = useState(initialPayslips);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
-    const [viewingPayslip, setViewingPayslip] = useState<Payslip | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-
-    const periods = useMemo(() => [...new Set(payslips.map(p => p.periode))].sort((a, b) => b.localeCompare(a)), [payslips]);
-
-    const filteredPayslips = useMemo(() => {
-        return payslips.filter(p => {
-            const searchMatch = p.employeeName.toLowerCase().includes(searchTerm.toLowerCase());
-            const periodMatch = selectedPeriod === 'all' || p.periode === selectedPeriod;
-            return searchMatch && periodMatch;
-        });
-    }, [payslips, searchTerm, selectedPeriod]);
-
-    const totalPages = Math.ceil(filteredPayslips.length / ITEMS_PER_PAGE);
-    const currentPayslips = filteredPayslips.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-    const handlePageChange = (newPage: number) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
-    };
-
-    const handleDownloadPDF = (payslip: Payslip) => {
-        const doc = new jsPDF();
-        
-        doc.setFontSize(18);
-        doc.text("BULLETIN DE PAIE", 105, 20, { align: 'center' });
-        doc.setFontSize(10);
-        doc.text(`Période de ${format(new Date(payslip.periode), 'MMMM yyyy', { locale: fr })}`, 105, 26, { align: 'center' });
-        
-        doc.text(`Employé: ${payslip.employeeName}`, 14, 40);
-        doc.text(`Matricule: ${payslip.employeeId}`, 14, 46);
-
-        autoTable(doc, {
-            head: [['Libellé', 'Base', 'Taux', 'Gain', 'Retenue']],
-            body: [
-                ['Salaire de Base', payslip.salaireBrut.toLocaleString('fr-FR'), '-', payslip.salaireBrut.toLocaleString('fr-FR'), '-'],
-                ['Cotisations Sociales', payslip.salaireBrut.toLocaleString('fr-FR'), '22%', '-', payslip.cotisationsSalariales.toLocaleString('fr-FR')],
-                ['Impôt sur le Revenu', payslip.netImposable.toLocaleString('fr-FR'), '~4.5%', '-', (payslip.netImposable - payslip.netAPayer).toLocaleString('fr-FR')],
-            ],
-            startY: 55,
-            theme: 'striped',
-        });
-        
-        const finalY = (doc as any).lastAutoTable.finalY + 10;
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`NET À PAYER : ${payslip.netAPayer.toLocaleString('fr-FR')} FCFA`, 196, finalY, { align: 'right' });
-
-        doc.save(`Bulletin_${payslip.employeeName.replace(' ', '_')}_${payslip.periode}.pdf`);
-        toast({ title: 'PDF du bulletin généré.' });
-    };
-    
-    return (
-        <>
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-2xl flex items-center gap-2"><Mail /> Bulletins de Paie</CardTitle>
-                            <CardDescription>Consultez et archivez les bulletins de paie de vos employés.</CardDescription>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Rechercher un employé..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                        </div>
-                        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Toutes les périodes</SelectItem>
-                                {periods.map(p => <SelectItem key={p} value={p}>{format(new Date(`${p}-02`), 'MMMM yyyy', {locale: fr})}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <Table>
-                        <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead className="text-center">Période</TableHead><TableHead className="text-right">Net à Payer</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[150px]">Actions</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            {currentPayslips.map(p => (
-                                <TableRow key={p.id} className="odd:bg-muted/50">
-                                    <TableCell className="font-medium">{p.employeeName}</TableCell>
-                                    <TableCell className="text-center capitalize">{format(new Date(`${p.periode}-02`), 'MMMM yyyy', {locale: fr})}</TableCell>
-                                    <TableCell className="text-right font-bold">{p.netAPayer.toLocaleString('fr-FR')} FCFA</TableCell>
-                                    <TableCell className="text-center"><Badge variant={p.status === 'Consulté' ? 'default' : 'secondary'}>{p.status}</Badge></TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex justify-center gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => setViewingPayslip(p)}><Eye className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => handleDownloadPDF(p)}><Download className="h-4 w-4"/></Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-                 <CardFooter className="flex items-center justify-between pt-6">
-                    <div className="text-sm text-muted-foreground">
-                        Total de {filteredPayslips.length} bulletins. Page {currentPage} sur {totalPages}.
-                    </div>
-                    {totalPages > 1 && (
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Précédent</Button>
-                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Suivant</Button>
-                        </div>
-                    )}
-                </CardFooter>
-            </Card>
-
-            <PayslipViewModal payslip={viewingPayslip} isOpen={!!viewingPayslip} onClose={() => setViewingPayslip(null)} />
-        </>
-    );
-}
-
-function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | null; isOpen: boolean; onClose: () => void }) {
+function PayslipViewModal({ payslip, isOpen, onClose, toast }: { payslip: Payslip | null; isOpen: boolean; onClose: () => void; toast: (options: any) => void; }) {
     if (!payslip) return null;
-
-    const { toast } = useToast();
+    
     const formatCurrencyFCFA = (value: number) => `${value.toLocaleString('fr-FR')} FCFA`;
 
     // Simulate detailed data based on the payslip prop
@@ -287,5 +165,126 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+export default function BulletinsPaiePage() {
+    const { toast } = useToast();
+    const [payslips] = useState(initialPayslips);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
+    const [viewingPayslip, setViewingPayslip] = useState<Payslip | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const periods = useMemo(() => [...new Set(payslips.map(p => p.periode))].sort((a, b) => b.localeCompare(a)), [payslips]);
+
+    const filteredPayslips = useMemo(() => {
+        return payslips.filter(p => {
+            const searchMatch = p.employeeName.toLowerCase().includes(searchTerm.toLowerCase());
+            const periodMatch = selectedPeriod === 'all' || p.periode === selectedPeriod;
+            return searchMatch && periodMatch;
+        });
+    }, [payslips, searchTerm, selectedPeriod]);
+
+    const totalPages = Math.ceil(filteredPayslips.length / ITEMS_PER_PAGE);
+    const currentPayslips = filteredPayslips.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    const handleDownloadPDF = (payslip: Payslip) => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text("BULLETIN DE PAIE", 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Période de ${format(new Date(payslip.periode), 'MMMM yyyy', { locale: fr })}`, 105, 26, { align: 'center' });
+        
+        doc.text(`Employé: ${payslip.employeeName}`, 14, 40);
+        doc.text(`Matricule: ${payslip.employeeId}`, 14, 46);
+
+        autoTable(doc, {
+            head: [['Libellé', 'Base', 'Taux', 'Gain', 'Retenue']],
+            body: [
+                ['Salaire de Base', payslip.salaireBrut.toLocaleString('fr-FR'), '-', payslip.salaireBrut.toLocaleString('fr-FR'), '-'],
+                ['Cotisations Sociales', payslip.salaireBrut.toLocaleString('fr-FR'), '22%', '-', payslip.cotisationsSalariales.toLocaleString('fr-FR')],
+                ['Impôt sur le Revenu', payslip.netImposable.toLocaleString('fr-FR'), '~4.5%', '-', (payslip.netImposable - payslip.netAPayer).toLocaleString('fr-FR')],
+            ],
+            startY: 55,
+            theme: 'striped',
+        });
+        
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`NET À PAYER : ${payslip.netAPayer.toLocaleString('fr-FR')} FCFA`, 196, finalY, { align: 'right' });
+
+        doc.save(`Bulletin_${payslip.employeeName.replace(' ', '_')}_${payslip.periode}.pdf`);
+        toast({ title: 'PDF du bulletin généré.' });
+    };
+    
+    return (
+        <>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-2xl flex items-center gap-2"><Mail /> Bulletins de Paie</CardTitle>
+                            <CardDescription>Consultez et archivez les bulletins de paie de vos employés.</CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Rechercher un employé..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        </div>
+                        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Toutes les périodes</SelectItem>
+                                {periods.map(p => <SelectItem key={p} value={p}>{format(new Date(`${p}-02`), 'MMMM yyyy', {locale: fr})}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead className="text-center">Période</TableHead><TableHead className="text-right">Net à Payer</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[150px]">Actions</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {currentPayslips.map(p => (
+                                <TableRow key={p.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium">{p.employeeName}</TableCell>
+                                    <TableCell className="text-center capitalize">{format(new Date(`${p.periode}-02`), 'MMMM yyyy', {locale: fr})}</TableCell>
+                                    <TableCell className="text-right font-bold">{p.netAPayer.toLocaleString('fr-FR')} FCFA</TableCell>
+                                    <TableCell className="text-center"><Badge variant={p.status === 'Consulté' ? 'default' : 'secondary'}>{p.status}</Badge></TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex justify-center gap-2">
+                                            <Button variant="ghost" size="icon" onClick={() => setViewingPayslip(p)}><Eye className="h-4 w-4"/></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDownloadPDF(p)}><Download className="h-4 w-4"/></Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                 <CardFooter className="flex items-center justify-between pt-6">
+                    <div className="text-sm text-muted-foreground">
+                        Total de {filteredPayslips.length} bulletins. Page {currentPage} sur {totalPages}.
+                    </div>
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Précédent</Button>
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Suivant</Button>
+                        </div>
+                    )}
+                </CardFooter>
+            </Card>
+
+            <PayslipViewModal payslip={viewingPayslip} isOpen={!!viewingPayslip} onClose={() => setViewingPayslip(null)} toast={toast} />
+        </>
     );
 }
