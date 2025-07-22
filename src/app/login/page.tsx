@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Logo } from '@/components/logo';
-import { Building, UserCog, UserTie, Clipboard, User } from 'lucide-react';
+import { Building, UserCog, Briefcase, Clipboard, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -55,7 +55,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Button variant="outline" onClick={() => handleLogin('Compte Entreprise', '/super-admin')}><Building />Compte Entreprise</Button>
               <Button variant="outline" onClick={() => handleLogin('Admin-Gestionnaire', '/dashboard')}><UserCog />Admin-Gestionnaire</Button>
-              <Button variant="outline" onClick={() => handleLogin('Gestionnaire (SKOMPTAB)', '/skomptab')}><UserTie />Gestionnaire</Button>
+              <Button variant="outline" onClick={() => handleLogin('Gestionnaire (SKOMPTAB)', '/skomptab')}><Briefcase />Gestionnaire</Button>
               <Button variant="outline" onClick={() => handleLogin('Stagiaire (SKOMPTAB)', '/skomptab')}><Clipboard />Stagiaire</Button>
               <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')} className="sm:col-span-2"><User />Employé</Button>
             </div>
