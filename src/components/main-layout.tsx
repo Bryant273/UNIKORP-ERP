@@ -15,8 +15,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const showFullLayout = !noLayoutPaths.includes(pathname);
 
   return (
-     <div className="flex h-screen w-full flex-col">
-      <AppHeader />
+    <div className="flex h-screen w-full flex-col">
+      {showFullLayout && <AppHeader />}
       {showFullLayout ? (
         <div className="flex flex-1 overflow-hidden">
           <AppSidebar />
@@ -28,10 +28,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       ) : (
-        <main className={cn(
-          "flex-1 overflow-y-auto bg-background/80",
-          (pathname === '/login' || pathname === '/') && "flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900"
-          )}>
+        <main
+          className={cn(
+            'flex-1 overflow-y-auto bg-background/80',
+            (pathname === '/login' || pathname === '/') &&
+              'flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900'
+          )}
+        >
           {children}
         </main>
       )}
