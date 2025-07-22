@@ -20,13 +20,13 @@ type DocumentCategory = 'Contrat' | 'Administratif' | 'Paie' | 'Évaluation';
 type DocumentStatus = 'Validé' | 'En attente' | 'Archivé';
 
 type Document = {
-    id: string;
-    nom: string;
-    categorie: DocumentCategory;
-    employe: string;
-    dateAjout: string;
-    statut: DocumentStatus;
-    fileUrl: string;
+  id: string;
+  nom: string;
+  categorie: DocumentCategory;
+  employe: string;
+  dateAjout: string;
+  statut: DocumentStatus;
+  fileUrl: string;
 };
 
 const initialDocuments: Document[] = [
@@ -135,7 +135,7 @@ export default function DossiersAdministratifsPage() {
                         </TableRow></TableHeader>
                         <TableBody>
                             {paginatedDocuments.map(doc => (
-                                <TableRow key={doc.id}>
+                                <TableRow key={doc.id} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{doc.nom}</TableCell>
                                     <TableCell className="text-center"><Badge variant="outline">{doc.categorie}</Badge></TableCell>
                                     <TableCell className="text-center">{doc.employe}</TableCell>
