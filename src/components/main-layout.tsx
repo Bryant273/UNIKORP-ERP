@@ -11,29 +11,26 @@ const noLayoutPaths = ['/login', '/super-admin', '/employee-dashboard'];
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const showLayout = !noLayoutPaths.includes(pathname);
-
-  if (!showLayout) {
-    return (
-        <>
-            {children}
-            <ChatWidget />
-        </>
-    );
-  }
+  const showFullLayout = !noLayoutPaths.includes(pathname);
 
   return (
-    <div className="flex h-screen w-full flex-col">
+     <div className="flex h-screen w-full flex-col">
       <AppHeader />
-      <div className="flex flex-1 overflow-hidden">
-        <AppSidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <ModuleNav />
-          <main className="flex-1 overflow-y-auto bg-background/80 p-6">
-            {children}
-          </main>
+      {showFullLayout ? (
+        <div className="flex flex-1 overflow-hidden">
+          <AppSidebar />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <ModuleNav />
+            <main className="flex-1 overflow-y-auto bg-background/80 p-6">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
+      ) : (
+        <main className="flex-1 overflow-y-auto bg-background/80">
+          {children}
+        </main>
+      )}
       <ChatWidget />
     </div>
   );
