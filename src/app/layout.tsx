@@ -7,6 +7,7 @@ import { AppHeader } from '@/components/app-header';
 import { ModuleNav } from '@/components/module-nav';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ChatWidget } from '@/components/chat-widget';
+import { MainLayout } from '@/components/main-layout';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -44,19 +45,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <div className="flex h-screen w-full flex-col">
-            <AppHeader />
-            <div className="flex flex-1 overflow-hidden">
-              <AppSidebar />
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <ModuleNav />
-                <main className="flex-1 overflow-y-auto bg-background/80 p-6">
-                  {children}
-                </main>
-              </div>
-            </div>
-          </div>
-          <ChatWidget />
+          <MainLayout>{children}</MainLayout>
           <Toaster />
         </ThemeProvider>
       </body>

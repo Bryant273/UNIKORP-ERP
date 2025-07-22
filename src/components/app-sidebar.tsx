@@ -327,7 +327,7 @@ const getNavForPath = (pathname: string) => {
   }
   // Default for main dashboard and special pages
   return {
-    dashboardLink: '/',
+    dashboardLink: '/dashboard',
     items: [],
   };
 };
@@ -417,11 +417,6 @@ export function AppSidebar() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  const specialPages = ['/chat', '/notifications', '/settings', '/help', '/support', '/actions'];
-  if (pathname === '/' || specialPages.some(p => pathname.startsWith(p))) {
-    return null;
-  }
 
   const { dashboardLink } = getNavForPath(pathname);
 

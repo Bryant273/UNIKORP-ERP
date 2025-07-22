@@ -13,7 +13,7 @@ import {
 
 const navLinks = [
   {
-    href: '/',
+    href: '/dashboard',
     label: 'Tableau de bord',
     icon: LayoutDashboard,
   },
@@ -43,8 +43,8 @@ export function ModuleNav() {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/';
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
     }
     return pathname.startsWith(href);
   };
