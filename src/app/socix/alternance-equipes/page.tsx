@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Sun, Coffee, Moon, Bed } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
-import { Logo } from '@/components/logo';
 
 // MOCK DATA & TYPES
 const kpiData = [
@@ -45,26 +44,6 @@ export default function AlternanceEquipesPage() {
 
     const handleExport = () => {
         const doc = new jsPDF();
-        const companyName = "UNIKORP";
-        const userName = "Utilisateur Unikorp";
-        const moduleName = "SOCIX";
-        const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVEhLY2BgYPg/lAb8B64DMAaogYvAOhgN3AZGAxQAAAWIAc0gJ15GAAAAAElFTkSuQmCC';
-        const printDateTime = format(new Date(), "dd/MM/yyyy 'à' HH:mm:ss");
-
-        const drawHeader = (data: any) => {
-            doc.setFontSize(9); doc.setTextColor(150);
-            doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
-            doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
-            doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
-            doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
-            doc.text(companyName, data.settings.margin.left + 15, 28);
-            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
-            const rightX = doc.internal.pageSize.width - data.settings.margin.right;
-            doc.text(`État : Analyse de l'Alternance des Équipes`, rightX, 25, { align: 'right' });
-            doc.text(`Exercice : ${selectedYear}`, rightX, 30, { align: 'right' });
-            doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
-            doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
-        };
         
         doc.setFontSize(18);
         doc.text(`Analyse de l'Alternance des Équipes - ${selectedYear}`, 105, 20, { align: 'center' });
@@ -152,20 +131,20 @@ export default function AlternanceEquipesPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Équipe</TableHead>
-                                        <TableHead className="text-center">Matin</TableHead>
-                                        <TableHead className="text-center">Après-midi</TableHead>
-                                        <TableHead className="text-center">Nuit</TableHead>
-                                        <TableHead className="text-center">Repos</TableHead>
+                                        <TableHead className="text-center">Matin (h)</TableHead>
+                                        <TableHead className="text-center">Après-midi (h)</TableHead>
+                                        <TableHead className="text-center">Nuit (h)</TableHead>
+                                        <TableHead className="text-center">Repos (h)</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {shiftDistributionData.map(d => (
-                                        <TableRow key={d.equipe}>
+                                        <TableRow key={d.equipe} className="odd:bg-muted/50">
                                             <TableCell className="font-medium">{d.equipe}</TableCell>
-                                            <TableCell className="text-center">{d.matin}h</TableCell>
-                                            <TableCell className="text-center">{d.aprem}h</TableCell>
-                                            <TableCell className="text-center">{d.nuit}h</TableCell>
-                                            <TableCell className="text-center">{d.repos}h</TableCell>
+                                            <TableCell className="text-center">{d.matin}</TableCell>
+                                            <TableCell className="text-center">{d.aprem}</TableCell>
+                                            <TableCell className="text-center">{d.nuit}</TableCell>
+                                            <TableCell className="text-center">{d.repos}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

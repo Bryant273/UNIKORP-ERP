@@ -132,7 +132,7 @@ export default function RecrutementPage() {
             </TableHeader>
             <TableBody>
               {paginatedOffers.map(offer => (
-                <TableRow key={offer.id}>
+                <TableRow key={offer.id} className="odd:bg-muted/50">
                   <TableCell className="font-medium">{offer.title}</TableCell>
                   <TableCell className="text-center">{getStatusBadge(offer.status)}</TableCell>
                   <TableCell className="text-center">
@@ -228,7 +228,7 @@ function CandidatesModal({ isOpen, onClose, offer, onPreviewCv }: { isOpen: bool
                         </TableHeader>
                         <TableBody>
                             {offer.candidates.map(candidate => (
-                                <TableRow key={candidate.id}>
+                                <TableRow key={candidate.id} className="odd:bg-muted/50">
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar>

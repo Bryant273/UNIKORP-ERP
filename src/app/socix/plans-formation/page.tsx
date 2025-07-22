@@ -147,7 +147,7 @@ export default function PlansFormationPage() {
                             </TableHeader>
                             <TableBody>
                                 {MOCK_TRAININGS.map(training => (
-                                    <TableRow key={training.id}>
+                                    <TableRow key={training.id} className="odd:bg-muted/50">
                                         <TableCell className="font-medium">{training.title}</TableCell>
                                         <TableCell>{getCategoryBadge(training.category)}</TableCell>
                                         <TableCell className="text-center">{format(training.date, 'dd/MM/yyyy')}</TableCell>

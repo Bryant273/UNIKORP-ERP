@@ -91,49 +91,41 @@ export default function BilanSocialPage() {
         
         let startY = 50;
         
-        bilanSocialData.forEach((category, index) => {
-            if (startY > 250) { // Simple page break logic
-                doc.addPage();
-                startY = 20;
+        const drawHeader = (data: any) => {
+             // Header only on the first page for this multi-section document
+            if (data.pageNumber === 1) {
+                doc.setFontSize(9); doc.setTextColor(150);
+                doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
+                doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
+                doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
+                doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
+                doc.text(companyName, data.settings.margin.left + 15, 28);
+                doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
+                const rightX = doc.internal.pageSize.width - data.settings.margin.right;
+                doc.text(`État : Bilan Social Annuel`, rightX, 25, { align: 'right' });
+                doc.text(`Exercice : ${selectedYear}`, rightX, 30, { align: 'right' });
+                doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
+                doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
             }
-            if(index > 0) startY += 5; // Add space between sections
-
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text(category.title, 14, startY);
-            startY += 5;
+                // Footer on all pages
+            const pageCountTotal = (doc as any).internal.getNumberOfPages();
+            doc.setFontSize(8); doc.setTextColor(150);
+            doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
+        };
+        
+        bilanSocialData.forEach((category, index) => {
+            const head = [['Indicateur', 'Valeur', 'Variation N-1']];
+            const body = category.indicators.map(ind => [ind.label, ind.value, ind.variation || '']);
 
             autoTable(doc, {
+                head: [[{content: category.title, colSpan: 3, styles: { halign: 'left', fillColor: '#e2e8f0', textColor: '#1e293b' }}]],
+                body: body,
                 startY: startY,
-                head: [['Indicateur', 'Valeur', 'Variation N-1']],
-                body: category.indicators.map(ind => [ind.label, ind.value, ind.variation || '']),
-                theme: 'grid',
-                headStyles: { fillColor: '#4A5568', textColor: '#FFFFFF' },
-                 didDrawPage: (data) => {
-                    // Header only on the first page for this multi-section document
-                    if (data.pageNumber === 1) {
-                        doc.setFontSize(9); doc.setTextColor(150);
-                        doc.text(`Imprimé via UNIKORP ® - ${moduleName}`, data.settings.margin.left, 15);
-                        doc.setDrawColor(220); doc.line(data.settings.margin.left, 18, doc.internal.pageSize.width - data.settings.margin.right, 18);
-                        doc.addImage(logoDataUri, 'PNG', data.settings.margin.left, 22, 12, 12);
-                        doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont('helvetica', 'bold');
-                        doc.text(companyName, data.settings.margin.left + 15, 28);
-                        doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
-                        const rightX = doc.internal.pageSize.width - data.settings.margin.right;
-                        doc.text(`État : Bilan Social Annuel`, rightX, 25, { align: 'right' });
-                        doc.text(`Exercice : ${selectedYear}`, rightX, 30, { align: 'right' });
-                        doc.text(`Imprimé le : ${printDateTime}`, rightX, 35, { align: 'right' });
-                        doc.text(`Par : ${userName}`, rightX, 40, { align: 'right' });
-                    }
-                     // Footer on all pages
-                    const pageCountTotal = (doc as any).internal.getNumberOfPages();
-                    doc.setFontSize(8); doc.setTextColor(150);
-                    doc.text(`Page ${String(data.pageNumber)} sur ${String(pageCountTotal)}`, data.settings.margin.left!, doc.internal.pageSize.height - 10);
-                },
+                theme: 'striped',
+                didDrawPage: drawHeader,
                  margin: { top: 50 },
             });
-
-            startY = (doc as any).lastAutoTable.finalY + 15;
+            startY = (doc as any).lastAutoTable.finalY + 10;
         });
 
         doc.save(`Bilan_Social_${selectedYear}.pdf`);
