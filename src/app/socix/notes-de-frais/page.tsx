@@ -94,7 +94,7 @@ export default function NotesDeFraisPage() {
                         <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead>Date Soumission</TableHead><TableHead>Description</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[100px]">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {currentExpenses.map(exp => (
-                                <TableRow key={exp.id}>
+                                <TableRow key={exp.id} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{exp.employeeName}</TableCell>
                                     <TableCell>{format(new Date(exp.submissionDate), 'dd/MM/yyyy')}</TableCell>
                                     <TableCell>{exp.description}</TableCell>

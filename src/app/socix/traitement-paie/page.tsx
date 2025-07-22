@@ -140,6 +140,7 @@ function TraitementPaiePage() {
     const [editingModele, setEditingModele] = useState<ModelePaie | null>(null);
     const [modeleToDelete, setModeleToDelete] = useState<ModelePaie | null>(null);
     const [previewingModele, setPreviewingModele] = useState<ModelePaie | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [importOption, setImportOption] = useState<'merge' | 'replace'>('merge');
@@ -147,6 +148,16 @@ function TraitementPaiePage() {
     const [isImporting, setIsImporting] = useState(false);
     const [importProgress, setImportProgress] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
+    
+    const totalPages = Math.ceil(modeles.length / ITEMS_PER_PAGE);
+    const paginatedModeles = modeles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
 
     const openModal = (modele: ModelePaie | null = null) => {
         setEditingModele(modele);
@@ -300,8 +311,8 @@ function TraitementPaiePage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {modeles.map(modele => (
-                                <TableRow key={modele.id}>
+                            {paginatedModeles.map(modele => (
+                                <TableRow key={modele.id} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{modele.nom}</TableCell>
                                     <TableCell className="text-muted-foreground">{modele.description}</TableCell>
                                     <TableCell className="text-center"><Badge variant="secondary">{modele.rubriques.length}</Badge></TableCell>
@@ -328,6 +339,31 @@ function TraitementPaiePage() {
                         </TableBody>
                     </Table>
                 </CardContent>
+                 <CardFooter className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Total de {modeles.length} modèles. Page {currentPage} sur {totalPages}.
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                        >
+                          Précédent
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                        >
+                          Suivant
+                        </Button>
+                    </div>
+                  )}
+                </CardFooter>
             </Card>
 
             <PayrollModelModal
@@ -615,7 +651,7 @@ const SectionCard = ({ title, description, children, actions }: { title: string,
     </div>
 );
 
-function PayslipPreview({ modele }: { modele: ModelePaie | null }) {
+function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onClose: () => void; modele: ModelePaie | null }) {
     if (!modele) return null;
 
     const gains = modele.rubriques.filter(r => r.type === 'Gain').sort((a,b) => a.ordre - b.ordre);
@@ -632,107 +668,6 @@ function PayslipPreview({ modele }: { modele: ModelePaie | null }) {
     };
 
     return (
-        <div className="p-8 border rounded-lg bg-white text-black font-sans shadow-lg max-w-4xl mx-auto">
-            {/* Header */}
-            <header className="flex justify-between items-center pb-4 border-b">
-                <div>
-                    <h1 className="text-xl font-bold text-gray-800">[Nom de l'entreprise]</h1>
-                    <p className="text-xs text-gray-500">[Adresse de l'entreprise]</p>
-                </div>
-                <div className="text-right">
-                    <h2 className="text-3xl font-bold text-primary">BULLETIN DE PAIE</h2>
-                    <p className="text-sm text-gray-600">Période du [Date Début] au [Date Fin]</p>
-                </div>
-            </header>
-
-            {/* Employee Info */}
-            <section className="grid grid-cols-2 gap-4 py-4 border-b">
-                <div>
-                    <p className="text-xs text-gray-500">SALARIÉ</p>
-                    <p className="font-semibold">[Prénom Nom]</p>
-                    <p className="text-xs text-gray-600">[Adresse]</p>
-                </div>
-                <div className="text-right">
-                    <p className="text-xs text-gray-500">MATRICULE</p>
-                    <p className="font-semibold">[Matricule]</p>
-                </div>
-            </section>
-
-            {/* Body */}
-            <main className="py-4">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-2/5">Description</TableHead>
-                            <TableHead className="text-center">Formule</TableHead>
-                            <TableHead className="text-right">[Montant]</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow className="bg-secondary/50">
-                            <TableCell colSpan={3} className="font-bold">GAINS</TableCell>
-                        </TableRow>
-                        {gains.map(r => (
-                            <TableRow key={r.id}>
-                                <TableCell className="font-medium">{r.libelle}</TableCell>
-                                <TableCell className="text-center font-mono text-xs">{r.formule}</TableCell>
-                                <TableCell className="text-right text-green-600 font-medium">[Montant]</TableCell>
-                            </TableRow>
-                        ))}
-                         <TableRow className="bg-muted/50 font-bold">
-                            <TableCell colSpan={2} className="text-right">Total Brut</TableCell>
-                            <TableCell className="text-right">[Total Brut]</TableCell>
-                        </TableRow>
-                        
-                        <TableRow className="bg-secondary/50">
-                            <TableCell colSpan={3} className="font-bold">COTISATIONS & RETENUES</TableCell>
-                        </TableRow>
-                        {[...cotisations, ...retenues].sort((a,b)=>a.ordre-b.ordre).map(r => (
-                            <TableRow key={r.id}>
-                                <TableCell className={cn("pl-6", getRubriqueTypeStyles(r.type))}>{r.libelle}</TableCell>
-                                <TableCell className="text-center font-mono text-xs">{r.formule}</TableCell>
-                                <TableCell className="text-right text-red-600">-[Montant]</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </main>
-
-            {/* Footer */}
-            <footer className="flex justify-end pt-4 border-t">
-                 <div className="w-1/2 max-w-xs space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Total Brut</span>
-                        <span className="font-semibold">[Total Brut]</span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-gray-600">Total Retenues Salariales</span>
-                        <span className="font-semibold text-red-600">-[Total Retenues]</span>
-                    </div>
-                    <Separator/>
-                     <div className="flex justify-between font-bold text-lg">
-                        <span>Net à Payer avant impôt</span>
-                        <span>[Net avant IGR]</span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-gray-600">Impôt sur le Revenu (IGR)</span>
-                        <span className="font-semibold text-red-600">-[Montant IGR]</span>
-                    </div>
-                    <Separator/>
-                     <div className="flex justify-between font-bold text-2xl text-primary p-2 bg-primary/10 rounded-md">
-                        <span>NET À PAYER</span>
-                        <span>[NET À PAYER]</span>
-                    </div>
-                </div>
-            </footer>
-        </div>
-    );
-}
-
-function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onClose: () => void; modele: ModelePaie | null }) {
-    if (!modele) return null;
-
-    return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
@@ -742,7 +677,100 @@ function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onC
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 overflow-y-auto bg-muted/50 p-6">
-                    <PayslipPreview modele={modele} />
+                    <div className="p-8 border rounded-lg bg-white text-black font-sans shadow-lg max-w-4xl mx-auto">
+                        {/* Header */}
+                        <header className="flex justify-between items-center pb-4 border-b">
+                            <div>
+                                <h1 className="text-xl font-bold text-gray-800">[Nom de l'entreprise]</h1>
+                                <p className="text-xs text-gray-500">[Adresse de l'entreprise]</p>
+                            </div>
+                            <div className="text-right">
+                                <h2 className="text-3xl font-bold text-primary">BULLETIN DE PAIE</h2>
+                                <p className="text-sm text-gray-600">Période du [Date Début] au [Date Fin]</p>
+                            </div>
+                        </header>
+
+                        {/* Employee Info */}
+                        <section className="grid grid-cols-2 gap-4 py-4 border-b">
+                            <div>
+                                <p className="text-xs text-gray-500">SALARIÉ</p>
+                                <p className="font-semibold">[Prénom Nom]</p>
+                                <p className="text-xs text-gray-600">[Adresse]</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs text-gray-500">MATRICULE</p>
+                                <p className="font-semibold">[Matricule]</p>
+                            </div>
+                        </section>
+
+                        {/* Body */}
+                        <main className="py-4">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-2/5">Description</TableHead>
+                                        <TableHead className="text-center">Formule</TableHead>
+                                        <TableHead className="text-right">[Montant]</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow className="bg-secondary/50">
+                                        <TableCell colSpan={3} className="font-bold">GAINS</TableCell>
+                                    </TableRow>
+                                    {gains.map(r => (
+                                        <TableRow key={r.id}>
+                                            <TableCell className="font-medium">{r.libelle}</TableCell>
+                                            <TableCell className="text-center font-mono text-xs">{r.formule}</TableCell>
+                                            <TableCell className="text-right text-green-600 font-medium">[Montant]</TableCell>
+                                        </TableRow>
+                                    ))}
+                                     <TableRow className="bg-muted/50 font-bold">
+                                        <TableCell colSpan={2} className="text-right">Total Brut</TableCell>
+                                        <TableCell className="text-right">[Total Brut]</TableCell>
+                                    </TableRow>
+                                    
+                                    <TableRow className="bg-secondary/50">
+                                        <TableCell colSpan={3} className="font-bold">COTISATIONS & RETENUES</TableCell>
+                                    </TableRow>
+                                    {[...cotisations, ...retenues].sort((a,b)=>a.ordre-b.ordre).map(r => (
+                                        <TableRow key={r.id}>
+                                            <TableCell className={cn("pl-6", getRubriqueTypeStyles(r.type))}>{r.libelle}</TableCell>
+                                            <TableCell className="text-center font-mono text-xs">{r.formule}</TableCell>
+                                            <TableCell className="text-right text-red-600">-[Montant]</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </main>
+
+                        {/* Footer */}
+                        <footer className="flex justify-end pt-4 border-t">
+                             <div className="w-1/2 max-w-xs space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Total Brut</span>
+                                    <span className="font-semibold">[Total Brut]</span>
+                                </div>
+                                 <div className="flex justify-between">
+                                    <span className="text-gray-600">Total Retenues Salariales</span>
+                                    <span className="font-semibold text-red-600">-[Total Retenues]</span>
+                                </div>
+                                <Separator/>
+                                 <div className="flex justify-between font-bold text-lg">
+                                    <span>Net à Payer avant impôt</span>
+                                    <span>[Net avant IGR]</span>
+                                </div>
+                                 <div className="flex justify-between">
+                                    <span className="text-gray-600">Impôt sur le Revenu (IGR)</span>
+                                    <span className="font-semibold text-red-600">-[Montant IGR]</span>
+                                </div>
+                                <Separator/>
+                                 <div className="flex justify-between font-bold text-2xl text-primary p-2 bg-primary/10 rounded-md">
+                                    <span>NET À PAYER</span>
+                                    <span>[NET À PAYER]</span>
+                                </div>
+                            </div>
+                        </footer>
+                    </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
@@ -752,5 +780,3 @@ function PayslipPreviewModal({ isOpen, onClose, modele }: { isOpen: boolean; onC
     );
 }
 export default TraitementPaiePage;
-
-    

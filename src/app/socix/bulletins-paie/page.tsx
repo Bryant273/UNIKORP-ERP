@@ -129,7 +129,7 @@ export default function BulletinsPaiePage() {
                         <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead className="text-center">Période</TableHead><TableHead className="text-right">Net à Payer</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[150px]">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {currentPayslips.map(p => (
-                                <TableRow key={p.id}>
+                                <TableRow key={p.id} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{p.employeeName}</TableCell>
                                     <TableCell className="text-center capitalize">{format(new Date(`${p.periode}-02`), 'MMMM yyyy', {locale: fr})}</TableCell>
                                     <TableCell className="text-right font-bold">{p.netAPayer.toLocaleString('fr-FR')} FCFA</TableCell>

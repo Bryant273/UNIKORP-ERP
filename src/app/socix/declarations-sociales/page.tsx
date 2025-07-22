@@ -387,16 +387,16 @@ function DeclarationsSocialesMainContent() {
                 {declarationsToRender.length > 0 ? declarationsToRender.map((d) => {
                     const isFinalized = d.statut === 'Traitée';
                     return (
-                    <TableRow key={d.id}>
+                    <TableRow key={d.id} className="odd:bg-muted/50">
                         <TableCell className="font-medium">{d.periode}</TableCell>
                         <TableCell><Badge variant="secondary">{d.type}</Badge></TableCell>
                         <TableCell className="text-center">{getStatusBadge(d)}</TableCell>
                         <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-1">
-                                <Button variant="ghost" size="icon" onClick={() => setViewingDeclaration(d)}><Eye className="mr-2 h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => openEditModal(d)} disabled={isFinalized}><Pencil className="mr-2 h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handlePrintDeclaration(d)}><Download className="mr-2 h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeclarationToDelete(d)} disabled={isFinalized}><Trash2 className="mr-2 h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => setViewingDeclaration(d)}><Eye className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => openEditModal(d)} disabled={isFinalized}><Pencil className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handlePrintDeclaration(d)}><Download className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeclarationToDelete(d)} disabled={isFinalized}><Trash2 className="h-4 w-4" /></Button>
                             </div>
                         </TableCell>
                     </TableRow>
@@ -408,77 +408,39 @@ function DeclarationsSocialesMainContent() {
     );
 
     return (
-        <>
-            <Tabs defaultValue="immatriculations" className="w-full">
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-2xl">Déclarations Sociales</CardTitle>
-                            <CardDescription>Gérez et suivez l'état de toutes vos déclarations sociales.</CardDescription>
-                        </div>
-                        <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+        <Card className="w-full">
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-2xl">Déclarations Sociales</CardTitle>
+                        <CardDescription>Gérez et suivez l'état de toutes vos déclarations sociales.</CardDescription>
                     </div>
-                     <TabsList className="grid w-full grid-cols-4 mt-4">
+                    <Button onClick={openCreateModal}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Déclaration</Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Tabs defaultValue="immatriculations" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 mt-4">
                         <TabsTrigger value="immatriculations">Immatriculations</TabsTrigger>
                         <TabsTrigger value="periodiques">Périodiques</TabsTrigger>
                         <TabsTrigger value="mouvements">Mouvements</TabsTrigger>
                         <TabsTrigger value="accidents">Accidents & Maladies</TabsTrigger>
                     </TabsList>
-                </CardHeader>
-
-                <TabsContent value="immatriculations" className="mt-0">
-                     <Card className="border-t-0 rounded-t-none">
-                        <CardContent className="pt-6">
-                            {renderTable(immatriculations)}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="periodiques" className="mt-0">
-                     <Card className="border-t-0 rounded-t-none">
-                         <CardContent className="pt-6">
-                            {renderTable(periodiques)}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="mouvements" className="mt-0">
-                     <Card className="border-t-0 rounded-t-none">
-                         <CardContent className="pt-6">
-                            {renderTable(mouvements)}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="accidents" className="mt-0">
-                     <Card className="border-t-0 rounded-t-none">
-                         <CardContent className="pt-6">
-                            {renderTable(accidents)}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-
-
-            <DeclarationModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleSaveDeclaration}
-                declarationToEdit={editingDeclaration}
-                selectedType={selectedType}
-                setSelectedType={setSelectedType}
-            />
-            
-             <ViewDeclarationModal 
-                isOpen={!!viewingDeclaration}
-                onClose={() => setViewingDeclaration(null)}
-                declaration={viewingDeclaration}
-            />
-
-            <AlertDialog open={!!declarationToDelete} onOpenChange={() => setDeclarationToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader><AlertDialogTitle>Supprimer cette déclaration ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible. La déclaration sera supprimée de l'historique.</AlertDialogDescription></AlertDialogHeader>
-                    <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </>
+                    <TabsContent value="immatriculations" className="mt-4">
+                        {renderTable(immatriculations)}
+                    </TabsContent>
+                    <TabsContent value="periodiques" className="mt-4">
+                        {renderTable(periodiques)}
+                    </TabsContent>
+                    <TabsContent value="mouvements" className="mt-4">
+                        {renderTable(mouvements)}
+                    </TabsContent>
+                    <TabsContent value="accidents" className="mt-4">
+                        {renderTable(accidents)}
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
     );
 }
 
