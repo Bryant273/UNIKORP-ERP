@@ -361,7 +361,8 @@ function SidebarNavContent() {
         }
       }
     }
-  }, [isMounted, items]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMounted]);
 
   const handleValueChange = (value: string[]) => {
     setOpenSections(value);
