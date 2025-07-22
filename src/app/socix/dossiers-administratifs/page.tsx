@@ -172,7 +172,7 @@ export default function DossiersAdministratifsPage() {
                         <DialogDescription>Document de {previewingDoc?.employe}.</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 bg-muted flex justify-center rounded-md">
-                        <Image src={previewingDoc?.fileUrl || ''} data-ai-hint="document contract" alt="Aperçu du document" width={595} height={842} className="border shadow-md"/>
+                        {previewingDoc?.fileUrl && <Image src={previewingDoc.fileUrl} data-ai-hint="document contract" alt="Aperçu du document" width={595} height={842} className="border shadow-md"/>}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setPreviewingDoc(null)}>Fermer</Button>
