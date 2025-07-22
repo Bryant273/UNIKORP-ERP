@@ -81,7 +81,7 @@ export default function CongesPayesPage() {
                         <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead className="text-center">Solde N-1</TableHead><TableHead className="text-center">Acquis N</TableHead><TableHead className="text-center">Pris N</TableHead><TableHead className="text-center font-bold">Solde Final</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {paginatedBalances.map(b => (
-                                <TableRow key={b.id}>
+                                <TableRow key={b.id} className="odd:bg-muted/50">
                                     <TableCell className="font-medium">{b.employeeName}</TableCell>
                                     <TableCell className="text-center">{b.soldeAnterieur}</TableCell>
                                     <TableCell className="text-center text-green-600">{b.acquisAnnee}</TableCell>
@@ -93,7 +93,7 @@ export default function CongesPayesPage() {
                     </Table>
                 </CardContent>
                  {totalPages > 1 && (
-                    <CardFooter className="flex justify-between items-center">
+                    <CardFooter className="flex justify-between items-center pt-6">
                          <div className="text-sm text-muted-foreground">
                             Total de {balances.length} employés. Page {currentPage} sur {totalPages}.
                         </div>

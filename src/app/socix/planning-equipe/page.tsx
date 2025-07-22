@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -110,7 +110,7 @@ export default function PlanningEquipePage() {
                 <CardHeader>
                      <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle className="text-2xl flex items-center gap-2"><CalendarDays /> Planning Mensuel</CardTitle>
+                            <CardTitle className="text-2xl flex items-center gap-2"><CalendarDays /> Planning d'Équipe</CardTitle>
                             <CardDescription>Planifiez les activités de l'équipe et consultez le planning par semaine.</CardDescription>
                         </div>
                          <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export default function PlanningEquipePage() {
                             ))}
                             {MOCK_EMPLOYEES.map(emp => (
                                 <React.Fragment key={emp.id}>
-                                    <div className="p-3 border-r flex items-center gap-3">
+                                    <div className="p-3 border-r flex items-center gap-3 odd:bg-muted/50">
                                         <Avatar className="h-8 w-8"><AvatarImage src={emp.avatarUrl} data-ai-hint="person face"/><AvatarFallback>{emp.name.charAt(0)}</AvatarFallback></Avatar>
                                         <span className="text-sm font-medium">{emp.name}</span>
                                     </div>
@@ -158,7 +158,7 @@ export default function PlanningEquipePage() {
                                         const event = events.find(e => e.employeeId === emp.id && e.date === format(day, 'yyyy-MM-dd'));
                                         const styles = event ? getEventTypeStyles(event.type) : null;
                                         return (
-                                            <div key={`${emp.id}-${day.toISOString()}`} className="border-l p-2 h-16 flex items-center justify-center">
+                                            <div key={`${emp.id}-${day.toISOString()}`} className="border-l p-2 h-16 flex items-center justify-center odd:bg-muted/50">
                                                 {event && styles && (
                                                     <TooltipProvider>
                                                         <Tooltip>

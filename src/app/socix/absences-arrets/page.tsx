@@ -185,7 +185,7 @@ export default function PointagePage() {
                             </TableRow></TableHeader>
                             <TableBody>
                                 {log.map(l => (
-                                    <TableRow key={l.id}>
+                                    <TableRow key={l.id} className="odd:bg-muted/50">
                                         <TableCell className="font-medium">{l.employeeName}</TableCell>
                                         <TableCell className="text-center">
                                             <div className="flex flex-col items-center">
