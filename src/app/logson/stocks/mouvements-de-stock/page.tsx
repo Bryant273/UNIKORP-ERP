@@ -133,7 +133,7 @@ export default function MouvementsDeStockPage() {
                         </div>
                     )}
                 </CardContent>
-                 {totalPages > 1 && (
+                 {mouvements.length > 0 &&
                     <CardFooter className="flex items-center justify-between pt-6">
                       <div className="text-sm text-muted-foreground">
                         Total de {mouvements.length} mouvements. Page {currentPage} sur {totalPages}.
@@ -157,7 +157,7 @@ export default function MouvementsDeStockPage() {
                         </Button>
                       </div>
                     </CardFooter>
-                 )}
+                 }
             </Card>
 
             <MouvementModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveMouvement} />

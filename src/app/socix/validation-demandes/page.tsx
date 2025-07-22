@@ -81,7 +81,7 @@ export default function ValidationDemandesPage() {
             <CardContent>
                 <Tabs defaultValue="pending">
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="pending"><Clock className="mr-2 h-4 w-4"/> En attente</TabsTrigger>
+                        <TabsTrigger value="pending"><Clock className="mr-2 h-4 w-4"/> En attente ({requests.filter(r => r.status === 'En attente').length})</TabsTrigger>
                         <TabsTrigger value="approved"><Check className="mr-2 h-4 w-4"/>Approuvées</TabsTrigger>
                         <TabsTrigger value="rejected"><X className="mr-2 h-4 w-4"/>Refusées</TabsTrigger>
                     </TabsList>

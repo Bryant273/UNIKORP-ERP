@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -32,12 +32,27 @@ const initialInterviews: Interview[] = [
     { id: 'int-4', employeeName: 'David Garcia', managerName: 'Awa Diallo', date: '2024-02-15', status: 'Effectué', period: 'Annuel 2023', finalScore: 88 },
     { id: 'int-5', employeeName: 'Camille Leroy', managerName: 'Elodie Dubois', date: '2024-02-20', status: 'Effectué', period: 'Annuel 2023', finalScore: 92 },
 ];
+const ITEMS_PER_PAGE = 10;
 
 export default function EntretiensAnnuelsPage() {
     const { toast } = useToast();
     const [interviews, setInterviews] = useState(initialInterviews);
     const [isScoringModalOpen, setIsScoringModalOpen] = useState(false);
     const [scoringInterview, setScoringInterview] = useState<Interview | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const plannedInterviews = interviews.filter(i => i.status === 'Planifié');
+    const scoringInterviews = interviews.filter(i => i.status === 'En cours');
+    const historyInterviews = interviews.filter(i => i.status === 'Effectué');
+
+    const totalPages = Math.ceil(historyInterviews.length / ITEMS_PER_PAGE);
+    const paginatedHistory = historyInterviews.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+    };
 
     const getStatusBadge = (status: InterviewStatus) => {
         switch (status) {
@@ -135,7 +150,7 @@ export default function EntretiensAnnuelsPage() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            {renderTable(interviews.filter(i => i.status === 'Planifié'), { showScore: false, showActions: false })}
+                            {renderTable(plannedInterviews, { showScore: false, showActions: false })}
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -145,7 +160,7 @@ export default function EntretiensAnnuelsPage() {
                             <CardTitle className="text-lg">Entretiens à Noter</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {renderTable(interviews.filter(i => i.status === 'En cours'), { showScore: false, showActions: true })}
+                            {renderTable(scoringInterviews, { showScore: false, showActions: true })}
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -155,8 +170,33 @@ export default function EntretiensAnnuelsPage() {
                             <CardTitle className="text-lg">Entretiens Effectués</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {renderTable(interviews.filter(i => i.status === 'Effectué'), { showScore: true, showActions: false })}
+                            {renderTable(paginatedHistory, { showScore: true, showActions: false })}
                         </CardContent>
+                         {totalPages > 1 && (
+                            <CardFooter className="flex items-center justify-between">
+                                 <div className="text-sm text-muted-foreground">
+                                    Total de {historyInterviews.length} entretiens. Page {currentPage} sur {totalPages}.
+                                </div>
+                                <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    Précédent
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Suivant
+                                </Button>
+                                </div>
+                            </CardFooter>
+                         )}
                     </Card>
                 </TabsContent>
             </Tabs>

@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -33,6 +33,8 @@ const mockProductMouvements = [
     { date: '2024-08-05', type: 'Sortie', quantite: 3, document: 'BL-CMD-0805'},
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ProduitsPage() {
     const [produits, setProduits] = useAtom(produitsAtom);
     const [entrepots] = useAtom(entrepotsAtom);
@@ -41,6 +43,17 @@ export default function ProduitsPage() {
     const [viewingProduit, setViewingProduit] = useState<Produit | null>(null);
     const [formData, setFormData] = useState<Omit<Produit, 'id'>>(defaultFormData);
     const { toast } = useToast();
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const totalPages = Math.ceil(produits.length / ITEMS_PER_PAGE);
+    const paginatedProduits = produits.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+     const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+    };
+
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -168,7 +181,7 @@ export default function ProduitsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {produits.map(p => (
+                            {paginatedProduits.map(p => (
                                 <TableRow key={p.id}>
                                     <TableCell className="font-mono">{p.reference}</TableCell>
                                     <TableCell className="font-medium">{p.name}</TableCell>
@@ -187,6 +200,31 @@ export default function ProduitsPage() {
                         </TableBody>
                     </Table>
                 </CardContent>
+                <CardFooter className="flex justify-between">
+                     <div className="text-sm text-muted-foreground">
+                        Total de {produits.length} produits. Page {currentPage} sur {totalPages}.
+                    </div>
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Précédent
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Suivant
+                            </Button>
+                        </div>
+                    )}
+                </CardFooter>
             </Card>
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

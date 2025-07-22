@@ -36,6 +36,16 @@ export default function CongesPayesPage() {
     const { toast } = useToast();
     const [balances, setBalances] = useState(MOCK_LEAVE_BALANCES);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    const totalPages = Math.ceil(balances.length / ITEMS_PER_PAGE);
+    const paginatedBalances = balances.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+    };
     
     const handleDeclareAbsence = () => {
         setIsModalOpen(true);
@@ -70,7 +80,7 @@ export default function CongesPayesPage() {
                     <Table>
                         <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead className="text-center">Solde N-1</TableHead><TableHead className="text-center">Acquis N</TableHead><TableHead className="text-center">Pris N</TableHead><TableHead className="text-center font-bold">Solde Final</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {balances.map(b => (
+                            {paginatedBalances.map(b => (
                                 <TableRow key={b.id}>
                                     <TableCell className="font-medium">{b.employeeName}</TableCell>
                                     <TableCell className="text-center">{b.soldeAnterieur}</TableCell>
@@ -82,6 +92,31 @@ export default function CongesPayesPage() {
                         </TableBody>
                     </Table>
                 </CardContent>
+                 {totalPages > 1 && (
+                    <CardFooter className="flex justify-between items-center">
+                         <div className="text-sm text-muted-foreground">
+                            Total de {balances.length} employés. Page {currentPage} sur {totalPages}.
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Précédent
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Suivant
+                            </Button>
+                        </div>
+                    </CardFooter>
+                 )}
             </Card>
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

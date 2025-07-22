@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +21,13 @@ type DeliveryItem = {
     expedition: Expedition;
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function SuiviLivraisonsPage() {
     const [invoices, setInvoices] = useAtom(invoicesAtom);
     const [viewingDelivery, setViewingDelivery] = useState<DeliveryItem | null>(null);
     const { toast } = useToast();
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Flatten the expeditions from all invoices into a single list
     const allDeliveries = useMemo(() => {
@@ -38,6 +41,15 @@ export default function SuiviLivraisonsPage() {
             }))
         ).filter(d => d.status === 'En transit' || d.status === 'Livrée');
     }, [invoices]);
+    
+    const totalPages = Math.ceil(allDeliveries.length / ITEMS_PER_PAGE);
+    const paginatedDeliveries = allDeliveries.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+    };
 
     const handleMarkAsDelivered = (invoiceId: string) => {
         setInvoices(invoices.map(inv => 
@@ -74,7 +86,7 @@ export default function SuiviLivraisonsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {allDeliveries.map(delivery => (
+                            {paginatedDeliveries.map(delivery => (
                                 <TableRow key={delivery.expedition.id}>
                                     <TableCell className="font-mono">{delivery.expedition.numeroBonLivraison}</TableCell>
                                     <TableCell>{delivery.clientName}</TableCell>
@@ -108,6 +120,31 @@ export default function SuiviLivraisonsPage() {
                         </div>
                     )}
                 </CardContent>
+                 {totalPages > 1 && (
+                    <CardFooter className="flex justify-between items-center">
+                         <div className="text-sm text-muted-foreground">
+                            Total de {allDeliveries.length} livraisons. Page {currentPage} sur {totalPages}.
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Précédent
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Suivant
+                            </Button>
+                        </div>
+                    </CardFooter>
+                 )}
             </Card>
 
             <DeliveryDetailsModal 
@@ -168,4 +205,5 @@ function DeliveryDetailsModal({ isOpen, onClose, deliveryItem }: { isOpen: boole
         </Dialog>
     );
 }
+
 

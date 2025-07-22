@@ -400,4 +400,3 @@ function ViewWarehouseModal({ isOpen, onClose, entrepot }: { isOpen: boolean, on
         </Dialog>
     );
 }
-

@@ -22,6 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type InvoiceWithPreparation = InvoiceData & { preparedItems: ExpeditedItem[] };
+const ITEMS_PER_PAGE = 10;
 
 export default function ExpeditionPage() {
     const [invoices, setInvoices] = useAtom(invoicesAtom);
@@ -30,8 +31,18 @@ export default function ExpeditionPage() {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [shippingInvoice, setShippingInvoice] = useState<InvoiceWithPreparation | null>(null);
     const [viewingInvoice, setViewingInvoice] = useState<InvoiceData | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const readyForShipping = invoices.filter(inv => ['Prête', 'Partiellement expédiée'].includes(inv.preparationStatus));
+    const invoicesWithStatus = invoices.filter(inv => inv.preparationStatus !== 'En attente');
+    
+    const totalPages = Math.ceil(invoicesWithStatus.length / ITEMS_PER_PAGE);
+    const paginatedInvoices = invoicesWithStatus.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+    };
 
     const handleOpenShippingModal = (invoice: InvoiceData) => {
         setShippingInvoice(invoice as InvoiceWithPreparation);
@@ -111,7 +122,7 @@ export default function ExpeditionPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {invoices.map(inv => (
+                            {paginatedInvoices.map(inv => (
                                 <TableRow key={inv.id}>
                                     <TableCell>{inv.invoiceNumber}</TableCell>
                                     <TableCell>{inv.clientName}</TableCell>
@@ -142,6 +153,31 @@ export default function ExpeditionPage() {
                         </div>
                     )}
                 </CardContent>
+                {totalPages > 1 && (
+                     <CardFooter className="flex justify-between">
+                        <div className="text-sm text-muted-foreground">
+                            Total de {invoicesWithStatus.length} commandes. Page {currentPage} sur {totalPages}.
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Précédent
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Suivant
+                            </Button>
+                        </div>
+                    </CardFooter>
+                )}
             </Card>
 
             <ShippingModal 

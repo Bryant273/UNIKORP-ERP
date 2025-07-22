@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as ShadTableFooter } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -126,13 +126,7 @@ export default function BulletinsPaiePage() {
                         </Select>
                     </div>
                     <Table>
-                        <TableHeader><TableRow>
-                            <TableHead>Employé</TableHead>
-                            <TableHead className="text-center">Période</TableHead>
-                            <TableHead className="text-right">Net à Payer</TableHead>
-                            <TableHead className="text-center">Statut</TableHead>
-                            <TableHead className="text-center w-[150px]">Actions</TableHead>
-                        </TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead className="text-center">Période</TableHead><TableHead className="text-right">Net à Payer</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[150px]">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {currentPayslips.map(p => (
                                 <TableRow key={p.id}>
@@ -253,13 +247,13 @@ function PayslipViewModal({ payslip, isOpen, onClose }: { payslip: Payslip | nul
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
-                                            <TableFooter>
+                                            <ShadTableFooter>
                                                 <TableRow>
                                                     <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
                                                     <TableCell className="text-right font-bold">{formatCurrencyFCFA(data.cumuls.brut)}</TableCell>
                                                     <TableCell className="text-right font-bold">{formatCurrencyFCFA(data.cumuls.salaireNet)}</TableCell>
                                                 </TableRow>
-                                            </TableFooter>
+                                            </ShadTableFooter>
                                         </Table>
                                     </CardContent>
                                 </Card>

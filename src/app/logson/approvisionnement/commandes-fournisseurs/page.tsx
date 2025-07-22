@@ -4,7 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as ShadTableFooter } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
@@ -67,6 +67,16 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
     const [fournisseurs] = useAtom(fournisseursAtom);
     const [commandeToDelete, setCommandeToDelete] = useState<Commande | null>(null);
     const [commandeToView, setCommandeToView] = useState<Commande | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    const totalPages = Math.ceil(commandes.length / ITEMS_PER_PAGE);
+    const paginatedCommandes = commandes.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+    };
     
     const getFournisseurName = (id: number) => fournisseurs.find(f => f.id === id)?.intitule || 'Inconnu';
     const calculateTotal = (lignes: LigneCommande[]) => lignes.reduce((sum, l) => sum + l.quantite * l.prixUnitaire, 0);
@@ -155,7 +165,7 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
                     <Table>
                         <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead>Montant</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {commandes.map(cmd => (
+                            {paginatedCommandes.length > 0 ? paginatedCommandes.map(cmd => (
                                 <TableRow key={cmd.id}>
                                     <TableCell>{cmd.numero}</TableCell>
                                     <TableCell>{format(new Date(cmd.date), 'dd/MM/yyyy')}</TableCell>
@@ -168,10 +178,37 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )) : (
+                                 <TableRow><TableCell colSpan={5} className="text-center h-24">Aucune commande enregistrée.</TableCell></TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
+                {totalPages > 1 && (
+                    <CardFooter className="flex justify-between">
+                         <div className="text-sm text-muted-foreground">
+                            Total de {commandes.length} commandes. Page {currentPage} sur {totalPages}.
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Précédent
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Suivant
+                            </Button>
+                        </div>
+                    </CardFooter>
+                )}
             </Card>
              <AlertDialog open={!!commandeToDelete} onOpenChange={() => setCommandeToDelete(null)}>
                 <AlertDialogContent>
@@ -199,12 +236,12 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
                                     </TableRow>
                                 ))}
                             </TableBody>
-                             <TableFooter>
+                             <ShadTableFooter>
                                 <TableRow>
                                     <TableCell colSpan={3} className="text-right font-bold">Total Général</TableCell>
                                     <TableCell className="text-right font-bold">{commandeToView && calculateTotal(commandeToView.lignes).toLocaleString('fr-FR')} FCFA</TableCell>
                                 </TableRow>
-                            </TableFooter>
+                            </ShadTableFooter>
                         </Table>
                     </div>
                      <DialogFooter>
@@ -288,7 +325,7 @@ function CommandeForm({ commande, onBack, onSave }: { commande: Commande | null,
                                 </TableRow>
                             ))}
                         </TableBody>
-                        <TableFooter><TableRow><TableCell colSpan={3} className="text-right font-bold">Total</TableCell><TableCell className="font-bold">{total.toLocaleString('fr-FR')} FCFA</TableCell><TableCell/></TableRow></TableFooter>
+                        <ShadTableFooter><TableRow><TableCell colSpan={3} className="text-right font-bold">Total</TableCell><TableCell className="font-bold">{total.toLocaleString('fr-FR')} FCFA</TableCell><TableCell/></TableRow></ShadTableFooter>
                     </Table>
                     <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-4"><PlusCircle className="mr-2 h-4 w-4"/>Ajouter une ligne</Button>
                 </CardContent>

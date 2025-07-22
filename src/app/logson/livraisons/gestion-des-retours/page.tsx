@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -38,12 +38,24 @@ type RetourItem = {
 };
 
 const MOCK_RETOURS: RetourItem[] = [];
+const ITEMS_PER_PAGE = 10;
 
 export default function GestionRetoursPage() {
     const [retours, setRetours] = useState(MOCK_RETOURS);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewingRetour, setViewingRetour] = useState<RetourItem | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const totalPages = Math.ceil(retours.length / ITEMS_PER_PAGE);
+    const paginatedRetours = retours.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+    };
+
 
     const getStatusBadge = (status: RetourStatus) => {
         switch (status) {
@@ -88,7 +100,7 @@ export default function GestionRetoursPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {retours.map(retour => (
+                        {paginatedRetours.map(retour => (
                             <TableRow key={retour.id}>
                                 <TableCell>{retour.retourNumero}</TableCell>
                                 <TableCell>{retour.blNumero}</TableCell>
@@ -108,6 +120,31 @@ export default function GestionRetoursPage() {
                     </div>
                 )}
             </CardContent>
+            {totalPages > 1 && (
+                <CardFooter className="flex justify-between items-center">
+                    <div className="text-sm text-muted-foreground">
+                        Total de {retours.length} retours. Page {currentPage} sur {totalPages}.
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            Précédent
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            Suivant
+                        </Button>
+                    </div>
+                </CardFooter>
+            )}
         </Card>
         
         <CreateRetourModal 
