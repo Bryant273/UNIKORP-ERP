@@ -24,9 +24,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const validTabs = ['profile', 'preferences', 'notifications'];
+
 function SettingsComponent() {
   const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || 'profile';
+  const tabParam = searchParams.get('tab');
+  const defaultTab = tabParam && validTabs.includes(tabParam) ? tabParam : 'profile';
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -36,7 +39,7 @@ function SettingsComponent() {
           Gérez les paramètres de votre compte et vos préférences.
         </p>
       </div>
-      <Tabs defaultValue={tab} key={tab} className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile">Profil</TabsTrigger>
           <TabsTrigger value="preferences">Préférences</TabsTrigger>
@@ -114,7 +117,7 @@ function SettingsComponent() {
                     Recevoir les notifications importantes par email.
                   </p>
                 </div>
-                <Switch id="email-notifications" checked />
+                <Switch id="email-notifications" defaultChecked />
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
@@ -123,7 +126,7 @@ function SettingsComponent() {
                     Recevoir des notifications en temps réel dans l&apos;application.
                   </p>
                 </div>
-                <Switch id="push-notifications" checked />
+                <Switch id="push-notifications" defaultChecked />
               </div>
             </CardContent>
             <CardFooter>
