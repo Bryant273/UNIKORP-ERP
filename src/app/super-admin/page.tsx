@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,10 +21,10 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Legend } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Legend, ComposedChart } from "recharts";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // --- MOCK DATA ---
@@ -151,7 +151,18 @@ function DashboardTab() {
                             <div key={kpi.title} className="p-2 bg-muted rounded-lg"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>
                         ))}
                     </div>
-                    <ChartContainer config={logsonChartConfig} className="h-[200px] w-full"><BarChart data={logsonChartData}><CartesianGrid vertical={false} /><XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/><YAxis /><ChartTooltip content={<ChartTooltipContent />} /><Legend /><Bar dataKey="expeditions" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} /><Bar dataKey="retours" fill="var(--color-retours)" radius={[4, 4, 0, 0]} /></BarChart></ChartContainer>
+                    <ChartContainer config={logsonChartConfig} className="h-[200px] w-full">
+                        <ComposedChart data={logsonChartData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                            <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" />
+                            <YAxis yAxisId="right" orientation="right" stroke="var(--color-retours)" />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Legend />
+                            <Bar dataKey="expeditions" yAxisId="left" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
+                            <Line type="monotone" dataKey="retours" yAxisId="right" stroke="var(--color-retours)" />
+                        </ComposedChart>
+                    </ChartContainer>
                 </CardContent>
             </Card>
         </div>
@@ -329,8 +340,19 @@ function UserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean; o
     );
 }
 
-function UserDetailModal({ isOpen, onClose, user }: { isOpen: boolean, onClose: () => void, user: User | null }) {
+function UserDetailModal({ isOpen, onClose, user }: { isOpen: boolean; onClose: () => void; user: User | null }) {
+    const { toast } = useToast();
+
     if (!user) return null;
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(`Email: ${user.email}\nMot de passe (temporaire): Abc@12345`);
+        toast({ title: 'Identifiants copiés', description: 'Le mot de passe est un placeholder.' });
+    };
+
+    const handleResetPassword = () => {
+        toast({ title: 'Mot de passe réinitialisé', description: `Un nouveau mot de passe a été généré pour ${user.name}.` });
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -357,6 +379,23 @@ function UserDetailModal({ isOpen, onClose, user }: { isOpen: boolean, onClose: 
                         <CardContent>
                             <div className="flex flex-wrap gap-2">
                                 {user.modules.map(m => <Badge key={m} variant="secondary" className="text-base py-1 px-3">{m}</Badge>)}
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Identifiants de connexion</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                           <div className="space-y-2">
+                                <Label htmlFor="user-email">Email</Label>
+                                <Input id="user-email" value={user.email} readOnly />
+                           </div>
+                           <div className="space-y-2">
+                                <Label htmlFor="user-password">Mot de passe</Label>
+                                <Input id="user-password" type="password" value="************" readOnly />
+                           </div>
+                            <div className="flex gap-2 pt-2">
+                                <Button variant="outline" className="w-full" onClick={handleCopy}><Copy className="mr-2 h-4 w-4" /> Copier les identifiants</Button>
+                                <Button variant="secondary" className="w-full" onClick={handleResetPassword}>Réinitialiser le mot de passe</Button>
                             </div>
                         </CardContent>
                     </Card>
