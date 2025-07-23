@@ -739,12 +739,12 @@ function ContractModal({ isOpen, onClose, employee }: { isOpen: boolean; onClose
                             <h3 className="font-semibold">L'EMPLOYÉ :</h3>
                             <p>Nom & Prénom : {employee.prenom} {employee.nom}</p>
                         </div>
-                        <Separator className="my-6" />
+                         <Separator className="my-6" />
                         <div className="space-y-4">
                             {/* Contract articles rendered here */}
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 1 - NATURE DU CONTRAT</h3><p>Il est conclu entre les parties un contrat de travail à durée {contractData.TYPE_CONTRAT}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 2 - FONCTION</h3><p>Le salarié est engagé en qualité de {contractData.FONCTION}.</p></div>
-                            <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {contractData.LIEU_TRAVAIL}.</p></div>
+                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 3 - LIEU DE TRAVAIL</h3><p>Le salarié exercera ses fonctions à l'adresse suivante : {contractData.LIEU_TRAVAIL}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 4 - HORAIRES ET DURÉE DU TRAVAIL</h3><p>La durée hebdomadaire du travail est de {contractData.DUREE_HEBDOMADAIRE} heures.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 5 - RÉMUNÉRATION</h3><p>Le salaire de base est fixé à {contractData.SALAIRE_BASE.toLocaleString('fr-FR')} FCFA {contractData.PERIODICITE_SALAIRE}.</p></div>
                             <div><h3 className="text-lg font-bold mb-1">ARTICLE 6 - CONGÉS PAYÉS</h3><p>Le salarié bénéficie de {contractData.NOMBRE_JOURS_CONGES} jours ouvrables de congés payés par an.</p></div>
@@ -874,10 +874,10 @@ function DocumentPreviewModal({ isOpen, onClose, document }: { isOpen: boolean; 
                     <DialogTitle>Aperçu: {document.name}</DialogTitle>
                     <DialogDescription>Document de {document.employeeName}.</DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
+                <div className="py-4 bg-muted flex justify-center rounded-md">
                     <Image src="https://placehold.co/800x1131.png" data-ai-hint="document contract" alt="Aperçu du document" width={800} height={1131} className="rounded-md border"/>
                 </div>
-                <DialogFooter>
+                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Fermer</Button>
                 </DialogFooter>
             </DialogContent>
