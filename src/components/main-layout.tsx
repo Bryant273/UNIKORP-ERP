@@ -27,8 +27,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             'flex-1 overflow-y-auto bg-background/80',
             // Apply padding only if sidebar is shown, otherwise let content handle it
             showSidebar && 'p-6',
+            !showSidebar && showHeader && 'p-4 sm:p-6 lg:p-8', // For super-admin and employee pages
             !showSidebar && !showHeader && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', // For login page
-            !showSidebar && showHeader && 'p-4 sm:p-6 lg:p-8' // For super-admin and employee pages
           )}
         >
           {children}
