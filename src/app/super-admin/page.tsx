@@ -164,6 +164,7 @@ function UsersTab() {
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [userToSuspend, setUserToSuspend] = useState<User | null>(null);
+    const [viewingUser, setViewingUser] = useState<User | null>(null);
 
     const handleOpenModal = (user: User | null) => {
         setEditingUser(user);
@@ -225,10 +226,13 @@ function UsersTab() {
                                 <TableCell><div className="flex flex-wrap gap-1">{user.modules.map(m => <Badge key={m} variant="secondary">{m}</Badge>)}</div></TableCell>
                                 <TableCell className="text-center"><Badge variant={user.status === 'Actif' ? 'default' : 'destructive'} className={user.status === 'Actif' ? 'bg-green-100 text-green-800' : ''}>{user.status}</Badge></TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => handleOpenModal(user)}><Pencil className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className={user.status === 'Actif' ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'} onClick={() => setUserToSuspend(user)}>
-                                        {user.status === 'Actif' ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4"/>}
-                                    </Button>
+                                    <div className="flex justify-end items-center gap-1">
+                                        <Button variant="ghost" size="icon" title="Voir" onClick={() => setViewingUser(user)}><Eye className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" title="Modifier" onClick={() => handleOpenModal(user)}><Pencil className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" className={user.status === 'Actif' ? 'text-destructive hover:text-destructive' : 'text-green-600 hover:text-green-600'} title={user.status === 'Actif' ? 'Suspendre' : 'Réactiver'} onClick={() => setUserToSuspend(user)}>
+                                            {user.status === 'Actif' ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4"/>}
+                                        </Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -237,6 +241,7 @@ function UsersTab() {
             </CardContent>
         </Card>
         <UserModal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} onSave={handleSaveUser} userToEdit={editingUser} />
+        <UserDetailModal isOpen={!!viewingUser} onClose={() => setViewingUser(null)} user={viewingUser} />
         <AlertDialog open={!!userToSuspend} onOpenChange={() => setUserToSuspend(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -319,6 +324,46 @@ function UserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean; o
                         <Button type="submit">Enregistrer</Button>
                     </DialogFooter>
                 </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function UserDetailModal({ isOpen, onClose, user }: { isOpen: boolean, onClose: () => void, user: User | null }) {
+    if (!user) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Feuille de Compte Utilisateur</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16"><AvatarFallback className="text-2xl">{user.name.charAt(0)}</AvatarFallback></Avatar>
+                        <div>
+                            <h3 className="text-xl font-bold">{user.name}</h3>
+                            <p className="text-muted-foreground">{user.email}</p>
+                        </div>
+                    </div>
+                    <Card>
+                        <CardContent className="pt-6 space-y-2">
+                            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Rôle:</span><span className="font-semibold">{user.role}</span></div>
+                            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Statut:</span><Badge variant={user.status === 'Actif' ? 'default' : 'destructive'} className={user.status === 'Actif' ? 'bg-green-100 text-green-800' : ''}>{user.status}</Badge></div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Accès aux Modules</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="flex flex-wrap gap-2">
+                                {user.modules.map(m => <Badge key={m} variant="secondary" className="text-base py-1 px-3">{m}</Badge>)}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
