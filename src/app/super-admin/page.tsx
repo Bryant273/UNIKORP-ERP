@@ -1,31 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { LayoutDashboard, Users, Building, KeyRound, Pencil } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useRouter } from 'next/navigation';
-import {
-    LayoutDashboard,
-    Users,
-    Building,
-    KeyRound,
-    CheckCircle,
-    XCircle,
-    Pencil,
-} from 'lucide-react';
-
-const mockUsers = [
-    { id: 'usr-1', name: 'Jean Dupont', email: 'jean.dupont@unikorp.com', role: 'Admin-Gestionnaire', status: 'Actif' },
-    { id: 'usr-2', name: 'Sophie Martin', email: 'sophie.martin@unikorp.com', role: 'Gestionnaire (MARKOS)', status: 'Actif' },
-    { id: 'usr-3', name: 'David Garcia', email: 'david.garcia@unikorp.com', role: 'Stagiaire (SKOMPTAB)', status: 'Inactif' },
-];
 
 function DashboardTab() {
   return (
@@ -43,6 +29,12 @@ function DashboardTab() {
     </div>
   );
 }
+
+const mockUsers = [
+    { id: 'usr-1', name: 'Jean Dupont', email: 'jean.dupont@unikorp.com', role: 'Admin-Gestionnaire', status: 'Actif' },
+    { id: 'usr-2', name: 'Sophie Martin', email: 'sophie.martin@unikorp.com', role: 'Gestionnaire (MARKOS)', status: 'Actif' },
+    { id: 'usr-3', name: 'David Garcia', email: 'david.garcia@unikorp.com', role: 'Stagiaire (SKOMPTAB)', status: 'Inactif' },
+];
 
 function UsersTab() {
   return (
