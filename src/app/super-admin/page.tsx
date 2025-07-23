@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Building, Users, Briefcase, CalendarCheck, CalendarX, LogIn, BarChart, Pencil, Trash2 } from 'lucide-react';
+import { Building, Users, Briefcase, CalendarCheck, CalendarX, LogIn, BarChart, Pencil, Trash2, Mail, Phone, Settings } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -166,37 +166,32 @@ function ErpAccessTab() {
 
 export default function SuperAdminPage() {
     return (
-        <div className="space-y-8">
-            <header className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">Portail Super Administrateur</h1>
-                <p className="text-muted-foreground">Gérez les paramètres globaux de votre instance UNIKORP.</p>
-            </header>
-
+        <div className="space-y-2">
             <Tabs defaultValue="dashboard" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-background/50 backdrop-blur-sm">
-                    <TabsTrigger value="dashboard">
+                <TabsList className="grid w-full grid-cols-4 bg-[#5D5CDE] rounded-b-none p-0 h-auto">
+                    <TabsTrigger value="dashboard" className="text-white/80 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-none rounded-t-md rounded-b-none py-3">
                         <BarChart className="mr-2 h-4 w-4" />Tableau de bord
                     </TabsTrigger>
-                    <TabsTrigger value="users">
+                    <TabsTrigger value="users" className="text-white/80 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-none rounded-t-md rounded-b-none py-3">
                         <Users className="mr-2 h-4 w-4" />Utilisateurs
                     </TabsTrigger>
-                    <TabsTrigger value="company">
+                    <TabsTrigger value="company" className="text-white/80 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-none rounded-t-md rounded-b-none py-3">
                         <Building className="mr-2 h-4 w-4" />Infos Entreprise
                     </TabsTrigger>
-                    <TabsTrigger value="access">
+                    <TabsTrigger value="access" className="text-white/80 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-none rounded-t-md rounded-b-none py-3">
                         <LogIn className="mr-2 h-4 w-4" />Accès ERP
                     </TabsTrigger>
                 </TabsList>
-                <TabsContent value="dashboard" className="mt-4">
+                <TabsContent value="dashboard" className="mt-0">
                     <DashboardTab />
                 </TabsContent>
-                <TabsContent value="users" className="mt-4">
+                <TabsContent value="users" className="mt-0">
                     <UsersTab />
                 </TabsContent>
-                <TabsContent value="company" className="mt-4">
+                <TabsContent value="company" className="mt-0">
                     <CompanyInfoTab />
                 </TabsContent>
-                <TabsContent value="access" className="mt-4">
+                <TabsContent value="access" className="mt-0">
                     <ErpAccessTab />
                 </TabsContent>
             </Tabs>
