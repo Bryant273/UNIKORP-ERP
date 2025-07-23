@@ -419,7 +419,7 @@ export default function SuperAdminPage() {
             </header>
 
             <Tabs defaultValue="dashboard" className="w-full">
-                <TabsList className="inline-flex h-auto rounded-none border-b-0 bg-[#5D5CDE] p-0">
+                <TabsList className="inline-flex h-auto rounded-none border-b-0 bg-[#2D3748] p-0">
                     <TabsTrigger value="dashboard" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
                         <BarChart className="mr-2 h-4 w-4" />Tableau de bord
                     </TabsTrigger>
