@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
+import { usePathname } from 'next/navigation';
 
 type Notification = {
   id: string;
@@ -42,6 +43,7 @@ const NotificationIcon = ({ type }: { type: Notification['type'] }) => {
 
 
 export function AppHeader() {
+  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -55,15 +57,19 @@ export function AppHeader() {
   const handleMarkAllRead = () => {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
+  
+  const showCompanyName = pathname !== '/super-admin';
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-[#2D3748] px-4 text-primary-foreground sm:px-6">
       <div className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-white" />
-        <Button variant="ghost" className="hover:bg-white/10 hover:text-primary-foreground">
-          <span>AUTO - SociétéX</span>
-          <ChevronDown className="ml-2 h-4 w-4" />
-        </Button>
+        {showCompanyName && (
+            <Button variant="ghost" className="hover:bg-white/10 hover:text-primary-foreground">
+                <span>AUTO - SociétéX</span>
+                <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+        )}
       </div>
 
       <div className="flex-1" />
