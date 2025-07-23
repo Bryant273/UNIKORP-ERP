@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 // Mock Data
 const users = [
@@ -169,11 +170,19 @@ export default function SuperAdminPage() {
             </header>
 
             <Tabs defaultValue="dashboard" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="dashboard"><BarChart className="mr-2 h-4 w-4" />Tableau de bord</TabsTrigger>
-                    <TabsTrigger value="users"><Users className="mr-2 h-4 w-4" />Utilisateurs</TabsTrigger>
-                    <TabsTrigger value="company"><Building className="mr-2 h-4 w-4" />Infos Entreprise</TabsTrigger>
-                    <TabsTrigger value="access"><LogIn className="mr-2 h-4 w-4" />Accès ERP</TabsTrigger>
+                <TabsList className="inline-flex h-auto rounded-none border-b-0 bg-[#5D5CDE] p-0">
+                    <TabsTrigger value="dashboard" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                        <BarChart className="mr-2 h-4 w-4" />Tableau de bord
+                    </TabsTrigger>
+                    <TabsTrigger value="users" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                        <Users className="mr-2 h-4 w-4" />Utilisateurs
+                    </TabsTrigger>
+                    <TabsTrigger value="company" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                        <Building className="mr-2 h-4 w-4" />Infos Entreprise
+                    </TabsTrigger>
+                    <TabsTrigger value="access" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                        <LogIn className="mr-2 h-4 w-4" />Accès ERP
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="dashboard" className="mt-4">
                     <DashboardTab />
