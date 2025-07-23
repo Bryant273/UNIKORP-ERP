@@ -5,6 +5,7 @@ import { AppHeader } from './app-header';
 import { AppSidebar } from './app-sidebar';
 import { ChatWidget } from './chat-widget';
 import { cn } from '@/lib/utils';
+import { ModuleNav } from './module-nav';
 
 const noHeaderPaths = ['/login'];
 const noSidebarPaths = ['/login', '/super-admin', '/employee-dashboard'];
@@ -15,10 +16,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const showHeader = !noHeaderPaths.includes(pathname);
   const showSidebar = !noSidebarPaths.includes(pathname);
+  const showModuleNav = showHeader && !noSidebarPaths.includes(pathname);
+
 
   return (
     <div className="flex h-screen w-full flex-col">
       {showHeader && <AppHeader />}
+      {showModuleNav && <ModuleNav />}
       <div className="flex flex-1 overflow-hidden">
         {showSidebar && <AppSidebar />}
         <main

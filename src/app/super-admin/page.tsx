@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -12,6 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+
 
 function DashboardTab() {
   return (
@@ -131,17 +134,20 @@ export default function SuperAdminPage() {
     return (
         <div className="w-full">
             <Tabs defaultValue="dashboard">
-                <TabsList className="grid w-full grid-cols-4 bg-[#2D3748] p-1 h-auto">
-                    <TabsTrigger value="dashboard" className="text-white/80 hover:text-white data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-2">
+                <TabsList className={cn(
+                    "grid w-full grid-cols-4 h-auto p-0 rounded-none bg-primary",
+                    "border-b border-primary/50"
+                  )}>
+                    <TabsTrigger value="dashboard" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
                         <LayoutDashboard className="mr-2 h-4 w-4" />Tableau de bord
                     </TabsTrigger>
-                    <TabsTrigger value="users" className="text-white/80 hover:text-white data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-2">
+                    <TabsTrigger value="users" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
                         <Users className="mr-2 h-4 w-4" />Utilisateurs
                     </TabsTrigger>
-                    <TabsTrigger value="company" className="text-white/80 hover:text-white data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-2">
+                    <TabsTrigger value="company" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
                         <Building className="mr-2 h-4 w-4" />Infos Entreprise
                     </TabsTrigger>
-                    <TabsTrigger value="access" className="text-white/80 hover:text-white data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-2">
+                    <TabsTrigger value="access" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
                         <KeyRound className="mr-2 h-4 w-4" />Accès ERP
                     </TabsTrigger>
                 </TabsList>
