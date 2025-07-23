@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import { AppHeader } from './app-header';
 import { AppSidebar } from './app-sidebar';
-import { ModuleNav } from './module-nav';
 import { ChatWidget } from './chat-widget';
 import { cn } from '@/lib/utils';
 
@@ -24,11 +23,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         {showSidebar && <AppSidebar />}
         <main
           className={cn(
-            'flex-1 overflow-y-auto bg-background/80',
-            // Apply padding only if sidebar is shown, otherwise let content handle it
+            'flex-1 overflow-y-auto',
+            // Default padding for pages with a sidebar
             showSidebar && 'p-6',
-            !showSidebar && showHeader && 'p-4 sm:p-6 lg:p-8', // For super-admin and employee pages
-            !showSidebar && !showHeader && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', // For login page
+            // Specific padding for pages without a sidebar but with a header
+            !showSidebar && showHeader && 'p-4 sm:p-6 lg:p-8',
+            // Centering for the login page (no header, no sidebar)
+            !showHeader && !showSidebar && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', 
+            // Background for all other pages
+            (showHeader || showSidebar) && 'bg-background/80'
           )}
         >
           {children}
