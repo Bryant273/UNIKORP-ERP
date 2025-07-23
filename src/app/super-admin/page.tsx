@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Building, Users, Briefcase, CalendarCheck, CalendarX, LogIn, BarChart, Pencil, Trash2, DollarSign, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText } from 'lucide-react';
+import { Building, Users, Briefcase, CalendarCheck, CalendarX, LogIn, BarChart, Pencil, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,55 +17,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Badge } from "@/components/ui/badge";
 
-// Mock Data
 const users = [
     { id: 1, name: 'Admin Gestionnaire', email: 'admin@unikorp.com', role: 'Admin-Gestionnaire', avatar: 'https://placehold.co/100x100.png' },
     { id: 2, name: 'Jean Dupont', email: 'jean.dupont@unikorp.com', role: 'Employé', avatar: 'https://placehold.co/100x100.png' },
     { id: 3, name: 'Marie Comptable', email: 'marie.compta@unikorp.com', role: 'Gestionnaire', avatar: 'https://placehold.co/100x100.png' },
 ];
-
-const mainKpis = [
-  { title: "Revenus (T3)", value: `${(1200000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA`, change: "+15.2%", icon: DollarSign, changeType: "up" },
-  { title: "Nouveaux Clients", value: "89", change: "+20.1%", icon: Users, changeType: "up" },
-  { title: "Commandes en cours", value: "245", change: "-3.5%", icon: ShoppingCart, changeType: "down" },
-  { title: "Effectif Total", value: "112", breakdown: "60 H / 52 F", icon: UserCheck },
-];
-
-const moduleSummaries = [
-    {
-        title: "SKOMPTAB - Finance",
-        icon: BarChart2,
-        kpis: [
-            { title: "Marge Nette", value: "28.4%" },
-            { title: "Factures en attente", value: `${(12450).toLocaleString('fr-FR')} FCFA` },
-        ]
-    },
-    {
-        title: "MARKOS - Marketing",
-        icon: TrendingUp,
-        kpis: [
-            { title: "Nouveaux Leads (Mois)", value: "316" },
-            { title: "Coût par Lead", value: `${(1850).toLocaleString('fr-FR')} FCFA` },
-        ]
-    },
-    {
-        title: "LOGSON - Logistique",
-        icon: Ship,
-        kpis: [
-            { title: "Expéditions (Mois)", value: "1 480" },
-            { title: "Taux de retours", value: "1.1%" },
-        ]
-    },
-     {
-        title: "SOCIX - RH",
-        icon: Users,
-        kpis: [
-            { title: "Masse Salariale", value: `${(89000).toLocaleString('fr-FR')} FCFA` },
-            { title: "Turnover", value: "2.1%" },
-        ]
-    },
-]
-
 
 function DashboardTab() {
     const [isExerciceModalOpen, setIsExerciceModalOpen] = useState(false);
@@ -129,56 +85,6 @@ function DashboardTab() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            {/* Main Dashboard Content */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {mainKpis.map((kpi) => (
-                    <Card key={kpi.title}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <div className="text-sm font-medium tracking-tight">{kpi.title}</div>
-                        <kpi.icon className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                        <div className="text-2xl font-bold">{kpi.value}</div>
-                        {kpi.breakdown ? (
-                            <p className="text-xs text-muted-foreground">
-                            {kpi.breakdown}
-                            </p>
-                        ) : (
-                            <p className={`text-xs ${kpi.changeType === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                            {kpi.change}
-                            </p>
-                        )}
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Synthèse par Module</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {moduleSummaries.map(summary => (
-                         <Card key={summary.title} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <summary.icon className="h-5 w-5 text-primary"/>
-                                    {summary.title}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex-1 flex flex-col gap-4 text-center">
-                                {summary.kpis.map(kpi => (
-                                    <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
-                                        <p className="text-xs text-muted-foreground">{kpi.title}</p>
-                                        <p className="text-lg font-bold">{kpi.value}</p>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </CardContent>
-            </Card>
         </div>
     );
 }
@@ -267,17 +173,17 @@ export default function SuperAdminPage() {
             </header>
 
             <Tabs defaultValue="dashboard" className="w-full">
-                <TabsList className="inline-flex h-auto rounded-none border-b-0 bg-[#2D3748] p-0">
-                    <TabsTrigger value="dashboard" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                <TabsList className="grid w-full grid-cols-4 bg-background/50 backdrop-blur-sm">
+                    <TabsTrigger value="dashboard">
                         <BarChart className="mr-2 h-4 w-4" />Tableau de bord
                     </TabsTrigger>
-                    <TabsTrigger value="users" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                    <TabsTrigger value="users">
                         <Users className="mr-2 h-4 w-4" />Utilisateurs
                     </TabsTrigger>
-                    <TabsTrigger value="company" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                    <TabsTrigger value="company">
                         <Building className="mr-2 h-4 w-4" />Infos Entreprise
                     </TabsTrigger>
-                    <TabsTrigger value="access" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=inactive]:text-white/80 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10 rounded-t-md rounded-b-none px-4 py-2">
+                    <TabsTrigger value="access">
                         <LogIn className="mr-2 h-4 w-4" />Accès ERP
                     </TabsTrigger>
                 </TabsList>
