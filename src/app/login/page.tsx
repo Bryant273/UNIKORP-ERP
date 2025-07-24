@@ -82,8 +82,8 @@ export default function LoginPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Button variant="outline" onClick={() => handleLogin('Compte Entreprise', '/super-admin')}><Building />Compte Entreprise</Button>
                 <Button variant="outline" onClick={() => handleLogin('Admin-Gestionnaire', '/dashboard')}><UserCog />Admin-Gestionnaire</Button>
-                <Button variant="outline" onClick={() => handleLogin('Gestionnaire (SKOMPTAB)', '/skomptab')}><Briefcase />Gestionnaire</Button>
-                <Button variant="outline" onClick={() => handleLogin('Stagiaire (SKOMPTAB)', '/skomptab')}><Clipboard />Stagiaire</Button>
+                <Button variant="outline" onClick={() => handleLogin('Gestionnaire (SKOMPTAB)', '/dashboard')}><Briefcase />Gestionnaire</Button>
+                <Button variant="outline" onClick={() => handleLogin('Stagiaire (SKOMPTAB)', '/dashboard')}><Clipboard />Stagiaire</Button>
                 <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')} className="sm:col-span-2"><User />Employé</Button>
             </div>
             </div>

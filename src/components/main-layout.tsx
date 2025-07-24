@@ -7,7 +7,7 @@ import { ChatWidget } from './chat-widget';
 import { cn } from '@/lib/utils';
 import { ModuleNav } from './module-nav';
 import { useAtom } from 'jotai';
-import { companyFileAtom } from '@/lib/store';
+import { companyFileAtom, userRoleAtom } from '@/lib/store';
 import { useState, useEffect } from 'react';
 import {
   Card,
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { FolderOpen, Check } from 'lucide-react';
+import Image from 'next/image';
 
 const noHeaderPaths = ['/login'];
 const noSidebarPaths = ['/login', '/super-admin', '/employee-dashboard'];
@@ -95,6 +96,7 @@ function CompanyFileSelection() {
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [companyFile] = useAtom(companyFileAtom);
+  const [role] = useAtom(userRoleAtom);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -105,10 +107,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const showSidebar = !noSidebarPaths.includes(pathname);
   const showModuleNav = showHeader && !['/login', '/super-admin', '/employee-dashboard'].includes(pathname);
   
-  const requiresCompanyFile = !['/login', '/super-admin'].includes(pathname);
+  const bypassPaths = ['/login', '/super-admin'];
+  const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
 
   if (!isClient) {
-    // Render a loading state or nothing on the server to prevent hydration mismatch
     return null; 
   }
 
@@ -116,7 +118,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     return <CompanyFileSelection />;
   }
   
-  // Special condition for the dashboard page: it must have a company file selected.
   const isDashboardBlocked = pathname === '/dashboard' && !companyFile;
 
   return (
@@ -128,15 +129,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             'flex-1 overflow-y-auto',
-            // Default padding for pages with a sidebar
             showSidebar && !isDashboardBlocked && 'p-6',
-             // Padding for dashboard (no sidebar)
             pathname === '/dashboard' && !isDashboardBlocked && 'p-4 sm:p-6 lg:p-8',
-            // Specific padding for pages without a sidebar but with a header
             !showSidebar && showHeader && pathname !== '/dashboard' && 'p-4 sm:p-6 lg:p-8',
-            // Centering for the login page (no header, no sidebar)
             !showHeader && !showSidebar && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', 
-            // Background for all other pages
             (showHeader || showSidebar) && 'bg-background/80'
           )}
         >
