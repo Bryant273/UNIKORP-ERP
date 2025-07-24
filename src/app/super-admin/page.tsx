@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,11 +21,12 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Legend, ComposedChart } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ComposedChart } from "recharts";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // --- MOCK DATA ---
 const skomptabKpis = [
@@ -137,7 +138,7 @@ function DashboardTab() {
                             <div key={kpi.title} className="p-2 bg-muted rounded-lg"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>
                         ))}
                     </div>
-                     <ChartContainer config={markosChartConfig} className="h-[200px] w-full"><LineChart data={markosChartData}><CartesianGrid vertical={false} /><XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/><YAxis /><ChartTooltip content={<ChartTooltipContent />} /><Line type="monotone" dataKey="leads" stroke="var(--color-leads)" strokeWidth={3} dot={{r:4}} /></LineChart></ChartContainer>
+                     <ChartContainer config={markosChartConfig} className="h-[200px] w-full"><ComposedChart data={markosChartData}><CartesianGrid vertical={false} /><XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/><YAxis /><ChartTooltip content={<ChartTooltipContent />} /><Bar dataKey="leads" fill="var(--color-leads)" radius={[4, 4, 0, 0]} /></ComposedChart></ChartContainer>
                 </CardContent>
             </Card>
             <Card>
@@ -408,25 +409,108 @@ function UserDetailModal({ isOpen, onClose, user }: { isOpen: boolean; onClose: 
     );
 }
 
+const regions = {
+    UEMOA: [{ code: 'CI', name: 'Côte d\'Ivoire' }, { code: 'SN', name: 'Sénégal' }, { code: 'BJ', name: 'Bénin' }],
+    'Amérique du Nord': [{ code: 'US', name: 'États-Unis' }, { code: 'CA', name: 'Canada' }],
+    'Europe': [{ code: 'FR', name: 'France' }, { code: 'DE', name: 'Allemagne' }, { code: 'ES', name: 'Espagne' }],
+    'Asie-Pacifique': [{ code: 'JP', name: 'Japon' }, { code: 'CN', name: 'Chine' }, { code: 'SG', name: 'Singapour' }, { code: 'IN', name: 'Inde' }],
+    'Afrique du Nord': [{ code: 'MA', name: 'Maroc' }, { code: 'TN', name: 'Tunisie' }, { code: 'DZ', name: 'Algérie' }, { code: 'EG', name: 'Égypte' }],
+    'Autres': [{ code: 'ZA', name: 'Afrique du Sud' }, { code: 'BR', name: 'Brésil' }, { code: 'AU', name: 'Australie' }, { code: 'AE', name: 'Émirats Arabes Unis' }],
+};
+
+const FormField = ({ label, children }: { label: string, children: React.ReactNode }) => (
+    <div className="space-y-1.5"><Label className="text-xs font-semibold">{label} <span className="text-destructive">*</span></Label>{children}</div>
+);
+
+const FormRegionUEMOA = () => (
+    <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Informations légales OHADA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Raison Sociale"><Input /></FormField><FormField label="Numéro RCCM"><Input /></FormField><FormField label="Numéro NIU"><Input /></FormField><FormField label="Numéro de Contribuable"><Input /></FormField><FormField label="Forme Juridique OHADA"><Input /></FormField><FormField label="Capital Social"><Input type="number" /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Localisation & Fiscalité UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Adresse Siège Social"><Textarea /></FormField><FormField label="Centre des Impôts"><Input /></FormField><FormField label="Régime Fiscal"><Input /></FormField><FormField label="Numéro de Patente"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Devise"><Input value="Franc CFA (XOF)" disabled /></FormField><FormField label="Plan Comptable"><Input value="SYSCOHADA" disabled /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+const FormRegionUSA = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Informations légales & Fiscales USA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Business Name"><Input /></FormField><FormField label="EIN"><Input /></FormField><FormField label="State of Incorporation"><Input /></FormField><FormField label="Business Entity Type"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Paramètres ERP USA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="USD" disabled /></FormField><FormField label="Plan Comptable"><Input value="US GAAP" disabled /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+const FormRegionEU = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Informations légales & Fiscales UE</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Entity Name"><Input /></FormField><FormField label="VAT Identification Number"><Input /></FormField><FormField label="EORI Number"><Input /></FormField><FormField label="Country of Incorporation"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Paramètres ERP Europe</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="EUR" disabled /></FormField><FormField label="Plan Comptable"><Input value="PCG Local/IFRS" disabled /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+
+const FormRegionDefault = () => (
+    <Card className="mt-4"><CardContent className="p-6 text-center text-muted-foreground">Le formulaire pour cette région n'est pas encore disponible.</CardContent></Card>
+);
+
 function CompanyInfoTab() {
+  const [region, setRegion] = useState<keyof typeof regions | ''>('UEMOA');
+  const [country, setCountry] = useState('CI');
+  const { toast } = useToast();
+
+  const handleRegionChange = (value: keyof typeof regions | '') => {
+    setRegion(value);
+    setCountry(''); // Reset country when region changes
+  };
+  
+  const handleSave = () => {
+    toast({
+        title: "Configuration sauvegardée",
+        description: `Les informations pour le pays ${country} dans la région ${region} ont été enregistrées.`,
+    })
+  }
+
+  const renderForm = () => {
+    switch(region) {
+        case 'UEMOA': return <FormRegionUEMOA />;
+        case 'Amérique du Nord': return country === 'US' ? <FormRegionUSA /> : <FormRegionDefault />;
+        case 'Europe': return <FormRegionEU />;
+        default: return <FormRegionDefault />;
+    }
+  }
+
   return (
     <div className="mt-6">
-        <Card className="max-w-3xl mx-auto">
-            <CardHeader>
-                <CardTitle>Informations sur l'entreprise</CardTitle>
-                <CardDescription>Mettez à jour les informations légales et de contact de votre entreprise.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-1"><Label htmlFor="companyName">Raison sociale</Label><Input id="companyName" defaultValue="AUTO - SociétéX" /></div>
-                    <div className="space-y-1"><Label htmlFor="companyNcc">N° Compte Contribuable</Label><Input id="companyNcc" defaultValue="P0012345678X" /></div>
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+            <CardTitle>Informations sur l'entreprise</CardTitle>
+            <CardDescription>Configurez les informations légales et fiscales de votre entreprise en fonction de sa localisation.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
+                 <div className="space-y-2">
+                    <Label>Région d'opération</Label>
+                    <Select value={region} onValueChange={handleRegionChange}>
+                        <SelectTrigger><SelectValue placeholder="Sélectionnez une région..." /></SelectTrigger>
+                        <SelectContent>
+                            {Object.keys(regions).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="space-y-2">
+                    <Label>Pays</Label>
+                    <Select value={country} onValueChange={setCountry} disabled={!region}>
+                        <SelectTrigger><SelectValue placeholder="Sélectionnez un pays..." /></SelectTrigger>
+                        <SelectContent>
+                            {region && regions[region].map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                 </div>
+            </div>
+
+            {region && country && (
+                <div>
+                   {renderForm()}
                 </div>
-                <div className="space-y-1"><Label htmlFor="companyAddress">Adresse</Label><Textarea id="companyAddress" defaultValue="Cocody Angré, 7ème Tranche, Abidjan, Côte d'Ivoire" /></div>
-            </CardContent>
-            <CardFooter>
-                <Button>Enregistrer les modifications</Button>
-            </CardFooter>
-        </Card>
+            )}
+        </CardContent>
+        <CardFooter>
+            <Button onClick={handleSave} disabled={!region || !country}>Enregistrer les modifications</Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
