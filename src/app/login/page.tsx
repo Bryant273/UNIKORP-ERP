@@ -12,19 +12,23 @@ import { Separator } from '@/components/ui/separator';
 import { Logo } from '@/components/logo';
 import { Building, UserCog, Briefcase, Clipboard, User, Moon, Sun } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAtom } from 'jotai';
+import { userRoleAtom, type UserRole } from '@/lib/session-store';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [, setRole] = useAtom(userRoleAtom);
   
   useEffect(() => setMounted(true), []);
 
 
-  const handleLogin = (role: string, path: string) => {
+  const handleLogin = (role: UserRole, path: string) => {
     // In a real app, you would handle authentication here.
     // For this simulation, we just navigate to the corresponding dashboard.
+    setRole(role);
     toast({
       title: 'Connexion Réussie',
       description: `Vous êtes maintenant connecté en tant que ${role}.`,

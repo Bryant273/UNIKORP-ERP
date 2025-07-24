@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { ModuleNav } from './module-nav';
 
 const noHeaderPaths = ['/login'];
-const noSidebarPaths = ['/login', '/super-admin', '/employee-dashboard'];
+const noSidebarPaths = ['/login', '/super-admin', '/employee-dashboard', '/dashboard'];
 
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const showHeader = !noHeaderPaths.includes(pathname);
   const showSidebar = !noSidebarPaths.includes(pathname);
-  const showModuleNav = showHeader && !noSidebarPaths.includes(pathname);
+  const showModuleNav = showHeader && !['/login', '/super-admin', '/employee-dashboard'].includes(pathname);
 
 
   return (

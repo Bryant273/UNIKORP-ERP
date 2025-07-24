@@ -9,7 +9,10 @@ import {
   Megaphone,
   Truck,
   UsersRound,
+  ShieldCheck,
 } from 'lucide-react';
+import { useAtom } from 'jotai';
+import { userRoleAtom } from '@/lib/session-store';
 
 const navLinks = [
   {
@@ -41,6 +44,9 @@ const navLinks = [
 
 export function ModuleNav() {
   const pathname = usePathname();
+  const [role] = useAtom(userRoleAtom);
+  
+  const isAdminRole = role === 'Admin-Gestionnaire' || role === 'Compte Entreprise';
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -66,6 +72,20 @@ export function ModuleNav() {
             </div>
           </Link>
         ))}
+        <div className="flex-1" />
+        {isAdminRole && (
+            <Link href="/super-admin">
+                <div
+                className={cn(
+                    'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white rounded-t-md',
+                    isActive('/super-admin') && 'bg-white text-primary'
+                )}
+                >
+                <ShieldCheck className="h-4 w-4" />
+                Super Admin
+                </div>
+            </Link>
+        )}
       </div>
     </nav>
   );
