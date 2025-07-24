@@ -1,23 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter, Roboto } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { AppSidebar } from '@/components/app-sidebar';
-import { AppHeader } from '@/components/app-header';
-import { ModuleNav } from '@/components/module-nav';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ChatWidget } from '@/components/chat-widget';
 import { MainLayout } from '@/components/main-layout';
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-  weight: ['400', '600'],
-});
-const roboto = Roboto({
-  subsets: ['latin'],
-  variable: '--font-roboto',
-  weight: ['400', '600'],
+  weight: ['400', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -36,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${roboto.variable} font-sans antialiased`}
+        className={`${inter.variable} antialiased`}
         suppressHydrationWarning={true}
       >
         <ThemeProvider
