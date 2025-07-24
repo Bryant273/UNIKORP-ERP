@@ -310,15 +310,15 @@ function UserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean; o
                         <DialogTitle>{userToEdit ? 'Modifier' : 'Ajouter'} un utilisateur</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4 md:grid-cols-2">
-                        <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" value={formData.name || ''} onChange={handleChange} required /></div>
-                        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={formData.email || ''} onChange={handleChange} required /></div>
-                        <div className="space-y-2"><Label htmlFor="role">Rôle</Label><Select name="role" value={formData.role} onValueChange={v => setFormData(f => ({...f, role: v as UserRole}))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Admin-Gestionnaire">Admin-Gestionnaire</SelectItem><SelectItem value="Gestionnaire (SKOMPTAB)">Gestionnaire (SKOMPTAB)</SelectItem><SelectItem value="Stagiaire (SKOMPTAB)">Stagiaire (SKOMPTAB)</SelectItem><SelectItem value="Employé">Employé</SelectItem></SelectContent></Select></div>
+                        <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" defaultValue={formData.name || ''} onChange={handleChange} required /></div>
+                        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" defaultValue={formData.email || ''} onChange={handleChange} required /></div>
+                        <div className="space-y-2"><Label htmlFor="role">Rôle</Label><Select name="role" defaultValue={formData.role} onValueChange={v => setFormData(f => ({...f, role: v as UserRole}))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Admin-Gestionnaire">Admin-Gestionnaire</SelectItem><SelectItem value="Gestionnaire (SKOMPTAB)">Gestionnaire (SKOMPTAB)</SelectItem><SelectItem value="Stagiaire (SKOMPTAB)">Stagiaire (SKOMPTAB)</SelectItem><SelectItem value="Employé">Employé</SelectItem></SelectContent></Select></div>
                         <div className="space-y-2">
                             <Label>Accès aux modules</Label>
                             <div className="flex flex-wrap gap-4 p-2 border rounded-md">
                                 {MODULES.map(module => (
                                     <div key={module} className="flex items-center space-x-2">
-                                        <Checkbox id={module} checked={formData.modules?.includes(module)} onCheckedChange={checked => handleModuleChange(module, !!checked)} />
+                                        <Checkbox id={module} defaultChecked={formData.modules?.includes(module)} onCheckedChange={checked => handleModuleChange(module, !!checked)} />
                                         <Label htmlFor={module} className="font-normal">{module}</Label>
                                     </div>
                                 ))}
@@ -327,7 +327,7 @@ function UserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean; o
                         <div className="col-span-2 space-y-2">
                             <Label>Identifiants de connexion</Label>
                             <div className="flex gap-2 items-center">
-                                <Input value="****************" disabled /><Button variant="secondary" type="button">Générer un mot de passe</Button>
+                                <Input defaultValue="****************" disabled /><Button variant="secondary" type="button">Générer un mot de passe</Button>
                             </div>
                         </div>
                     </div>
@@ -388,11 +388,11 @@ function UserDetailModal({ isOpen, onClose, user }: { isOpen: boolean; onClose: 
                         <CardContent className="space-y-4">
                            <div className="space-y-2">
                                 <Label htmlFor="user-email">Email</Label>
-                                <Input id="user-email" value={user.email} readOnly />
+                                <Input id="user-email" defaultValue={user.email} readOnly />
                            </div>
                            <div className="space-y-2">
                                 <Label htmlFor="user-password">Mot de passe</Label>
-                                <Input id="user-password" type="password" value="************" readOnly />
+                                <Input id="user-password" type="password" defaultValue="************" readOnly />
                            </div>
                             <div className="flex gap-2 pt-2">
                                 <Button variant="outline" className="w-full" onClick={handleCopy}><Copy className="mr-2 h-4 w-4" /> Copier les identifiants</Button>
@@ -434,7 +434,7 @@ const FormRegionUEMOA = () => (
     <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
         <AccordionItem value="item-1"><AccordionTrigger>Informations légales OHADA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Raison Sociale"><Input /></FormField><FormField label="Numéro RCCM"><Input /></FormField><FormField label="Numéro NIU"><Input /></FormField><FormField label="Numéro de Contribuable"><Input /></FormField><FormField label="Forme Juridique OHADA"><Input /></FormField><FormField label="Capital Social"><Input type="number" /></FormField><FormField label="Date d'Immatriculation RCCM"><Input type="date" /></FormField><FormField label="Greffe de Rattachement"><Input /></FormField></div></AccordionContent></AccordionItem>
         <AccordionItem value="item-2"><AccordionTrigger>Localisation &amp; Fiscalité UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><div className="col-span-2"><FormField label="Adresse Siège Social"><Textarea /></FormField></div><FormField label="Commune, Département, Région"><Input /></FormField><FormField label="Centre des Impôts"><Input /></FormField><FormField label="Téléphone"><Input /></FormField><FormField label="Email"><Input type="email" /></FormField><FormField label="Régime Fiscal"><Input /></FormField><FormField label="Numéro de Patente"><Input /></FormField><FormField label="Code Activité UEMOA"><Input /></FormField><FormField label="Commissaire aux Comptes"><Input /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Devise"><Input value="Franc CFA (XOF)" disabled /></FormField><FormField label="Plan Comptable"><Input value="SYSCOHADA" disabled /></FormField><FormField label="Fuseau Horaire"><Input value="GMT" disabled /></FormField><FormField label="Langues"><Input value="Français + Locale" /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Devise"><Input defaultValue="Franc CFA (XOF)" disabled /></FormField><FormField label="Plan Comptable"><Input defaultValue="SYSCOHADA" disabled /></FormField><FormField label="Fuseau Horaire"><Input defaultValue="GMT" disabled /></FormField><FormField label="Langues"><Input /></FormField></div></AccordionContent></AccordionItem>
     </Accordion>
 );
 
@@ -443,7 +443,7 @@ const FormRegionUSA = () => (
         <AccordionItem value="item-1"><AccordionTrigger>Informations légales obligatoires</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Business Name"><Input /></FormField><FormField label="DBA (Doing Business As)"><Input /></FormField><FormField label="EIN (Employer Identification Number)"><Input /></FormField><FormField label="State of Incorporation"><Input /></FormField><FormField label="Business Entity Type"><Input /></FormField><FormField label="Registered Agent"><Input /></FormField><FormField label="Date of Formation"><Input type="date" /></FormField></div></AccordionContent></AccordionItem>
         <AccordionItem value="item-2"><AccordionTrigger>Adresses et contact</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><div className="col-span-2"><FormField label="Principal Business Address"><Textarea /></FormField></div><div className="col-span-2"><FormField label="Registered Office Address"><Textarea /></FormField></div><FormField label="Phone"><Input /></FormField><FormField label="Email"><Input type="email" /></FormField></div></AccordionContent></AccordionItem>
         <AccordionItem value="item-3"><AccordionTrigger>Informations fiscales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Federal Tax Classification"><Input /></FormField><FormField label="State Tax ID Numbers"><Input /></FormField><FormField label="Sales Tax Permit Numbers"><Input /></FormField><FormField label="NAICS Code"><Input /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-4"><AccordionTrigger>Paramètres ERP USA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="USD" disabled /></FormField><FormField label="Time Zone"><Input /></FormField><FormField label="Tax Year"><Input /></FormField><FormField label="Plan Comptable"><Input value="US GAAP" disabled /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-4"><AccordionTrigger>Paramètres ERP USA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input defaultValue="USD" disabled /></FormField><FormField label="Time Zone"><Input /></FormField><FormField label="Tax Year"><Input /></FormField><FormField label="Plan Comptable"><Input defaultValue="US GAAP" disabled /></FormField></div></AccordionContent></AccordionItem>
     </Accordion>
 );
 
@@ -451,14 +451,14 @@ const FormRegionCA = () => (
     <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
         <AccordionItem value="item-1"><AccordionTrigger>Informations légales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Name"><Input /></FormField><FormField label="Operating Name"><Input /></FormField><FormField label="Business Number (BN)"><Input /></FormField><FormField label="Corporation Number"><Input /></FormField><FormField label="Province/Territory of Incorporation"><Input /></FormField><FormField label="Business Structure"><Input /></FormField><div className="col-span-2"><FormField label="Registered Office"><Textarea /></FormField></div></div></AccordionContent></AccordionItem>
         <AccordionItem value="item-2"><AccordionTrigger>Informations fiscales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="GST/HST Registration Number"><Input /></FormField><FormField label="Provincial Tax Numbers"><Input /></FormField><FormField label="NAICS Code"><Input /></FormField><FormField label="Payroll Account Numbers"><Input /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP Canada</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="CAD" disabled /></FormField><FormField label="Languages"><Input value="English/French" /></FormField><FormField label="Plan Comptable"><Input value="ASPE/IFRS" /></FormField><FormField label="Tax Year"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP Canada</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input defaultValue="CAD" disabled /></FormField><FormField label="Languages"><Input /></FormField><FormField label="Plan Comptable"><Input defaultValue="ASPE/IFRS" /></FormField><FormField label="Tax Year"><Input /></FormField></div></AccordionContent></AccordionItem>
     </Accordion>
 );
 
 const FormRegionEU = () => (
     <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
         <AccordionItem value="item-1"><AccordionTrigger>Informations légales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Entity Name"><Input /></FormField><FormField label="Company Registration Number"><Input /></FormField><FormField label="VAT Identification Number"><Input /></FormField><FormField label="EORI Number"><Input /></FormField><FormField label="Legal Form"><Input /></FormField><FormField label="Share Capital"><Input type="number" /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-2"><AccordionTrigger>Paramètres ERP Europe</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="EUR" /></FormField><FormField label="Plan Comptable"><Input value="PCG Local/IFRS" /></FormField><div className="flex items-center space-x-2"><Checkbox id="gdpr"/><Label htmlFor="gdpr">GDPR Compliance Enabled</Label></div></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Paramètres ERP Europe</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input defaultValue="EUR" /></FormField><FormField label="Plan Comptable"><Input defaultValue="PCG Local/IFRS" /></FormField><div className="flex items-center space-x-2"><Checkbox id="gdpr"/><Label htmlFor="gdpr">GDPR Compliance Enabled</Label></div></div></AccordionContent></AccordionItem>
     </Accordion>
 );
 
