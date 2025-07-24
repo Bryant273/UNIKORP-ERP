@@ -6,7 +6,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card"
 import {
   ChartContainer,
@@ -15,16 +14,9 @@ import {
 } from "@/components/ui/chart"
 import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend } from "recharts"
 import { Calendar } from "@/components/ui/calendar"
-import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText, Check, FolderOpen } from "lucide-react"
+import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText } from "lucide-react"
 import { type ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
-import { useAtom } from 'jotai'
-import { companyFileAtom } from '@/lib/store';
-import { useState, useEffect } from 'react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
 
 type Kpi = {
   title: string;
@@ -112,88 +104,7 @@ const fiscalDeadlines = [
     { date: "05/08/2024", label: "Déclaration Sociale Nominative (DSN)" },
 ];
 
-const mockCompanyFiles = [
-  "AUTO-GEST-2024-SocieteX",
-  "AUTO-GEST-2024-UnikorpCI",
-  "AUTO-GEST-2023-SocieteX",
-];
-
-function CompanyFileSelectionModal({ onFileSelect }: { onFileSelect: (file: string) => void }) {
-  const [selectedFile, setSelectedFile] = useState<string | undefined>();
-  const { toast } = useToast();
-
-  const handleConfirm = () => {
-    if (selectedFile) {
-        onFileSelect(selectedFile);
-    } else {
-        toast({
-            title: "Sélection requise",
-            description: "Veuillez sélectionner un fichier de gestion pour continuer.",
-            variant: "destructive"
-        })
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-muted/40">
-        <Card className="w-full max-w-md">
-             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl"><FolderOpen /> Sélectionner un Fichier de Gestion</CardTitle>
-                <CardDescription>Veuillez sélectionner un fichier pour initialiser votre session de travail.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="company-file-select">Fichier de gestion</Label>
-                    <Select onValueChange={setSelectedFile} value={selectedFile}>
-                        <SelectTrigger id="company-file-select">
-                            <SelectValue placeholder="Choisissez un fichier..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {mockCompanyFiles.map(file => (
-                                <SelectItem key={file} value={file}>{file}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                 </div>
-            </CardContent>
-            <CardFooter>
-                 <Button className="w-full" onClick={handleConfirm} disabled={!selectedFile}>
-                    Continuer
-                </Button>
-            </CardFooter>
-        </Card>
-    </div>
-  );
-}
-
-
 export default function DashboardPage() {
-  const [companyFile, setCompanyFile] = useAtom(companyFileAtom);
-  const [isClient, setIsClient] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const handleFileSelect = (file: string) => {
-    setCompanyFile(file);
-    toast({
-      title: "Fichier de gestion sélectionné",
-      description: `Vous êtes bien connecté au fichier ${file}`,
-      action: <Check className="h-5 w-5 text-green-500" />,
-    });
-  };
-
-  if (!isClient) {
-    // Render nothing or a loading spinner on the server to prevent hydration mismatch
-    return null;
-  }
-
-  if (!companyFile) {
-    return <CompanyFileSelectionModal onFileSelect={handleFileSelect} />
-  }
-
   return (
     <>
       <div className="flex w-full flex-col gap-6">
