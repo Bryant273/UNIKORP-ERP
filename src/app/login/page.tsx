@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { Building, UserCog, Briefcase, Clipboard, User, Moon, Sun, Calculator, U
 import { useToast } from '@/hooks/use-toast';
 import { useAtom } from 'jotai';
 import { userRoleAtom, type UserRole } from '@/lib/store';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,6 +38,20 @@ export default function LoginPage() {
   if (!mounted) {
     return null;
   }
+
+  const managerRoles = [
+    { role: 'Gestionnaire SKOMPTAB', path: '/skomptab', icon: Calculator, label: 'Gest. SKOMPTAB' },
+    { role: 'Gestionnaire SOCIX', path: '/socix', icon: Users, label: 'Gest. SOCIX' },
+    { role: 'Gestionnaire MARKOS', path: '/markos', icon: Megaphone, label: 'Gest. MARKOS' },
+    { role: 'Gestionnaire LOGSON', path: '/logson', icon: Truck, label: 'Gest. LOGSON' },
+  ];
+  
+  const internRoles = [
+    { role: 'Stagiaire SKOMPTAB', path: '/skomptab', icon: Clipboard, label: 'Stag. SKOMPTAB' },
+    { role: 'Stagiaire SOCIX', path: '/socix', icon: Clipboard, label: 'Stag. SOCIX' },
+    { role: 'Stagiaire MARKOS', path: '/markos', icon: Clipboard, label: 'Stag. MARKOS' },
+    { role: 'Stagiaire LOGSON', path: '/logson', icon: Clipboard, label: 'Stag. LOGSON' },
+  ];
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
@@ -80,27 +95,42 @@ export default function LoginPage() {
 
                 <Separator className="my-6" />
 
-                <div className="space-y-2 text-center">
-                <p className="text-sm text-muted-foreground">Ou connectez-vous rapidement avec un profil de test :</p>
-                <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" onClick={() => handleLogin('Compte Entreprise', '/super-admin')}><Building />Compte Entreprise</Button>
-                    <Button variant="outline" onClick={() => handleLogin('Admin-Gestionnaire', '/dashboard')}><UserCog />Admin-Gestionnaire</Button>
-                    
-                    <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Gestionnaires</h4>
-                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire SKOMPTAB', '/skomptab')}><Calculator/>Gest. SKOMPTAB</Button>
-                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire SOCIX', '/socix')}><Users/>Gest. SOCIX</Button>
-                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire MARKOS', '/markos')}><Megaphone/>Gest. MARKOS</Button>
-                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire LOGSON', '/logson')}><Truck/>Gest. LOGSON</Button>
+                <div className="space-y-3 text-center">
+                    <p className="text-sm text-muted-foreground">Ou connectez-vous rapidement avec un profil de test :</p>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button variant="outline" onClick={() => handleLogin('Compte Entreprise', '/super-admin')}><Building />Compte Entreprise</Button>
+                        <Button variant="outline" onClick={() => handleLogin('Admin-Gestionnaire', '/dashboard')}><UserCog />Admin-Gestionnaire</Button>
+                        
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline"><Briefcase/>Gestionnaire</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {managerRoles.map(({ role, path, icon: Icon, label }) => (
+                                    <DropdownMenuItem key={role} onClick={() => handleLogin(role as UserRole, path)}>
+                                        <Icon className="mr-2 h-4 w-4" />
+                                        <span>{label}</span>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                    <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Stagiaires</h4>
-                    <Button variant="outline" onClick={() => handleLogin('Stagiaire SKOMPTAB', '/skomptab')}><Clipboard />Stag. SKOMPTAB</Button>
-                    <Button variant="outline" onClick={() => handleLogin('Stagiaire SOCIX', '/socix')}><Clipboard />Stag. SOCIX</Button>
-                    <Button variant="outline" onClick={() => handleLogin('Stagiaire MARKOS', '/markos')}><Clipboard />Stag. MARKOS</Button>
-                    <Button variant="outline" onClick={() => handleLogin('Stagiaire LOGSON', '/logson')}><Clipboard />Stag. LOGSON</Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline"><Clipboard/>Stagiaire</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {internRoles.map(({ role, path, icon: Icon, label }) => (
+                                    <DropdownMenuItem key={role} onClick={() => handleLogin(role as UserRole, path)}>
+                                        <Icon className="mr-2 h-4 w-4" />
+                                        <span>{label}</span>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                    <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Employé</h4>
-                    <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')} className="sm:col-span-2"><User />Employé</Button>
-                </div>
+                        <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')} className="col-span-2"><User />Employé</Button>
+                    </div>
                 </div>
             </CardContent>
             </Card>
