@@ -5,11 +5,14 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileEdit, UserPlus, LogOut, FileText, Download } from 'lucide-react';
+import { FileEdit, UserPlus, LogOut, FileText, Download, Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 type Action = {
   id: string;
@@ -37,27 +40,15 @@ const ActionIcon = ({ module }: { module: string }) => {
     }
 }
 
-const ITEMS_PER_PAGE = 10;
-
 export default function ActionsPage() {
-    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     
-    const groupedActions = useMemo(() => {
-        return allActions.reduce((acc, action) => {
-            const date = new Date(action.timestamp).toLocaleDateString('fr-FR', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-            });
-            if (!acc[date]) {
-                acc[date] = [];
-            }
-            acc[date].push(action);
-            return acc;
-        }, {} as Record<string, Action[]>);
-    }, []);
-
-    // Pagination logic would be more complex with grouped data.
-    // For this example, we'll show all actions.
-    // In a real app, you'd paginate the dates or use infinite scroll.
+    const filteredActions = useMemo(() => {
+        if (!selectedDate) return [];
+        return allActions
+            .filter(action => format(new Date(action.timestamp), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd'))
+            .sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    }, [selectedDate]);
 
   return (
     <Card className="w-full">
@@ -65,60 +56,78 @@ export default function ActionsPage() {
         <div className="flex items-center justify-between">
             <div>
                 <CardTitle className="text-2xl">Journal des Actions</CardTitle>
-                <CardDescription>Consultez l'historique de toutes les actions effectuées sur la plateforme.</CardDescription>
+                <CardDescription>Consultez l'historique des actions effectuées sur la plateforme.</CardDescription>
             </div>
-             <Button variant="outline"><Download className="mr-2 h-4 w-4"/> Exporter</Button>
+             <div className="flex items-center gap-2">
+                 <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-[280px] justify-start text-left font-normal",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                 <Button variant="outline"><Download className="mr-2 h-4 w-4"/> Exporter</Button>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-8">
-            {Object.keys(groupedActions).length > 0 ? (
-                Object.entries(groupedActions).map(([date, actions]) => (
-                    <div key={date}>
-                        <h3 className="text-lg font-semibold mb-4 capitalize">{date}</h3>
-                         <div className="space-y-4">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-24"></TableHead>
-                                        <TableHead>Utilisateur</TableHead>
-                                        <TableHead>Action</TableHead>
-                                        <TableHead className="text-center">Module</TableHead>
-                                        <TableHead className="text-right">Heure</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {actions.map(action => (
-                                    <TableRow key={action.id}>
-                                        <TableCell>
-                                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                                <ActionIcon module={action.module} />
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={action.user.avatarUrl} alt={action.user.name} />
-                                                    <AvatarFallback>{action.user.name.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <span className="font-medium">{action.user.name}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{action.action}</TableCell>
-                                        <TableCell className="text-center">
-                                            <Badge variant={action.module === 'System' ? 'destructive' : 'secondary'}>{action.module}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right text-muted-foreground">{format(new Date(action.timestamp), 'HH:mm:ss')}</TableCell>
-                                    </TableRow>
-                                ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                ))
+        <div className="space-y-4">
+            {filteredActions.length > 0 ? (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-24"></TableHead>
+                            <TableHead>Utilisateur</TableHead>
+                            <TableHead>Action</TableHead>
+                            <TableHead className="text-center">Module</TableHead>
+                            <TableHead className="text-right">Heure</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {filteredActions.map(action => (
+                        <TableRow key={action.id}>
+                            <TableCell>
+                                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                    <ActionIcon module={action.module} />
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={action.user.avatarUrl} alt={action.user.name} />
+                                        <AvatarFallback>{action.user.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium">{action.user.name}</span>
+                                </div>
+                            </TableCell>
+                            <TableCell>{action.action}</TableCell>
+                            <TableCell className="text-center">
+                                <Badge variant={action.module === 'System' ? 'destructive' : 'secondary'}>{action.module}</Badge>
+                            </TableCell>
+                            <TableCell className="text-right text-muted-foreground">{format(new Date(action.timestamp), 'HH:mm:ss')}</TableCell>
+                        </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
             ) : (
                 <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                    <p className="text-muted-foreground">Aucune action enregistrée.</p>
+                    <p className="text-muted-foreground">Aucune action enregistrée pour le {selectedDate ? format(selectedDate, "PPP", { locale: fr }) : ''}.</p>
                 </div>
             )}
         </div>
