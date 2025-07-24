@@ -6,7 +6,19 @@ import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 // --- SESSION STORAGE ATOMS ---
 
 // Define the type for the user's role
-export type UserRole = 'Admin-Gestionnaire' | 'Compte Entreprise' | 'Gestionnaire (SKOMPTAB)' | 'Stagiaire (SKOMPTAB)' | 'Employé' | null;
+export type UserRole = 
+  | 'Admin-Gestionnaire' 
+  | 'Compte Entreprise' 
+  | 'Gestionnaire SKOMPTAB' 
+  | 'Stagiaire SKOMPTAB' 
+  | 'Gestionnaire SOCIX'
+  | 'Stagiaire SOCIX'
+  | 'Gestionnaire MARKOS'
+  | 'Stagiaire MARKOS'
+  | 'Gestionnaire LOGSON'
+  | 'Stagiaire LOGSON'
+  | 'Employé' 
+  | null;
 
 // Use session storage which clears when the browser tab is closed
 const sessionJSONStorage = <T>(key: string) => createJSONStorage<T>(() => sessionStorage);

@@ -14,31 +14,36 @@ import {
 import { useAtom } from 'jotai';
 import { userRoleAtom } from '@/lib/store';
 
-const navLinks = [
+const allNavLinks = [
   {
     href: '/dashboard',
     label: 'Tableau de bord',
     icon: LayoutDashboard,
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire SKOMPTAB', 'Gestionnaire SOCIX', 'Gestionnaire MARKOS', 'Gestionnaire LOGSON', 'Stagiaire SKOMPTAB', 'Stagiaire SOCIX', 'Stagiaire MARKOS', 'Stagiaire LOGSON'],
   },
   {
     href: '/skomptab',
     label: 'SKOMPTAB',
     icon: Calculator,
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire SKOMPTAB', 'Stagiaire SKOMPTAB'],
   },
   {
     href: '/socix',
     label: 'SOCIX',
     icon: UsersRound,
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire SOCIX', 'Stagiaire SOCIX'],
   },
   {
     href: '/markos',
     label: 'MARKOS',
     icon: Megaphone,
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire MARKOS', 'Stagiaire MARKOS'],
   },
   {
     href: '/logson',
     label: 'LOGSON',
     icon: Truck,
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire LOGSON', 'Stagiaire LOGSON'],
   },
 ];
 
@@ -47,6 +52,10 @@ export function ModuleNav() {
   const [role] = useAtom(userRoleAtom);
   
   const isAdminRole = role === 'Admin-Gestionnaire' || role === 'Compte Entreprise';
+
+  const visibleNavLinks = allNavLinks.filter(link => 
+    role ? link.allowedRoles.includes(role) : false
+  );
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -58,7 +67,7 @@ export function ModuleNav() {
   return (
     <nav className="bg-[#5D5CDE] border-b px-4 sm:px-6">
       <div className="flex items-center gap-4">
-        {navLinks.map((link) => (
+        {visibleNavLinks.map((link) => (
           <Link href={link.href} key={link.href}>
             <div
               className={cn(
