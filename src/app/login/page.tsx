@@ -13,7 +13,7 @@ import { Logo } from '@/components/logo';
 import { Building, UserCog, Briefcase, Clipboard, User, Moon, Sun } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAtom } from 'jotai';
-import { userRoleAtom, type UserRole } from '@/lib/session-store';
+import { userRoleAtom, type UserRole } from '@/lib/store';
 
 export default function LoginPage() {
   const router = useRouter();
