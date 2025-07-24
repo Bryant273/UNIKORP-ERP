@@ -217,7 +217,7 @@ export default function CreationJournauxPage() {
             </TableHeader>
             <TableBody>
               {paginatedJournals.map((journal) => (
-                <TableRow key={journal.id}>
+                <TableRow key={journal.id} className="odd:bg-muted/50">
                   <TableCell>{journal.code}</TableCell>
                   <TableCell>{journal.intitule}</TableCell>
                   <TableCell>{journal.type}</TableCell>

@@ -199,18 +199,18 @@ export default function ComptesTiersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px] text-center font-semibold">Numéro</TableHead>
-                  <TableHead className="text-center font-semibold">Intitulé</TableHead>
-                  <TableHead className="text-center font-semibold">Téléphone</TableHead>
+                  <TableHead className="w-[150px] font-semibold">Numéro</TableHead>
+                  <TableHead className="font-semibold">Intitulé</TableHead>
+                  <TableHead className="font-semibold">Téléphone</TableHead>
                   <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedData.map((compte) => (
                   <TableRow key={compte.id} className="odd:bg-muted/50">
-                    <TableCell className="text-center">{compte.numero}</TableCell>
-                    <TableCell className="font-medium text-center">{compte.intitule}</TableCell>
-                    <TableCell className="text-center">{compte.telephone}</TableCell>
+                    <TableCell>{compte.numero}</TableCell>
+                    <TableCell className="font-medium">{compte.intitule}</TableCell>
+                    <TableCell>{compte.telephone}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
                           <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(compte, type === 'clients' ? 'Client' : 'Fournisseur')}>

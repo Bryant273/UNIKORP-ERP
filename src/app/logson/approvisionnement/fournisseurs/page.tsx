@@ -176,18 +176,18 @@ export default function FournisseursPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px] text-center font-semibold">Numéro</TableHead>
-                  <TableHead className="text-center font-semibold">Intitulé</TableHead>
-                  <TableHead className="text-center font-semibold">Téléphone</TableHead>
+                  <TableHead className="w-[150px] font-semibold">Numéro</TableHead>
+                  <TableHead className="font-semibold">Intitulé</TableHead>
+                  <TableHead className="font-semibold">Téléphone</TableHead>
                   <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedFournisseurs.map((fournisseur) => (
                   <TableRow key={fournisseur.id} className="odd:bg-muted/50">
-                    <TableCell className="text-center">{fournisseur.numero}</TableCell>
-                    <TableCell className="font-medium text-center">{fournisseur.intitule}</TableCell>
-                    <TableCell className="text-center">{fournisseur.telephone}</TableCell>
+                    <TableCell>{fournisseur.numero}</TableCell>
+                    <TableCell className="font-medium">{fournisseur.intitule}</TableCell>
+                    <TableCell>{fournisseur.telephone}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
                           <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(fournisseur)}>

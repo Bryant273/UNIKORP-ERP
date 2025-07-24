@@ -166,18 +166,18 @@ export default function TransporteursPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px] text-center font-semibold">Numéro</TableHead>
-                  <TableHead className="text-center font-semibold">Intitulé</TableHead>
-                  <TableHead className="text-center font-semibold">Téléphone</TableHead>
+                  <TableHead className="w-[150px] font-semibold">Numéro</TableHead>
+                  <TableHead className="font-semibold">Intitulé</TableHead>
+                  <TableHead className="font-semibold">Téléphone</TableHead>
                   <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedTransporteurs.map((transporteur) => (
                   <TableRow key={transporteur.id} className="odd:bg-muted/50">
-                    <TableCell className="text-center">{transporteur.numero}</TableCell>
-                    <TableCell className="font-medium text-center">{transporteur.intitule}</TableCell>
-                    <TableCell className="text-center">{transporteur.telephone}</TableCell>
+                    <TableCell>{transporteur.numero}</TableCell>
+                    <TableCell className="font-medium">{transporteur.intitule}</TableCell>
+                    <TableCell>{transporteur.telephone}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
                           <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(transporteur)}>
