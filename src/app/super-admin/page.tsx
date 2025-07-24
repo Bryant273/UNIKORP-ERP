@@ -652,7 +652,7 @@ function OpeningModal() {
             </div>
             <DialogFooter>
                 {step > 1 && <Button variant="outline" onClick={() => setStep(s => s - 1)}>Précédent</Button>}
-                {step < 4 && <Button onClick={() => setStep(s => s + 1)} disabled={(step === 3 && totals.totalDebit !== totals.totalCredit)}>Suivant</Button>}
+                {step < 4 && <Button onClick={() => setStep(s => s + 1)}>Suivant</Button>}
                 {step === 4 && <DialogClose asChild><Button disabled={totals.totalDebit !== totals.totalCredit}>Ouvrir l'Exercice</Button></DialogClose>}
             </DialogFooter>
         </DialogContent>
