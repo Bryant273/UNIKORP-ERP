@@ -14,9 +14,15 @@ import {
 } from "@/components/ui/chart"
 import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend } from "recharts"
 import { Calendar } from "@/components/ui/calendar"
-import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText } from "lucide-react"
+import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText, Check, FolderOpen } from "lucide-react"
 import { type ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
+import { useAtom } from 'jotai'
+import { companyFileAtom } from '@/lib/store';
+import { useState, useEffect } from 'react';
 
 type Kpi = {
   title: string;
@@ -104,184 +110,241 @@ const fiscalDeadlines = [
     { date: "05/08/2024", label: "Déclaration Sociale Nominative (DSN)" },
 ];
 
+const mockCompanyFiles = [
+  "AUTO-GEST-2024-SocieteX",
+  "AUTO-GEST-2024-UnikorpCI",
+  "AUTO-GEST-2023-SocieteX",
+];
+
+function CompanyFileSelectionModal({ isOpen, onFileSelect }: { isOpen: boolean, onFileSelect: (file: string) => void }) {
+  return (
+    <Dialog open={isOpen}>
+      <DialogContent className="sm:max-w-md" hideCloseButton>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><FolderOpen /> Sélectionner un Fichier de Gestion</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <p className="text-muted-foreground mb-4">Veuillez sélectionner un fichier pour continuer.</p>
+          <div className="space-y-2">
+            {mockCompanyFiles.map(file => (
+              <Button
+                key={file}
+                variant="outline"
+                className="w-full justify-start h-12"
+                onClick={() => onFileSelect(file)}
+              >
+                {file}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export default function DashboardPage() {
+  const [companyFile, setCompanyFile] = useAtom(companyFileAtom);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Show modal only if company file is not set
+    if (!companyFile) {
+      setIsModalOpen(true);
+    }
+  }, [companyFile]);
+
+  const handleFileSelect = (file: string) => {
+    setCompanyFile(file);
+    setIsModalOpen(false);
+    toast({
+      title: "Fichier de gestion sélectionné",
+      description: `Vous êtes bien connecté au fichier ${file}`,
+      action: <Check className="h-5 w-5 text-green-500" />,
+    });
+  };
+
   return (
-    <div className="flex w-full flex-col gap-6">
-      {/* KPIs Globaux */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {mainKpis.map((kpi) => (
-          <Card key={kpi.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="text-sm font-medium tracking-tight">{kpi.title}</div>
-              <kpi.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
-              {kpi.breakdown ? (
-                <p className="text-xs text-muted-foreground">
-                  {kpi.breakdown}
-                </p>
-              ) : (
-                <p className={`text-xs ${kpi.changeType === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                  {kpi.change}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne Principale (Modules) */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-          {/* SKOMPTAB Card */}
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><BarChart2 className="h-5 w-5 text-primary"/>SKOMPTAB - Finance</CardTitle>
-              <CardDescription>Analyse des revenus, dépenses et rentabilité.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                    {skomptabKpis.map(kpi => (
-                        <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
-                            <p className="text-xs text-muted-foreground">{kpi.title}</p>
-                            <p className="text-lg font-bold">{kpi.value}</p>
-                        </div>
-                    ))}
-                </div>
-                <ChartContainer config={skomptabChartConfig} className="h-[200px] w-full flex-1">
-                    <ComposedChart data={skomptabChartData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                        <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
-                        <Legend />
-                        <Bar dataKey="revenus" fill="var(--color-revenus)" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="depenses" fill="var(--color-depenses)" radius={[4, 4, 0, 0]} />
-                        <Line type="monotone" dataKey="resultat" stroke="var(--color-resultat)" strokeWidth={2} dot={{ r: 4 }} />
-                    </ComposedChart>
-                </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* MARKOS Card */}
-           <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-500"/>MARKOS - Marketing</CardTitle>
-              <CardDescription>Performance des leads et taux de conversion.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                    {markosKpis.map(kpi => (
-                         <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
-                            <p className="text-xs text-muted-foreground">{kpi.title}</p>
-                            <p className="text-lg font-bold">{kpi.value}</p>
-                        </div>
-                    ))}
-                </div>
-                <ChartContainer config={markosChartConfig} className="h-[200px] w-full flex-1">
-                    <ComposedChart data={markosChartData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                        <YAxis yAxisId="left" orientation="left" stroke="var(--color-leads)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')}/>
-                        <YAxis yAxisId="right" orientation="right" stroke="var(--color-conversion)" tickLine={false} axisLine={false} fontSize={12} unit="%" />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => name === 'conversion' ? `${value}%` : `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
-                        <Legend />
-                        <Bar dataKey="leads" yAxisId="left" fill="var(--color-leads)" radius={[4, 4, 0, 0]} />
-                        <Line type="monotone" dataKey="conversion" yAxisId="right" stroke="var(--color-conversion)" strokeWidth={2} dot={{ r: 4 }} />
-                    </ComposedChart>
-                </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* LOGSON Card */}
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Ship className="h-5 w-5 text-orange-500"/>LOGSON - Logistique</CardTitle>
-              <CardDescription>Expéditions et retours sur le dernier semestre.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                    {logsonKpis.map(kpi => (
-                         <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
-                            <p className="text-xs text-muted-foreground">{kpi.title}</p>
-                            <p className="text-lg font-bold">{kpi.value}</p>
-                        </div>
-                    ))}
-                </div>
-                <ChartContainer config={logsonChartConfig} className="h-[200px] w-full flex-1">
-                    <ComposedChart data={logsonChartData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                        <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')}/>
-                        <YAxis yAxisId="right" orientation="right" stroke="var(--color-retours)" tickLine={false} axisLine={false} fontSize={12} />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => (value as number).toLocaleString('fr-FR')} />} />
-                        <Legend />
-                        <Bar dataKey="expeditions" yAxisId="left" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
-                        <Line type="monotone" dataKey="retours" yAxisId="right" stroke="var(--color-retours)" strokeWidth={2} dot={{ r: 4 }} />
-                    </ComposedChart>
-                </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* SOCIX Card */}
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-purple-500"/>SOCIX - RH</CardTitle>
-              <CardDescription>Flux des employés et effectif total.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                    {socixKpis.map(kpi => (
-                         <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
-                            <p className="text-xs text-muted-foreground">{kpi.title}</p>
-                            <p className="text-lg font-bold">{kpi.value}</p>
-                        </div>
-                    ))}
-                </div>
-                <ChartContainer config={socixChartConfig} className="h-[200px] w-full flex-1">
-                     <ComposedChart data={socixChartData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                        <YAxis yAxisId="left" orientation="left" stroke="var(--color-recrutements)" tickLine={false} axisLine={false} fontSize={12} />
-                        <YAxis yAxisId="right" orientation="right" stroke="var(--color-effectif)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => (value as number).toLocaleString('fr-FR')} />} />
-                        <Legend />
-                        <Bar dataKey="recrutements" stackId="a" yAxisId="left" fill="var(--color-recrutements)" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="departs" stackId="a" yAxisId="left" fill="var(--color-departs)" radius={[4, 4, 0, 0]} />
-                        <Line type="monotone" dataKey="effectif" yAxisId="right" stroke="var(--color-effectif)" strokeWidth={2} dot={{ r: 4 }} />
-                    </ComposedChart>
-                </ChartContainer>
-            </CardContent>
-          </Card>
+    <>
+      <CompanyFileSelectionModal isOpen={isModalOpen} onFileSelect={handleFileSelect} />
+      <div className="flex w-full flex-col gap-6">
+        {/* KPIs Globaux */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {mainKpis.map((kpi) => (
+            <Card key={kpi.title}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="text-sm font-medium tracking-tight">{kpi.title}</div>
+                <kpi.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{kpi.value}</div>
+                {kpi.breakdown ? (
+                  <p className="text-xs text-muted-foreground">
+                    {kpi.breakdown}
+                  </p>
+                ) : (
+                  <p className={`text-xs ${kpi.changeType === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+                    {kpi.change}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Colonne Latérale */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Échéances Fiscales</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={new Date()}
-                className="rounded-md border p-0"
-              />
-              <div className="mt-4 space-y-2">
-                {fiscalDeadlines.map(deadline => (
-                    <div key={deadline.label} className="flex items-center justify-between text-sm p-2 rounded-md bg-muted/50">
-                        <p>{deadline.label}</p>
-                        <Badge variant="outline">{deadline.date}</Badge>
-                    </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Colonne Principale (Modules) */}
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+            {/* SKOMPTAB Card */}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><BarChart2 className="h-5 w-5 text-primary"/>SKOMPTAB - Finance</CardTitle>
+                <CardDescription>Analyse des revenus, dépenses et rentabilité.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                      {skomptabKpis.map(kpi => (
+                          <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">{kpi.title}</p>
+                              <p className="text-lg font-bold">{kpi.value}</p>
+                          </div>
+                      ))}
+                  </div>
+                  <ChartContainer config={skomptabChartConfig} className="h-[200px] w-full flex-1">
+                      <ComposedChart data={skomptabChartData}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                          <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
+                          <Legend />
+                          <Bar dataKey="revenus" fill="var(--color-revenus)" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="depenses" fill="var(--color-depenses)" radius={[4, 4, 0, 0]} />
+                          <Line type="monotone" dataKey="resultat" stroke="var(--color-resultat)" strokeWidth={2} dot={{ r: 4 }} />
+                      </ComposedChart>
+                  </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* MARKOS Card */}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-500"/>MARKOS - Marketing</CardTitle>
+                <CardDescription>Performance des leads et taux de conversion.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                      {markosKpis.map(kpi => (
+                          <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">{kpi.title}</p>
+                              <p className="text-lg font-bold">{kpi.value}</p>
+                          </div>
+                      ))}
+                  </div>
+                  <ChartContainer config={markosChartConfig} className="h-[200px] w-full flex-1">
+                      <ComposedChart data={markosChartData}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                          <YAxis yAxisId="left" orientation="left" stroke="var(--color-leads)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')}/>
+                          <YAxis yAxisId="right" orientation="right" stroke="var(--color-conversion)" tickLine={false} axisLine={false} fontSize={12} unit="%" />
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => name === 'conversion' ? `${value}%` : `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
+                          <Legend />
+                          <Bar dataKey="leads" yAxisId="left" fill="var(--color-leads)" radius={[4, 4, 0, 0]} />
+                          <Line type="monotone" dataKey="conversion" yAxisId="right" stroke="var(--color-conversion)" strokeWidth={2} dot={{ r: 4 }} />
+                      </ComposedChart>
+                  </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* LOGSON Card */}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Ship className="h-5 w-5 text-orange-500"/>LOGSON - Logistique</CardTitle>
+                <CardDescription>Expéditions et retours sur le dernier semestre.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                      {logsonKpis.map(kpi => (
+                          <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">{kpi.title}</p>
+                              <p className="text-lg font-bold">{kpi.value}</p>
+                          </div>
+                      ))}
+                  </div>
+                  <ChartContainer config={logsonChartConfig} className="h-[200px] w-full flex-1">
+                      <ComposedChart data={logsonChartData}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                          <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')}/>
+                          <YAxis yAxisId="right" orientation="right" stroke="var(--color-retours)" tickLine={false} axisLine={false} fontSize={12} />
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value) => (value as number).toLocaleString('fr-FR')} />} />
+                          <Legend />
+                          <Bar dataKey="expeditions" yAxisId="left" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
+                          <Line type="monotone" dataKey="retours" yAxisId="right" stroke="var(--color-retours)" strokeWidth={2} dot={{ r: 4 }} />
+                      </ComposedChart>
+                  </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* SOCIX Card */}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-purple-500"/>SOCIX - RH</CardTitle>
+                <CardDescription>Flux des employés et effectif total.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                      {socixKpis.map(kpi => (
+                          <div key={kpi.title} className="p-2 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">{kpi.title}</p>
+                              <p className="text-lg font-bold">{kpi.value}</p>
+                          </div>
+                      ))}
+                  </div>
+                  <ChartContainer config={socixChartConfig} className="h-[200px] w-full flex-1">
+                      <ComposedChart data={socixChartData}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                          <YAxis yAxisId="left" orientation="left" stroke="var(--color-recrutements)" tickLine={false} axisLine={false} fontSize={12} />
+                          <YAxis yAxisId="right" orientation="right" stroke="var(--color-effectif)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value) => (value as number).toLocaleString('fr-FR')} />} />
+                          <Legend />
+                          <Bar dataKey="recrutements" stackId="a" yAxisId="left" fill="var(--color-recrutements)" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="departs" stackId="a" yAxisId="left" fill="var(--color-departs)" radius={[4, 4, 0, 0]} />
+                          <Line type="monotone" dataKey="effectif" yAxisId="right" stroke="var(--color-effectif)" strokeWidth={2} dot={{ r: 4 }} />
+                      </ComposedChart>
+                  </ChartContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Colonne Latérale */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Échéances Fiscales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Calendar
+                  mode="single"
+                  selected={new Date()}
+                  className="rounded-md border p-0"
+                />
+                <div className="mt-4 space-y-2">
+                  {fiscalDeadlines.map(deadline => (
+                      <div key={deadline.label} className="flex items-center justify-between text-sm p-2 rounded-md bg-muted/50">
+                          <p>{deadline.label}</p>
+                          <Badge variant="outline">{deadline.date}</Badge>
+                      </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

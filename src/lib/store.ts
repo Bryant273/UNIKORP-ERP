@@ -1,5 +1,24 @@
 
+
 import { atom } from 'jotai';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
+
+// --- SESSION STORAGE ATOMS ---
+
+// Define the type for the user's role
+export type UserRole = 'Admin-Gestionnaire' | 'Compte Entreprise' | 'Gestionnaire (SKOMPTAB)' | 'Stagiaire (SKOMPTAB)' | 'Employé' | null;
+
+// Use session storage which clears when the browser tab is closed
+const sessionJSONStorage = <T>(key: string) => createJSONStorage<T>(() => sessionStorage);
+
+// Create an atom to store the user's role, persisting it in session storage
+export const userRoleAtom = atomWithStorage<UserRole>('userRole', null, sessionJSONStorage<UserRole>('userRole'));
+
+// Create an atom to store the selected company file name
+export const companyFileAtom = atomWithStorage<string | null>('companyFile', null, sessionJSONStorage<string | null>('companyFile'));
+
+
+// --- IN-MEMORY ATOMS ---
 
 type CompteTiers = {
   id: number;

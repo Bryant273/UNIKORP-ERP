@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { ModuleNav } from './module-nav';
 
 const noHeaderPaths = ['/login'];
-const noSidebarPaths = ['/login', '/super-admin', '/employee-dashboard', '/dashboard'];
+const noSidebarPaths = ['/login', '/super-admin', '/employee-dashboard'];
 
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -30,8 +30,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             'flex-1 overflow-y-auto',
             // Default padding for pages with a sidebar
             showSidebar && 'p-6',
+             // Padding for dashboard (no sidebar)
+            pathname === '/dashboard' && 'p-4 sm:p-6 lg:p-8',
             // Specific padding for pages without a sidebar but with a header
-            !showSidebar && showHeader && 'p-4 sm:p-6 lg:p-8',
+            !showSidebar && showHeader && pathname !== '/dashboard' && 'p-4 sm:p-6 lg:p-8',
             // Centering for the login page (no header, no sidebar)
             !showHeader && !showSidebar && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', 
             // Background for all other pages

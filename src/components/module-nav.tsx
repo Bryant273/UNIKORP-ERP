@@ -12,7 +12,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useAtom } from 'jotai';
-import { userRoleAtom } from '@/lib/session-store';
+import { userRoleAtom } from '@/lib/store';
 
 const navLinks = [
   {

@@ -420,6 +420,12 @@ export function AppSidebar() {
 
   const { dashboardLink } = getNavForPath(pathname);
 
+  const showSidebar = !['/login', '/super-admin', '/employee-dashboard', '/dashboard'].includes(pathname);
+
+  if (!showSidebar) {
+    return null;
+  }
+
   if (!isMounted) {
     return (
         <aside className="hidden w-72 flex-col border-r bg-card font-roboto sm:flex">
