@@ -24,11 +24,14 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ComposedChart, Line } from "recharts";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy, BookLock, BookUp, Loader2, BookDown, Upload } from 'lucide-react';
+import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy, BookLock, BookUp, Loader2, BookDown, Upload, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
+import ActionsPage from '@/app/actions/page';
+import { useAtom } from 'jotai';
+import { userRoleAtom } from '@/lib/store';
 
 // --- MOCK DATA ---
 const skomptabKpis = [
@@ -64,7 +67,7 @@ const logsonChartData = [ { month: "Jan", expeditions: 1204, retours: 18 }, { mo
 const logsonChartConfig = { expeditions: { label: "Expéditions", color: "hsl(var(--chart-4))" }, retours: { label: "Retours", color: "hsl(var(--chart-1))" } } satisfies ChartConfig;
 
 // --- USER MANAGEMENT DATA ---
-type UserRole = 'Admin-Gestionnaire' | 'Gestionnaire (SKOMPTAB)' | 'Stagiaire (SKOMPTAB)' | 'Employé';
+type UserRole = 'Admin-Gestionnaire' | 'Compte Entreprise' | 'Gestionnaire (SKOMPTAB)' | 'Stagiaire (SKOMPTAB)' | 'Employé';
 type UserStatus = 'Actif' | 'Suspendu';
 type User = {
     id: string;
@@ -727,29 +730,34 @@ function ClosingModal() {
 
 
 export default function SuperAdminPage() {
+    const [role] = useAtom(userRoleAtom);
+    const tabsList = [
+        { value: "dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+        { value: "users", label: "Utilisateurs", icon: Users },
+        { value: "company", label: "Infos Entreprise", icon: Building },
+        { value: "actions", label: "Actions", icon: History, role: "Compte Entreprise" },
+        { value: "access", label: "Accès ERP", icon: KeyRound },
+    ];
+    
+    const availableTabs = tabsList.filter(tab => !tab.role || tab.role === role);
+
     return (
         <div className="w-full">
             <Tabs defaultValue="dashboard">
                 <TabsList className={cn(
-                    "grid w-full grid-cols-4 h-auto p-0 rounded-none bg-primary",
-                    "border-b border-primary/50"
+                    "grid w-full h-auto p-0 rounded-none bg-primary border-b border-primary/50",
+                    `grid-cols-${availableTabs.length}`
                   )}>
-                    <TabsTrigger value="dashboard" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
-                        <LayoutDashboard className="mr-2 h-4 w-4" />Tableau de bord
-                    </TabsTrigger>
-                    <TabsTrigger value="users" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
-                        <Users className="mr-2 h-4 w-4" />Utilisateurs
-                    </TabsTrigger>
-                    <TabsTrigger value="company" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
-                        <Building className="mr-2 h-4 w-4" />Infos Entreprise
-                    </TabsTrigger>
-                    <TabsTrigger value="access" className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
-                        <KeyRound className="mr-2 h-4 w-4" />Accès ERP
-                    </TabsTrigger>
+                    {availableTabs.map(tab => (
+                         <TabsTrigger key={tab.value} value={tab.value} className="text-white/80 hover:text-white data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md rounded-t-md rounded-b-none py-3">
+                            <tab.icon className="mr-2 h-4 w-4" />{tab.label}
+                        </TabsTrigger>
+                    ))}
                 </TabsList>
                 <TabsContent value="dashboard"><DashboardTab /></TabsContent>
                 <TabsContent value="users"><UsersTab /></TabsContent>
                 <TabsContent value="company"><CompanyInfoTab /></TabsContent>
+                {role === 'Compte Entreprise' && <TabsContent value="actions"><div className="mt-6"><ActionsPage/></div></TabsContent>}
                 <TabsContent value="access"><ErpAccessTab /></TabsContent>
             </Tabs>
         </div>
