@@ -410,7 +410,7 @@ function UserDetailModal({ isOpen, onClose, user }: { isOpen: boolean; onClose: 
 }
 
 const regions = {
-    UEMOA: [{ code: 'CI', name: 'Côte d\'Ivoire' }, { code: 'SN', name: 'Sénégal' }, { code: 'BJ', name: 'Bénin' }],
+    'UEMOA': [{ code: 'CI', name: 'Côte d\'Ivoire' }, { code: 'SN', name: 'Sénégal' }, { code: 'BJ', name: 'Bénin' }],
     'Amérique du Nord': [{ code: 'US', name: 'États-Unis' }, { code: 'CA', name: 'Canada' }],
     'Europe': [{ code: 'FR', name: 'France' }, { code: 'DE', name: 'Allemagne' }, { code: 'ES', name: 'Espagne' }],
     'Asie-Pacifique': [{ code: 'JP', name: 'Japon' }, { code: 'CN', name: 'Chine' }, { code: 'SG', name: 'Singapour' }, { code: 'IN', name: 'Inde' }],
@@ -422,28 +422,71 @@ const FormField = ({ label, children }: { label: string, children: React.ReactNo
     <div className="space-y-1.5"><Label className="text-xs font-semibold">{label} <span className="text-destructive">*</span></Label>{children}</div>
 );
 
+// --- FORM COMPONENTS PER REGION ---
+
+const FormRegionDefault = () => (
+    <div className="p-4 border rounded-md h-40 flex items-center justify-center text-center text-muted-foreground bg-muted/50">
+        <p>Sélectionnez une région et un pays pour afficher le formulaire correspondant.</p>
+    </div>
+);
+
 const FormRegionUEMOA = () => (
-    <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3']} className="w-full">
-        <AccordionItem value="item-1"><AccordionTrigger>Informations légales OHADA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Raison Sociale"><Input /></FormField><FormField label="Numéro RCCM"><Input /></FormField><FormField label="Numéro NIU"><Input /></FormField><FormField label="Numéro de Contribuable"><Input /></FormField><FormField label="Forme Juridique OHADA"><Input /></FormField><FormField label="Capital Social"><Input type="number" /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-2"><AccordionTrigger>Localisation & Fiscalité UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Adresse Siège Social"><Textarea /></FormField><FormField label="Centre des Impôts"><Input /></FormField><FormField label="Régime Fiscal"><Input /></FormField><FormField label="Numéro de Patente"><Input /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Devise"><Input value="Franc CFA (XOF)" disabled /></FormField><FormField label="Plan Comptable"><Input value="SYSCOHADA" disabled /></FormField></div></AccordionContent></AccordionItem>
-    </Accordion>
-);
-const FormRegionUSA = () => (
     <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
-        <AccordionItem value="item-1"><AccordionTrigger>Informations légales & Fiscales USA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Business Name"><Input /></FormField><FormField label="EIN"><Input /></FormField><FormField label="State of Incorporation"><Input /></FormField><FormField label="Business Entity Type"><Input /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-2"><AccordionTrigger>Paramètres ERP USA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="USD" disabled /></FormField><FormField label="Plan Comptable"><Input value="US GAAP" disabled /></FormField></div></AccordionContent></AccordionItem>
-    </Accordion>
-);
-const FormRegionEU = () => (
-    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
-        <AccordionItem value="item-1"><AccordionTrigger>Informations légales & Fiscales UE</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Entity Name"><Input /></FormField><FormField label="VAT Identification Number"><Input /></FormField><FormField label="EORI Number"><Input /></FormField><FormField label="Country of Incorporation"><Input /></FormField></div></AccordionContent></AccordionItem>
-        <AccordionItem value="item-2"><AccordionTrigger>Paramètres ERP Europe</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="EUR" disabled /></FormField><FormField label="Plan Comptable"><Input value="PCG Local/IFRS" disabled /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-1"><AccordionTrigger>Informations légales OHADA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Raison Sociale"><Input /></FormField><FormField label="Numéro RCCM"><Input /></FormField><FormField label="Numéro NIU"><Input /></FormField><FormField label="Numéro de Contribuable"><Input /></FormField><FormField label="Forme Juridique OHADA"><Input /></FormField><FormField label="Capital Social"><Input type="number" /></FormField><FormField label="Date d'Immatriculation RCCM"><Input type="date" /></FormField><FormField label="Greffe de Rattachement"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Localisation &amp; Fiscalité UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><div className="col-span-2"><FormField label="Adresse Siège Social"><Textarea /></FormField></div><FormField label="Commune, Département, Région"><Input /></FormField><FormField label="Centre des Impôts"><Input /></FormField><FormField label="Téléphone"><Input /></FormField><FormField label="Email"><Input type="email" /></FormField><FormField label="Régime Fiscal"><Input /></FormField><FormField label="Numéro de Patente"><Input /></FormField><FormField label="Code Activité UEMOA"><Input /></FormField><FormField label="Commissaire aux Comptes"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP UEMOA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Devise"><Input value="Franc CFA (XOF)" disabled /></FormField><FormField label="Plan Comptable"><Input value="SYSCOHADA" disabled /></FormField><FormField label="Fuseau Horaire"><Input value="GMT" disabled /></FormField><FormField label="Langues"><Input value="Français + Locale" /></FormField></div></AccordionContent></AccordionItem>
     </Accordion>
 );
 
-const FormRegionDefault = () => (
-    <Card className="mt-4"><CardContent className="p-6 text-center text-muted-foreground">Le formulaire pour cette région n'est pas encore disponible.</CardContent></Card>
+const FormRegionUSA = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Informations légales obligatoires</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Business Name"><Input /></FormField><FormField label="DBA (Doing Business As)"><Input /></FormField><FormField label="EIN (Employer Identification Number)"><Input /></FormField><FormField label="State of Incorporation"><Input /></FormField><FormField label="Business Entity Type"><Input /></FormField><FormField label="Registered Agent"><Input /></FormField><FormField label="Date of Formation"><Input type="date" /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Adresses et contact</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><div className="col-span-2"><FormField label="Principal Business Address"><Textarea /></FormField></div><div className="col-span-2"><FormField label="Registered Office Address"><Textarea /></FormField></div><FormField label="Phone"><Input /></FormField><FormField label="Email"><Input type="email" /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Informations fiscales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Federal Tax Classification"><Input /></FormField><FormField label="State Tax ID Numbers"><Input /></FormField><FormField label="Sales Tax Permit Numbers"><Input /></FormField><FormField label="NAICS Code"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-4"><AccordionTrigger>Paramètres ERP USA</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="USD" disabled /></FormField><FormField label="Time Zone"><Input /></FormField><FormField label="Tax Year"><Input /></FormField><FormField label="Plan Comptable"><Input value="US GAAP" disabled /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+
+const FormRegionCA = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Informations légales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Name"><Input /></FormField><FormField label="Operating Name"><Input /></FormField><FormField label="Business Number (BN)"><Input /></FormField><FormField label="Corporation Number"><Input /></FormField><FormField label="Province/Territory of Incorporation"><Input /></FormField><FormField label="Business Structure"><Input /></FormField><div className="col-span-2"><FormField label="Registered Office"><Textarea /></FormField></div></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Informations fiscales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="GST/HST Registration Number"><Input /></FormField><FormField label="Provincial Tax Numbers"><Input /></FormField><FormField label="NAICS Code"><Input /></FormField><FormField label="Payroll Account Numbers"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Paramètres ERP Canada</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="CAD" disabled /></FormField><FormField label="Languages"><Input value="English/French" /></FormField><FormField label="Plan Comptable"><Input value="ASPE/IFRS" /></FormField><FormField label="Tax Year"><Input /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+
+const FormRegionEU = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Informations légales</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Legal Entity Name"><Input /></FormField><FormField label="Company Registration Number"><Input /></FormField><FormField label="VAT Identification Number"><Input /></FormField><FormField label="EORI Number"><Input /></FormField><FormField label="Legal Form"><Input /></FormField><FormField label="Share Capital"><Input type="number" /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Paramètres ERP Europe</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Currency"><Input value="EUR" /></FormField><FormField label="Plan Comptable"><Input value="PCG Local/IFRS" /></FormField><div className="flex items-center space-x-2"><Checkbox id="gdpr"/><Label htmlFor="gdpr">GDPR Compliance Enabled</Label></div></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+
+const FormRegionAsia = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Japon</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Corporate Name (Kanji/Katakana/Romaji)"><Input /></FormField><FormField label="Corporate Number (法人番号)"><Input /></FormField><FormField label="Registration Prefecture"><Input /></FormField><FormField label="Business License Numbers"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Chine</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Company Name (Chinese/English)"><Input /></FormField><FormField label="Unified Social Credit Code"><Input /></FormField><FormField label="Business License Number"><Input /></FormField><FormField label="Organization Code"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Singapour</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Company Name"><Input /></FormField><FormField label="UEN (Unique Entity Number)"><Input /></FormField><FormField label="Company Type"><Input /></FormField><FormField label="ACRA Registration"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-4"><AccordionTrigger>Inde</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Company Name"><Input /></FormField><FormField label="CIN (Corporate Identity Number)"><Input /></FormField><FormField label="PAN (Permanent Account Number)"><Input /></FormField><FormField label="GST Registration Number"><Input /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+
+const FormRegionNorthAfrica = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Maroc</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Numéro RC"><Input /></FormField><FormField label="Identifiant Fiscal (IF)"><Input /></FormField><FormField label="Numéro CNSS"><Input /></FormField><FormField label="ICE"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Tunisie</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Numéro Registre de Commerce"><Input /></FormField><FormField label="Matricule Fiscal"><Input /></FormField><FormField label="Code TVA"><Input /></FormField><FormField label="Code Douane"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Algérie</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Numéro RC"><Input /></FormField><FormField label="Numéro NIF"><Input /></FormField><FormField label="Numéro NIS"><Input /></FormField><FormField label="Code d'Activité"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-4"><AccordionTrigger>Égypte</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Commercial Registration Number"><Input /></FormField><FormField label="Tax Card Number"><Input /></FormField><FormField label="Social Insurance Number"><Input /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
+);
+
+const FormRegionOthers = () => (
+    <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+        <AccordionItem value="item-1"><AccordionTrigger>Afrique du Sud</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Company Registration Number"><Input /></FormField><FormField label="VAT Registration Number"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-2"><AccordionTrigger>Brésil</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="CNPJ"><Input /></FormField><FormField label="Inscrição Estadual"><Input /></FormField><FormField label="CNAE Code"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-3"><AccordionTrigger>Australie</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="ACN"><Input /></FormField><FormField label="ABN"><Input /></FormField></div></AccordionContent></AccordionItem>
+        <AccordionItem value="item-4"><AccordionTrigger>Émirats Arabes Unis</AccordionTrigger><AccordionContent className="p-4 space-y-4"><div className="grid grid-cols-2 gap-4"><FormField label="Trade License Number"><Input /></FormField><FormField label="VAT Registration Number"><Input /></FormField></div></AccordionContent></AccordionItem>
+    </Accordion>
 );
 
 function CompanyInfoTab() {
@@ -466,8 +509,14 @@ function CompanyInfoTab() {
   const renderForm = () => {
     switch(region) {
         case 'UEMOA': return <FormRegionUEMOA />;
-        case 'Amérique du Nord': return country === 'US' ? <FormRegionUSA /> : <FormRegionDefault />;
+        case 'Amérique du Nord':
+            if (country === 'US') return <FormRegionUSA />;
+            if (country === 'CA') return <FormRegionCA />;
+            return <FormRegionDefault />;
         case 'Europe': return <FormRegionEU />;
+        case 'Asie-Pacifique': return <FormRegionAsia />;
+        case 'Afrique du Nord': return <FormRegionNorthAfrica />;
+        case 'Autres': return <FormRegionOthers />;
         default: return <FormRegionDefault />;
     }
   }
