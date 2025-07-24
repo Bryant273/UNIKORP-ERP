@@ -24,10 +24,11 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ComposedChart, Line } from "recharts";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy, BookLock, BookUp, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy, BookLock, BookUp, Loader2, BookDown, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 
 // --- MOCK DATA ---
 const skomptabKpis = [
@@ -476,6 +477,7 @@ function CompanyInfoTab() {
   const [region, setRegion] = useState<keyof typeof regions | ''>('UEMOA');
   const [country, setCountry] = useState('CI');
   const { toast } = useToast();
+  const [logoPreview, setLogoPreview] = useState<string | null>("https://placehold.co/200x80.png");
 
   const handleRegionChange = (value: keyof typeof regions | '') => {
     setRegion(value);
@@ -487,7 +489,20 @@ function CompanyInfoTab() {
         title: "Configuration sauvegardée",
         description: `Les informations pour le pays ${country} dans la région ${region} ont été enregistrées.`,
     })
-  }
+  };
+
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+        toast({ title: "Logo mis à jour", description: "Le nouveau logo est prêt à être sauvegardé." });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   const renderForm = () => {
     if (!region || !country) return <FormRegionDefault />;
@@ -521,11 +536,28 @@ function CompanyInfoTab() {
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 space-y-6">
+       <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+            <CardTitle>Identité de l'entreprise</CardTitle>
+            <CardDescription>Gérez le logo de votre entreprise.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-6">
+            <div className="w-48 h-20 rounded-md border bg-muted flex items-center justify-center">
+                {logoPreview ? <Image src={logoPreview} alt="Aperçu du logo" width={192} height={80} className="object-contain h-full" data-ai-hint="company logo"/> : <span className="text-xs text-muted-foreground">Aucun logo</span>}
+            </div>
+            <div className="flex-1">
+                 <Label htmlFor="logo-upload">Changer le logo</Label>
+                 <Input id="logo-upload" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} />
+                 <p className="text-xs text-muted-foreground mt-1">PNG, JPG, SVG. Recommandé: 200x80px.</p>
+            </div>
+        </CardContent>
+      </Card>
+
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-            <CardTitle>Informations sur l'entreprise</CardTitle>
-            <CardDescription>Configurez les informations légales et fiscales de votre entreprise en fonction de sa localisation.</CardDescription>
+            <CardTitle>Informations légales et fiscales</CardTitle>
+            <CardDescription>Configurez les informations en fonction de la localisation de votre entreprise.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
@@ -652,7 +684,8 @@ function OpeningModal() {
             </div>
             <DialogFooter>
                 {step > 1 && <Button variant="outline" onClick={() => setStep(s => s - 1)}>Précédent</Button>}
-                {step < 4 && <Button onClick={() => setStep(s => s + 1)}>Suivant</Button>}
+                {step < 3 && <Button onClick={() => setStep(s => s + 1)}>Suivant</Button>}
+                {step === 3 && <Button onClick={() => setStep(s => s + 1)}>Suivant</Button>}
                 {step === 4 && <DialogClose asChild><Button disabled={totals.totalDebit !== totals.totalCredit}>Ouvrir l'Exercice</Button></DialogClose>}
             </DialogFooter>
         </DialogContent>
