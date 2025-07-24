@@ -1,10 +1,11 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { FileText, CalendarDays, Plane, Briefcase, User, Mail, Phone, Building, CheckCircle, FileSignature, Hourglass, Download, Pencil, History, Upload } from 'lucide-react';
+import { FileText, CalendarDays, Plane, Briefcase, User, Mail, Phone, Building, CheckCircle, FileSignature, Hourglass, Download, Pencil, History, Upload, Eye, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -325,7 +326,14 @@ export default function EmployeeDashboardPage() {
 
 // --- Edit Profile Modal Component ---
 
-function EditProfileModal({ isOpen, onClose, onSave, currentUser }: { isOpen: boolean, onClose: () => void, onSave: (data: Partial<typeof currentUser>, avatar: File | null) => void, currentUser: typeof employee }) {
+type EditProfileModalProps = {
+    isOpen: boolean, 
+    onClose: () => void, 
+    onSave: (data: Partial<typeof employee>, avatar: File | null) => void, 
+    currentUser: typeof employee
+}
+
+function EditProfileModal({ isOpen, onClose, onSave, currentUser }: EditProfileModalProps) {
     const [formData, setFormData] = useState<Partial<typeof currentUser>>(currentUser);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser.avatarUrl);
