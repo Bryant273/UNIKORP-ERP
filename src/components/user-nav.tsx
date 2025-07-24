@@ -13,8 +13,29 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { User, Settings, LifeBuoy, LogOut, Zap, Bell, History, MessageCircleQuestion } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAtom } from 'jotai';
+import { companyFileAtom, userRoleAtom } from '@/lib/store';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserNav() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [, setRole] = useAtom(userRoleAtom);
+  const [, setCompanyFile] = useAtom(companyFileAtom);
+
+  const handleLogout = () => {
+    // Reset global state
+    setRole(null);
+    setCompanyFile(null);
+    // Redirect to login page
+    router.push('/login');
+    toast({
+        title: 'Déconnexion réussie',
+        description: 'Vous avez été déconnecté de votre session.',
+    });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -74,7 +95,7 @@ export function UserNav() {
               <span>Contacter le Support</span>
             </Link>
           </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Déconnexion</span>
         </DropdownMenuItem>

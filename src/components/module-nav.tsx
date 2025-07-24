@@ -91,7 +91,7 @@ export function ModuleNav() {
                 )}
                 >
                 <ShieldCheck className="h-4 w-4" />
-                Super Admin
+                Page Admin
                 </div>
             </Link>
         )}
