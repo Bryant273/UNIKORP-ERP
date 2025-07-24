@@ -89,7 +89,9 @@ const getDefaultInvoiceData = (template: InvoiceTemplate): Omit<InvoiceData, 'id
         companyName: template.companyName,
         companyAddress: template.companyAddress,
         companyLogoUrl: template.companyLogoUrl,
-        primaryColor: template.primaryColor
+        primaryColor: template.primaryColor,
+        preparedItems: [],
+        expeditions: [],
     };
 };
 
@@ -408,10 +410,10 @@ export default function ElaborationFacturesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px] text-center font-semibold">Date d'émission</TableHead>
-                            <TableHead className="text-center font-semibold">Tiers</TableHead>
-                            <TableHead className="text-center font-semibold">Libellé</TableHead>
-                            <TableHead className="w-[150px] text-center font-semibold">Montant TTC</TableHead>
+                            <TableHead className="w-[120px] font-semibold">N° Facture</TableHead>
+                            <TableHead className="font-semibold">Client</TableHead>
+                            <TableHead className="text-center font-semibold">Date d'émission</TableHead>
+                            <TableHead className="w-[150px] text-right font-semibold">Montant TTC</TableHead>
                             <TableHead className="w-[200px] text-center font-semibold">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -420,10 +422,10 @@ export default function ElaborationFacturesPage() {
                             const { total } = calculateTotals(invoice);
                             return (
                                 <TableRow key={invoice.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-mono text-xs">{invoice.invoiceNumber}</TableCell>
+                                    <TableCell className="font-medium">{invoice.clientName}</TableCell>
                                     <TableCell className="text-center">{new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}</TableCell>
-                                    <TableCell className="font-medium text-center">{invoice.clientName}</TableCell>
-                                    <TableCell className="text-center">{invoice.invoiceTitle}</TableCell>
-                                    <TableCell className="text-center">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
+                                    <TableCell className="text-right">{total.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenViewSheet(invoice)}><Eye className="h-4 w-4" /></Button>

@@ -10,7 +10,7 @@ import { PlusCircle, Truck, Download, Eye, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAtom } from 'jotai';
-import { invoicesAtom, transporteursAtom, type InvoiceData, type PreparationStatus, type ExpeditedItem, type Expedition } from '@/lib/store';
+import { invoicesAtom, transporteursAtom, produitsAtom, mouvementsAtom, type InvoiceData, type PreparationStatus, type ExpeditedItem, type Expedition } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,8 @@ const ITEMS_PER_PAGE = 10;
 
 export default function ExpeditionPage() {
     const [invoices, setInvoices] = useAtom(invoicesAtom);
+    const [, setProduits] = useAtom(produitsAtom);
+    const [, setMouvements] = useAtom(mouvementsAtom);
     const { toast } = useToast();
     const [isShipModalOpen, setIsShipModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -60,6 +62,37 @@ export default function ExpeditionPage() {
                 ...expedition
             };
             
+            // Update stock and movements
+            setProduits(prevProduits => {
+                const updatedProduits = [...prevProduits];
+                const newMouvements = [];
+
+                for(const item of newExpedition.items) {
+                    const preparedItem = inv.preparedItems.find(p => p.ligneCommandeId === item.ligneCommandeId);
+                    if (preparedItem) {
+                        const product = prevProduits.find(p => p.name === preparedItem.description);
+                        if(product) {
+                            const productIndex = updatedProduits.findIndex(p => p.id === product.id);
+                            if (productIndex > -1) {
+                                updatedProduits[productIndex] = { ...product, stock: product.stock - item.quantiteLivree };
+                                newMouvements.push({
+                                    id: `mvt-${Date.now()}-${product.id}`,
+                                    date: new Date().toISOString(),
+                                    produitId: product.id,
+                                    type: 'Sortie' as const,
+                                    quantite: item.quantiteLivree,
+                                    document: newExpedition.numeroBonLivraison,
+                                    entrepotSourceId: product.entrepotId,
+                                });
+                            }
+                        }
+                    }
+                }
+                setMouvements(prevMouvements => [...prevMouvements, ...newMouvements]);
+                return updatedProduits;
+            });
+
+
             const allPreparedItems = new Map(inv.preparedItems.map(item => [item.ligneCommandeId, item.quantiteAPreparer]));
             const allExpeditedItems = [...existingExpeditions, newExpedition]
                 .flatMap(exp => exp.items)
@@ -189,7 +222,7 @@ export default function ExpeditionPage() {
 
             <ViewExpeditionsModal
                 isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
+                onClose={() => setViewingInvoice(null)}
                 invoice={viewingInvoice}
             />
         </>

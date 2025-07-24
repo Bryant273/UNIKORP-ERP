@@ -139,7 +139,7 @@ export default function ProspectsPage() {
     // Add to clients list
     setClients(prevClients => [...prevClients, {
         ...prospectToConvert,
-        numero: `C-${prospectToConvert.numero}` // Change prefix
+        numero: `C-${prospectToConvert.numero}` // Change prefix to signify client
     }]);
     
     // Remove from prospects list
@@ -147,7 +147,7 @@ export default function ProspectsPage() {
 
     toast({
         title: "Conversion réussie !",
-        description: `${prospectToConvert.intitule} est maintenant un client.`,
+        description: `${prospectToConvert.intitule} est maintenant un client et a été ajouté dans les comptes tiers de SKOMPTAB.`,
     })
   };
 
@@ -194,18 +194,18 @@ export default function ProspectsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px] text-center font-semibold">Numéro</TableHead>
-                  <TableHead className="text-center font-semibold">Intitulé</TableHead>
-                  <TableHead className="text-center font-semibold">Téléphone</TableHead>
+                  <TableHead className="w-[150px] font-semibold">Numéro</TableHead>
+                  <TableHead className="font-semibold">Intitulé</TableHead>
+                  <TableHead className="font-semibold">Téléphone</TableHead>
                   <TableHead className="w-[150px] text-center font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedProspects.map((prospect) => (
                   <TableRow key={prospect.id} className="odd:bg-muted/50">
-                    <TableCell className="text-center">{prospect.numero}</TableCell>
-                    <TableCell className="font-medium text-center">{prospect.intitule}</TableCell>
-                    <TableCell className="text-center">{prospect.telephone}</TableCell>
+                    <TableCell>{prospect.numero}</TableCell>
+                    <TableCell className="font-medium">{prospect.intitule}</TableCell>
+                    <TableCell>{prospect.telephone}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleConvertToClient(prospect)} title="Convertir en client">

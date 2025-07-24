@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Truck, Download, ListChecks } from 'lucide-react';
-import { commandesFournisseursAtom, receptionsAtom, fournisseursAtom, type Commande, type Reception } from '@/lib/store';
+import { commandesFournisseursAtom, receptionsAtom, fournisseursAtom, produitsAtom, mouvementsAtom, type Commande, type Reception } from '@/lib/store';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
@@ -21,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 
 type LigneReception = {
     ligneCommandeId: string;
+    produitId: number | null;
     description: string;
     quantiteRecue: number;
     quantiteCommandee: number;
@@ -30,6 +31,8 @@ export default function ReceptionsPage() {
     const [commandes] = useAtom(commandesFournisseursAtom);
     const [receptions, setReceptions] = useAtom(receptionsAtom);
     const [fournisseurs] = useAtom(fournisseursAtom);
+    const [, setProduits] = useAtom(produitsAtom);
+    const [, setMouvements] = useAtom(mouvementsAtom);
     const { toast } = useToast();
 
     const [isReceptionModalOpen, setIsReceptionModalOpen] = useState(false);
@@ -63,6 +66,7 @@ export default function ReceptionsPage() {
         setLignesReception(
             commande.lignes.map(l => ({
                 ligneCommandeId: l.id,
+                produitId: l.produitId,
                 description: l.description,
                 quantiteCommandee: l.quantite,
                 quantiteRecue: 0,
@@ -88,16 +92,44 @@ export default function ReceptionsPage() {
             date: new Date().toISOString().split('T')[0],
             numeroBon: `BR-${commandeToReceive.numero}-${receptions.filter(r => r.commandeId === commandeToReceive.id).length + 1}`,
             numeroBonFournisseur: bonLivraisonFournisseur,
-            lignes: lignesReception.filter(l => l.quantiteRecue > 0),
+            lignes: lignesReception.filter(l => l.quantiteRecue > 0).map(l => ({...l})), // strip produitId
         };
 
         if (newReception.lignes.length === 0) {
             toast({ title: 'Aucune quantité saisie', description: 'Veuillez entrer des quantités pour les articles reçus.', variant: 'destructive' });
             return;
         }
+        
+        // Update product stock and create movements
+        setProduits(prevProduits => {
+            const updatedProduits = [...prevProduits];
+            const newMouvements = [];
+
+            for (const ligne of lignesReception) {
+                if(ligne.produitId && ligne.quantiteRecue > 0) {
+                    const productIndex = updatedProduits.findIndex(p => p.id === ligne.produitId);
+                    if (productIndex > -1) {
+                         const produit = updatedProduits[productIndex];
+                        updatedProduits[productIndex] = { ...produit, stock: produit.stock + ligne.quantiteRecue };
+                        
+                         newMouvements.push({
+                            id: `mvt-${Date.now()}-${ligne.produitId}`,
+                            date: new Date().toISOString(),
+                            produitId: ligne.produitId,
+                            type: 'Entrée' as const,
+                            quantite: ligne.quantiteRecue,
+                            document: newReception.numeroBon,
+                            entrepotDestId: produit.entrepotId,
+                        });
+                    }
+                }
+            }
+             setMouvements(prevMouvements => [...prevMouvements, ...newMouvements]);
+            return updatedProduits;
+        });
 
         setReceptions(prev => [...prev, newReception]);
-        toast({ title: 'Réception enregistrée', description: `Un nouveau bon de réception a été créé pour la commande ${commandeToReceive.numero}.` });
+        toast({ title: 'Réception enregistrée', description: `Un nouveau bon de réception a été créé et les stocks mis à jour.` });
         
         setIsReceptionModalOpen(false);
     };
