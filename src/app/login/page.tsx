@@ -26,8 +26,6 @@ export default function LoginPage() {
 
 
   const handleLogin = (role: UserRole, path: string) => {
-    // In a real app, you would handle authentication here.
-    // For this simulation, we just navigate to the corresponding dashboard.
     setRole(role);
     toast({
       title: 'Connexion Réussie',
@@ -41,7 +39,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
         <div className="absolute top-4 right-4">
             <Button
               variant="outline"
@@ -54,53 +52,59 @@ export default function LoginPage() {
             </Button>
         </div>
 
-        <Card className="w-full max-w-lg mx-auto">
-        <CardHeader className="text-center">
-            <Logo className="mx-auto h-12 w-12 text-primary" />
-            <CardTitle className="text-2xl mt-4">Bienvenue sur UNIKORP</CardTitle>
-            <CardDescription>Votre solution ERP unifiée</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <form className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" defaultValue="admin@unikorp.com" />
+        <div className="w-full max-w-md space-y-8">
+            <div className="text-center">
+                <Logo className="mx-auto h-16 w-16 text-primary" />
+                <h1 className="text-3xl font-bold mt-6">Bienvenue sur UNIKORP</h1>
+                <p className="text-muted-foreground mt-2">Votre solution ERP unifiée</p>
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input id="password" type="password" defaultValue="password" />
-            </div>
-            <Button className="w-full" type="submit" onClick={(e) => { e.preventDefault(); handleLogin('Admin-Gestionnaire', '/dashboard')}}>
-                Se connecter
-            </Button>
-            </form>
 
-            <Separator className="my-6" />
+            <Card>
+            <CardHeader>
+                <CardTitle>Se connecter</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" placeholder="m@example.com" defaultValue="admin@unikorp.com" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="password">Mot de passe</Label>
+                    <Input id="password" type="password" defaultValue="password" />
+                </div>
+                <Button className="w-full" type="submit" onClick={(e) => { e.preventDefault(); handleLogin('Admin-Gestionnaire', '/dashboard')}}>
+                    Connexion
+                </Button>
+                </form>
 
-            <div className="space-y-2 text-center">
-            <p className="text-sm text-muted-foreground">Ou connectez-vous rapidement avec un profil de test :</p>
-            <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => handleLogin('Compte Entreprise', '/super-admin')}><Building />Compte Entreprise</Button>
-                <Button variant="outline" onClick={() => handleLogin('Admin-Gestionnaire', '/dashboard')}><UserCog />Admin-Gestionnaire</Button>
-                
-                <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Gestionnaires</h4>
-                <Button variant="outline" onClick={() => handleLogin('Gestionnaire SKOMPTAB', '/dashboard')}><Calculator/>Gest. SKOMPTAB</Button>
-                <Button variant="outline" onClick={() => handleLogin('Gestionnaire SOCIX', '/dashboard')}><Users/>Gest. SOCIX</Button>
-                <Button variant="outline" onClick={() => handleLogin('Gestionnaire MARKOS', '/dashboard')}><Megaphone/>Gest. MARKOS</Button>
-                <Button variant="outline" onClick={() => handleLogin('Gestionnaire LOGSON', '/dashboard')}><Truck/>Gest. LOGSON</Button>
+                <Separator className="my-6" />
 
-                <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Stagiaires</h4>
-                <Button variant="outline" onClick={() => handleLogin('Stagiaire SKOMPTAB', '/dashboard')}><Clipboard />Stag. SKOMPTAB</Button>
-                 <Button variant="outline" onClick={() => handleLogin('Stagiaire SOCIX', '/dashboard')}><Clipboard />Stag. SOCIX</Button>
-                 <Button variant="outline" onClick={() => handleLogin('Stagiaire MARKOS', '/dashboard')}><Clipboard />Stag. MARKOS</Button>
-                 <Button variant="outline" onClick={() => handleLogin('Stagiaire LOGSON', '/dashboard')}><Clipboard />Stag. LOGSON</Button>
+                <div className="space-y-2 text-center">
+                <p className="text-sm text-muted-foreground">Ou connectez-vous rapidement avec un profil de test :</p>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" onClick={() => handleLogin('Compte Entreprise', '/super-admin')}><Building />Compte Entreprise</Button>
+                    <Button variant="outline" onClick={() => handleLogin('Admin-Gestionnaire', '/dashboard')}><UserCog />Admin-Gestionnaire</Button>
+                    
+                    <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Gestionnaires</h4>
+                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire SKOMPTAB', '/skomptab')}><Calculator/>Gest. SKOMPTAB</Button>
+                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire SOCIX', '/socix')}><Users/>Gest. SOCIX</Button>
+                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire MARKOS', '/markos')}><Megaphone/>Gest. MARKOS</Button>
+                    <Button variant="outline" onClick={() => handleLogin('Gestionnaire LOGSON', '/logson')}><Truck/>Gest. LOGSON</Button>
 
-                <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Employé</h4>
-                <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')} className="sm:col-span-2"><User />Employé</Button>
-            </div>
-            </div>
-        </CardContent>
-        </Card>
+                    <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Stagiaires</h4>
+                    <Button variant="outline" onClick={() => handleLogin('Stagiaire SKOMPTAB', '/skomptab')}><Clipboard />Stag. SKOMPTAB</Button>
+                    <Button variant="outline" onClick={() => handleLogin('Stagiaire SOCIX', '/socix')}><Clipboard />Stag. SOCIX</Button>
+                    <Button variant="outline" onClick={() => handleLogin('Stagiaire MARKOS', '/markos')}><Clipboard />Stag. MARKOS</Button>
+                    <Button variant="outline" onClick={() => handleLogin('Stagiaire LOGSON', '/logson')}><Clipboard />Stag. LOGSON</Button>
+
+                    <h4 className="col-span-2 text-sm font-semibold text-muted-foreground mt-2 border-b pb-1">Employé</h4>
+                    <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')} className="sm:col-span-2"><User />Employé</Button>
+                </div>
+                </div>
+            </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }
