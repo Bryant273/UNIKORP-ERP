@@ -21,7 +21,7 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ComposedChart } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ComposedChart, Line } from "recharts";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy } from 'lucide-react';
