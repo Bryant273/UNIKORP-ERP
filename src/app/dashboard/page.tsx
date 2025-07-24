@@ -23,6 +23,8 @@ import { useToast } from '@/hooks/use-toast'
 import { useAtom } from 'jotai'
 import { companyFileAtom } from '@/lib/store';
 import { useState, useEffect } from 'react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 type Kpi = {
   title: string;
@@ -116,49 +118,61 @@ const mockCompanyFiles = [
   "AUTO-GEST-2023-SocieteX",
 ];
 
-function CompanyFileSelectionModal({ isOpen, onFileSelect }: { isOpen: boolean, onFileSelect: (file: string) => void }) {
+function CompanyFileSelectionModal({ onFileSelect }: { onFileSelect: (file: string) => void }) {
+  const [selectedFile, setSelectedFile] = useState<string | undefined>();
+  const { toast } = useToast();
+
+  const handleConfirm = () => {
+    if (selectedFile) {
+        onFileSelect(selectedFile);
+    } else {
+        toast({
+            title: "Sélection requise",
+            description: "Veuillez sélectionner un fichier de gestion pour continuer.",
+            variant: "destructive"
+        })
+    }
+  };
+
   return (
-    <Dialog open={isOpen}>
-      <DialogContent className="sm:max-w-md" hideCloseButton>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><FolderOpen /> Sélectionner un Fichier de Gestion</DialogTitle>
-        </DialogHeader>
-        <div className="py-4">
-          <p className="text-muted-foreground mb-4">Veuillez sélectionner un fichier pour continuer.</p>
-          <div className="space-y-2">
-            {mockCompanyFiles.map(file => (
-              <Button
-                key={file}
-                variant="outline"
-                className="w-full justify-start h-12"
-                onClick={() => onFileSelect(file)}
-              >
-                {file}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div className="flex items-center justify-center min-h-screen bg-muted/40">
+        <Card className="w-full max-w-md">
+             <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl"><FolderOpen /> Sélectionner un Fichier de Gestion</CardTitle>
+                <CardDescription>Veuillez sélectionner un fichier pour initialiser votre session de travail.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="company-file-select">Fichier de gestion</Label>
+                    <Select onValueChange={setSelectedFile} value={selectedFile}>
+                        <SelectTrigger id="company-file-select">
+                            <SelectValue placeholder="Choisissez un fichier..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {mockCompanyFiles.map(file => (
+                                <SelectItem key={file} value={file}>{file}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
+            </CardContent>
+            <CardFooter>
+                 <Button className="w-full" onClick={handleConfirm} disabled={!selectedFile}>
+                    Continuer
+                </Button>
+            </CardFooter>
+        </Card>
+    </div>
   );
 }
 
 
 export default function DashboardPage() {
   const [companyFile, setCompanyFile] = useAtom(companyFileAtom);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Show modal only if company file is not set
-    if (!companyFile) {
-      setIsModalOpen(true);
-    }
-  }, [companyFile]);
 
   const handleFileSelect = (file: string) => {
     setCompanyFile(file);
-    setIsModalOpen(false);
     toast({
       title: "Fichier de gestion sélectionné",
       description: `Vous êtes bien connecté au fichier ${file}`,
@@ -166,9 +180,12 @@ export default function DashboardPage() {
     });
   };
 
+  if (!companyFile) {
+    return <CompanyFileSelectionModal onFileSelect={handleFileSelect} />
+  }
+
   return (
     <>
-      <CompanyFileSelectionModal isOpen={isModalOpen} onFileSelect={handleFileSelect} />
       <div className="flex w-full flex-col gap-6">
         {/* KPIs Globaux */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
