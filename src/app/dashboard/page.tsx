@@ -18,7 +18,6 @@ import { Calendar } from "@/components/ui/calendar"
 import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText, Check, FolderOpen } from "lucide-react"
 import { type ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { useAtom } from 'jotai'
@@ -170,7 +169,12 @@ function CompanyFileSelectionModal({ onFileSelect }: { onFileSelect: (file: stri
 
 export default function DashboardPage() {
   const [companyFile, setCompanyFile] = useAtom(companyFileAtom);
+  const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleFileSelect = (file: string) => {
     setCompanyFile(file);
@@ -180,6 +184,11 @@ export default function DashboardPage() {
       action: <Check className="h-5 w-5 text-green-500" />,
     });
   };
+
+  if (!isClient) {
+    // Render nothing or a loading spinner on the server to prevent hydration mismatch
+    return null;
+  }
 
   if (!companyFile) {
     return <CompanyFileSelectionModal onFileSelect={handleFileSelect} />
