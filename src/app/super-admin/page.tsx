@@ -586,12 +586,28 @@ function OpeningModal() {
         { compte: '411000', libelle: 'Clients', soldeN1: 300000, report: 300000 },
         { compte: '512000', libelle: 'Banque', soldeN1: -450000, report: -450000 },
     ]);
+    const [editingRow, setEditingRow] = useState<string | null>(null);
+    const [currentEditValue, setCurrentEditValue] = useState(0);
 
     const totals = useMemo(() => {
         const totalDebit = balances.filter(b => b.report > 0).reduce((sum, b) => sum + b.report, 0);
         const totalCredit = balances.filter(b => b.report < 0).reduce((sum, b) => sum + b.report, 0);
         return { totalDebit, totalCredit: -totalCredit };
     }, [balances]);
+
+    const handleStartEdit = (compte: string, value: number) => {
+        setEditingRow(compte);
+        setCurrentEditValue(value);
+    };
+
+    const handleSaveEdit = () => {
+        if (editingRow) {
+            setBalances(current => 
+                current.map(b => b.compte === editingRow ? { ...b, report: currentEditValue } : b)
+            );
+        }
+        setEditingRow(null);
+    };
 
     return (
         <DialogContent className="max-w-4xl">
@@ -610,8 +626,26 @@ function OpeningModal() {
                     <TabsContent value="step-1" className="mt-4"><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Date de début</Label><Input type="date" defaultValue="2025-01-01" /></div><div className="space-y-2"><Label>Date de fin</Label><Input type="date" defaultValue="2025-12-31" /></div></div></TabsContent>
                     <TabsContent value="step-2" className="mt-4"><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Numérotation des pièces</Label><Select><SelectTrigger><SelectValue placeholder="Format..."/></SelectTrigger><SelectContent><SelectItem value="format1">JOURNAL-AAAA-####</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label>Comptes à reporter</Label><Select><SelectTrigger><SelectValue placeholder="Sélection..."/></SelectTrigger><SelectContent><SelectItem value="all">Tous les comptes de bilan</SelectItem></SelectContent></Select></div></div></TabsContent>
                     <TabsContent value="step-3" className="mt-4"><p>Saisissez ou validez les soldes à reporter pour le nouvel exercice.</p><div className="h-64 mt-2 overflow-auto border rounded-md"><Table>
-                        <TableHeader><TableRow><TableHead>Compte</TableHead><TableHead>Libellé</TableHead><TableHead className="text-right">Solde N-1</TableHead><TableHead className="text-right">A-nouveau à reporter</TableHead></TableRow></TableHeader>
-                        <TableBody>{balances.map((b, i) => <TableRow key={b.compte}><TableCell>{b.compte}</TableCell><TableCell>{b.libelle}</TableCell><TableCell className="text-right">{b.soldeN1.toLocaleString()}</TableCell><TableCell><Input type="number" className="text-right" value={b.report} onChange={(e) => setBalances(current => { const next = [...current]; next[i].report = parseInt(e.target.value) || 0; return next; })} /></TableCell></TableRow>)}</TableBody>
+                        <TableHeader><TableRow><TableHead>Compte</TableHead><TableHead>Libellé</TableHead><TableHead className="text-right">Solde N-1</TableHead><TableHead className="text-right">A-nouveau à reporter</TableHead><TableHead className="w-24 text-center">Action</TableHead></TableRow></TableHeader>
+                        <TableBody>{balances.map((b, i) => <TableRow key={b.compte}>
+                            <TableCell>{b.compte}</TableCell>
+                            <TableCell>{b.libelle}</TableCell>
+                            <TableCell className="text-right">{b.soldeN1.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">
+                                {editingRow === b.compte ? (
+                                    <Input type="number" className="text-right h-8" value={currentEditValue} onChange={(e) => setCurrentEditValue(parseInt(e.target.value) || 0)} />
+                                ) : (
+                                    b.report.toLocaleString()
+                                )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                                {editingRow === b.compte ? (
+                                    <Button size="sm" onClick={handleSaveEdit}>Enregistrer</Button>
+                                ) : (
+                                    <Button size="sm" variant="outline" onClick={() => handleStartEdit(b.compte, b.report)}>Modifier</Button>
+                                )}
+                            </TableCell>
+                        </TableRow>)}</TableBody>
                     </Table></div></TabsContent>
                     <TabsContent value="step-4" className="mt-4"><div className="text-center p-8 space-y-4"><h3 className="text-lg font-semibold">Vérification de l'Équilibre</h3><div className="flex justify-around"><div className="p-4 rounded-md bg-muted"><p>Total Débit</p><p className="text-xl font-bold">{totals.totalDebit.toLocaleString()} FCFA</p></div><div className="p-4 rounded-md bg-muted"><p>Total Crédit</p><p className="text-xl font-bold">{totals.totalCredit.toLocaleString()} FCFA</p></div></div>{totals.totalDebit === totals.totalCredit ? <p className="text-green-600 font-bold">L'écriture d'à-nouveaux est équilibrée.</p> : <p className="text-red-600 font-bold">L'écriture est déséquilibrée de {(totals.totalDebit - totals.totalCredit).toLocaleString()} FCFA.</p>}</div></TabsContent>
                 </Tabs>
