@@ -1,16 +1,15 @@
-
 'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { FileText, CalendarDays, Plane, Briefcase, User, Mail, Phone, Building, CheckCircle, FileSignature, Hourglass, Download } from 'lucide-react';
+import { FileText, CalendarDays, Plane, Briefcase, User, Mail, Phone, Building, CheckCircle, FileSignature, Hourglass, Download, Pencil, History, Upload } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +20,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 type Document = {
     name: string;
@@ -29,13 +29,17 @@ type Document = {
     fileUrl: string;
 };
 
+type LeaveRequest = {
+    id: string;
+    type: 'Congé Payé' | 'Télétravail' | 'Congé Maladie' | 'Absence Exceptionnelle';
+    dates: string;
+    status: 'Approuvé' | 'En attente' | 'Refusé';
+};
+
+
 export default function EmployeeDashboardPage() {
   const { toast } = useToast();
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
-  const [leaveDates, setLeaveDates] = useState<DateRange | undefined>();
-
-  const employee = {
+  const [employee, setEmployee] = useState({
     name: 'Jean Dupont',
     position: 'Développeur Senior',
     department: 'IT',
@@ -43,10 +47,25 @@ export default function EmployeeDashboardPage() {
     email: 'jean.dupont@unikorp.com',
     phone: '01 02 03 04 05',
     hireDate: '2020-03-15',
+    dateOfBirth: '1985-05-15',
     manager: 'Marc Lefebvre',
     contractType: 'CDI',
     leaveBalance: 14.5,
-  };
+  });
+
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [leaveDates, setLeaveDates] = useState<DateRange | undefined>();
+  const [leaveType, setLeaveType] = useState<string | undefined>();
+  const [leaveReason, setLeaveReason] = useState('');
+  
+  const [allRequests, setAllRequests] = useState<LeaveRequest[]>([
+      { id: 'req-1', type: 'Congé Payé', dates: '15/08/2024 - 30/08/2024', status: 'Approuvé' },
+      { id: 'req-2', type: 'Télétravail', dates: '05/09/2024', status: 'En attente' },
+      { id: 'req-3', type: 'Congé Maladie', dates: '10/07/2024', status: 'Approuvé' },
+      { id: 'req-4', type: 'Absence Exceptionnelle', dates: '01/06/2024', status: 'Refusé' },
+  ]);
 
   const documents: Document[] = [
     { name: 'Contrat de travail initial', category: 'Contrat', date: '2020-03-15', fileUrl: 'https://placehold.co/800x1131.png' },
@@ -56,22 +75,42 @@ export default function EmployeeDashboardPage() {
     { name: 'Attestation de travail', category: 'Autre', date: '2024-01-10', fileUrl: 'https://placehold.co/800x1131.png' },
   ];
   
-  const upcomingLeaves = [
-    { type: 'Congé Payé', dates: '15/08/2024 - 30/08/2024', status: 'Approuvé' },
-  ];
-
-  const pendingRequests = [
-    { type: 'Télétravail', dates: '05/09/2024', status: 'En attente' },
-  ];
-
   const handleLeaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const newRequest: LeaveRequest = {
+        id: `req-${Date.now()}`,
+        type: leaveType as LeaveRequest['type'],
+        dates: leaveDates?.from ? 
+            (leaveDates.to ? `${format(leaveDates.from, "dd/MM/yyyy")} - ${format(leaveDates.to, "dd/MM/yyyy")}` : format(leaveDates.from, "dd/MM/yyyy")) 
+            : 'Date non spécifiée',
+        status: 'En attente'
+    };
+    setAllRequests(prev => [newRequest, ...prev]);
     setIsLeaveModalOpen(false);
     toast({
         title: 'Demande envoyée',
         description: "Votre demande d'absence a été soumise pour validation.",
     });
   };
+
+  const getStatusBadge = (status: LeaveRequest['status']) => {
+        switch (status) {
+            case 'Approuvé': return <Badge className="bg-green-100 text-green-800"><CheckCircle className="mr-1 h-3 w-3"/>Approuvé</Badge>;
+            case 'En attente': return <Badge className="bg-yellow-100 text-yellow-800"><Hourglass className="mr-1 h-3 w-3"/>En attente</Badge>;
+            case 'Refusé': return <Badge variant="destructive"><X className="mr-1 h-3 w-3" />Refusé</Badge>;
+        }
+  }
+  
+  const handleProfileUpdate = (updatedData: Partial<typeof employee>, newAvatar: File | null) => {
+    setEmployee(prev => ({
+        ...prev,
+        ...updatedData,
+        avatarUrl: newAvatar ? URL.createObjectURL(newAvatar) : prev.avatarUrl
+    }));
+    toast({ title: 'Profil mis à jour', description: 'Vos informations personnelles ont été enregistrées.' });
+    setIsProfileModalOpen(false);
+  };
+
 
   return (
     <>
@@ -91,20 +130,24 @@ export default function EmployeeDashboardPage() {
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>Mon Profil</TabsTrigger>
                 <TabsTrigger value="documents"><FileText className="mr-2 h-4 w-4"/>Mes Documents</TabsTrigger>
-                <TabsTrigger value="leaves"><CalendarDays className="mr-2 h-4 w-4"/>Mes Congés</TabsTrigger>
+                <TabsTrigger value="leaves"><CalendarDays className="mr-2 h-4 w-4"/>Mes Congés & Demandes</TabsTrigger>
             </TabsList>
             
             <TabsContent value="profile" className="mt-4">
                 <Card>
-                    <CardHeader><CardTitle>Informations Personnelles & Professionnelles</CardTitle></CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Informations Personnelles & Professionnelles</CardTitle>
+                        <Button variant="outline" onClick={() => setIsProfileModalOpen(true)}><Pencil className="mr-2 h-4 w-4" /> Modifier</Button>
+                    </CardHeader>
                     <CardContent className="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                         <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground"/><span>{employee.email}</span></div>
                         <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground"/><span>{employee.phone}</span></div>
                         <div className="flex items-center gap-3"><Building className="h-4 w-4 text-muted-foreground"/><span>Département {employee.department}</span></div>
                         <div className="flex items-center gap-3"><Briefcase className="h-4 w-4 text-muted-foreground"/><span>{employee.position}</span></div>
-                        <div className="flex items-center gap-3"><CalendarDays className="h-4 w-4 text-muted-foreground"/><span>Embauché le {new Date(employee.hireDate).toLocaleDateString('fr-FR')}</span></div>
+                        <div className="flex items-center gap-3"><CalendarDays className="h-4 w-4 text-muted-foreground"/><span>Embauché le {format(new Date(employee.hireDate), "dd MMMM yyyy", { locale: fr })}</span></div>
                         <div className="flex items-center gap-3"><User className="h-4 w-4 text-muted-foreground"/><span>Manager: {employee.manager}</span></div>
                         <div className="flex items-center gap-3"><FileSignature className="h-4 w-4 text-muted-foreground"/><span>Contrat en {employee.contractType}</span></div>
+                         <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground"/><span>Né le {format(new Date(employee.dateOfBirth), "dd MMMM yyyy", { locale: fr })}</span></div>
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -127,8 +170,11 @@ export default function EmployeeDashboardPage() {
                                     <TableRow key={doc.name}>
                                         <TableCell className="font-medium">{doc.name}</TableCell>
                                         <TableCell><Badge variant="outline">{doc.category}</Badge></TableCell>
-                                        <TableCell>{new Date(doc.date).toLocaleDateString('fr-FR')}</TableCell>
-                                        <TableCell className="text-right"><Button variant="outline" size="sm" onClick={() => setSelectedDocument(doc)}>Voir</Button></TableCell>
+                                        <TableCell>{format(new Date(doc.date), 'dd/MM/yyyy', { locale: fr })}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => setSelectedDocument(doc)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => toast({ title: "Fonctionnalité à venir" })}><Download className="h-4 w-4" /></Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -140,44 +186,39 @@ export default function EmployeeDashboardPage() {
             <TabsContent value="leaves" className="mt-4">
                  <Card>
                     <CardHeader><CardTitle>Mes Congés & Absences</CardTitle></CardHeader>
-                    <CardContent className="grid md:grid-cols-3 gap-6">
-                        <div className="md:col-span-1 flex flex-col items-center justify-center p-6 bg-muted rounded-lg">
-                             <p className="text-muted-foreground">Solde de congés payés</p>
-                            <p className="text-5xl font-bold text-primary">{employee.leaveBalance}</p>
-                            <p className="text-sm text-muted-foreground">jours restants</p>
-                             <Button className="w-full mt-6" onClick={() => setIsLeaveModalOpen(true)}><Plane className="mr-2 h-4 w-4"/>Faire une demande</Button>
-                        </div>
-                        <div className="md:col-span-2 space-y-4">
-                            <div>
-                                <h4 className="font-semibold text-sm mb-2">Absences à venir</h4>
-                                {upcomingLeaves.length > 0 ? (
-                                   <div className="flex items-center justify-between text-sm p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                                        <div className="flex items-center gap-2">
-                                           <Plane className="h-4 w-4 text-blue-600"/>
-                                           <p>{upcomingLeaves[0].type}</p>
-                                        </div>
-                                       <p className="font-semibold">{upcomingLeaves[0].dates}</p>
-                                       <Badge className="bg-green-100 text-green-800"><CheckCircle className="mr-1 h-3 w-3"/>{upcomingLeaves[0].status}</Badge>
-                                   </div>
-                                ) : (
-                                   <p className="text-sm text-muted-foreground text-center p-4 border rounded-md">Aucune absence planifiée.</p>
-                                )}
+                    <CardContent className="space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="flex flex-col items-center justify-center p-6 bg-muted rounded-lg">
+                                <p className="text-muted-foreground">Solde de congés payés</p>
+                                <p className="text-5xl font-bold text-primary">{employee.leaveBalance}</p>
+                                <p className="text-sm text-muted-foreground">jours restants</p>
+                                <Button className="w-full mt-6" onClick={() => setIsLeaveModalOpen(true)}><Plane className="mr-2 h-4 w-4"/>Faire une demande</Button>
                             </div>
-                             <div>
-                                <h4 className="font-semibold text-sm mb-2">Demandes en attente</h4>
-                                {pendingRequests.length > 0 ? (
-                                   <div className="flex items-center justify-between text-sm p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-                                        <div className="flex items-center gap-2">
-                                           <Briefcase className="h-4 w-4 text-yellow-600"/>
-                                           <p>{pendingRequests[0].type}</p>
-                                        </div>
-                                       <p className="font-semibold">{pendingRequests[0].dates}</p>
-                                       <Badge className="bg-yellow-100 text-yellow-800"><Hourglass className="mr-1 h-3 w-3"/>{pendingRequests[0].status}</Badge>
-                                   </div>
-                                ) : (
-                                   <p className="text-sm text-muted-foreground text-center p-4 border rounded-md">Aucune demande en attente.</p>
-                                )}
-                            </div>
+                            <Card>
+                                <CardHeader><h4 className="font-semibold">Historique de vos demandes</h4></CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Type</TableHead>
+                                                <TableHead>Période</TableHead>
+                                                <TableHead className="text-right">Statut</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                        {allRequests.length > 0 ? allRequests.map(req => (
+                                            <TableRow key={req.id}>
+                                                <TableCell>{req.type}</TableCell>
+                                                <TableCell>{req.dates}</TableCell>
+                                                <TableCell className="text-right">{getStatusBadge(req.status)}</TableCell>
+                                            </TableRow>
+                                        )) : (
+                                            <TableRow><TableCell colSpan={3} className="text-center h-24">Aucune demande soumise.</TableCell></TableRow>
+                                        )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
                         </div>
                     </CardContent>
                 </Card>
@@ -191,7 +232,7 @@ export default function EmployeeDashboardPage() {
             <DialogHeader>
                 <DialogTitle>{selectedDocument?.name}</DialogTitle>
                 <DialogDescription>
-                    Document de la catégorie "{selectedDocument?.category}" ajouté le {selectedDocument ? new Date(selectedDocument.date).toLocaleDateString('fr-FR') : ''}.
+                    Document de la catégorie "{selectedDocument?.category}" ajouté le {selectedDocument ? format(new Date(selectedDocument.date), 'dd MMMM yyyy', {locale: fr}) : ''}.
                 </DialogDescription>
             </DialogHeader>
             <div className="py-4 bg-muted flex justify-center rounded-md">
@@ -217,7 +258,7 @@ export default function EmployeeDashboardPage() {
                 <div className="py-4 space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="leave-type">Type d'absence</Label>
-                        <Select name="leave-type" required>
+                        <Select name="leave-type" required onValueChange={setLeaveType}>
                             <SelectTrigger id="leave-type">
                                 <SelectValue placeholder="Sélectionnez un type..." />
                             </SelectTrigger>
@@ -260,7 +301,7 @@ export default function EmployeeDashboardPage() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="leave-reason">Motif (optionnel)</Label>
-                        <Textarea id="leave-reason" placeholder="Fournissez plus de détails si nécessaire..." />
+                        <Textarea id="leave-reason" placeholder="Fournissez plus de détails si nécessaire..." value={leaveReason} onChange={e => setLeaveReason(e.target.value)} />
                     </div>
                 </div>
                 <DialogFooter>
@@ -270,6 +311,85 @@ export default function EmployeeDashboardPage() {
             </form>
         </DialogContent>
     </Dialog>
+    
+    {/* Edit Profile Modal */}
+    <EditProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onSave={handleProfileUpdate}
+        currentUser={employee}
+    />
     </>
   );
+}
+
+// --- Edit Profile Modal Component ---
+
+function EditProfileModal({ isOpen, onClose, onSave, currentUser }: { isOpen: boolean, onClose: () => void, onSave: (data: Partial<typeof currentUser>, avatar: File | null) => void, currentUser: typeof employee }) {
+    const [formData, setFormData] = useState<Partial<typeof currentUser>>(currentUser);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser.avatarUrl);
+
+    useEffect(() => {
+        setFormData(currentUser);
+        setAvatarPreview(currentUser.avatarUrl);
+    }, [currentUser, isOpen]);
+    
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData(prev => ({...prev, [e.target.id]: e.target.value }));
+    };
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+        }
+    };
+    
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData, avatarFile);
+    };
+
+    return (
+         <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>Modifier mes informations</DialogTitle>
+                        <DialogDescription>Mettez à jour vos informations personnelles.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="flex items-center gap-4">
+                             <Avatar className="h-20 w-20">
+                                <AvatarImage src={avatarPreview || ''} alt={formData.name}/>
+                                <AvatarFallback className="text-3xl">{formData.name?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="space-y-2">
+                                <Label htmlFor="avatar-upload">Changer de photo</Label>
+                                <Input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nom complet</Label>
+                            <Input id="name" value={formData.name || ''} onChange={handleChange} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="dateOfBirth">Date de naissance</Label>
+                            <Input id="dateOfBirth" type="date" value={formData.dateOfBirth || ''} onChange={handleChange} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="phone">Numéro de téléphone</Label>
+                            <Input id="phone" value={formData.phone || ''} onChange={handleChange} />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Enregistrer les modifications</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
 }
