@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   ChartContainer,
@@ -24,9 +24,10 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ComposedChart, Line } from "recharts";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy } from 'lucide-react';
+import { LayoutDashboard, Users, Building, KeyRound, Pencil, DollarSign, TrendingUp, Ship, UserCheck, BarChart2, TrendingDown, Package, PlusCircle, Trash2, Eye, Ban, CheckCircle, Copy, BookLock, BookUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- MOCK DATA ---
 const skomptabKpis = [
@@ -93,8 +94,8 @@ function DashboardTab() {
                 <CardDescription>Ouvrez un nouvel exercice ou clôturez l'exercice en cours pour archiver les données.</CardDescription>
             </CardHeader>
             <CardContent className="flex items-center justify-center gap-4">
-                <Button variant="outline" size="lg">Ouvrir un nouvel exercice</Button>
-                <Button variant="destructive" size="lg">Clôturer l'exercice en cours</Button>
+                 <Dialog><DialogTrigger asChild><Button variant="outline" size="lg"><BookUp className="mr-2 h-4 w-4"/>Ouvrir un nouvel exercice</Button></DialogTrigger><OpeningModal /></Dialog>
+                 <Dialog><DialogTrigger asChild><Button variant="destructive" size="lg"><BookLock className="mr-2 h-4 w-4"/>Clôturer l'exercice en cours</Button></DialogTrigger><ClosingModal /></Dialog>
             </CardContent>
         </Card>
         
@@ -324,12 +325,6 @@ function UserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean; o
                                 ))}
                             </div>
                         </div>
-                        <div className="col-span-2 space-y-2">
-                            <Label>Identifiants de connexion</Label>
-                            <div className="flex gap-2 items-center">
-                                <Input defaultValue="****************" disabled /><Button variant="secondary" type="button">Générer un mot de passe</Button>
-                            </div>
-                        </div>
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
@@ -495,6 +490,7 @@ function CompanyInfoTab() {
   }
 
   const renderForm = () => {
+    if (!region || !country) return <FormRegionDefault />;
     switch(region) {
         case 'UEMOA': return <FormRegionUEMOA />;
         case 'Amérique du Nord':
@@ -553,11 +549,7 @@ function CompanyInfoTab() {
                  </div>
             </div>
 
-            {region && country && (
-                <div>
-                   {renderForm()}
-                </div>
-            )}
+            {renderForm()}
         </CardContent>
         <CardFooter>
             <Button onClick={handleSave} disabled={!region || !country}>Enregistrer les modifications</Button>
@@ -583,6 +575,89 @@ function ErpAccessTab() {
     </div>
   );
 }
+
+function OpeningModal() {
+    const [step, setStep] = useState(1);
+    const [balances, setBalances] = useState([
+        { compte: '101000', libelle: 'Capital Social', soldeN1: 500000, report: 500000 },
+        { compte: '211000', libelle: 'Terrains', soldeN1: 1000000, report: 1000000 },
+        { compte: '281000', libelle: 'Amortissements', soldeN1: -200000, report: -200000 },
+        { compte: '401000', libelle: 'Fournisseurs', soldeN1: -150000, report: -150000 },
+        { compte: '411000', libelle: 'Clients', soldeN1: 300000, report: 300000 },
+        { compte: '512000', libelle: 'Banque', soldeN1: -450000, report: -450000 },
+    ]);
+
+    const totals = useMemo(() => {
+        const totalDebit = balances.filter(b => b.report > 0).reduce((sum, b) => sum + b.report, 0);
+        const totalCredit = balances.filter(b => b.report < 0).reduce((sum, b) => sum + b.report, 0);
+        return { totalDebit, totalCredit: -totalCredit };
+    }, [balances]);
+
+    return (
+        <DialogContent className="max-w-4xl">
+            <DialogHeader>
+                <DialogTitle>Ouverture d'un Nouvel Exercice Comptable</DialogTitle>
+                <DialogDescription>Suivez les étapes pour initialiser le nouvel exercice fiscal.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Tabs value={`step-${step}`} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="step-1" onClick={() => setStep(1)}>1. Dates</TabsTrigger>
+                        <TabsTrigger value="step-2" onClick={() => setStep(2)} disabled={step < 2}>2. Paramètres</TabsTrigger>
+                        <TabsTrigger value="step-3" onClick={() => setStep(3)} disabled={step < 3}>3. A-nouveaux</TabsTrigger>
+                        <TabsTrigger value="step-4" onClick={() => setStep(4)} disabled={step < 4}>4. Validation</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="step-1" className="mt-4"><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Date de début</Label><Input type="date" defaultValue="2025-01-01" /></div><div className="space-y-2"><Label>Date de fin</Label><Input type="date" defaultValue="2025-12-31" /></div></div></TabsContent>
+                    <TabsContent value="step-2" className="mt-4"><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Numérotation des pièces</Label><Select><SelectTrigger><SelectValue placeholder="Format..."/></SelectTrigger><SelectContent><SelectItem value="format1">JOURNAL-AAAA-####</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label>Comptes à reporter</Label><Select><SelectTrigger><SelectValue placeholder="Sélection..."/></SelectTrigger><SelectContent><SelectItem value="all">Tous les comptes de bilan</SelectItem></SelectContent></Select></div></div></TabsContent>
+                    <TabsContent value="step-3" className="mt-4"><p>Saisissez ou validez les soldes à reporter pour le nouvel exercice.</p><div className="h-64 mt-2 overflow-auto border rounded-md"><Table>
+                        <TableHeader><TableRow><TableHead>Compte</TableHead><TableHead>Libellé</TableHead><TableHead className="text-right">Solde N-1</TableHead><TableHead className="text-right">A-nouveau à reporter</TableHead></TableRow></TableHeader>
+                        <TableBody>{balances.map((b, i) => <TableRow key={b.compte}><TableCell>{b.compte}</TableCell><TableCell>{b.libelle}</TableCell><TableCell className="text-right">{b.soldeN1.toLocaleString()}</TableCell><TableCell><Input type="number" className="text-right" value={b.report} onChange={(e) => setBalances(current => { const next = [...current]; next[i].report = parseInt(e.target.value) || 0; return next; })} /></TableCell></TableRow>)}</TableBody>
+                    </Table></div></TabsContent>
+                    <TabsContent value="step-4" className="mt-4"><div className="text-center p-8 space-y-4"><h3 className="text-lg font-semibold">Vérification de l'Équilibre</h3><div className="flex justify-around"><div className="p-4 rounded-md bg-muted"><p>Total Débit</p><p className="text-xl font-bold">{totals.totalDebit.toLocaleString()} FCFA</p></div><div className="p-4 rounded-md bg-muted"><p>Total Crédit</p><p className="text-xl font-bold">{totals.totalCredit.toLocaleString()} FCFA</p></div></div>{totals.totalDebit === totals.totalCredit ? <p className="text-green-600 font-bold">L'écriture d'à-nouveaux est équilibrée.</p> : <p className="text-red-600 font-bold">L'écriture est déséquilibrée de {(totals.totalDebit - totals.totalCredit).toLocaleString()} FCFA.</p>}</div></TabsContent>
+                </Tabs>
+            </div>
+            <DialogFooter>
+                {step > 1 && <Button variant="outline" onClick={() => setStep(s => s - 1)}>Précédent</Button>}
+                {step < 4 && <Button onClick={() => setStep(s => s + 1)} disabled={(step === 3 && totals.totalDebit !== totals.totalCredit)}>Suivant</Button>}
+                {step === 4 && <DialogClose asChild><Button disabled={totals.totalDebit !== totals.totalCredit}>Ouvrir l'Exercice</Button></DialogClose>}
+            </DialogFooter>
+        </DialogContent>
+    );
+}
+
+function ClosingModal() {
+    const [step, setStep] = useState(1);
+    const [checks, setChecks] = useState({ lettrage: false, rapprochements: false });
+
+    return (
+        <DialogContent className="max-w-4xl">
+            <DialogHeader>
+                <DialogTitle>Clôture de l'Exercice Comptable</DialogTitle>
+                <DialogDescription>Validez les étapes pour clôturer définitivement l'exercice en cours.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Tabs value={`step-${step}`} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="step-1" onClick={() => setStep(1)}>1. Contrôles</TabsTrigger>
+                        <TabsTrigger value="step-2" onClick={() => setStep(2)} disabled={step < 2}>2. Écritures</TabsTrigger>
+                        <TabsTrigger value="step-3" onClick={() => setStep(3)} disabled={step < 3}>3. Affectation</TabsTrigger>
+                        <TabsTrigger value="step-4" onClick={() => setStep(4)} disabled={step < 4}>4. Validation</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="step-1" className="mt-4"><p>Veuillez confirmer que les contrôles suivants ont bien été effectués.</p><div className="space-y-2 mt-4"><div className="flex items-center space-x-2"><Checkbox id="lettrage" checked={checks.lettrage} onCheckedChange={(c) => setChecks(v => ({...v, lettrage: !!c}))} /><Label htmlFor="lettrage">Lettrage des comptes tiers terminé</Label></div><div className="flex items-center space-x-2"><Checkbox id="rapprochements" checked={checks.rapprochements} onCheckedChange={(c) => setChecks(v => ({...v, rapprochements: !!c}))} /><Label htmlFor="rapprochements">Rapprochements bancaires effectués et validés</Label></div></div></TabsContent>
+                    <TabsContent value="step-2" className="mt-4"><p>Le système va générer automatiquement les écritures de clôture (amortissements, provisions, régularisations).</p><div className="p-4 bg-muted rounded-md mt-2 text-center text-sm">Simulation de la génération des écritures... <Loader2 className="inline-block h-4 w-4 animate-spin" /></div></TabsContent>
+                    <TabsContent value="step-3" className="mt-4"><div className="space-y-4"><p>Le résultat de l'exercice est de <strong>12,540,000 FCFA</strong>. Veuillez choisir une affectation.</p><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Mise en réserve</Label><Input type="number" defaultValue="12540000"/></div><div className="space-y-2"><Label>Distribution de dividendes</Label><Input type="number" defaultValue="0"/></div></div></div></TabsContent>
+                    <TabsContent value="step-4" className="mt-4"><div className="text-center p-8 space-y-4 text-destructive"><h3 className="text-lg font-bold">ATTENTION : Action Irréversible</h3><p>La validation finale va clôturer l'exercice. Aucune modification ne sera plus possible sur cette période. Les données seront archivées.</p></div></TabsContent>
+                </Tabs>
+            </div>
+            <DialogFooter>
+                {step > 1 && <Button variant="outline" onClick={() => setStep(s => s - 1)}>Précédent</Button>}
+                {step < 4 && <Button onClick={() => setStep(s => s + 1)} disabled={(step === 1 && (!checks.lettrage || !checks.rapprochements))}>Suivant</Button>}
+                {step === 4 && <DialogClose asChild><Button variant="destructive">Clôturer Définitivement</Button></DialogClose>}
+            </DialogFooter>
+        </DialogContent>
+    );
+}
+
 
 export default function SuperAdminPage() {
     return (
