@@ -11,25 +11,27 @@
 
 Le projet UNIKORP vise à développer une solution ERP (Enterprise Resource Planning) moderne, intégrée et modulaire, conçue pour unifier et optimiser la gestion des processus métier d'une entreprise. L'application centralise les données et les opérations de quatre départements clés : la finance, les ressources humaines, le marketing et la logistique.
 
+Face aux défis classiques de la gestion d'entreprise – silos d'information, redondance des saisies manuelles, manque de visibilité en temps réel et complexité administrative – UNIKORP propose une réponse unifiée et intelligente. L'objectif est de transformer la gestion opérationnelle en un avantage stratégique, en permettant aux entreprises de se concentrer sur leur croissance plutôt que sur la gestion de leurs outils.
+
 ### 1.2. Philosophie
 
 L'application est conçue pour être :
-- **Intuitive :** Une interface utilisateur claire, cohérente et facile à prendre en main pour tous les niveaux d'utilisateurs.
-- **Intégrée :** Les données circulent de manière fluide et logique entre les modules, reflétant les interactions réelles d'une entreprise.
-- **Modulaire :** Chaque module peut fonctionner de manière autonome tout en étant parfaitement connecté aux autres.
-- **Intelligente :** L'intégration de l'IA (via Genkit) permet d'automatiser des tâches complexes et d'offrir des fonctionnalités avancées comme la recherche sémantique.
-- **Sécurisée :** Une gestion des rôles et des accès précise garantit que chaque utilisateur ne voit et ne modifie que les informations pertinentes à sa fonction.
+- **Intuitive :** Une interface utilisateur claire, cohérente et facile à prendre en main pour tous les niveaux d'utilisateurs. L'ergonomie est pensée pour réduire la courbe d'apprentissage et permettre une adoption rapide par les équipes. Chaque écran est conçu pour présenter l'information la plus pertinente en premier, guidant l'utilisateur dans ses tâches.
+- **Intégrée :** Les données circulent de manière fluide et logique entre les modules, reflétant les interactions réelles d'une entreprise. Une action dans un module (ex: la validation d'une facture) déclenche automatiquement les processus nécessaires dans les autres modules (ex: mise à jour des stocks en logistique). Cela élimine la double saisie, réduit les erreurs et assure la cohérence des données à travers toute l'organisation.
+- **Modulaire :** Chaque module (SKOMPTAB, SOCIX, MARKOS, LOGSON) peut fonctionner de manière autonome tout en étant parfaitement connecté aux autres. Cette approche permet une flexibilité maximale : une entreprise peut commencer par utiliser un seul module et intégrer les autres progressivement, selon ses besoins et sa croissance.
+- **Intelligente :** L'intégration de l'IA (via Genkit) permet d'automatiser des tâches complexes et d'offrir des fonctionnalités avancées comme la recherche sémantique, le traitement automatique de documents (factures, plans comptables), et à terme, des analyses prédictives. L'IA n'est pas un gadget, mais un outil au service de la productivité.
+- **Sécurisée :** Une gestion des rôles et des accès précise garantit que chaque utilisateur ne voit et ne modifie que les informations pertinentes à sa fonction. La sécurité des données, la confidentialité et la traçabilité des actions sont au cœur de l'architecture.
 
 ---
 
 ## 2. Architecture Technique
 
-- **Framework Frontend :** Next.js 15 avec le App Router.
-- **Librairie UI :** React 18.
-- **Système de Design :** ShadCN UI pour les composants, et Tailwind CSS pour le style.
-- **Gestion d'état :** Jotai pour une gestion d'état atomique et légère.
-- **Intelligence Artificielle :** Google Genkit pour la création de flux IA (flows) et l'interaction avec les modèles Gemini.
-- **Langage :** TypeScript pour la robustesse et la sécurité de typage.
+- **Framework Frontend :** Next.js 15 avec le App Router. Choisi pour ses performances, son rendu côté serveur (SSR) et sa capacité à créer des applications web rapides et optimisées pour le SEO. Le App Router, en particulier, permet une gestion fine des états de chargement et des layouts imbriqués.
+- **Librairie UI :** React 18. Pour son approche basée sur les composants, qui favorise la réutilisabilité et la maintenabilité du code, et pour son vaste écosystème.
+- **Système de Design :** ShadCN UI pour les composants, et Tailwind CSS pour le style. Cette combinaison offre le meilleur des deux mondes : des composants d'interface accessibles et personnalisables (ShadCN) avec la flexibilité et la rapidité de développement d'un framework CSS utility-first (Tailwind).
+- **Gestion d'état :** Jotai pour une gestion d'état atomique et légère. Préféré pour sa simplicité et ses performances, Jotai permet de partager l'état entre les composants de manière efficace sans la complexité d'autres solutions plus lourdes.
+- **Intelligence Artificielle :** Google Genkit pour la création de flux IA (flows) et l'interaction avec les modèles Gemini. Genkit a été choisi pour son intégration native avec l'écosystème Google, sa facilité à définir des schémas de données structurées (entrées/sorties) et sa capacité à orchestrer des tâches complexes.
+- **Langage :** TypeScript pour la robustesse et la sécurité de typage. L'utilisation de TypeScript réduit les erreurs à l'exécution et améliore considérablement la maintenabilité du code sur un projet de grande envergure comme un ERP.
 
 ---
 
@@ -39,21 +41,21 @@ L'ERP est organisé autour de plusieurs modules principaux, accessibles via une 
 
 ### 3.1. Rôles et Contrôle d'Accès
 
-L'accès aux fonctionnalités est strictement contrôlé par un système de rôles :
+L'accès aux fonctionnalités est strictement contrôlé par un système de rôles. La logique est de fournir à chaque utilisateur uniquement les outils dont il a besoin, évitant ainsi la surcharge cognitive et les erreurs de manipulation.
 
-- **Compte Entreprise :** Rôle de supervision ultime. A accès à tous les modules, au tableau de bord principal, et à une **vue d'administration** exclusive (`/super-admin`) qui inclut le journal de toutes les actions des utilisateurs.
-- **Admin-Gestionnaire :** Rôle de configuration. A accès à tous les modules, au tableau de bord principal et à la page d'administration (`/super-admin`), mais ne voit pas le journal des actions.
-- **Gestionnaire de Module (Finance, RH, Marketing, Logistique) :** Accès limité au tableau de bord principal et à leur module spécifique (ex: un Gestionnaire RH ne voit que les onglets "Tableau de bord" et "SOCIX").
-- **Stagiaire de Module (Finance, RH, Marketing, Logistique) :** Accès identique à celui du gestionnaire, mais avec des droits de modification potentiellement restreints.
-- **Employé :** N'a pas accès à l'ERP de gestion. Il est redirigé directement vers son propre tableau de bord (`/employee-dashboard`) pour consulter ses informations personnelles, ses documents et gérer ses absences.
+- **Compte Entreprise :** Rôle de supervision ultime. A accès à tous les modules, au tableau de bord principal, et à une **vue d'administration** exclusive (`/super-admin`) qui inclut le journal de toutes les actions des utilisateurs. Ce rôle est destiné au propriétaire ou au dirigeant de l'entreprise.
+- **Admin-Gestionnaire :** Rôle de configuration. A accès à tous les modules, au tableau de bord principal et à la page d'administration (`/super-admin`), mais ne voit pas le journal des actions. Ce rôle est parfait pour un directeur des opérations ou un DSI qui a besoin de configurer l'ERP sans pour autant surveiller l'activité de chaque employé.
+- **Gestionnaire de Module (Finance, RH, Marketing, Logistique) :** Accès limité au tableau de bord principal et à leur module spécifique (ex: un Gestionnaire RH ne voit que les onglets "Tableau de bord" et "SOCIX"). Ce rôle est conçu pour les chefs de département.
+- **Stagiaire de Module (Finance, RH, Marketing, Logistique) :** Accès identique à celui du gestionnaire, mais avec des droits de modification potentiellement restreints (cette restriction pourra être affinée dans une future version). Cela permet aux stagiaires de se former sur l'outil en conditions réelles mais contrôlées.
+- **Employé :** N'a pas accès à l'ERP de gestion. Il est redirigé directement vers son propre tableau de bord (`/employee-dashboard`) pour consulter ses informations personnelles, ses documents et gérer ses absences. C'est un portail en self-service conçu pour autonomiser l'employé.
 
-**Logique de Sélection de Fichier :** Tous les rôles, à l'exception de "Employé", doivent obligatoirement sélectionner un fichier de gestion après la connexion pour accéder à l'ERP.
+**Logique de Sélection de Fichier :** Tous les rôles, à l'exception de "Employé", doivent obligatoirement sélectionner un fichier de gestion après la connexion pour accéder à l'ERP. Cette étape simule le choix d'un dossier comptable ou d'une entité juridique spécifique sur laquelle travailler, une pratique courante dans les cabinets ou les groupes multi-sociétés.
 
 ### 3.2. Modules de l'ERP
 
 #### 3.2.1. SKOMPTAB (Comptabilité & Finance)
 
-- **Objectif :** Gérer l'intégralité du cycle comptable et financier.
+- **Objectif :** Gérer l'intégralité du cycle comptable et financier, de la saisie des écritures à la production des états financiers, en passant par la gestion de la fiscalité et le pilotage analytique.
 
 - **Tableau de Bord (`/skomptab`)**
   - **Description :** Le tableau de bord financier offre une vue synthétique de la santé financière de l'entreprise. Il présente les indicateurs de performance clés (KPIs) comme le chiffre d'affaires, le résultat net, et la trésorerie. Des graphiques illustrent l'évolution des revenus face aux dépenses et les flux de trésorerie mensuels.
@@ -106,7 +108,7 @@ L'accès aux fonctionnalités est strictement contrôlé par un système de rôl
 
 #### 3.2.2. SOCIX (Ressources Humaines)
 
-- **Objectif :** Gérer le capital humain de l'entreprise.
+- **Objectif :** Gérer le capital humain de l'entreprise, du recrutement à la paie, en passant par le développement des talents et le suivi administratif.
 
 - **Tableau de Bord (`/socix`)**
   - **Description :** Vue d'ensemble des indicateurs RH : effectif, pyramide des âges, répartition par genre, et suivi des événements RH à venir.
@@ -143,7 +145,7 @@ L'accès aux fonctionnalités est strictement contrôlé par un système de rôl
 
 #### 3.2.3. MARKOS (Marketing & CRM)
 
-- **Objectif :** Gérer la relation client et les campagnes marketing.
+- **Objectif :** Gérer la relation client et les campagnes marketing, de la génération de leads à la fidélisation, en passant par l'analyse des performances.
 
 - **Tableau de Bord (`/markos`)**
   - **Description :** Vue d'ensemble des performances marketing, incluant les leads, le coût par lead, et le tunnel de conversion.
@@ -174,7 +176,7 @@ L'accès aux fonctionnalités est strictement contrôlé par un système de rôl
 
 #### 3.2.4. LOGSON (Logistique & Stocks)
 
-- **Objectif :** Optimiser la chaîne d'approvisionnement et la gestion des stocks.
+- **Objectif :** Optimiser la chaîne d'approvisionnement et la gestion des stocks, de la commande fournisseur à la livraison client, en assurant une traçabilité complète.
 
 - **Tableau de Bord (`/logson`)**
   - **Description :** Synthèse des indicateurs logistiques : rotation des stocks, livraison à temps, coût par commande, etc.
