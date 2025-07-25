@@ -1,4 +1,3 @@
-
 'use client';
 import { usePathname } from 'next/navigation';
 import { AppHeader } from './app-header';
@@ -30,8 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import { FolderOpen, Check } from 'lucide-react';
 import Image from 'next/image';
 
-const noHeaderPaths = ['/login'];
-const noSidebarPaths = ['/login', '/super-admin', '/employee-dashboard'];
+const noHeaderPaths = ['/'];
+const noSidebarPaths = ['/', '/super-admin', '/employee-dashboard'];
 
 const mockCompanyFiles = [
   "AUTO-GEST-2024-SocieteX",
@@ -105,9 +104,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const showHeader = !noHeaderPaths.includes(pathname);
   const showSidebar = !noSidebarPaths.includes(pathname);
-  const showModuleNav = showHeader && !['/login', '/super-admin', '/employee-dashboard'].includes(pathname);
+  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard'].includes(pathname);
   
-  const bypassPaths = ['/login', '/super-admin'];
+  const bypassPaths = ['/', '/super-admin'];
   const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
 
   if (!isClient) {

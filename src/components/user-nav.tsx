@@ -1,4 +1,3 @@
-
 'use client';
 import {
   DropdownMenu,
@@ -29,7 +28,7 @@ export function UserNav() {
     setRole(null);
     setCompanyFile(null);
     // Redirect to login page
-    router.push('/login');
+    router.push('/');
     toast({
         title: 'Déconnexion réussie',
         description: 'Vous avez été déconnecté de votre session.',
