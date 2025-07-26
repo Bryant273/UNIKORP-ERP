@@ -25,7 +25,7 @@ export default function LandingPage() {
                 'Rapprochement bancaire intelligent et suivi de trésorerie.',
                 'Reporting financier en temps réel (Bilan, Compte de Résultat, SIG).',
             ],
-            image: 'https://placehold.co/800x600.png'
+            image: 'https://placehold.co/600x400.png'
         },
         {
             name: 'SOCIX',
@@ -38,7 +38,7 @@ export default function LandingPage() {
                 'Suivi des congés, absences et plannings d\'équipe.',
                 'Gestion des compétences, formations et entretiens annuels.',
             ],
-            image: 'https://placehold.co/800x600.png'
+            image: 'https://placehold.co/600x400.png'
         },
         {
             name: 'MARKOS',
@@ -51,7 +51,7 @@ export default function LandingPage() {
                 'Automatisation des campagnes marketing multicanal.',
                 'Analyse du ROI et des performances en temps réel.',
             ],
-            image: 'https://placehold.co/800x600.png'
+            image: 'https://placehold.co/600x400.png'
         },
         {
             name: 'LOGSON',
@@ -64,7 +64,7 @@ export default function LandingPage() {
                 'Planification et suivi des expéditions clients.',
                 'Analyse des coûts logistiques et des indicateurs de performance.',
             ],
-            image: 'https://placehold.co/800x600.png'
+            image: 'https://placehold.co/600x400.png'
         },
     ];
 
@@ -145,7 +145,7 @@ export default function LandingPage() {
                                             </ul>
                                         </div>
                                         <div>
-                                            <Image src={module.image} alt={`Interface ${module.name}`} data-ai-hint={`${module.name} screen dashboard`} width={800} height={600} className="rounded-lg shadow-lg aspect-[4/3] object-cover"/>
+                                            <Image src={module.image} alt={`Interface ${module.name}`} data-ai-hint={`${module.name} screen dashboard`} width={600} height={400} className="rounded-lg shadow-lg aspect-video object-cover"/>
                                         </div>
                                     </div>
                                 ))}
