@@ -3,10 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
-import { BarChart, Calculator, Megaphone, Ship, Users, ArrowRight, GitCommit, Zap } from "lucide-react";
+import { BarChart, Calculator, Megaphone, Ship, Users, ArrowRight, GitCommit, Zap, ShieldCheck, Heart, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -19,25 +18,25 @@ export default function LandingPage() {
             name: 'SKOMPTAB',
             title: 'Finance & Comptabilité',
             icon: Calculator,
-            description: 'Pilotez votre santé financière avec une précision chirurgicale. SKOMPTAB centralise votre comptabilité, de la saisie des écritures à la génération des états financiers.',
+            description: 'Pilotez votre santé financière avec une précision chirurgicale. SKOMPTAB centralise votre comptabilité, de la saisie des écritures à la génération des états financiers, en passant par la gestion de la trésorerie et la conformité fiscale.',
             features: [
-                'Plan comptable général et analytique',
-                'Gestion automatisée de la TVA et des impôts',
-                'Rapprochement bancaire intelligent',
-                'Reporting financier en temps réel (Bilan, Compte de Résultat)',
+                'Plan comptable général et analytique personnalisable.',
+                'Gestion automatisée de la TVA et des autres impôts.',
+                'Rapprochement bancaire intelligent et suivi de trésorerie.',
+                'Reporting financier en temps réel (Bilan, Compte de Résultat, SIG).',
             ],
             image: 'https://placehold.co/800x600.png'
         },
         {
             name: 'SOCIX',
             title: 'Ressources Humaines',
-            icon: Users,
-            description: 'Transformez votre gestion RH. SOCIX simplifie la gestion des employés, de la paie aux congés, en passant par le développement des talents.',
+            icon: UsersRound,
+            description: 'Transformez votre gestion RH en un levier de croissance stratégique. SOCIX simplifie la gestion des employés, de la paie aux congés, en passant par le développement des talents et le suivi des performances.',
             features: [
-                'Gestion complète des dossiers employés',
-                'Traitement de la paie et déclarations sociales',
-                'Suivi des congés, absences et plannings',
-                'Gestion des compétences et plans de formation',
+                'Gestion complète des dossiers employés et des contrats.',
+                'Traitement de la paie et déclarations sociales automatisées.',
+                'Suivi des congés, absences et plannings d\'équipe.',
+                'Gestion des compétences, formations et entretiens annuels.',
             ],
             image: 'https://placehold.co/800x600.png'
         },
@@ -45,12 +44,12 @@ export default function LandingPage() {
             name: 'MARKOS',
             title: 'Marketing & CRM',
             icon: Megaphone,
-            description: 'De la prospection à la fidélisation, MARKOS est votre copilote pour une relation client optimisée et des campagnes marketing percutantes.',
+            description: 'De la prospection à la fidélisation, MARKOS est votre copilote pour une relation client optimisée et des campagnes marketing percutantes. Unifiez vos efforts pour une croissance mesurable.',
             features: [
-                'Pipeline de vente et suivi des opportunités',
-                'Segmentation de la base de contacts',
-                'Automatisation des campagnes marketing',
-                'Analyse du ROI et des performances',
+                'Pipeline de vente visuel et suivi des opportunités.',
+                'Segmentation avancée de la base de contacts.',
+                'Automatisation des campagnes marketing multicanal.',
+                'Analyse du ROI et des performances en temps réel.',
             ],
             image: 'https://placehold.co/800x600.png'
         },
@@ -58,12 +57,12 @@ export default function LandingPage() {
             name: 'LOGSON',
             title: 'Logistique & Stocks',
             icon: Ship,
-            description: 'Optimisez votre chaîne d\'approvisionnement. LOGSON vous donne une visibilité complète sur vos stocks, commandes et livraisons.',
+            description: 'Optimisez l\'ensemble de votre chaîne d\'approvisionnement. LOGSON vous donne une visibilité complète sur vos stocks, commandes et livraisons pour une efficacité maximale.',
             features: [
-                'Suivi des stocks en temps réel multi-entrepôts',
-                'Gestion des commandes fournisseurs et réceptions',
-                'Planification et suivi des expéditions clients',
-                'Analyse des coûts logistiques et KPI',
+                'Suivi des stocks en temps réel sur plusieurs entrepôts.',
+                'Gestion des commandes fournisseurs et des réceptions.',
+                'Planification et suivi des expéditions clients.',
+                'Analyse des coûts logistiques et des indicateurs de performance.',
             ],
             image: 'https://placehold.co/800x600.png'
         },
@@ -107,9 +106,19 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </section>
+
+                    {/* Intro Section */}
+                    <section className="py-20 bg-background">
+                        <div className="container mx-auto px-4 text-center">
+                             <h2 className="text-3xl font-bold">La Plateforme Unifiée pour Piloter votre Croissance</h2>
+                             <p className="text-muted-foreground mt-4 max-w-3xl mx-auto">
+                                UNIKORP, une innovation signée <span className="font-semibold text-primary">INNOV'KORP</span>, est bien plus qu'un simple logiciel. C'est un partenaire stratégique conçu pour briser les silos entre vos départements. En centralisant vos données et en automatisant vos processus, nous vous offrons une vision à 360° de votre activité pour des décisions plus rapides et plus intelligentes.
+                             </p>
+                        </div>
+                    </section>
                     
                     {/* Modules Section */}
-                    <section id="modules" className="py-20 bg-background">
+                    <section id="modules" className="py-20 bg-muted/40">
                         <div className="container mx-auto px-4">
                             <div className="text-center mb-16">
                                 <h2 className="text-3xl font-bold">Une solution complète pour chaque département</h2>
@@ -146,7 +155,7 @@ export default function LandingPage() {
 
 
                     {/* Integration Section */}
-                    <section id="integration" className="py-20 bg-muted/40">
+                    <section id="integration" className="py-20 bg-background">
                         <div className="container mx-auto px-4">
                              <div className="text-center mb-12">
                                 <h2 className="text-3xl font-bold">Une Synergie Parfaite</h2>
@@ -185,7 +194,7 @@ export default function LandingPage() {
                 {/* Footer */}
                 <footer id="contact" className="bg-foreground text-background">
                     <div className="container mx-auto px-4 py-8 text-center">
-                        <p>&copy; {new Date().getFullYear()} UNIKORP. Tous droits réservés.</p>
+                        <p>&copy; {new Date().getFullYear()} UNIKORP by INNOV'KORP. Tous droits réservés.</p>
                     </div>
                 </footer>
             </div>
