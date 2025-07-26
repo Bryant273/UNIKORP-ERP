@@ -8,6 +8,7 @@ import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 
 export default function LandingPage() {
@@ -107,45 +108,39 @@ export default function LandingPage() {
                         </div>
                     </section>
                     
-                    {/* Modules Section with Tabs */}
+                    {/* Modules Section */}
                     <section id="modules" className="py-20 bg-background">
                         <div className="container mx-auto px-4">
-                            <div className="text-center mb-12">
+                            <div className="text-center mb-16">
                                 <h2 className="text-3xl font-bold">Une solution complète pour chaque département</h2>
-                                <p className="text-muted-foreground mt-2">Découvrez comment chaque module UNIKORP répond aux besoins spécifiques de votre entreprise.</p>
+                                <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Découvrez comment chaque module UNIKORP répond aux besoins spécifiques de votre entreprise.</p>
                             </div>
-                            <Tabs defaultValue="SKOMPTAB" className="w-full">
-                                <TabsList className="grid w-full grid-cols-4">
-                                    {modules.map(module => (
-                                        <TabsTrigger key={module.name} value={module.name}>
-                                            <module.icon className="mr-2 h-4 w-4" /> {module.name}
-                                        </TabsTrigger>
-                                    ))}
-                                </TabsList>
-                                {modules.map(module => (
-                                    <TabsContent key={module.name} value={module.name} className="mt-6">
-                                        <Card>
-                                            <CardContent className="p-6 grid md:grid-cols-2 gap-8 items-center">
-                                                <div className="space-y-4">
-                                                    <h3 className="text-2xl font-semibold">{module.title}</h3>
-                                                    <p className="text-muted-foreground">{module.description}</p>
-                                                    <ul className="space-y-2">
-                                                        {module.features.map(feature => (
-                                                            <li key={feature} className="flex items-start gap-2">
-                                                                <Zap className="h-4 w-4 text-primary mt-1 flex-shrink-0"/>
-                                                                <span className="text-sm">{feature}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                            <div className="space-y-24">
+                                {modules.map((module, index) => (
+                                    <div key={module.name} className="grid md:grid-cols-2 gap-12 items-center">
+                                        <div className={cn("space-y-4", index % 2 !== 0 && "md:order-last")}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-primary/10 rounded-md">
+                                                    <module.icon className="h-6 w-6 text-primary" />
                                                 </div>
-                                                <div>
-                                                    <Image src={module.image} alt={`Interface ${module.name}`} data-ai-hint={`${module.name} screen dashboard`} width={800} height={600} className="rounded-lg shadow-lg"/>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </TabsContent>
+                                                <h3 className="text-2xl font-semibold">{module.title}</h3>
+                                            </div>
+                                            <p className="text-muted-foreground">{module.description}</p>
+                                            <ul className="space-y-2 pt-2">
+                                                {module.features.map(feature => (
+                                                    <li key={feature} className="flex items-start gap-3">
+                                                        <Zap className="h-4 w-4 text-primary mt-1 flex-shrink-0"/>
+                                                        <span className="text-sm">{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <Image src={module.image} alt={`Interface ${module.name}`} data-ai-hint={`${module.name} screen dashboard`} width={800} height={600} className="rounded-lg shadow-lg aspect-[4/3] object-cover"/>
+                                        </div>
+                                    </div>
                                 ))}
-                            </Tabs>
+                            </div>
                         </div>
                     </section>
 
