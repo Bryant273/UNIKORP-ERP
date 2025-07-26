@@ -80,7 +80,6 @@ export default function LandingPage() {
                     <div className="flex items-center gap-4">
                         <nav className="hidden md:flex gap-6 text-sm font-medium">
                             <a href="#modules" className="hover:text-primary transition-colors">Modules</a>
-                            <a href="#integration" className="hover:text-primary transition-colors">Intégration</a>
                             <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
                         </nav>
                         <Button onClick={() => setIsLoginModalOpen(true)}>Se connecter</Button>
@@ -152,43 +151,6 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </section>
-
-
-                    {/* Integration Section */}
-                    <section id="integration" className="py-20 bg-background">
-                        <div className="container mx-auto px-4">
-                             <div className="text-center mb-12">
-                                <h2 className="text-3xl font-bold">Une Synergie Parfaite</h2>
-                                <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Les modules d'UNIKORP ne sont pas des silos. Ils communiquent et travaillent ensemble pour automatiser vos flux de travail.</p>
-                            </div>
-                            <div className="grid md:grid-cols-3 gap-8">
-                                <Card>
-                                    <CardHeader><CardTitle className="flex items-center gap-2"><Megaphone/>MARKOS</CardTitle></CardHeader>
-                                    <CardContent><p className="text-sm">Un prospect est converti en client.</p></CardContent>
-                                </Card>
-                                <div className="flex items-center justify-center text-primary"><ArrowRight className="w-12 h-12"/></div>
-                                <Card>
-                                    <CardHeader><CardTitle className="flex items-center gap-2"><Calculator/>SKOMPTAB</CardTitle></CardHeader>
-                                    <CardContent><p className="text-sm">Le compte client est automatiquement créé dans les tiers.</p></CardContent>
-                                </Card>
-                            </div>
-                            <div className="flex justify-center my-8">
-                                <GitCommit className="w-8 h-8 rotate-90 text-muted-foreground"/>
-                            </div>
-                            <div className="grid md:grid-cols-3 gap-8">
-                                 <Card>
-                                    <CardHeader><CardTitle className="flex items-center gap-2"><Calculator/>SKOMPTAB</CardTitle></CardHeader>
-                                    <CardContent><p className="text-sm">Une facture de vente est validée.</p></CardContent>
-                                </Card>
-                                <div className="flex items-center justify-center text-primary"><ArrowRight className="w-12 h-12"/></div>
-                                <Card>
-                                    <CardHeader><CardTitle className="flex items-center gap-2"><Ship/>LOGSON</CardTitle></CardHeader>
-                                    <CardContent><p className="text-sm">Une commande client est automatiquement créée, prête pour préparation et expédition.</p></CardContent>
-                                </Card>
-                            </div>
-                        </div>
-                    </section>
-
                 </main>
 
                 {/* Footer */}
