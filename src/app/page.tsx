@@ -2,14 +2,71 @@
 'use client';
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { BarChart, Calculator, Megaphone, Ship, Users } from "lucide-react";
+import { BarChart, Calculator, Megaphone, Ship, Users, ArrowRight, GitCommit, Zap } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+
 
 export default function LandingPage() {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+    const modules = [
+        {
+            name: 'SKOMPTAB',
+            title: 'Finance & Comptabilité',
+            icon: Calculator,
+            description: 'Pilotez votre santé financière avec une précision chirurgicale. SKOMPTAB centralise votre comptabilité, de la saisie des écritures à la génération des états financiers.',
+            features: [
+                'Plan comptable général et analytique',
+                'Gestion automatisée de la TVA et des impôts',
+                'Rapprochement bancaire intelligent',
+                'Reporting financier en temps réel (Bilan, Compte de Résultat)',
+            ],
+            image: 'https://placehold.co/800x600.png'
+        },
+        {
+            name: 'SOCIX',
+            title: 'Ressources Humaines',
+            icon: Users,
+            description: 'Transformez votre gestion RH. SOCIX simplifie la gestion des employés, de la paie aux congés, en passant par le développement des talents.',
+            features: [
+                'Gestion complète des dossiers employés',
+                'Traitement de la paie et déclarations sociales',
+                'Suivi des congés, absences et plannings',
+                'Gestion des compétences et plans de formation',
+            ],
+            image: 'https://placehold.co/800x600.png'
+        },
+        {
+            name: 'MARKOS',
+            title: 'Marketing & CRM',
+            icon: Megaphone,
+            description: 'De la prospection à la fidélisation, MARKOS est votre copilote pour une relation client optimisée et des campagnes marketing percutantes.',
+            features: [
+                'Pipeline de vente et suivi des opportunités',
+                'Segmentation de la base de contacts',
+                'Automatisation des campagnes marketing',
+                'Analyse du ROI et des performances',
+            ],
+            image: 'https://placehold.co/800x600.png'
+        },
+        {
+            name: 'LOGSON',
+            title: 'Logistique & Stocks',
+            icon: Ship,
+            description: 'Optimisez votre chaîne d\'approvisionnement. LOGSON vous donne une visibilité complète sur vos stocks, commandes et livraisons.',
+            features: [
+                'Suivi des stocks en temps réel multi-entrepôts',
+                'Gestion des commandes fournisseurs et réceptions',
+                'Planification et suivi des expéditions clients',
+                'Analyse des coûts logistiques et KPI',
+            ],
+            image: 'https://placehold.co/800x600.png'
+        },
+    ];
 
     return (
         <>
@@ -22,8 +79,8 @@ export default function LandingPage() {
                     </div>
                     <div className="flex items-center gap-4">
                         <nav className="hidden md:flex gap-6 text-sm font-medium">
-                            <a href="#features" className="hover:text-primary transition-colors">Fonctionnalités</a>
                             <a href="#modules" className="hover:text-primary transition-colors">Modules</a>
+                            <a href="#integration" className="hover:text-primary transition-colors">Intégration</a>
                             <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
                         </nav>
                         <Button onClick={() => setIsLoginModalOpen(true)}>Se connecter</Button>
@@ -49,60 +106,85 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </section>
-
-                    {/* Modules Section */}
-                     <section id="modules" className="py-20 bg-background">
+                    
+                    {/* Modules Section with Tabs */}
+                    <section id="modules" className="py-20 bg-background">
                         <div className="container mx-auto px-4">
-                            <h2 className="text-3xl font-bold text-center mb-12">Quatre Pôles Stratégiques, Une Solution Unifiée</h2>
-                            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                <div className="text-center p-6 border rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                                    <Calculator className="h-12 w-12 mx-auto text-primary mb-4" />
-                                    <h3 className="font-semibold text-lg">SKOMPTAB</h3>
-                                    <p className="text-muted-foreground mt-2 text-sm">Finance & Comptabilité</p>
-                                </div>
-                                 <div className="text-center p-6 border rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                                    <Users className="h-12 w-12 mx-auto text-primary mb-4" />
-                                    <h3 className="font-semibold text-lg">SOCIX</h3>
-                                    <p className="text-muted-foreground mt-2 text-sm">Ressources Humaines</p>
-                                </div>
-                                 <div className="text-center p-6 border rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                                    <Megaphone className="h-12 w-12 mx-auto text-primary mb-4" />
-                                    <h3 className="font-semibold text-lg">MARKOS</h3>
-                                    <p className="text-muted-foreground mt-2 text-sm">Marketing & CRM</p>
-                                </div>
-                                 <div className="text-center p-6 border rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                                    <Ship className="h-12 w-12 mx-auto text-primary mb-4" />
-                                    <h3 className="font-semibold text-lg">LOGSON</h3>
-                                    <p className="text-muted-foreground mt-2 text-sm">Logistique & Stocks</p>
-                                </div>
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl font-bold">Une solution complète pour chaque département</h2>
+                                <p className="text-muted-foreground mt-2">Découvrez comment chaque module UNIKORP répond aux besoins spécifiques de votre entreprise.</p>
+                            </div>
+                            <Tabs defaultValue="SKOMPTAB" className="w-full">
+                                <TabsList className="grid w-full grid-cols-4">
+                                    {modules.map(module => (
+                                        <TabsTrigger key={module.name} value={module.name}>
+                                            <module.icon className="mr-2 h-4 w-4" /> {module.name}
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                                {modules.map(module => (
+                                    <TabsContent key={module.name} value={module.name} className="mt-6">
+                                        <Card>
+                                            <CardContent className="p-6 grid md:grid-cols-2 gap-8 items-center">
+                                                <div className="space-y-4">
+                                                    <h3 className="text-2xl font-semibold">{module.title}</h3>
+                                                    <p className="text-muted-foreground">{module.description}</p>
+                                                    <ul className="space-y-2">
+                                                        {module.features.map(feature => (
+                                                            <li key={feature} className="flex items-start gap-2">
+                                                                <Zap className="h-4 w-4 text-primary mt-1 flex-shrink-0"/>
+                                                                <span className="text-sm">{feature}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <div>
+                                                    <Image src={module.image} alt={`Interface ${module.name}`} data-ai-hint={`${module.name} screen dashboard`} width={800} height={600} className="rounded-lg shadow-lg"/>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
+                                ))}
+                            </Tabs>
+                        </div>
+                    </section>
+
+
+                    {/* Integration Section */}
+                    <section id="integration" className="py-20 bg-muted/40">
+                        <div className="container mx-auto px-4">
+                             <div className="text-center mb-12">
+                                <h2 className="text-3xl font-bold">Une Synergie Parfaite</h2>
+                                <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Les modules d'UNIKORP ne sont pas des silos. Ils communiquent et travaillent ensemble pour automatiser vos flux de travail.</p>
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                <Card>
+                                    <CardHeader><CardTitle className="flex items-center gap-2"><Megaphone/>MARKOS</CardTitle></CardHeader>
+                                    <CardContent><p className="text-sm">Un prospect est converti en client.</p></CardContent>
+                                </Card>
+                                <div className="flex items-center justify-center text-primary"><ArrowRight className="w-12 h-12"/></div>
+                                <Card>
+                                    <CardHeader><CardTitle className="flex items-center gap-2"><Calculator/>SKOMPTAB</CardTitle></CardHeader>
+                                    <CardContent><p className="text-sm">Le compte client est automatiquement créé dans les tiers.</p></CardContent>
+                                </Card>
+                            </div>
+                            <div className="flex justify-center my-8">
+                                <GitCommit className="w-8 h-8 rotate-90 text-muted-foreground"/>
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                 <Card>
+                                    <CardHeader><CardTitle className="flex items-center gap-2"><Calculator/>SKOMPTAB</CardTitle></CardHeader>
+                                    <CardContent><p className="text-sm">Une facture de vente est validée.</p></CardContent>
+                                </Card>
+                                <div className="flex items-center justify-center text-primary"><ArrowRight className="w-12 h-12"/></div>
+                                <Card>
+                                    <CardHeader><CardTitle className="flex items-center gap-2"><Ship/>LOGSON</CardTitle></CardHeader>
+                                    <CardContent><p className="text-sm">Une commande client est automatiquement créée, prête pour préparation et expédition.</p></CardContent>
+                                </Card>
                             </div>
                         </div>
                     </section>
 
-                    {/* Features Section */}
-                    <section id="features" className="py-20 bg-muted/40">
-                        <div className="container mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
-                            <div>
-                                <Image src="https://placehold.co/800x600.png" alt="Tableau de bord Unikorp" data-ai-hint="dashboard screen" width={800} height={600} className="rounded-lg shadow-2xl" />
-                            </div>
-                            <div>
-                                <h2 className="text-3xl font-bold mb-4">Pilotage en Temps Réel</h2>
-                                <p className="text-muted-foreground mb-6">
-                                    Prenez des décisions éclairées grâce à des tableaux de bord dynamiques et des indicateurs de performance clés (KPI) mis à jour en continu. UNIKORP transforme vos données brutes en informations stratégiques.
-                                </p>
-                                 <ul className="space-y-4">
-                                    <li className="flex items-start gap-3">
-                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><BarChart className="h-5 w-5 text-primary" /></div>
-                                        <div><h4 className="font-semibold">Vue à 360°</h4><p className="text-sm text-muted-foreground">Consolidez les données de tous vos départements en une seule vue unifiée.</p></div>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><Users className="h-5 w-5 text-primary" /></div>
-                                        <div><h4 className="font-semibold">Collaboration Accrue</h4><p className="text-sm text-muted-foreground">Éliminez les silos d'information et favorisez une communication fluide entre les équipes.</p></div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
                 </main>
 
                 {/* Footer */}
