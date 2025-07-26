@@ -95,6 +95,7 @@ export function UserNav() {
               <span>Contacter le Support</span>
             </Link>
           </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Déconnexion</span>

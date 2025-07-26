@@ -30,8 +30,8 @@ import { useToast } from '@/hooks/use-toast';
 import { FolderOpen, Check } from 'lucide-react';
 import Image from 'next/image';
 
-const noHeaderPaths = ['/login', '/'];
-const noSidebarPaths = ['/', '/login', '/super-admin', '/employee-dashboard'];
+const noHeaderPaths = ['/'];
+const noSidebarPaths = ['/', '/super-admin', '/employee-dashboard'];
 
 const mockCompanyFiles = [
   "AUTO-GEST-2024-SocieteX",
@@ -105,9 +105,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const showHeader = !noHeaderPaths.includes(pathname);
   const showSidebar = !noSidebarPaths.includes(pathname);
-  const showModuleNav = showHeader && !['/', '/login', '/super-admin', '/employee-dashboard'].includes(pathname);
+  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard'].includes(pathname);
   
-  const bypassPaths = ['/', '/login', '/super-admin'];
+  const bypassPaths = ['/'];
   const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
 
   if (!isClient) {
@@ -132,7 +132,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             showSidebar && !isDashboardBlocked && 'p-6',
             pathname === '/dashboard' && !isDashboardBlocked && 'p-4 sm:p-6 lg:p-8',
             !showSidebar && showHeader && pathname !== '/dashboard' && 'p-4 sm:p-6 lg:p-8',
-            !showHeader && !showSidebar && pathname !== '/login' && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', 
+            !showHeader && !showSidebar && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', 
             (showHeader || showSidebar) && 'bg-background/80'
           )}
         >
