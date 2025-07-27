@@ -1,3 +1,4 @@
+import { use } from 'react';
 import { SettingsTabs } from '@/components/settings-tabs';
 
 export default function SettingsPage({
@@ -5,7 +6,7 @@ export default function SettingsPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const tab = searchParams?.tab as string | undefined;
+  const tab = use(searchParams)?.tab as string | undefined;
 
   return (
     <div className="flex w-full flex-col gap-8">
