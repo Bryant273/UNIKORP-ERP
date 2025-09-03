@@ -1,0 +1,60 @@
+// /src/lib/services/smart-search-service.ts
+
+/**
+ * @fileOverview This service handles the business logic for the smart search functionality.
+ * It interacts with the Genkit AI flow to perform searches across modules.
+ */
+
+import {
+  crossModuleSmartSearch,
+  type CrossModuleSmartSearchInput,
+  type CrossModuleSmartSearchOutput,
+} from '@/ai/flows/cross-module-smart-search';
+import { z } from 'zod';
+
+const DUMMY_RESULTS: CrossModuleSmartSearchOutput = {
+  results: [
+    { module: 'MARKOS', recordId: 'CAMP-001', summary: 'Campagne marketing "Lancement Produit Alpha" pour le Q3 2024.' },
+    { module: 'LOGSON', recordId: 'SHIP-987', summary: 'Expédition en retard pour le client "TechCorp", prévue pour le 15/08/2024.' },
+    { module: 'SKOMPTAB', recordId: 'INV-2024-042', summary: 'Facture impayée pour le client "Innovate Inc.", due le 30/07/2024.' },
+    { module: 'MARKOS', recordId: 'LEAD-554', summary: 'Nouveau prospect qualifié "Global Solutions Ltd" intéressé par le Produit Beta.' },
+    { module: 'SOCIX', recordId: 'EMP-076', summary: 'Profil de l\'employé Jean Dupont, Senior Developer.' },
+  ],
+};
+
+const inputSchema = z.object({
+  query: z.string().min(1, "Query cannot be empty"),
+});
+
+/**
+ * Handles the smart search logic. In a real application, this would
+ * contain the core business logic, database lookups, and calls to AI flows.
+ * @param input The search input containing the query.
+ * @returns A promise that resolves to the search results.
+ */
+export async function handleSmartSearch(input: CrossModuleSmartSearchInput): Promise<CrossModuleSmartSearchOutput> {
+  const validatedInput = inputSchema.safeParse(input);
+  if (!validatedInput.success) {
+    throw new Error('Invalid input for smart search.');
+  }
+
+  // To avoid hitting real API for every test, we can use a flag.
+  // In a real app, this would be based on environment variables.
+  const useDummyData = process.env.NODE_ENV === 'development';
+
+  if (useDummyData && validatedInput.data.query.toLowerCase().includes('test')) {
+     // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return DUMMY_RESULTS;
+  }
+
+  try {
+    // In a real scenario, you'd call the actual AI flow.
+    const results = await crossModuleSmartSearch(validatedInput.data);
+    return results;
+    
+  } catch (error) {
+    console.error("Error in crossModuleSmartSearch flow:", error);
+    throw new Error("Failed to execute smart search.");
+  }
+}

@@ -7,12 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Search, Loader2, ServerCrash } from 'lucide-react';
-import { handleSmartSearch } from '@/app/actions';
 import type { CrossModuleSmartSearchOutput } from '@/ai/flows/cross-module-smart-search';
 import {
   Accordion,
@@ -37,7 +35,20 @@ export function SmartSearch() {
     setError(null);
     setResults(null);
     try {
-      const searchResults = await handleSmartSearch({ query });
+      // Frontend now calls the API route
+      const response = await fetch('/api/smart-search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
+
+      const searchResults: CrossModuleSmartSearchOutput = await response.json();
       setResults(searchResults);
     } catch (err) {
       setError('An error occurred during the search. Please try again.');
@@ -125,7 +136,7 @@ export function SmartSearch() {
                 ))}
               </Accordion>
             )}
-             {results?.results.length === 0 && (
+             {results?.results.length === 0 && !isLoading && (
                 <div className="text-center py-8">
                     <p className="text-muted-foreground">Aucun résultat trouvé.</p>
                 </div>
