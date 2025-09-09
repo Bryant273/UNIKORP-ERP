@@ -31,7 +31,7 @@ import { FolderOpen, Check } from 'lucide-react';
 import Image from 'next/image';
 
 const noHeaderPaths = ['/'];
-const noSidebarPaths = ['/', '/super-admin', '/employee-dashboard'];
+const noSidebarPaths = ['/', '/super-admin', '/employee-dashboard', '/platform-admin'];
 
 const mockCompanyFiles = [
   "AUTO-GEST-2024-SocieteX",
@@ -105,9 +105,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const showHeader = !noHeaderPaths.includes(pathname);
   const showSidebar = !noSidebarPaths.includes(pathname);
-  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard'].includes(pathname);
+  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin'].includes(pathname);
   
-  const bypassPaths = ['/'];
+  const bypassPaths = ['/', '/platform-admin'];
   const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
 
   if (!isClient) {
@@ -131,7 +131,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             'flex-1 overflow-y-auto',
             showSidebar && !isDashboardBlocked && 'p-6',
             pathname === '/dashboard' && !isDashboardBlocked && 'p-4 sm:p-6 lg:p-8',
-            !showSidebar && showHeader && pathname !== '/dashboard' && 'p-4 sm:p-6 lg:p-8',
+            !showSidebar && showHeader && !['/dashboard', '/super-admin'].includes(pathname) && 'p-4 sm:p-6 lg:p-8',
+            (pathname === '/super-admin' || pathname === '/platform-admin') && 'p-4 sm:p-6 lg:p-8',
             !showHeader && !showSidebar && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', 
             (showHeader || showSidebar) && 'bg-background/80'
           )}

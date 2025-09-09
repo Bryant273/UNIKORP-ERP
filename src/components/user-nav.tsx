@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { User, Settings, LifeBuoy, LogOut, Zap, Bell, History, MessageCircleQuestion } from 'lucide-react';
+import { User, Settings, LifeBuoy, LogOut, Zap, Bell, History, MessageCircleQuestion, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
-  const [, setRole] = useAtom(userRoleAtom);
+  const [role, setRole] = useAtom(userRoleAtom);
   const [, setCompanyFile] = useAtom(companyFileAtom);
 
   const handleLogout = () => {
@@ -35,6 +35,8 @@ export function UserNav() {
         description: 'Vous avez été déconnecté de votre session.',
     });
   }
+  
+  const isPlatformAdmin = role === 'Fournisseur ERP';
 
   return (
     <DropdownMenu>
@@ -49,32 +51,43 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Utilisateur Unikorp</p>
+            <p className="text-sm font-medium leading-none">{isPlatformAdmin ? "Admin Plateforme" : "Utilisateur Unikorp"}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              utilisateur@unikorp.com
+              {isPlatformAdmin ? "admin@unikorp-provider.com" : "utilisateur@unikorp.com"}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href="/settings?tab=profile">
-              <User className="mr-2 h-4 w-4" />
-              <span>Profil</span>
-            </Link>
-          </DropdownMenuItem>
-           <DropdownMenuItem asChild>
-            <Link href="/notifications">
-              <Bell className="mr-2 h-4 w-4" />
-              <span>Notifications</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/actions">
-              <History className="mr-2 h-4 w-4" />
-              <span>Actions</span>
-            </Link>
-          </DropdownMenuItem>
+          {isPlatformAdmin ? (
+            <DropdownMenuItem asChild>
+              <Link href="/platform-admin">
+                <Shield className="mr-2 h-4 w-4" />
+                <span>Gestion Plateforme</span>
+              </Link>
+            </DropdownMenuItem>
+          ) : (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href="/settings?tab=profile">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profil</span>
+                </Link>
+              </DropdownMenuItem>
+               <DropdownMenuItem asChild>
+                <Link href="/notifications">
+                  <Bell className="mr-2 h-4 w-4" />
+                  <span>Notifications</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/actions">
+                  <History className="mr-2 h-4 w-4" />
+                  <span>Actions</span>
+                </Link>
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuItem asChild>
             <Link href="/settings?tab=preferences">
               <Settings className="mr-2 h-4 w-4" />

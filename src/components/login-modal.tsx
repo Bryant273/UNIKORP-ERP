@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Logo } from '@/components/logo';
-import { Building, UserCog, Briefcase, Clipboard, User, Moon, Sun, Calculator, Users, Megaphone, Truck } from 'lucide-react';
+import { Building, UserCog, Briefcase, Clipboard, User, Moon, Sun, Calculator, Users, Megaphone, Truck, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAtom } from 'jotai';
 import { userRoleAtom, type UserRole } from '@/lib/store';
@@ -124,7 +124,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
 
-                                <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')} className="col-span-2"><User className="mr-2"/>Employé</Button>
+                                <Button variant="outline" onClick={() => handleLogin('Employé', '/employee-dashboard')}><User className="mr-2"/>Employé</Button>
+                                <Button variant="outline" onClick={() => handleLogin('Fournisseur ERP', '/platform-admin')}><Shield className="mr-2"/>Fournisseur</Button>
                             </div>
                         </div>
                     </CardContent>
