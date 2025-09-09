@@ -62,16 +62,16 @@ export function AppHeader() {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
   
-  const showCompanyName = pathname !== '/super-admin';
+  const showCompanyName = !['/super-admin', '/dashboard'].includes(pathname);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-[#2D3748] px-4 text-primary-foreground sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
       <div className="flex items-center gap-4">
-        <Logo className="h-8 w-8 text-white" />
+        <Logo className="h-8 w-8 text-primary" />
         {showCompanyName && companyFile && (
             <div className="flex items-center gap-3">
-                <Image src="https://placehold.co/100x100.png" width={28} height={28} alt="Company Logo" className="h-7 w-7 rounded-full border-2 border-white/50" data-ai-hint="company logo"/>
-                <span className="font-semibold text-white">{companyFile}</span>
+                <Image src="https://placehold.co/100x100.png" width={28} height={28} alt="Company Logo" className="h-7 w-7 rounded-full border-2 border-primary/20" data-ai-hint="company logo"/>
+                <span className="font-semibold text-foreground">{companyFile}</span>
             </div>
         )}
       </div>
@@ -86,7 +86,6 @@ export function AppHeader() {
         {mounted ? (
           <Switch
             id="dark-mode-toggle"
-            className="data-[state=checked]:bg-white/20 data-[state=unchecked]:bg-white/20"
             checked={theme === 'dark'}
             onCheckedChange={(checked) => {
               setTheme(checked ? 'dark' : 'light');
@@ -98,10 +97,10 @@ export function AppHeader() {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative rounded-full hover:bg-white/10 hover:text-primary-foreground">
+            <Button variant="ghost" size="icon" className="relative rounded-full">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs text-primary-foreground">
                     {unreadCount}
                 </span>
               )}
@@ -152,7 +151,7 @@ export function AppHeader() {
         </Popover>
         
         <Link href="/help">
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 hover:text-primary-foreground">
+          <Button variant="ghost" size="icon" className="rounded-full">
             <LifeBuoy className="h-5 w-5" />
             <span className="sr-only">Help</span>
           </Button>

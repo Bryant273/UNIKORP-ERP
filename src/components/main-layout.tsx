@@ -118,7 +118,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     return <CompanyFileSelection />;
   }
   
-  const isDashboardBlocked = pathname === '/dashboard' && !companyFile;
+  const isDashboardBlocked = (pathname === '/dashboard' || pathname.startsWith('/skomptab') || pathname.startsWith('/socix') || pathname.startsWith('/markos') || pathname.startsWith('/logson')) && !companyFile && role !== 'Employé';
 
   return (
     <div className="flex h-screen w-full flex-col">

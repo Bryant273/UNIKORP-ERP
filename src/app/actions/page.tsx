@@ -110,7 +110,7 @@ export default function ActionsPage() {
                             <TableCell>
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
-                                        <AvatarImage src={action.user.avatarUrl} alt={action.user.name} />
+                                        <AvatarImage src={action.user.avatarUrl} alt={action.user.name} data-ai-hint="person face" />
                                         <AvatarFallback>{action.user.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <span className="font-medium">{action.user.name}</span>
