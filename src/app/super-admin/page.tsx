@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
   CardFooter
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -24,12 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend, PieChart, Pie } from "recharts";
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,13 +33,14 @@ import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, BarChart
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAtom } from 'jotai';
 import { userRoleAtom } from '@/lib/store';
 import ActionsPage from '../actions/page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 
-
+// --- DATA ---
 type User = {
     id: string;
     name: string;
@@ -64,42 +59,14 @@ const allUsers: User[] = [
     { id: '5', name: 'Léa Moreau', email: 'lea.moreau@unikorp.com', role: 'Employé', avatarUrl: 'https://placehold.co/100x100.png', status: 'Inactif', lastLogin: '2024-07-24T18:30:00Z' },
 ];
 
-export default function SuperAdminPage() {
-    const [role] = useAtom(userRoleAtom);
-    const hasActionLogAccess = role === 'Compte Entreprise';
+const navItems = [
+    { href: '/super-admin?tab=dashboard', label: 'Tableau de bord', value: 'dashboard' },
+    { href: '/super-admin?tab=users', label: 'Utilisateurs', value: 'users' },
+    { href: '/super-admin?tab=actions', label: 'Actions', value: 'actions' },
+    { href: '/super-admin?tab=settings', label: 'Configuration', value: 'settings' },
+    { href: '/dashboard', label: 'Accès ERP', value: 'erp' },
+];
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Panneau d'Administration</h1>
-            </div>
-
-            <Tabs defaultValue="dashboard">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="dashboard">Vue d'ensemble</TabsTrigger>
-                    <TabsTrigger value="users">Gestion des Utilisateurs</TabsTrigger>
-                    {hasActionLogAccess && <TabsTrigger value="actions">Journal des Actions</TabsTrigger>}
-                    <TabsTrigger value="settings">Configuration</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="dashboard" className="mt-4">
-                    <AdminDashboard />
-                </TabsContent>
-                <TabsContent value="users" className="mt-4">
-                    <UserManagement />
-                </TabsContent>
-                {hasActionLogAccess && 
-                    <TabsContent value="actions" className="mt-4">
-                        <ActionsPage />
-                    </TabsContent>
-                }
-                <TabsContent value="settings" className="mt-4">
-                    <CompanySettings />
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
-}
 
 function AdminDashboard() {
     return (
@@ -190,4 +157,53 @@ function CompanySettings() {
             </CardFooter>
         </Card>
     )
+}
+
+
+export default function SuperAdminPage() {
+    const [role] = useAtom(userRoleAtom);
+    const hasActionLogAccess = role === 'Compte Entreprise';
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'dashboard';
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'dashboard': return <AdminDashboard />;
+            case 'users': return <UserManagement />;
+            case 'actions': return hasActionLogAccess ? <ActionsPage /> : null;
+            case 'settings': return <CompanySettings />;
+            default: return <AdminDashboard />;
+        }
+    };
+    
+    return (
+        <div className="space-y-6">
+             <nav className="bg-primary border-b px-4 sm:px-6 -mx-6 -mt-6">
+              <div className="flex items-center gap-4">
+                {navItems.map((link) => {
+                    const isErpAccess = link.value === 'erp';
+                    if (link.value === 'actions' && !hasActionLogAccess) return null;
+                    return (
+                      <Link href={link.href} key={link.href}>
+                        <div
+                          className={cn(
+                            'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white rounded-t-md',
+                            activeTab === link.value && !isErpAccess && 'bg-background text-primary'
+                          )}
+                        >
+                          {link.label}
+                        </div>
+                      </Link>
+                    )
+                })}
+              </div>
+            </nav>
+
+            <div className="pt-2">
+              {renderContent()}
+            </div>
+        </div>
+    );
 }

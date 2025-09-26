@@ -62,13 +62,14 @@ export function AppHeader() {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
   
-  const showCompanyName = !['/super-admin', '/dashboard'].includes(pathname);
+  const showCompanyName = !['/dashboard', '/platform-admin', '/'].includes(pathname) && companyFile;
+
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-header-bg text-white px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Logo className="h-8 w-8 text-white" />
-        {showCompanyName && companyFile && (
+        {showCompanyName && (
             <div className="flex items-center gap-3">
                 <Image src="https://placehold.co/100x100.png" width={28} height={28} alt="Company Logo" className="h-7 w-7 rounded-full border-2 border-primary/20" data-ai-hint="company logo"/>
                 <span className="font-semibold">{companyFile}</span>
