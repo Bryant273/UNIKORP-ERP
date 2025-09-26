@@ -179,6 +179,7 @@ function UserManagement() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[50px] text-center">#</TableHead>
                                 <TableHead>Utilisateur</TableHead>
                                 <TableHead>Rôle</TableHead>
                                 <TableHead className="text-center">Statut</TableHead>
@@ -186,8 +187,9 @@ function UserManagement() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {allUsers.map(user => (
-                                <TableRow key={user.id}>
+                            {allUsers.map((user, index) => (
+                                <TableRow key={user.id} className="odd:bg-muted/50">
+                                    <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-9 w-9"><AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="person face" /><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>
