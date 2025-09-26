@@ -55,7 +55,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -678,14 +678,17 @@ export default function SuperAdminPage() {
     
     return (
         <div className="space-y-6">
-             <nav className="border-b px-4 sm:px-0 -mx-6 -mt-6 bg-background">
+             <nav className="bg-primary px-4 sm:px-6 -mx-6 -mt-6">
               <div className="flex items-center gap-4 max-w-[1600px] mx-auto">
                 {navItems.map((link) => {
                     const isErpAccess = link.value === 'erp';
                     const isActive = activeTab === link.value && !isErpAccess;
                     if (link.value === 'actions' && !hasActionLogAccess) return null;
                     return (
-                      <Link href={link.href} key={link.href} className={cn('flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary border-b-2', isActive ? 'border-primary text-primary' : 'border-transparent' )}>
+                      <Link href={link.href} key={link.href} className={cn(
+                          'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white rounded-t-md',
+                           isActive && 'bg-background text-primary'
+                           )}>
                           {link.label}
                       </Link>
                     )
