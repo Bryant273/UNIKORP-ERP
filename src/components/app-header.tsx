@@ -66,7 +66,7 @@ export function AppHeader() {
 
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-[#1C2039] text-white px-4 sm:px-6">
+    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-[#1C2039] text-white px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Logo className="h-8 w-8 text-white" />
         {showCompanyName && (
@@ -108,7 +108,7 @@ export function AppHeader() {
               <span className="sr-only">Toggle notifications</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-96 p-0" align="end">
+          <PopoverContent className="w-96 p-0 text-foreground" align="end">
             <Card className="border-0 shadow-none">
               <CardHeader className="p-4">
                 <div className="flex items-center justify-between">
