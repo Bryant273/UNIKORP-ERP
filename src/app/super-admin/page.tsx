@@ -2,10 +2,10 @@
 'use client';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAtom } from 'jotai';
 
-import { userRoleAtom } from '@/lib/store';
+import { userRoleAtom, type UserRole } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import ActionsPage from '../actions/page';
 import { Button } from '@/components/ui/button';
@@ -55,11 +55,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import DashboardPage from '../dashboard/page';
+import { useToast } from '@/hooks/use-toast';
 
 // --- DATA ---
 type User = {
@@ -144,43 +145,113 @@ function AdminDashboard() {
 }
 
 function UserManagement() {
+    const { toast } = useToast();
+    const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+    const [isInviteUserModalOpen, setIsInviteUserModalOpen] = useState(false);
+    
+    const inviteLink = "https://unikorp.com/invite/a1b2c3d4e5f6";
+    
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(inviteLink);
+        toast({ title: "Lien copié !", description: "Le lien d'invitation a été copié dans le presse-papiers." });
+    };
+
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <CardTitle>Gestion des Utilisateurs</CardTitle>
-                    <Button><PlusCircle className="mr-2 h-4 w-4"/>Inviter un utilisateur</Button>
-                </div>
-                <CardDescription>Ajoutez, modifiez ou suspendez les accès des utilisateurs à l'ERP.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Utilisateur</TableHead>
-                            <TableHead>Rôle</TableHead>
-                            <TableHead className="text-center">Statut</TableHead>
-                            <TableHead>Dernière connexion</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {allUsers.map(user => (
-                            <TableRow key={user.id}>
-                                <TableCell>
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-9 w-9"><AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="person face" /><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>
-                                        <div><p className="font-medium">{user.name}</p><p className="text-xs text-muted-foreground">{user.email}</p></div>
-                                    </div>
-                                </TableCell>
-                                <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
-                                <TableCell className="text-center"><Badge variant={user.status === 'Actif' ? 'default' : 'destructive'} className={cn(user.status === 'Actif' && 'bg-green-100 text-green-800')}>{user.status}</Badge></TableCell>
-                                <TableCell>{format(new Date(user.lastLogin), 'dd/MM/yyyy HH:mm', {locale: fr})}</TableCell>
+        <>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle>Gestion des Utilisateurs</CardTitle>
+                        <div className="flex gap-2">
+                             <Button variant="outline" onClick={() => setIsInviteUserModalOpen(true)}>
+                                <Link2 className="mr-2 h-4 w-4"/>
+                                Inviter un utilisateur
+                            </Button>
+                            <Button onClick={() => setIsAddUserModalOpen(true)}>
+                                <UserPlus className="mr-2 h-4 w-4"/>
+                                Ajouter un utilisateur
+                            </Button>
+                        </div>
+                    </div>
+                    <CardDescription>Ajoutez, modifiez ou suspendez les accès des utilisateurs à l'ERP.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Utilisateur</TableHead>
+                                <TableHead>Rôle</TableHead>
+                                <TableHead className="text-center">Statut</TableHead>
+                                <TableHead>Dernière connexion</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                        </TableHeader>
+                        <TableBody>
+                            {allUsers.map(user => (
+                                <TableRow key={user.id}>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9"><AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="person face" /><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>
+                                            <div><p className="font-medium">{user.name}</p><p className="text-xs text-muted-foreground">{user.email}</p></div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
+                                    <TableCell className="text-center"><Badge variant={user.status === 'Actif' ? 'default' : 'destructive'} className={cn(user.status === 'Actif' && 'bg-green-100 text-green-800')}>{user.status}</Badge></TableCell>
+                                    <TableCell>{format(new Date(user.lastLogin), 'dd/MM/yyyy HH:mm', {locale: fr})}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            {/* Add User Modal */}
+            <Dialog open={isAddUserModalOpen} onOpenChange={setIsAddUserModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+                        <DialogDescription>Remplissez les informations pour créer un nouveau compte.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" placeholder="Jean Dupont"/></div>
+                        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="jean.dupont@example.com"/></div>
+                         <div className="space-y-2">
+                            <Label htmlFor="role">Rôle</Label>
+                            <Select><SelectTrigger><SelectValue placeholder="Attribuer un rôle..."/></SelectTrigger><SelectContent>
+                                <SelectItem value="admin">Admin-Gestionnaire</SelectItem>
+                                <SelectItem value="gest_skomptab">Gestionnaire SKOMPTAB</SelectItem>
+                                <SelectItem value="stag_skomptab">Stagiaire SKOMPTAB</SelectItem>
+                                <SelectItem value="employee">Employé</SelectItem>
+                            </SelectContent></Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsAddUserModalOpen(false)}>Annuler</Button>
+                        <Button>Créer l'utilisateur</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Invite User Modal */}
+            <Dialog open={isInviteUserModalOpen} onOpenChange={setIsInviteUserModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Inviter un utilisateur</DialogTitle>
+                        <DialogDescription>Générez un lien d'invitation sécurisé à envoyer à un nouvel utilisateur. Il pourra compléter ses informations lui-même.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <Label htmlFor="invite-link">Lien d'invitation unique</Label>
+                        <div className="flex items-center gap-2">
+                            <Input id="invite-link" value={inviteLink} readOnly />
+                            <Button onClick={handleCopyLink} size="icon" variant="outline"><Copy className="h-4 w-4" /></Button>
+                        </div>
+                         <p className="text-xs text-muted-foreground">Ce lien est valide pour 7 jours.</p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsInviteUserModalOpen(false)}>Fermer</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     )
 }
 
