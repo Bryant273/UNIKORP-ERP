@@ -55,15 +55,18 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
-import { BarChart2, TrendingDown, TrendingUp, UserCheck, Ship } from 'lucide-react';
+import { DollarSign, UserCheck, Ship, TrendingDown, Target, UserRound } from "lucide-react";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 
 // --- DATA ---
 type User = {
@@ -88,12 +91,14 @@ const navItems = [
     { href: '/super-admin?tab=dashboard', label: 'Tableau de bord', value: 'dashboard' },
     { href: '/super-admin?tab=users', label: 'Utilisateurs', value: 'users' },
     { href: '/super-admin?tab=actions', label: 'Actions', value: 'actions' },
+    { href: '/super-admin?tab=reports', label: 'États & Rapports', value: 'reports' },
     { href: '/super-admin?tab=settings', label: 'Configuration', value: 'settings' },
     { href: '/dashboard', label: 'Accès ERP', value: 'erp' },
 ];
 
 // --- COMPONENTS ---
 
+// Dashboard Data
 const skomptabChartData = [
   { month: "Jan", revenus: 4000, depenses: 2400, resultat: 1600 }, { month: "Fev", revenus: 3000, depenses: 1398, resultat: 1602 },
   { month: "Mar", revenus: 5000, depenses: 3200, resultat: 1800 }, { month: "Avr", revenus: 2780, depenses: 3908, resultat: -1128 },
@@ -103,21 +108,27 @@ const skomptabChartConfig = {
   revenus: { label: "Revenus", color: "hsl(var(--chart-2))" },
   depenses: { label: "Dépenses", color: "hsl(var(--chart-1))" },
   resultat: { label: "Résultat Net", color: "hsl(var(--primary))" },
-} satisfies ChartConfig
-
-const markosKpis = [
-    { title: "Nouveaux Leads (Mois)", value: "316", icon: Users },
-    { title: "Coût par Lead", value: `${(1850).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` },
+} satisfies ChartConfig;
+const skomptabKpis = [
+    { title: 'Trésorerie Actuelle', value: '7,5M FCFA' },
+    { title: 'Factures en attente', value: '1,2M FCFA' },
+    { title: 'DSO (Jours)', value: '45j' },
 ];
 
-const logsonKpis = [
-    { title: "Expéditions (Mois)", value: "1 480", icon: Ship },
-    { title: "Taux de retours", value: "1.1%", icon: TrendingDown }
-];
-const socixKpis = [
-    { title: "Masse Salariale", value: `${(89000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` },
-    { title: "Effectif Total", value: "112", icon: UserCheck },
-];
+const markosChartData = [ { month: "Jan", leads: 22, conversion: 2.5 }, { month: "Fev", leads: 45, conversion: 3.1 }, { month: "Mar", leads: 52, conversion: 3.5 }, { month: "Avr", leads: 78, conversion: 4.2 }, { month: "Mai", leads: 92, conversion: 4.8 }, { month: "Juin", leads: 120, conversion: 5.1 }, ];
+const markosChartConfig = { leads: { label: "Leads", color: "hsl(var(--primary))" }, conversion: { label: "Taux de Conv. (%)", color: "hsl(var(--chart-2))" }, } satisfies ChartConfig;
+const markosKpis = [ { title: "Nouveaux Leads (Mois)", value: "316" }, { title: "Coût par Lead", value: `${(1850).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` }, { title: "Taux de Conversion", value: "4.2%" },];
+
+const logsonChartData = [ { month: "Jan", expeditions: 1204, retours: 18 }, { month: "Fev", expeditions: 1350, retours: 22 }, { month: "Mar", expeditions: 1100, retours: 15 }, { month: "Avr", expeditions: 1420, retours: 25 }, { month: "Mai", expeditions: 1550, retours: 20 }, { month: "Juin", expeditions: 1480, retours: 16 }, ];
+const logsonChartConfig = { expeditions: { label: "Expéditions", color: "hsl(var(--chart-3))" }, retours: { label: "Retours", color: "hsl(var(--chart-1))" }, } satisfies ChartConfig;
+const logsonKpis = [ { title: "Expéditions (Mois)", value: "1 480" }, { title: "Taux de retours", value: "1.1%" }, { title: "Rotation des stocks", value: "6.2" }, ];
+
+const socixChartData = [ { month: "Jan", recrutements: 5, departs: 2, effectif: 103 }, { month: "Fev", recrutements: 3, departs: 3, effectif: 103 }, { month: "Mar", recrutements: 6, departs: 1, effectif: 108 }, { month: "Avr", recrutements: 4, departs: 2, effectif: 110 }, { month: "Mai", recrutements: 2, departs: 2, effectif: 110 }, { month: "Juin", recrutements: 4, departs: 2, effectif: 112 }, ];
+const socixChartConfig = { recrutements: { label: "Recrutements", color: "hsl(var(--chart-2))" }, departs: { label: "Départs", color: "hsl(var(--chart-1))" }, effectif: { label: "Effectif Total", color: "hsl(var(--primary))" }, } satisfies ChartConfig;
+const socixKpis = [ { title: "Masse Salariale", value: `${(89000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` }, { title: "Effectif Total", value: "112" }, { title: "Turnover", value: "2.1%" }, ];
+
+const genderData = [ { name: 'Hommes', value: 60, fill: 'hsl(var(--chart-2))' }, { name: 'Femmes', value: 52, fill: 'hsl(var(--chart-1))' }, ];
+const genderConfig = { value: { label: "Employés" }, hommes: { label: "Hommes", color: "hsl(var(--chart-2))" }, femmes: { label: "Femmes", color: "hsl(var(--chart-1))" }, } satisfies ChartConfig
 
 
 function AdminDashboard() {
@@ -144,13 +155,15 @@ function AdminDashboard() {
                         <CardDescription>Analyse des revenus, dépenses et rentabilité.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col gap-4">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            {skomptabKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
+                        </div>
                         <ChartContainer config={skomptabChartConfig} className="h-[200px] w-full flex-1">
                             <ComposedChart data={skomptabChartData}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
+                                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number / 1000) + 'k'} />
                                 <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
-                                <Legend />
                                 <Bar dataKey="revenus" fill="var(--color-revenus)" radius={[4, 4, 0, 0]} />
                                 <Bar dataKey="depenses" fill="var(--color-depenses)" radius={[4, 4, 0, 0]} />
                                 <Line type="monotone" dataKey="resultat" stroke="var(--color-resultat)" strokeWidth={2} dot={{ r: 4 }} />
@@ -164,13 +177,31 @@ function AdminDashboard() {
                         <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-purple-500"/>SOCIX - RH</CardTitle>
                         <CardDescription>Indicateurs clés des ressources humaines.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-4 text-center">
-                        {socixKpis.map(kpi => (
-                            <div key={kpi.title} className="p-4 rounded-lg bg-muted/50">
-                                <p className="text-sm text-muted-foreground">{kpi.title}</p>
-                                <p className="text-2xl font-bold">{kpi.value}</p>
+                    <CardContent className="flex-1 grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                             <div className="grid grid-cols-3 gap-2 text-center">
+                                {socixKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
                             </div>
-                        ))}
+                            <ChartContainer config={socixChartConfig} className="h-[200px] w-full flex-1">
+                                <ComposedChart data={socixChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                                    <YAxis yAxisId="left" orientation="left" stroke="var(--color-recrutements)" tickLine={false} axisLine={false} fontSize={12} />
+                                    <YAxis yAxisId="right" orientation="right" stroke="var(--color-effectif)" tickLine={false} axisLine={false} fontSize={12} />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="recrutements" stackId="a" yAxisId="left" fill="var(--color-recrutements)" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="departs" stackId="a" yAxisId="left" fill="var(--color-departs)" radius={[4, 4, 0, 0]} />
+                                    <Line type="monotone" dataKey="effectif" yAxisId="right" stroke="var(--color-effectif)" strokeWidth={2} dot={{ r: 4 }} />
+                                </ComposedChart>
+                            </ChartContainer>
+                        </div>
+                        <div>
+                            <ChartContainer config={genderConfig} className="h-[250px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsPieChart><ChartTooltip content={<ChartTooltipContent hideLabel />} /><Pie data={genderData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80}><Legend /></Pie></RechartsPieChart>
+                                </ResponsiveContainer>
+                            </ChartContainer>
+                        </div>
                     </CardContent>
                 </Card>
                  {/* MARKOS Card */}
@@ -179,13 +210,21 @@ function AdminDashboard() {
                         <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-500"/>MARKOS - Marketing</CardTitle>
                         <CardDescription>Performance des leads et taux de conversion.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-4 text-center">
-                       {markosKpis.map(kpi => (
-                            <div key={kpi.title} className="p-4 rounded-lg bg-muted/50">
-                                <p className="text-sm text-muted-foreground">{kpi.title}</p>
-                                <p className="text-2xl font-bold">{kpi.value}</p>
-                            </div>
-                        ))}
+                    <CardContent className="flex-1 flex flex-col gap-4">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            {markosKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
+                        </div>
+                        <ChartContainer config={markosChartConfig} className="h-[200px] w-full flex-1">
+                            <ComposedChart data={markosChartData}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                                <YAxis yAxisId="left" orientation="left" stroke="var(--color-leads)" tickLine={false} axisLine={false} fontSize={12}/>
+                                <YAxis yAxisId="right" orientation="right" stroke="var(--color-conversion)" tickLine={false} axisLine={false} fontSize={12} unit="%" />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="leads" yAxisId="left" fill="var(--color-leads)" radius={[4, 4, 0, 0]} />
+                                <Line type="monotone" dataKey="conversion" yAxisId="right" stroke="var(--color-conversion)" strokeWidth={2} dot={{ r: 4 }} />
+                            </ComposedChart>
+                        </ChartContainer>
                     </CardContent>
                 </Card>
                 {/* LOGSON Card */}
@@ -194,13 +233,21 @@ function AdminDashboard() {
                         <CardTitle className="flex items-center gap-2"><Ship className="h-5 w-5 text-orange-500"/>LOGSON - Logistique</CardTitle>
                         <CardDescription>Suivi des expéditions et des retours.</CardDescription>
                     </CardHeader>
-                     <CardContent className="grid grid-cols-2 gap-4 text-center">
-                       {logsonKpis.map(kpi => (
-                            <div key={kpi.title} className="p-4 rounded-lg bg-muted/50">
-                                <p className="text-sm text-muted-foreground">{kpi.title}</p>
-                                <p className="text-2xl font-bold">{kpi.value}</p>
-                            </div>
-                        ))}
+                     <CardContent className="flex-1 flex flex-col gap-4">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            {logsonKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
+                        </div>
+                        <ChartContainer config={logsonChartConfig} className="h-[200px] w-full flex-1">
+                            <ComposedChart data={logsonChartData}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                                <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" tickLine={false} axisLine={false} fontSize={12}/>
+                                <YAxis yAxisId="right" orientation="right" stroke="var(--color-retours)" tickLine={false} axisLine={false} fontSize={12} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="expeditions" yAxisId="left" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
+                                <Line type="monotone" dataKey="retours" yAxisId="right" stroke="var(--color-retours)" strokeWidth={2} dot={{ r: 4 }} />
+                            </ComposedChart>
+                        </ChartContainer>
                     </CardContent>
                 </Card>
             </div>
@@ -330,10 +377,8 @@ function UserManagement() {
                 </CardContent>
             </Card>
 
-            {/* Add/Edit User Modal */}
             <AddUserModal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} onSave={handleSaveUser} userToEdit={editingUser} />
 
-            {/* Invite User Modal */}
             <Dialog open={isInviteUserModalOpen} onOpenChange={setIsInviteUserModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -546,6 +591,71 @@ function CompanySettings() {
     )
 }
 
+function Reports() {
+     const [year, setYear] = useState('2024');
+     const { toast } = useToast();
+
+     const handleDownload = (reportName: string) => {
+        toast({
+            title: "Génération du rapport...",
+            description: `Le rapport "${reportName}" pour ${year} est en cours de préparation.`
+        })
+     }
+    
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <CardTitle>États & Rapports Financiers</CardTitle>
+                    <div className="w-40">
+                         <Select value={year} onValueChange={setYear}>
+                            <SelectTrigger><SelectValue/></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="2024">Exercice 2024</SelectItem>
+                                <SelectItem value="2023">Exercice 2023</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <CardDescription>Téléchargez les états comptables et financiers pour l'exercice sélectionné.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2" onClick={() => handleDownload('Bilan')}>
+                        <FileText className="h-6 w-6"/>
+                        <span className="font-semibold">Bilan</span>
+                        <span className="text-xs text-muted-foreground text-left">Photographie du patrimoine de l'entreprise à la fin de l'exercice.</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2" onClick={() => handleDownload('Compte de Résultat')}>
+                        <FileText className="h-6 w-6"/>
+                        <span className="font-semibold">Compte de Résultat</span>
+                        <span className="text-xs text-muted-foreground text-left">Synthèse des charges et des produits de l'exercice.</span>
+                    </Button>
+                     <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2" onClick={() => handleDownload('Tableau des SIG')}>
+                        <FileText className="h-6 w-6"/>
+                        <span className="font-semibold">Tableau des SIG</span>
+                        <span className="text-xs text-muted-foreground text-left">Analyse de la formation du résultat de l'entreprise.</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2" onClick={() => handleDownload('Flux de Trésorerie')}>
+                        <FileText className="h-6 w-6"/>
+                        <span className="font-semibold">Flux de Trésorerie</span>
+                        <span className="text-xs text-muted-foreground text-left">Tableau des encaissements et décaissements de l'exercice.</span>
+                    </Button>
+                     <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2" onClick={() => handleDownload('Balance Générale')}>
+                        <FileText className="h-6 w-6"/>
+                        <span className="font-semibold">Balance Générale</span>
+                        <span className="text-xs text-muted-foreground text-left">Liste de tous les comptes avec leurs soldes débiteurs et créditeurs.</span>
+                    </Button>
+                     <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2" onClick={() => handleDownload('Grand Livre')}>
+                        <FileText className="h-6 w-6"/>
+                        <span className="font-semibold">Grand Livre</span>
+                        <span className="text-xs text-muted-foreground text-left">Détail de toutes les écritures passées sur chaque compte.</span>
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
 
 export default function SuperAdminPage() {
     const [role] = useAtom(userRoleAtom);
@@ -561,27 +671,22 @@ export default function SuperAdminPage() {
             case 'users': return <UserManagement />;
             case 'actions': return hasActionLogAccess ? <ActionsPage /> : null;
             case 'settings': return <CompanySettings />;
+            case 'reports': return <Reports />;
             default: return <AdminDashboard />;
         }
     };
     
     return (
         <div className="space-y-6">
-             <nav className="border-b px-4 sm:px-0 -mx-6 -mt-6">
+             <nav className="border-b px-4 sm:px-0 -mx-6 -mt-6 bg-background">
               <div className="flex items-center gap-4 max-w-[1600px] mx-auto">
                 {navItems.map((link) => {
                     const isErpAccess = link.value === 'erp';
+                    const isActive = activeTab === link.value && !isErpAccess;
                     if (link.value === 'actions' && !hasActionLogAccess) return null;
                     return (
-                      <Link href={link.href} key={link.href}>
-                        <div
-                          className={cn(
-                            'flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary border-b-2 border-transparent',
-                            activeTab === link.value && !isErpAccess && 'border-primary text-primary'
-                          )}
-                        >
+                      <Link href={link.href} key={link.href} className={cn('flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary border-b-2', isActive ? 'border-primary text-primary' : 'border-transparent' )}>
                           {link.label}
-                        </div>
                       </Link>
                     )
                 })}
