@@ -55,14 +55,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import DashboardPage from '../dashboard/page';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, Line, ComposedChart, CartesianGrid, XAxis, YAxis, Legend } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import { BarChart2, TrendingDown, TrendingUp, UserCheck, Ship } from 'lucide-react';
 
@@ -472,22 +471,65 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean
     )
 }
 
-
 function CompanySettings() {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Paramètres de l'entreprise</CardTitle>
-                <CardDescription>Gérez les informations générales de votre entreprise et les exercices comptables.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="space-y-2">
-                    <Label htmlFor="companyName">Nom de l'entreprise</Label>
-                    <Input id="companyName" defaultValue="UNIKORP S.A."/>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                    <h3 className="font-semibold">Exercices Comptables</h3>
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Informations sur l'entreprise</CardTitle>
+                    <CardDescription>Gérez les informations légales et de contact de votre entreprise.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2"><Label htmlFor="companyName">Raison sociale</Label><Input id="companyName" defaultValue="UNIKORP S.A."/></div>
+                    <div className="space-y-2"><Label htmlFor="companyNif">N° Compte Contribuable (NIF)</Label><Input id="companyNif" defaultValue="1234567-A"/></div>
+                    <div className="space-y-2 col-span-full"><Label htmlFor="companyAddress">Adresse</Label><Input id="companyAddress" defaultValue="Cocody Angré, Abidjan, Côte d'Ivoire"/></div>
+                    <div className="space-y-2"><Label htmlFor="companyPhone">Téléphone</Label><Input id="companyPhone" defaultValue="+225 01 02 03 04 05"/></div>
+                    <div className="space-y-2"><Label htmlFor="companyEmail">Email</Label><Input id="companyEmail" defaultValue="contact@unikorp.com"/></div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Paramètres Comptables et Fiscaux</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="space-y-2">
+                        <Label htmlFor="accountingZone">Zone Comptable</Label>
+                        <Select defaultValue="syscohada"><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="syscohada">SYSCOHADA</SelectItem><SelectItem value="pcg-france">PCG (France)</SelectItem></SelectContent></Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="taxRegime">Régime d'imposition</Label>
+                        <Select defaultValue="reel-normal"><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="reel-normal">Réel Normal</SelectItem><SelectItem value="reel-simplifie">Réel Simplifié</SelectItem><SelectItem value="synthetique">Synthétique</SelectItem></SelectContent></Select>
+                    </div>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Formats de Numérotation</CardTitle>
+                    <CardDescription>Personnalisez les préfixes et formats pour vos documents.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="invoiceFormat">Format Factures de Vente</Label>
+                        <Input id="invoiceFormat" defaultValue="FACT-{AAAA}-{MM}-{NNNN}"/>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="accountingFormat">Format Pièces Comptables</Label>
+                        <Input id="accountingFormat" defaultValue="{JOURNAL}-{AAAA}{MM}-{NNNN}"/>
+                    </div>
+                     <div className="col-span-full text-xs text-muted-foreground flex items-center gap-2">
+                        <Info className="h-4 w-4"/>
+                        <span>Variables disponibles : &#123;AAAA&#125; (année), &#123;MM&#125; (mois), &#123;JOURNAL&#125; (code journal), &#123;NNNN&#125; (séquence).</span>
+                    </div>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Exercices Comptables</CardTitle>
+                </CardHeader>
+                <CardContent>
                      <Table>
                         <TableHeader><TableRow><TableHead>Année</TableHead><TableHead>Date Début</TableHead><TableHead>Date Fin</TableHead><TableHead>Statut</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
                         <TableBody>
@@ -495,12 +537,12 @@ function CompanySettings() {
                             <TableRow><TableCell>2023</TableCell><TableCell>01/01/2023</TableCell><TableCell>31/12/2023</TableCell><TableCell><Badge variant="secondary">Clôturé</Badge></TableCell><TableCell className="text-right"><Button variant="outline" size="sm" disabled>Rouvrir</Button></TableCell></TableRow>
                         </TableBody>
                     </Table>
-                </div>
-            </CardContent>
-             <CardFooter>
-                <Button className="ml-auto">Enregistrer les modifications</Button>
-            </CardFooter>
-        </Card>
+                </CardContent>
+                 <CardFooter>
+                    <Button className="ml-auto">Enregistrer les modifications</Button>
+                </CardFooter>
+            </Card>
+        </div>
     )
 }
 
@@ -525,8 +567,8 @@ export default function SuperAdminPage() {
     
     return (
         <div className="space-y-6">
-             <nav className="bg-primary border-b px-4 sm:px-6 -mx-6 -mt-6">
-              <div className="flex items-center gap-4">
+             <nav className="border-b px-4 sm:px-0 -mx-6 -mt-6">
+              <div className="flex items-center gap-4 max-w-[1600px] mx-auto">
                 {navItems.map((link) => {
                     const isErpAccess = link.value === 'erp';
                     if (link.value === 'actions' && !hasActionLogAccess) return null;
@@ -534,8 +576,8 @@ export default function SuperAdminPage() {
                       <Link href={link.href} key={link.href}>
                         <div
                           className={cn(
-                            'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white rounded-t-md',
-                            activeTab === link.value && !isErpAccess && 'bg-background text-primary'
+                            'flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary border-b-2 border-transparent',
+                            activeTab === link.value && !isErpAccess && 'border-primary text-primary'
                           )}
                         >
                           {link.label}
@@ -552,7 +594,3 @@ export default function SuperAdminPage() {
         </div>
     );
 }
-
-    
-
-    
