@@ -205,31 +205,7 @@ function UserManagement() {
             </Card>
 
             {/* Add User Modal */}
-            <Dialog open={isAddUserModalOpen} onOpenChange={setIsAddUserModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
-                        <DialogDescription>Remplissez les informations pour créer un nouveau compte.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" placeholder="Jean Dupont"/></div>
-                        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="jean.dupont@example.com"/></div>
-                         <div className="space-y-2">
-                            <Label htmlFor="role">Rôle</Label>
-                            <Select><SelectTrigger><SelectValue placeholder="Attribuer un rôle..."/></SelectTrigger><SelectContent>
-                                <SelectItem value="admin">Admin-Gestionnaire</SelectItem>
-                                <SelectItem value="gest_skomptab">Gestionnaire SKOMPTAB</SelectItem>
-                                <SelectItem value="stag_skomptab">Stagiaire SKOMPTAB</SelectItem>
-                                <SelectItem value="employee">Employé</SelectItem>
-                            </SelectContent></Select>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAddUserModalOpen(false)}>Annuler</Button>
-                        <Button>Créer l'utilisateur</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <AddUserModal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} />
 
             {/* Invite User Modal */}
             <Dialog open={isInviteUserModalOpen} onOpenChange={setIsInviteUserModalOpen}>
@@ -254,6 +230,69 @@ function UserManagement() {
         </>
     )
 }
+
+function AddUserModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+    const [generatedPassword, setGeneratedPassword] = useState('');
+    const { toast } = useToast();
+
+    const generatePassword = () => {
+        const pass = `pass${Math.random().toString(36).slice(-8)}`;
+        setGeneratedPassword(pass);
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ title: 'Copié !' });
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+                    <DialogDescription>Remplissez les informations pour créer un nouveau compte.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" placeholder="Jean Dupont"/></div>
+                    <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="jean.dupont@example.com"/></div>
+                     <div className="space-y-2">
+                        <Label htmlFor="role">Rôle</Label>
+                        <Select><SelectTrigger><SelectValue placeholder="Attribuer un rôle..."/></SelectTrigger><SelectContent>
+                            <SelectItem value="admin">Admin-Gestionnaire</SelectItem>
+                            <SelectItem value="gest_skomptab">Gestionnaire SKOMPTAB</SelectItem>
+                            <SelectItem value="stag_skomptab">Stagiaire SKOMPTAB</SelectItem>
+                            <SelectItem value="employee">Employé</SelectItem>
+                        </SelectContent></Select>
+                    </div>
+                     <Separator />
+                    <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">Identifiants générés</h4>
+                             <Button type="button" variant="secondary" size="sm" onClick={generatePassword}>Générer le mot de passe</Button>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Email / Nom d'utilisateur</Label>
+                            <Input readOnly value="jean.dupont@example.com" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Mot de passe temporaire</Label>
+                            <div className="flex items-center gap-2">
+                                <Input readOnly value={generatedPassword} placeholder="Cliquez pour générer" />
+                                <Button type="button" onClick={() => copyToClipboard(generatedPassword)} size="icon" variant="outline" disabled={!generatedPassword}><Copy className="h-4 w-4" /></Button>
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">L'utilisateur sera invité à changer ce mot de passe à sa première connexion.</p>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Annuler</Button>
+                    <Button>Créer l'utilisateur</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 
 function CompanySettings() {
     return (
