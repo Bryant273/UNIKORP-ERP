@@ -2,7 +2,7 @@
 'use client';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAtom } from 'jotai';
 
 import { userRoleAtom, type UserRole } from '@/lib/store';
@@ -378,7 +378,7 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean
     const [generatedPassword, setGeneratedPassword] = useState('');
     const { toast } = useToast();
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isOpen) {
             setFormData(userToEdit || { status: 'Actif' });
             setGeneratedPassword('');
@@ -552,5 +552,7 @@ export default function SuperAdminPage() {
         </div>
     );
 }
+
+    
 
     
