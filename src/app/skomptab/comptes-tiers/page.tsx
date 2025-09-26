@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -280,8 +279,8 @@ export default function ComptesTiersPage() {
         <CardContent>
           <Tabs defaultValue="clients" className="w-full" onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="clients" className="data-[state=active]:hover:bg-primary/10">Clients</TabsTrigger>
-              <TabsTrigger value="fournisseurs" className="data-[state=active]:hover:bg-primary/10">Fournisseurs</TabsTrigger>
+              <TabsTrigger value="clients">Clients</TabsTrigger>
+              <TabsTrigger value="fournisseurs">Fournisseurs</TabsTrigger>
             </TabsList>
             <TabsContent value="clients" className="pt-4">
               {renderTable(clients, 'clients')}
