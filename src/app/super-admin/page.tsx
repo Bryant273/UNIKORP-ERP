@@ -55,7 +55,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -73,7 +73,7 @@ type User = {
     lastLogin: string;
 }
 
-const allUsers: User[] = [
+const initialUsers: User[] = [
     { id: '1', name: 'Jean Dupont', email: 'jean.dupont@unikorp.com', role: 'Gestionnaire SKOMPTAB', avatarUrl: 'https://placehold.co/100x100.png', status: 'Actif', lastLogin: '2024-07-26T14:30:00Z' },
     { id: '2', name: 'Sophie Martin', email: 'sophie.martin@unikorp.com', role: 'Gestionnaire MARKOS', avatarUrl: 'https://placehold.co/100x100.png', status: 'Actif', lastLogin: '2024-07-26T11:15:00Z' },
     { id: '3', name: 'Admin', email: 'admin@unikorp.com', role: 'Admin-Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png', status: 'Actif', lastLogin: '2024-07-26T14:00:00Z' },
@@ -146,14 +146,36 @@ function AdminDashboard() {
 
 function UserManagement() {
     const { toast } = useToast();
+    const [users, setUsers] = useState(allUsers);
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
     const [isInviteUserModalOpen, setIsInviteUserModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
     
     const inviteLink = "https://unikorp.com/invite/a1b2c3d4e5f6";
     
     const handleCopyLink = () => {
         navigator.clipboard.writeText(inviteLink);
         toast({ title: "Lien copié !", description: "Le lien d'invitation a été copié dans le presse-papiers." });
+    };
+
+    const handleSaveUser = (user: User) => {
+        if (editingUser) {
+            setUsers(users.map(u => u.id === user.id ? user : u));
+            toast({ title: 'Utilisateur modifié', description: `Les informations de ${user.name} ont été mises à jour.` });
+        } else {
+            setUsers(prev => [user, ...prev]);
+            toast({ title: 'Utilisateur ajouté', description: `${user.name} a été ajouté.` });
+        }
+        setEditingUser(null);
+        setIsAddUserModalOpen(false);
+    };
+
+    const handleDeleteUser = () => {
+        if (!userToDelete) return;
+        setUsers(users.filter(u => u.id !== userToDelete.id));
+        toast({ title: 'Utilisateur supprimé' });
+        setUserToDelete(null);
     };
 
     return (
@@ -167,7 +189,7 @@ function UserManagement() {
                                 <Link2 className="mr-2 h-4 w-4"/>
                                 Inviter un utilisateur
                             </Button>
-                            <Button onClick={() => setIsAddUserModalOpen(true)}>
+                            <Button onClick={() => { setEditingUser(null); setIsAddUserModalOpen(true); }}>
                                 <UserPlus className="mr-2 h-4 w-4"/>
                                 Ajouter un utilisateur
                             </Button>
@@ -184,10 +206,11 @@ function UserManagement() {
                                 <TableHead>Rôle</TableHead>
                                 <TableHead className="text-center">Statut</TableHead>
                                 <TableHead>Dernière connexion</TableHead>
+                                <TableHead className="text-center">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {allUsers.map((user, index) => (
+                            {users.map((user, index) => (
                                 <TableRow key={user.id} className="odd:bg-muted/50">
                                     <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell>
@@ -199,6 +222,13 @@ function UserManagement() {
                                     <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
                                     <TableCell className="text-center"><Badge variant={user.status === 'Actif' ? 'default' : 'destructive'} className={cn(user.status === 'Actif' && 'bg-green-100 text-green-800')}>{user.status}</Badge></TableCell>
                                     <TableCell>{format(new Date(user.lastLogin), 'dd/MM/yyyy HH:mm', {locale: fr})}</TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => toast({ title: 'Aperçu non disponible' })}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => { setEditingUser(user); setIsAddUserModalOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setUserToDelete(user)}><Trash2 className="h-4 w-4" /></Button>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -206,8 +236,8 @@ function UserManagement() {
                 </CardContent>
             </Card>
 
-            {/* Add User Modal */}
-            <AddUserModal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} />
+            {/* Add/Edit User Modal */}
+            <AddUserModal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} onSave={handleSaveUser} userToEdit={editingUser} />
 
             {/* Invite User Modal */}
             <Dialog open={isInviteUserModalOpen} onOpenChange={setIsInviteUserModalOpen}>
@@ -229,13 +259,36 @@ function UserManagement() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cet utilisateur ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Cette action est irréversible. Pour désactiver temporairement un compte, modifiez son statut.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     )
 }
 
-function AddUserModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean, onClose: () => void, onSave: (data: User) => void, userToEdit: User | null }) {
+    const [formData, setFormData] = useState<Partial<User>>({});
     const [generatedPassword, setGeneratedPassword] = useState('');
     const { toast } = useToast();
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setFormData(userToEdit || { status: 'Actif' });
+            setGeneratedPassword('');
+        }
+    }, [userToEdit, isOpen]);
 
     const generatePassword = () => {
         const pass = `pass${Math.random().toString(36).slice(-8)}`;
@@ -246,50 +299,79 @@ function AddUserModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => voi
         navigator.clipboard.writeText(text);
         toast({ title: 'Copié !' });
     };
+    
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const finalData = {
+            id: userToEdit?.id || `user-${Date.now()}`,
+            name: formData.name || '',
+            email: formData.email || '',
+            role: formData.role || 'Employé',
+            status: formData.status || 'Actif',
+            lastLogin: userToEdit?.lastLogin || new Date().toISOString(),
+            avatarUrl: userToEdit?.avatarUrl || 'https://placehold.co/100x100.png'
+        };
+        onSave(finalData);
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
-                    <DialogDescription>Remplissez les informations pour créer un nouveau compte.</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" placeholder="Jean Dupont"/></div>
-                    <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="jean.dupont@example.com"/></div>
-                     <div className="space-y-2">
-                        <Label htmlFor="role">Rôle</Label>
-                        <Select><SelectTrigger><SelectValue placeholder="Attribuer un rôle..."/></SelectTrigger><SelectContent>
-                            <SelectItem value="admin">Admin-Gestionnaire</SelectItem>
-                            <SelectItem value="gest_skomptab">Gestionnaire SKOMPTAB</SelectItem>
-                            <SelectItem value="stag_skomptab">Stagiaire SKOMPTAB</SelectItem>
-                            <SelectItem value="employee">Employé</SelectItem>
-                        </SelectContent></Select>
-                    </div>
-                     <Separator />
-                    <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
-                        <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">Identifiants générés</h4>
-                             <Button type="button" variant="secondary" size="sm" onClick={generatePassword}>Générer le mot de passe</Button>
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>{userToEdit ? 'Modifier' : 'Ajouter'} un utilisateur</DialogTitle>
+                        <DialogDescription>Remplissez les informations pour {userToEdit ? 'modifier le' : 'créer un nouveau'} compte.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" value={formData.name || ''} onChange={e => setFormData(f => ({...f, name: e.target.value}))} placeholder="Jean Dupont"/></div>
+                        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={formData.email || ''} onChange={e => setFormData(f => ({...f, email: e.target.value}))} placeholder="jean.dupont@example.com"/></div>
+                         <div className="space-y-2">
+                            <Label htmlFor="role">Rôle</Label>
+                            <Select value={formData.role} onValueChange={(value) => setFormData(f => ({...f, role: value}))}>
+                                <SelectTrigger><SelectValue placeholder="Attribuer un rôle..."/></SelectTrigger><SelectContent>
+                                    <SelectItem value="Admin-Gestionnaire">Admin-Gestionnaire</SelectItem>
+                                    <SelectItem value="Gestionnaire SKOMPTAB">Gestionnaire SKOMPTAB</SelectItem>
+                                    <SelectItem value="Stagiaire SKOMPTAB">Stagiaire SKOMPTAB</SelectItem>
+                                    <SelectItem value="Employé">Employé</SelectItem>
+                                </SelectContent></Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Email / Nom d'utilisateur</Label>
-                            <Input readOnly value="jean.dupont@example.com" />
+                            <Label htmlFor="status">Statut</Label>
+                            <Select value={formData.status} onValueChange={(value: 'Actif' | 'Inactif') => setFormData(f => ({...f, status: value}))}>
+                                <SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                                    <SelectItem value="Actif">Actif</SelectItem>
+                                    <SelectItem value="Inactif">Inactif</SelectItem>
+                                </SelectContent></Select>
                         </div>
-                        <div className="space-y-2">
-                            <Label>Mot de passe temporaire</Label>
-                            <div className="flex items-center gap-2">
-                                <Input readOnly value={generatedPassword} placeholder="Cliquez pour générer" />
-                                <Button type="button" onClick={() => copyToClipboard(generatedPassword)} size="icon" variant="outline" disabled={!generatedPassword}><Copy className="h-4 w-4" /></Button>
-                            </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">L'utilisateur sera invité à changer ce mot de passe à sa première connexion.</p>
+                         {!userToEdit && (
+                            <>
+                                <Separator />
+                                <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-semibold">Identifiants générés</h4>
+                                         <Button type="button" variant="secondary" size="sm" onClick={generatePassword}>Générer le mot de passe</Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Email / Nom d'utilisateur</Label>
+                                        <Input readOnly value={formData.email || ''} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Mot de passe temporaire</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input readOnly value={generatedPassword} placeholder="Cliquez pour générer" />
+                                            <Button type="button" onClick={() => copyToClipboard(generatedPassword)} size="icon" variant="outline" disabled={!generatedPassword}><Copy className="h-4 w-4" /></Button>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">L'utilisateur sera invité à changer ce mot de passe à sa première connexion.</p>
+                                </div>
+                            </>
+                         )}
                     </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Annuler</Button>
-                    <Button>Créer l'utilisateur</Button>
-                </DialogFooter>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Enregistrer</Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     )
