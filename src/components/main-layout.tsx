@@ -27,8 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { FolderOpen, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import Image from 'next/image';
+import { Logo } from './logo';
 
 const noHeaderPaths = ['/'];
 const noSidebarPaths = ['/', '/super-admin', '/employee-dashboard', '/platform-admin'];
@@ -64,8 +65,9 @@ function CompanyFileSelection() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40 p-4">
         <Card className="w-full max-w-md animate-modal-enter">
-             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl"><FolderOpen /> Sélectionner un Fichier de Gestion</CardTitle>
+             <CardHeader className="items-center text-center">
+                <Logo className="h-12 w-12 text-primary mb-2" />
+                <CardTitle className="text-xl">Sélectionner un Fichier de Gestion</CardTitle>
                 <CardDescription>Veuillez sélectionner un fichier pour initialiser votre session de travail.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

@@ -17,7 +17,8 @@ export type UserRole =
   | 'Stagiaire MARKOS'
   | 'Gestionnaire LOGSON'
   | 'Stagiaire LOGSON'
-  | 'Employé' 
+  | 'Employé'
+  | 'Fournisseur ERP'
   | null;
 
 // Use session storage which clears when the browser tab is closed
@@ -28,6 +29,9 @@ export const userRoleAtom = atomWithStorage<UserRole>('userRole', null, sessionJ
 
 // Create an atom to store the selected company file name
 export const companyFileAtom = atomWithStorage<string | null>('companyFile', null, sessionJSONStorage<string | null>('companyFile'));
+
+// Create an atom to store the company logo URL
+export const companyLogoAtom = atomWithStorage<string | null>('companyLogo', 'https://placehold.co/100x100.png', sessionJSONStorage<string | null>('companyLogo'));
 
 
 // --- IN-MEMORY ATOMS ---

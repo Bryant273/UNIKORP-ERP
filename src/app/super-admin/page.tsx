@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useAtom } from 'jotai';
 
-import { userRoleAtom, type UserRole } from '@/lib/store';
+import { userRoleAtom, type UserRole, companyLogoAtom } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import ActionsPage from '../actions/page';
 import { Button } from '@/components/ui/button';
@@ -55,17 +55,17 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2, DollarSign, Target, UserCheck, UserRound, Ship, TrendingDown } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2, DollarSign, Target, UserCheck, UserRound, Ship, TrendingDown, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart, LineChart } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-
+import Image from 'next/image';
 
 // --- DATA ---
 type User = {
@@ -573,6 +573,8 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean
 }
 
 function CompanySettings() {
+    const [logoUrl, setLogoUrl] = useAtom(companyLogoAtom);
+
     return (
         <div className="space-y-6">
             <Card>
@@ -588,6 +590,32 @@ function CompanySettings() {
                     <div className="space-y-2"><Label htmlFor="companyEmail">Email</Label><Input id="companyEmail" defaultValue="contact@unikorp.com"/></div>
                 </CardContent>
             </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Image de marque et Logo</CardTitle>
+                    <CardDescription>Personnalisez l'apparence de vos documents et de l'interface.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <div className="md:col-span-2 space-y-2">
+                        <Label htmlFor="logoUrl">URL du logo de l'entreprise</Label>
+                        <Input 
+                            id="logoUrl" 
+                            placeholder="https://example.com/logo.png" 
+                            value={logoUrl || ''}
+                            onChange={(e) => setLogoUrl(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex justify-center items-center h-24 w-24 rounded-md border bg-muted">
+                        {logoUrl ? (
+                            <Image src={logoUrl} alt="Aperçu du logo" width={80} height={80} className="object-contain" data-ai-hint="company logo"/>
+                        ) : (
+                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
 
             <Card>
                 <CardHeader>
@@ -665,12 +693,10 @@ function Reports() {
                     <CardTitle>États & Rapports Financiers</CardTitle>
                     <div className="w-40">
                          <Select value={year} onValueChange={setYear}>
-                            <SelectTrigger><SelectValue/></SelectTrigger>
-                            <SelectContent>
+                            <SelectTrigger><SelectValue/></SelectTrigger><SelectContent>
                                 <SelectItem value="2024">Exercice 2024</SelectItem>
                                 <SelectItem value="2023">Exercice 2023</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            </SelectContent></Select>
                     </div>
                 </div>
                 <CardDescription>Téléchargez les états comptables et financiers pour l'exercice sélectionné.</CardDescription>
@@ -722,16 +748,24 @@ function SuperAdminPageNav() {
     const isActive = (tabValue: string) => activeTab === tabValue;
 
     return (
-        <nav className="bg-primary -mx-6 -mt-6">
+        <nav className="bg-[#1C2039] -mx-6 -mt-6">
             <div className="flex items-center gap-x-2 max-w-[1600px] mx-auto px-4 sm:px-6">
                 {navItems.map((link) => {
                     if (link.value === 'actions' && !hasActionLogAccess) return null;
                     return (
                         <Link href={link.href} key={link.href} className={cn(
-                            'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white',
-                            isActive(link.value) && 'border-b-2 border-white text-white'
+                            'flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-white/80 transition-colors hover:text-white relative',
+                             isActive(link.value) ? 'text-white' : ''
                         )}>
+                            {link.value === 'dashboard' ? <LayoutDashboard className="h-4 w-4" /> :
+                             link.value === 'users' ? <Users className="h-4 w-4" /> :
+                             link.value === 'actions' ? <BarChart2 className="h-4 w-4" /> :
+                             link.value === 'settings' ? <Settings className="h-4 w-4" /> :
+                             link.value === 'reports' ? <FileText className="h-4 w-4" /> :
+                             link.value === 'erp' ? <TrendingUp className="h-4 w-4" /> : null
+                            }
                             {link.label}
+                            {isActive(link.value) && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-t-full" />}
                         </Link>
                     )
                 })}
