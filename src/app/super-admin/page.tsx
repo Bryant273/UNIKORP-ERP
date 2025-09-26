@@ -61,7 +61,7 @@ import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart, LineChart } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -713,14 +713,38 @@ function Reports() {
     )
 }
 
-export default function SuperAdminPage() {
+function SuperAdminPageNav() {
     const [role] = useAtom(userRoleAtom);
     const hasActionLogAccess = role === 'Compte Entreprise';
-    const router = useRouter();
-    const pathname = usePathname();
     const searchParams = useSearchParams();
-    
-    // Fallback to Suspense for initial render if searchParams is null
+    const activeTab = searchParams ? searchParams.get('tab') || 'dashboard' : 'dashboard';
+
+    const isActive = (tabValue: string) => activeTab === tabValue;
+
+    return (
+        <nav className="bg-primary -mx-6 -mt-6">
+            <div className="flex items-center gap-x-2 max-w-[1600px] mx-auto px-4 sm:px-6">
+                {navItems.map((link) => {
+                    if (link.value === 'actions' && !hasActionLogAccess) return null;
+                    return (
+                        <Link href={link.href} key={link.href} className={cn(
+                            'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white',
+                            isActive(link.value) && 'border-b-2 border-white text-white'
+                        )}>
+                            {link.label}
+                        </Link>
+                    )
+                })}
+            </div>
+        </nav>
+    );
+}
+
+function SuperAdminPageContent() {
+    const searchParams = useSearchParams();
+    const [role] = useAtom(userRoleAtom);
+    const hasActionLogAccess = role === 'Compte Entreprise';
+
     const activeTab = searchParams ? searchParams.get('tab') || 'dashboard' : 'dashboard';
 
     const renderContent = () => {
@@ -733,30 +757,17 @@ export default function SuperAdminPage() {
             default: return <AdminDashboard />;
         }
     };
-    
-    return (
-        <div className="space-y-6">
-            <nav className="bg-primary -mx-6 -mt-6">
-              <div className="flex items-center gap-x-2 max-w-[1600px] mx-auto px-4 sm:px-6">
-                {navItems.map((link) => {
-                    const isErpAccess = link.value === 'erp';
-                    const isActive = activeTab === link.value && !isErpAccess;
-                    if (link.value === 'actions' && !hasActionLogAccess) return null;
-                    return (
-                      <Link href={link.href} key={link.href} className={cn(
-                          'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white',
-                           isActive && 'border-b-2 border-white text-white'
-                           )}>
-                          {link.label}
-                      </Link>
-                    )
-                })}
-              </div>
-            </nav>
+    return <div className="pt-2">{renderContent()}</div>
+}
 
-            <div className="pt-2">
-              {renderContent()}
+
+export default function SuperAdminPage() {
+    return (
+        <Suspense fallback={<div>Chargement...</div>}>
+            <div className="space-y-6">
+                <SuperAdminPageNav />
+                <SuperAdminPageContent />
             </div>
-        </div>
+        </Suspense>
     );
 }
