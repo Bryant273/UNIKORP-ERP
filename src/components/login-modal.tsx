@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAtom } from 'jotai';
 import { userRoleAtom, type UserRole } from '@/lib/store';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 type LoginModalProps = {
     isOpen: boolean;
