@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Legend, Tooltip, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LabelList } from "recharts";
-import { Target, Mail, MessageSquare, Newspaper, LayoutTemplate } from "lucide-react";
+import { Target, Mail, MessageSquare, Newspaper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const kpiData = [
   { title: "Taux de Conv. Global (Mois)", value: "4.2%", Icon: Target },
   { title: "Meilleur Canal", value: "Emailing", Icon: Mail },
-  { title: "Meilleure Landing Page", value: "LP Webinaire Tech", Icon: LayoutTemplate },
+  { title: "Meilleure Landing Page", value: "LP Webinaire Tech", Icon: Newspaper },
 ];
 
 const conversionByChannelData = [

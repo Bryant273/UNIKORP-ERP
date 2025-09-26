@@ -81,7 +81,7 @@ export default function PerformancesPage() {
                     <ChartContainer config={funnelChartConfig} className="mx-auto w-full h-80">
                         <ResponsiveContainer>
                             <FunnelChart>
-                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <ChartTooltip content={<ChartTooltipContent nameKey="value" />} />
                                 <Funnel dataKey="value" data={funnelData} isAnimationActive>
                                     <LabelList position="right" fill="#fff" dataKey="name" />
                                 </Funnel>

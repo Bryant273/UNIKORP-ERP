@@ -11,10 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const costData = [
-    { type: 'Transport', cost: 1250000, color: 'hsl(var(--chart-1))' },
-    { type: 'Stockage', cost: 850000, color: 'hsl(var(--chart-2))' },
-    { type: 'Manutention', cost: 450000, color: 'hsl(var(--chart-3))' },
-    { type: 'Administratif', cost: 250000, color: 'hsl(var(--chart-4))' },
+    { type: 'Transport', cost: 1250000, fill: 'hsl(var(--chart-1))' },
+    { type: 'Stockage', cost: 850000, fill: 'hsl(var(--chart-2))' },
+    { type: 'Manutention', cost: 450000, fill: 'hsl(var(--chart-3))' },
+    { type: 'Administratif', cost: 250000, fill: 'hsl(var(--chart-4))' },
 ];
 
 const chartConfig = {
@@ -78,7 +78,7 @@ export default function CoutsLogistiquesPage() {
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[350px]">
                         <RechartsPieChart>
-                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <ChartTooltip content={<ChartTooltipContent nameKey="cost" />} />
                             <Pie data={costData} dataKey="cost" nameKey="type" innerRadius={60} />
                             <Legend />
                         </RechartsPieChart>
@@ -89,7 +89,7 @@ export default function CoutsLogistiquesPage() {
                             {costData.map(d => (
                                 <TableRow key={d.type} className="odd:bg-muted/50">
                                     <TableCell className="font-medium flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.fill }}></div>
                                         {d.type}
                                     </TableCell>
                                     <TableCell className="text-right">{d.cost.toLocaleString()} FCFA</TableCell>

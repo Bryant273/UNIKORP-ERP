@@ -4,14 +4,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Legend, Tooltip, XAxis, YAxis, CartesianGrid, LineChart, Line, ComposedChart } from "recharts";
-import { Users, TrendingUp, TrendingDown, Wallet, UserCheck, UserX, UserRound, GraduationCap } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, Wallet, UserCheck, UserX } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { Download } from 'lucide-react';
 
 const kpiData = [

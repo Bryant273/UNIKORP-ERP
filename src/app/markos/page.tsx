@@ -67,7 +67,12 @@ export default function MarkosPage() {
             <CardHeader><CardTitle>Source des Leads</CardTitle></CardHeader>
             <CardContent className="flex justify-center">
                 <ChartContainer config={leadsBySourceConfig} className="mx-auto aspect-square h-[300px]">
-                    <RechartsPieChart><ChartTooltip content={<ChartTooltipContent hideLabel />} /><Pie data={leadsBySourceData} dataKey="value" nameKey="name" innerRadius={60}><Legend/></Pie></RechartsPieChart>
+                    <RechartsPieChart>
+                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                        <Pie data={leadsBySourceData} dataKey="value" nameKey="name" innerRadius={60}>
+                            <Legend />
+                        </Pie>
+                    </RechartsPieChart>
                 </ChartContainer>
             </CardContent>
         </Card>

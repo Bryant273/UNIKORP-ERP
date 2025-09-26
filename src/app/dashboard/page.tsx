@@ -12,9 +12,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend } from "recharts"
+import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend, BarChart, ResponsiveContainer } from "recharts"
 import { Calendar } from "@/components/ui/calendar"
-import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText } from "lucide-react"
+import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText, Calendar as CalendarIcon } from "lucide-react"
 import { type ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
 

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Users, BarChart, Percent, Euro, UserCheck, UserX, ShoppingBag, Mail, Eye, Trash2, Pencil } from 'lucide-react';
+import { PlusCircle, Users, BarChart, Percent, UserCheck, UserX, ShoppingBag, Mail, Eye, Trash2, Pencil } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Bar, BarChart as RechartsBarChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Cell } from "recharts";
 import { useToast } from '@/hooks/use-toast';
