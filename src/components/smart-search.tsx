@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -19,6 +20,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from './ui/badge';
+import { cn } from '@/lib/utils';
 
 export function SmartSearch() {
   const [isOpen, setIsOpen] = useState(false);
@@ -68,7 +70,7 @@ export function SmartSearch() {
     <>
       <Button
         variant="outline"
-        className="w-full justify-start text-muted-foreground sm:w-64"
+        className="w-full justify-start text-muted-foreground sm:w-64 bg-header-bg border-gray-500 hover:bg-white/20 hover:text-white"
         onClick={() => setIsOpen(true)}
       >
         <Search className="mr-2 h-4 w-4" />
