@@ -66,7 +66,7 @@ export function AppHeader() {
 
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-[#1C2039] text-white px-4 sm:px-6">
+    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-[#8A2BE2] text-white px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Logo className="h-8 w-8 text-white" />
         {showCompanyName && (

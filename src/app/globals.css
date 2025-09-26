@@ -11,7 +11,7 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 261 52% 48%; /* Deep Purple (#673AB7) */
+    --primary: 271 76% 53%; /* Blue Violet (#8A2BE2) */
     --primary-foreground: 0 0% 100%;
     --secondary: 228 6% 96%;
     --secondary-foreground: 240 5.9% 10%;
@@ -23,7 +23,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 261 52% 48%;
+    --ring: 271 76% 53%;
     --radius: 0.5rem;
     --chart-1: 221 83% 53%; /* Blue */
     --chart-2: 142 71% 45%; /* Green */
@@ -38,7 +38,7 @@
     --card-foreground: 210 20% 98%;
     --popover: 224 71.4% 4.1%;
     --popover-foreground: 210 20% 98%;
-    --primary: 261 52% 58%;
+    --primary: 271 76% 63%;
     --primary-foreground: 210 20% 98%;
     --secondary: 215 27.9% 16.9%;
     --secondary-foreground: 210 20% 98%;
@@ -50,7 +50,7 @@
     --destructive-foreground: 210 20% 98%;
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
-    --ring: 261 52% 58%;
+    --ring: 271 76% 63%;
     --chart-1: 211 83% 63%; /* Blue */
     --chart-2: 142 71% 55%; /* Green */
     --chart-3: 38 92% 60%; /* Orange */
