@@ -61,6 +61,10 @@ import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import DashboardPage from '../dashboard/page';
 import { useToast } from '@/hooks/use-toast';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, Line, ComposedChart, CartesianGrid, XAxis, YAxis, Legend } from 'recharts';
+import { type ChartConfig } from "@/components/ui/chart";
+import { BarChart2, TrendingDown, TrendingUp, UserCheck, Ship } from 'lucide-react';
 
 // --- DATA ---
 type User = {
@@ -89,8 +93,34 @@ const navItems = [
     { href: '/dashboard', label: 'Accès ERP', value: 'erp' },
 ];
 
-
 // --- COMPONENTS ---
+
+const skomptabChartData = [
+  { month: "Jan", revenus: 4000, depenses: 2400, resultat: 1600 }, { month: "Fev", revenus: 3000, depenses: 1398, resultat: 1602 },
+  { month: "Mar", revenus: 5000, depenses: 3200, resultat: 1800 }, { month: "Avr", revenus: 2780, depenses: 3908, resultat: -1128 },
+  { month: "Mai", revenus: 6890, depenses: 4800, resultat: 2090 }, { month: "Juin", revenus: 7390, depenses: 3800, resultat: 3590 },
+];
+const skomptabChartConfig = {
+  revenus: { label: "Revenus", color: "hsl(var(--chart-2))" },
+  depenses: { label: "Dépenses", color: "hsl(var(--chart-1))" },
+  resultat: { label: "Résultat Net", color: "hsl(var(--primary))" },
+} satisfies ChartConfig
+
+const markosKpis = [
+    { title: "Nouveaux Leads (Mois)", value: "316", icon: Users },
+    { title: "Coût par Lead", value: `${(1850).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` },
+];
+
+const logsonKpis = [
+    { title: "Expéditions (Mois)", value: "1 480", icon: Ship },
+    { title: "Taux de retours", value: "1.1%", icon: TrendingDown }
+];
+const socixKpis = [
+    { title: "Masse Salariale", value: `${(89000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` },
+    { title: "Effectif Total", value: "112", icon: UserCheck },
+];
+
+
 function AdminDashboard() {
     const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(false);
     const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
@@ -107,8 +137,73 @@ function AdminDashboard() {
                     <Button variant="destructive" onClick={() => setIsClosingModalOpen(true)}><StopCircle className="mr-2 h-4 w-4"/>Clôture d'exercice</Button>
                 </div>
             </div>
-            <div className="mt-6">
-                <DashboardPage />
+             <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 {/* SKOMPTAB Card */}
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><BarChart2 className="h-5 w-5 text-primary"/>SKOMPTAB - Finance</CardTitle>
+                        <CardDescription>Analyse des revenus, dépenses et rentabilité.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col gap-4">
+                        <ChartContainer config={skomptabChartConfig} className="h-[200px] w-full flex-1">
+                            <ComposedChart data={skomptabChartData}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number).toLocaleString('fr-FR')} />
+                                <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
+                                <Legend />
+                                <Bar dataKey="revenus" fill="var(--color-revenus)" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="depenses" fill="var(--color-depenses)" radius={[4, 4, 0, 0]} />
+                                <Line type="monotone" dataKey="resultat" stroke="var(--color-resultat)" strokeWidth={2} dot={{ r: 4 }} />
+                            </ComposedChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+                 {/* SOCIX Card */}
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-purple-500"/>SOCIX - RH</CardTitle>
+                        <CardDescription>Indicateurs clés des ressources humaines.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4 text-center">
+                        {socixKpis.map(kpi => (
+                            <div key={kpi.title} className="p-4 rounded-lg bg-muted/50">
+                                <p className="text-sm text-muted-foreground">{kpi.title}</p>
+                                <p className="text-2xl font-bold">{kpi.value}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                 {/* MARKOS Card */}
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-500"/>MARKOS - Marketing</CardTitle>
+                        <CardDescription>Performance des leads et taux de conversion.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4 text-center">
+                       {markosKpis.map(kpi => (
+                            <div key={kpi.title} className="p-4 rounded-lg bg-muted/50">
+                                <p className="text-sm text-muted-foreground">{kpi.title}</p>
+                                <p className="text-2xl font-bold">{kpi.value}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                {/* LOGSON Card */}
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Ship className="h-5 w-5 text-orange-500"/>LOGSON - Logistique</CardTitle>
+                        <CardDescription>Suivi des expéditions et des retours.</CardDescription>
+                    </CardHeader>
+                     <CardContent className="grid grid-cols-2 gap-4 text-center">
+                       {logsonKpis.map(kpi => (
+                            <div key={kpi.title} className="p-4 rounded-lg bg-muted/50">
+                                <p className="text-sm text-muted-foreground">{kpi.title}</p>
+                                <p className="text-2xl font-bold">{kpi.value}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
             </div>
 
             <Dialog open={isOpeningModalOpen} onOpenChange={setIsOpeningModalOpen}>
@@ -146,7 +241,7 @@ function AdminDashboard() {
 
 function UserManagement() {
     const { toast } = useToast();
-    const [users, setUsers] = useState(allUsers);
+    const [users, setUsers] = useState(initialUsers);
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
     const [isInviteUserModalOpen, setIsInviteUserModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -457,3 +552,5 @@ export default function SuperAdminPage() {
         </div>
     );
 }
+
+    
