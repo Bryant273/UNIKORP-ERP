@@ -22,7 +22,21 @@ export type UserRole =
   | null;
 
 // Use session storage which clears when the browser tab is closed
-const sessionJSONStorage = <T>(key: string) => createJSONStorage<T>(() => sessionStorage);
+const sessionJSONStorage = <T>(key: string) => {
+    const storage = createJSONStorage<T>(() => sessionStorage);
+    return {
+        ...storage,
+        // HACK: on initial load, storage is not ready and returns undefined
+        // which causes hydration errors. We'll return the default value instead.
+        getItem: (key: string, initialValue: T) => {
+            try {
+                return storage.getItem(key, initialValue);
+            } catch {
+                return initialValue;
+            }
+        },
+    };
+};
 
 // Create an atom to store the user's role, persisting it in session storage
 export const userRoleAtom = atomWithStorage<UserRole>('userRole', null, sessionJSONStorage<UserRole>('userRole'));
@@ -31,7 +45,7 @@ export const userRoleAtom = atomWithStorage<UserRole>('userRole', null, sessionJ
 export const companyFileAtom = atomWithStorage<string | null>('companyFile', null, sessionJSONStorage<string | null>('companyFile'));
 
 // Create an atom to store the company logo URL
-export const companyLogoAtom = atomWithStorage<string | null>('companyLogo', 'https://placehold.co/100x100.png', sessionJSONStorage<string | null>('companyLogo'));
+export const companyLogoAtom = atomWithStorage<string | null>('companyLogo', null, sessionJSONStorage<string | null>('companyLogo'));
 
 
 // --- IN-MEMORY ATOMS ---
@@ -309,3 +323,5 @@ export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
 export const receptionsAtom = atom<Reception[]>([]);
 export const invoicesAtom = atom<InvoiceData[]>(initialInvoices);
 export const mouvementsAtom = atom<Mouvement[]>(initialMouvements);
+
+    

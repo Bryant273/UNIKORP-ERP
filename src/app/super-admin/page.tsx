@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -55,13 +56,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2, DollarSign, Target, UserCheck, UserRound, Ship, TrendingDown, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2, DollarSign, Target, UserCheck, UserRound, Ship, TrendingDown, Image as ImageIcon, FileUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart, LineChart } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -574,6 +575,19 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean
 
 function CompanySettings() {
     const [logoUrl, setLogoUrl] = useAtom(companyLogoAtom);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setLogoFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoUrl(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -591,20 +605,15 @@ function CompanySettings() {
                 </CardContent>
             </Card>
 
-            <Card>
+             <Card>
                 <CardHeader>
                     <CardTitle>Image de marque et Logo</CardTitle>
                     <CardDescription>Personnalisez l'apparence de vos documents et de l'interface.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                    <div className="md:col-span-2 space-y-2">
-                        <Label htmlFor="logoUrl">URL du logo de l'entreprise</Label>
-                        <Input 
-                            id="logoUrl" 
-                            placeholder="https://example.com/logo.png" 
-                            value={logoUrl || ''}
-                            onChange={(e) => setLogoUrl(e.target.value)}
-                        />
+                     <div className="md:col-span-2 space-y-2">
+                        <Label htmlFor="logoUpload">Changer le logo</Label>
+                        <Input id="logoUpload" type="file" accept="image/*" onChange={handleFileChange} />
                     </div>
                     <div className="flex justify-center items-center h-24 w-24 rounded-md border bg-muted">
                         {logoUrl ? (
@@ -615,7 +624,6 @@ function CompanySettings() {
                     </div>
                 </CardContent>
             </Card>
-
 
             <Card>
                 <CardHeader>
@@ -748,7 +756,7 @@ function SuperAdminPageNav() {
     const isActive = (tabValue: string) => activeTab === tabValue;
 
     return (
-        <nav className="bg-[#1C2039]">
+        <nav className="bg-[#8A2BE2]">
             <div className="flex items-center gap-x-1 max-w-[1600px] mx-auto px-4 sm:px-6">
                 {navItems.map((link) => {
                     if (link.value === 'actions' && !hasActionLogAccess) return null;
@@ -805,3 +813,5 @@ export default function SuperAdminPage() {
         </Suspense>
     );
 }
+
+    
