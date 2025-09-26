@@ -1,5 +1,4 @@
 
-
 'use client';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -56,17 +55,18 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2, DollarSign, Target, UserCheck, UserRound, Ship, TrendingDown, Image as ImageIcon, FileUp, LineChart } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart, Line, LineChart } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Image from 'next/image';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2, DollarSign, Target, UserCheck, UserRound, Ship, TrendingDown, ImageIcon, FileUp, Check, Building, FolderKanban, FileSignature } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 // --- DATA ---
 type User = {
