@@ -58,7 +58,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart, Line, LineChart } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Pie, PieChart as RechartsPieChart, ResponsiveContainer, BarChart, Line, LineChart, Funnel, FunnelChart, Tooltip } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -259,7 +259,7 @@ function AdminDashboard() {
                     </div>
                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                         <Card><CardHeader><CardTitle className="text-base">Source des Leads</CardTitle></CardHeader><CardContent className="flex justify-center"><ChartContainer config={{}} className="h-48 w-full"><ResponsiveContainer width="100%" height="100%"><RechartsPieChart><Pie data={markosChart1Data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} /></RechartsPieChart></ResponsiveContainer></ChartContainer></CardContent></Card>
-                        <Card><CardHeader><CardTitle className="text-base">Entonnoir de Vente</CardTitle></CardHeader><CardContent className="flex justify-center"><ChartContainer config={{}} className="h-48 w-full"><ResponsiveContainer width="100%" height="100%"><RechartsPieChart><Pie data={markosChart2Data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} /></RechartsPieChart></ResponsiveContainer></ChartContainer></CardContent></Card>
+                        <Card><CardHeader><CardTitle className="text-base">Entonnoir de Vente</CardTitle></CardHeader><CardContent className="flex justify-center"><ChartContainer config={{}} className="h-48 w-full"><ResponsiveContainer><FunnelChart><Funnel dataKey="value" data={markosChart2Data} /></FunnelChart></ResponsiveContainer></ChartContainer></CardContent></Card>
                         <Card><CardHeader><CardTitle className="text-base">Marge par Produit</CardTitle></CardHeader><CardContent><ChartContainer config={{}} className="h-48 w-full"><LineChart data={markosChart3Data}><XAxis dataKey="mois" fontSize={10} /><YAxis fontSize={10} unit="%"/>
 <Line type="monotone" dataKey="produitA" stroke="#8884d8" /><Line type="monotone" dataKey="produitB" stroke="#82ca9d" /></LineChart></ChartContainer></CardContent></Card>
                         <Card><CardHeader><CardTitle className="text-base">Conv. par Canal</CardTitle></CardHeader><CardContent><ChartContainer config={{}} className="h-48 w-full"><BarChart data={markosChart4Data} layout="vertical"><YAxis type="category" dataKey="channel" fontSize={10} width={60} /><XAxis type="number" hide /><Bar dataKey="conversionRate" fill="#ffc658" radius={2}/></BarChart></ChartContainer></CardContent></Card>
@@ -575,14 +575,14 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean
 }
 
 function CompanySettings() {
-    const [logoUrl, setLogoUrl] = useAtom(companyLogoAtom);
+    const [companyLogo, setCompanyLogo] = useAtom(companyLogoAtom);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onloadend = () => {
-                setLogoUrl(reader.result as string);
+                setCompanyLogo(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
@@ -615,8 +615,8 @@ function CompanySettings() {
                         <Input id="logoUpload" type="file" accept="image/*" onChange={handleFileChange} />
                     </div>
                     <div className="flex justify-center items-center h-24 w-24 rounded-md border bg-muted">
-                        {logoUrl ? (
-                            <Image src={logoUrl} alt="Aperçu du logo" width={80} height={80} className="object-contain" data-ai-hint="company logo"/>
+                        {companyLogo ? (
+                            <Image src={companyLogo} alt="Aperçu du logo" width={80} height={80} className="object-contain" data-ai-hint="company logo"/>
                         ) : (
                             <ImageIcon className="h-8 w-8 text-muted-foreground" />
                         )}
