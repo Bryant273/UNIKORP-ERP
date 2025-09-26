@@ -70,7 +70,7 @@ export function SmartSearch() {
     <>
       <Button
         variant="outline"
-        className="w-full justify-start text-muted-foreground sm:w-64 bg-header-bg border-gray-500 hover:bg-white/20 hover:text-white"
+        className="w-full justify-start text-primary-foreground/80 sm:w-64 bg-white/10 border-white/20 hover:bg-white/20 hover:text-white"
         onClick={() => setIsOpen(true)}
       >
         <Search className="mr-2 h-4 w-4" />
