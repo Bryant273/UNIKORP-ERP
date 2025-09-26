@@ -55,7 +55,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -99,41 +99,78 @@ const navItems = [
 // --- COMPONENTS ---
 
 // Dashboard Data
+const mainKpis = [
+  { title: "Chiffre d'Affaires", value: `${(128500000).toLocaleString('fr-FR')} FCFA`, change: "+12.8% vs Q3", icon: DollarSign, changeType: "up" },
+  { title: "Résultat Net", value: `${(43200000).toLocaleString('fr-FR')} FCFA`, change: "+8.5% vs Q3", icon: Target, changeType: "up" },
+  { title: "Nouveaux Clients", value: "89", change: "+20.1% vs Q3", icon: UserCheck, changeType: "up" },
+  { title: "Effectif Total", value: "112", change: "+2 vs M-1", icon: UserRound, changeType: "up" },
+  { title: "Commandes Expédiées", value: "1 480", change: "-3.5% vs M-1", icon: Ship, changeType: "down" },
+];
+
 const skomptabChartData = [
-  { month: "Jan", revenus: 4000, depenses: 2400, resultat: 1600 }, { month: "Fev", revenus: 3000, depenses: 1398, resultat: 1602 },
-  { month: "Mar", revenus: 5000, depenses: 3200, resultat: 1800 }, { month: "Avr", revenus: 2780, depenses: 3908, resultat: -1128 },
-  { month: "Mai", revenus: 6890, depenses: 4800, resultat: 2090 }, { month: "Juin", revenus: 7390, depenses: 3800, resultat: 3590 },
+  { month: "Jan", revenus: 40000000, depenses: 24000000 }, { month: "Fev", revenus: 30000000, depenses: 13980000 },
+  { month: "Mar", revenus: 50000000, depenses: 32000000 }, { month: "Avr", revenus: 27800000, depenses: 39080000 },
+  { month: "Mai", revenus: 68900000, depenses: 48000000 }, { month: "Juin", revenus: 73900000, depenses: 38000000 },
 ];
 const skomptabChartConfig = {
   revenus: { label: "Revenus", color: "hsl(var(--chart-2))" },
   depenses: { label: "Dépenses", color: "hsl(var(--chart-1))" },
-  resultat: { label: "Résultat Net", color: "hsl(var(--primary))" },
 } satisfies ChartConfig;
-const skomptabKpis = [
-    { title: 'Trésorerie Actuelle', value: '7,5M FCFA' },
-    { title: 'Factures en attente', value: '1,2M FCFA' },
-    { title: 'DSO (Jours)', value: '45j' },
-];
 
-const markosChartData = [ { month: "Jan", leads: 22, conversion: 2.5 }, { month: "Fev", leads: 45, conversion: 3.1 }, { month: "Mar", leads: 52, conversion: 3.5 }, { month: "Avr", leads: 78, conversion: 4.2 }, { month: "Mai", leads: 92, conversion: 4.8 }, { month: "Juin", leads: 120, conversion: 5.1 }, ];
-const markosChartConfig = { leads: { label: "Leads", color: "hsl(var(--primary))" }, conversion: { label: "Taux de Conv. (%)", color: "hsl(var(--chart-2))" }, } satisfies ChartConfig;
-const markosKpis = [ { title: "Nouveaux Leads (Mois)", value: "316" }, { title: "Coût par Lead", value: `${(1850).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` }, { title: "Taux de Conversion", value: "4.2%" },];
+const funnelData = [
+  { name: 'Leads', value: 316, fill: 'hsl(var(--chart-1))' },
+  { name: 'MQLs', value: 120, fill: 'hsl(var(--chart-2))' },
+  { name: 'SQLs', value: 89, fill: 'hsl(var(--chart-3))' },
+  { name: 'Clients', value: 52, fill: 'hsl(var(--chart-4))' },
+];
+const funnelChartConfig = {
+    Leads: { label: "Leads", color: "hsl(var(--chart-1))" },
+    MQLs: { label: "MQLs", color: "hsl(var(--chart-2))" },
+    SQLs: { label: "SQLs", color: "hsl(var(--chart-3))" },
+    Clients: { label: "Clients", color: "hsl(var(--chart-4))" },
+} satisfies ChartConfig;
 
 const logsonChartData = [ { month: "Jan", expeditions: 1204, retours: 18 }, { month: "Fev", expeditions: 1350, retours: 22 }, { month: "Mar", expeditions: 1100, retours: 15 }, { month: "Avr", expeditions: 1420, retours: 25 }, { month: "Mai", expeditions: 1550, retours: 20 }, { month: "Juin", expeditions: 1480, retours: 16 }, ];
 const logsonChartConfig = { expeditions: { label: "Expéditions", color: "hsl(var(--chart-3))" }, retours: { label: "Retours", color: "hsl(var(--chart-1))" }, } satisfies ChartConfig;
-const logsonKpis = [ { title: "Expéditions (Mois)", value: "1 480" }, { title: "Taux de retours", value: "1.1%" }, { title: "Rotation des stocks", value: "6.2" }, ];
 
-const socixChartData = [ { month: "Jan", recrutements: 5, departs: 2, effectif: 103 }, { month: "Fev", recrutements: 3, departs: 3, effectif: 103 }, { month: "Mar", recrutements: 6, departs: 1, effectif: 108 }, { month: "Avr", recrutements: 4, departs: 2, effectif: 110 }, { month: "Mai", recrutements: 2, departs: 2, effectif: 110 }, { month: "Juin", recrutements: 4, departs: 2, effectif: 112 }, ];
-const socixChartConfig = { recrutements: { label: "Recrutements", color: "hsl(var(--chart-2))" }, departs: { label: "Départs", color: "hsl(var(--chart-1))" }, effectif: { label: "Effectif Total", color: "hsl(var(--primary))" }, } satisfies ChartConfig;
-const socixKpis = [ { title: "Masse Salariale", value: `${(89000).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA` }, { title: "Effectif Total", value: "112" }, { title: "Turnover", value: "2.1%" }, ];
-
-const genderData = [ { name: 'Hommes', value: 60, fill: 'hsl(var(--chart-2))' }, { name: 'Femmes', value: 52, fill: 'hsl(var(--chart-1))' }, ];
-const genderConfig = { value: { label: "Employés" }, hommes: { label: "Hommes", color: "hsl(var(--chart-2))" }, femmes: { label: "Femmes", color: "hsl(var(--chart-1))" }, } satisfies ChartConfig
-
+const socixChartData = [ { month: "Jan", recrutements: 5, departs: 2 }, { month: "Fev", recrutements: 3, departs: 3 }, { month: "Mar", recrutements: 6, departs: 1 }, { month: "Avr", recrutements: 4, departs: 2 }, { month: "Mai", recrutements: 2, departs: 2 }, { month: "Juin", recrutements: 4, departs: 2 }, ];
+const socixChartConfig = { recrutements: { label: "Recrutements", color: "hsl(var(--chart-2))" }, departs: { label: "Départs", color: "hsl(var(--chart-1))" } } satisfies ChartConfig;
 
 function AdminDashboard() {
     const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(false);
     const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+    const [reportContent, setReportContent] = useState("");
+
+    const handleGenerateReport = () => {
+        setIsGeneratingReport(true);
+        setReportContent("");
+        setTimeout(() => {
+            const content = `
+                Analyse Globale - ${new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric'})}
+
+                Synthèse:
+                L'entreprise affiche une performance solide ce mois-ci, portée par une forte croissance du chiffre d'affaires (+12.8% vs Q3) et un résultat net positif de 43.2M FCFA.
+                
+                Finance (SKOMPTAB):
+                - Le CA est en hausse, mais les dépenses ont également augmenté, ce qui nécessite une surveillance.
+                - La trésorerie reste stable mais en dessous de l'objectif.
+                
+                Marketing (MARKOS):
+                - L'entonnoir de conversion montre une bonne qualification des leads (MQLs) mais une chute lors du passage en SQLs.
+                - Recommandation: Revoir les critères de qualification des SQLs ou renforcer le suivi commercial.
+
+                Logistique (LOGSON):
+                - Le nombre d'expéditions est stable. Le taux de retours est faible, ce qui est un excellent indicateur de qualité.
+
+                Ressources Humaines (SOCIX):
+                - Le solde des recrutements est positif (+2), indiquant une croissance maîtrisée de l'effectif.
+            `;
+            setReportContent(content.replace(/^\s+/gm, ''));
+            setIsGeneratingReport(false);
+        }, 2000);
+    };
 
     return (
         <>
@@ -143,110 +180,102 @@ function AdminDashboard() {
                     <p className="text-muted-foreground">Vue globale de l'activité de l'entreprise pour le mois en cours.</p>
                 </div>
                 <div className="flex gap-2">
+                     <Button onClick={() => {setIsReportModalOpen(true); handleGenerateReport();}}><Bot className="mr-2 h-4 w-4"/>Générer une analyse IA</Button>
                     <Button variant="outline" onClick={() => setIsOpeningModalOpen(true)}><PlayCircle className="mr-2 h-4 w-4"/>Ouverture d'exercice</Button>
                     <Button variant="destructive" onClick={() => setIsClosingModalOpen(true)}><StopCircle className="mr-2 h-4 w-4"/>Clôture d'exercice</Button>
                 </div>
             </div>
+
+             <div className="mt-6 grid grid-cols-2 lg:grid-cols-5 gap-4">
+                {mainKpis.map((kpi) => (
+                    <Card key={kpi.title}>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                        <kpi.icon className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                        <div className="text-2xl font-bold">{kpi.value}</div>
+                        <p className={`text-xs ${kpi.changeType === 'down' ? 'text-green-500' : 'text-red-500'}`}>{kpi.change}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
              <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 {/* SKOMPTAB Card */}
-                <Card className="flex flex-col">
+                 {/* Revenus vs Dépenses */}
+                <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><BarChart2 className="h-5 w-5 text-primary"/>SKOMPTAB - Finance</CardTitle>
-                        <CardDescription>Analyse des revenus, dépenses et rentabilité.</CardDescription>
+                        <CardTitle>Revenus vs Dépenses</CardTitle>
+                        <CardDescription>Analyse mensuelle de la rentabilité.</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col gap-4">
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            {skomptabKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
-                        </div>
-                        <ChartContainer config={skomptabChartConfig} className="h-[200px] w-full flex-1">
-                            <ComposedChart data={skomptabChartData}>
+                    <CardContent>
+                        <ChartContainer config={skomptabChartConfig} className="h-[250px] w-full">
+                            <BarChart data={skomptabChartData}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => (value as number / 1000) + 'k'} />
+                                <YAxis tickFormatter={(value) => `${value / 1000000}M`} />
                                 <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`} />} />
+                                <Legend />
                                 <Bar dataKey="revenus" fill="var(--color-revenus)" radius={[4, 4, 0, 0]} />
                                 <Bar dataKey="depenses" fill="var(--color-depenses)" radius={[4, 4, 0, 0]} />
-                                <Line type="monotone" dataKey="resultat" stroke="var(--color-resultat)" strokeWidth={2} dot={{ r: 4 }} />
-                            </ComposedChart>
+                            </BarChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
-                 {/* SOCIX Card */}
-                <Card className="flex flex-col">
+                 {/* Entonnoir de Conversion */}
+                <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-purple-500"/>SOCIX - RH</CardTitle>
-                        <CardDescription>Indicateurs clés des ressources humaines.</CardDescription>
+                        <CardTitle>Entonnoir de Conversion</CardTitle>
+                        <CardDescription>Parcours de la prospection à la signature.</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                             <div className="grid grid-cols-3 gap-2 text-center">
-                                {socixKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
-                            </div>
-                            <ChartContainer config={socixChartConfig} className="h-[200px] w-full flex-1">
-                                <ComposedChart data={socixChartData}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                                    <YAxis yAxisId="left" orientation="left" stroke="var(--color-recrutements)" tickLine={false} axisLine={false} fontSize={12} />
-                                    <YAxis yAxisId="right" orientation="right" stroke="var(--color-effectif)" tickLine={false} axisLine={false} fontSize={12} />
+                     <CardContent className="flex justify-center">
+                        <ChartContainer config={funnelChartConfig} className="mx-auto w-full h-[250px]">
+                            <ResponsiveContainer>
+                                <RechartsPieChart>
                                     <ChartTooltip content={<ChartTooltipContent />} />
-                                    <Bar dataKey="recrutements" stackId="a" yAxisId="left" fill="var(--color-recrutements)" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="departs" stackId="a" yAxisId="left" fill="var(--color-departs)" radius={[4, 4, 0, 0]} />
-                                    <Line type="monotone" dataKey="effectif" yAxisId="right" stroke="var(--color-effectif)" strokeWidth={2} dot={{ r: 4 }} />
-                                </ComposedChart>
-                            </ChartContainer>
-                        </div>
-                        <div>
-                            <ChartContainer config={genderConfig} className="h-[250px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <RechartsPieChart><ChartTooltip content={<ChartTooltipContent hideLabel />} /><Pie data={genderData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80}><Legend /></Pie></RechartsPieChart>
-                                </ResponsiveContainer>
-                            </ChartContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-                 {/* MARKOS Card */}
-                <Card className="flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-500"/>MARKOS - Marketing</CardTitle>
-                        <CardDescription>Performance des leads et taux de conversion.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col gap-4">
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            {markosKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
-                        </div>
-                        <ChartContainer config={markosChartConfig} className="h-[200px] w-full flex-1">
-                            <ComposedChart data={markosChartData}>
-                                <CartesianGrid vertical={false} />
-                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                                <YAxis yAxisId="left" orientation="left" stroke="var(--color-leads)" tickLine={false} axisLine={false} fontSize={12}/>
-                                <YAxis yAxisId="right" orientation="right" stroke="var(--color-conversion)" tickLine={false} axisLine={false} fontSize={12} unit="%" />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="leads" yAxisId="left" fill="var(--color-leads)" radius={[4, 4, 0, 0]} />
-                                <Line type="monotone" dataKey="conversion" yAxisId="right" stroke="var(--color-conversion)" strokeWidth={2} dot={{ r: 4 }} />
-                            </ComposedChart>
+                                    <Pie data={funnelData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80}><Legend /></Pie>
+                                </RechartsPieChart>
+                            </ResponsiveContainer>
                         </ChartContainer>
                     </CardContent>
                 </Card>
-                {/* LOGSON Card */}
-                <Card className="flex flex-col">
+                 {/* Flux des Employés */}
+                <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Ship className="h-5 w-5 text-orange-500"/>LOGSON - Logistique</CardTitle>
-                        <CardDescription>Suivi des expéditions et des retours.</CardDescription>
+                        <CardTitle>Flux des Employés</CardTitle>
+                         <CardDescription>Suivi des recrutements et des départs.</CardDescription>
                     </CardHeader>
-                     <CardContent className="flex-1 flex flex-col gap-4">
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            {logsonKpis.map(kpi => (<div key={kpi.title} className="p-2 rounded-lg bg-muted/50"><p className="text-xs text-muted-foreground">{kpi.title}</p><p className="text-lg font-bold">{kpi.value}</p></div>))}
-                        </div>
-                        <ChartContainer config={logsonChartConfig} className="h-[200px] w-full flex-1">
-                            <ComposedChart data={logsonChartData}>
+                    <CardContent>
+                        <ChartContainer config={socixChartConfig} className="h-[250px] w-full">
+                            <BarChart data={socixChartData}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                                <YAxis yAxisId="left" orientation="left" stroke="var(--color-expeditions)" tickLine={false} axisLine={false} fontSize={12}/>
-                                <YAxis yAxisId="right" orientation="right" stroke="var(--color-retours)" tickLine={false} axisLine={false} fontSize={12} />
+                                <YAxis allowDecimals={false} />
                                 <ChartTooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="expeditions" yAxisId="left" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
-                                <Line type="monotone" dataKey="retours" yAxisId="right" stroke="var(--color-retours)" strokeWidth={2} dot={{ r: 4 }} />
-                            </ComposedChart>
+                                <Legend />
+                                <Bar dataKey="recrutements" stackId="a" fill="var(--color-recrutements)" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="departs" stackId="a" fill="var(--color-departs)" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+                 {/* Suivi des Expéditions */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Suivi des Expéditions</CardTitle>
+                        <CardDescription>Volume des expéditions et des retours.</CardDescription>
+                    </CardHeader>
+                     <CardContent>
+                        <ChartContainer config={logsonChartConfig} className="h-[250px] w-full">
+                            <BarChart data={logsonChartData}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                                <YAxis />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Legend />
+                                <Bar dataKey="expeditions" fill="var(--color-expeditions)" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="retours" fill="var(--color-retours)" radius={[4, 4, 0, 0]} />
+                            </BarChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
@@ -281,6 +310,33 @@ function AdminDashboard() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            
+            <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><Bot /> Analyse du Tableau de Bord</DialogTitle>
+                        <DialogDescription>
+                            Voici une synthèse générée par l'IA basée sur les données actuelles du tableau de bord.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 max-h-[60vh] overflow-y-auto">
+                        {isGeneratingReport ? (
+                            <div className="flex flex-col items-center justify-center gap-2 py-8">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                <p className="text-muted-foreground">L'IA analyse les données...</p>
+                            </div>
+                        ) : (
+                             <pre className="text-sm whitespace-pre-wrap font-sans bg-muted/50 p-4 rounded-md">
+                                {reportContent}
+                             </pre>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsReportModalOpen(false)}>Fermer</Button>
+                        <Button disabled={isGeneratingReport || !reportContent}><Download className="mr-2 h-4 w-4"/> Télécharger en PDF</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
@@ -702,3 +758,5 @@ export default function SuperAdminPage() {
         </div>
     );
 }
+
+    
