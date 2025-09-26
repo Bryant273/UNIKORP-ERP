@@ -1,5 +1,15 @@
 
 'use client';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { useState } from "react";
+import { useAtom } from 'jotai';
+
+import { userRoleAtom } from '@/lib/store';
+import { cn } from '@/lib/utils';
+import ActionsPage from '../actions/page';
+import { Button } from '@/components/ui/button';
+
 import {
   Card,
   CardContent,
@@ -8,7 +18,6 @@ import {
   CardTitle,
   CardFooter
 } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -46,20 +55,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, BarChart2, DollarSign, Target, UserCheck, Ship, FileText, UserPlus, LogOut, FileEdit, CheckCircle, Clock, PlayCircle, StopCircle } from 'lucide-react';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { useAtom } from 'jotai';
-import { userRoleAtom } from '@/lib/store';
-import ActionsPage from '../actions/page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { useState } from "react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, BarChart } from "recharts";
+import DashboardPage from '../dashboard/page';
 
 // --- DATA ---
 type User = {
@@ -88,12 +88,6 @@ const navItems = [
     { href: '/dashboard', label: 'Accès ERP', value: 'erp' },
 ];
 
-const moduleStats = {
-    skomptab: { title: 'SKOMPTAB - Finance', kpis: [{label: 'Revenus', value: '15.2M FCFA'}, {label: 'Dépenses', value: '8.9M FCFA'}], icon: DollarSign },
-    socix: { title: 'SOCIX - RH', kpis: [{label: 'Effectif', value: '112'}, {label: 'Recrutements', value: '4'}], icon: UserCheck },
-    markos: { title: 'MARKOS - Marketing', kpis: [{label: 'Nouveaux Leads', value: '316'}, {label: 'Taux Conv.', value: '4.2%'}], icon: Target },
-    logson: { title: 'LOGSON - Logistique', kpis: [{label: 'Commandes Expédiées', value: '1,480'}, {label: 'Valeur Stock', value: '250M FCFA'}], icon: Ship },
-}
 
 // --- COMPONENTS ---
 function AdminDashboard() {
@@ -112,24 +106,8 @@ function AdminDashboard() {
                     <Button variant="destructive" onClick={() => setIsClosingModalOpen(true)}><StopCircle className="mr-2 h-4 w-4"/>Clôture d'exercice</Button>
                 </div>
             </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
-                {Object.values(moduleStats).map(module => (
-                    <Card key={module.title}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                <module.icon className="h-4 w-4 text-muted-foreground"/> {module.title}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                           {module.kpis.map(kpi => (
-                                <div key={kpi.label} className="mt-2">
-                                    <p className="text-xs text-muted-foreground">{kpi.label}</p>
-                                    <p className="text-2xl font-bold">{kpi.value}</p>
-                                </div>
-                           ))}
-                        </CardContent>
-                    </Card>
-                ))}
+            <div className="mt-6">
+                <DashboardPage />
             </div>
 
             <Dialog open={isOpeningModalOpen} onOpenChange={setIsOpeningModalOpen}>
