@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -575,12 +576,10 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean
 
 function CompanySettings() {
     const [logoUrl, setLogoUrl] = useAtom(companyLogoAtom);
-    const [logoFile, setLogoFile] = useState<File | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setLogoFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setLogoUrl(reader.result as string);
