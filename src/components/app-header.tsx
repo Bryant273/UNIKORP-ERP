@@ -1,7 +1,7 @@
 
 'use client';
 import { Button } from './ui/button';
-import { Bell, ChevronDown, HelpCircle, FileText, UserPlus, Megaphone, LifeBuoy } from 'lucide-react';
+import { Bell, ChevronDown, HelpCircle, FileText, UserPlus, Megaphone, LifeBuoy, Building } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { SmartSearch } from './smart-search';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
