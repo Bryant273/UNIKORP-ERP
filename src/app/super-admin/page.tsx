@@ -61,7 +61,7 @@ import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, BarChart, LineChart } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -748,8 +748,8 @@ function SuperAdminPageNav() {
     const isActive = (tabValue: string) => activeTab === tabValue;
 
     return (
-        <nav className="bg-[#1C2039] -mx-6 -mt-6">
-            <div className="flex items-center gap-x-2 max-w-[1600px] mx-auto px-4 sm:px-6">
+        <nav className="bg-[#1C2039]">
+            <div className="flex items-center gap-x-1 max-w-[1600px] mx-auto px-4 sm:px-6">
                 {navItems.map((link) => {
                     if (link.value === 'actions' && !hasActionLogAccess) return null;
                     return (
