@@ -62,7 +62,7 @@ export function AppHeader() {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
   
-  const showCompanyName = !['/dashboard', '/platform-admin', '/'].includes(pathname) && companyFile;
+  const showCompanyName = !['/platform-admin', '/'].includes(pathname) && companyFile;
 
 
   return (
