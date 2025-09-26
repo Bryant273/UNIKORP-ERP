@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useAtom } from 'jotai';
 
-import { userRoleAtom, type UserRole, companyLogoAtom } from '@/lib/store';
+import { userRoleAtom, type UserRole } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import ActionsPage from '../actions/page';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Pie, PieChart as RechartsPieChart, ResponsiveContainer, BarChart, Line, LineChart, Funnel, FunnelChart, Tooltip } from 'recharts';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Pie, PieChart as RechartsPieChart, ResponsiveContainer, BarChart, LineChart, Line, Funnel, FunnelChart, Tooltip } from 'recharts';
 import { type ChartConfig } from "@/components/ui/chart";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -575,18 +575,7 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit }: { isOpen: boolean
 }
 
 function CompanySettings() {
-    const [companyLogo, setCompanyLogo] = useAtom(companyLogoAtom);
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setCompanyLogo(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+    const { toast } = useToast();
     
     return (
         <div className="space-y-6">
@@ -601,26 +590,6 @@ function CompanySettings() {
                     <div className="space-y-2 col-span-full"><Label htmlFor="companyAddress">Adresse</Label><Input id="companyAddress" defaultValue="Cocody Angré, Abidjan, Côte d'Ivoire"/></div>
                     <div className="space-y-2"><Label htmlFor="companyPhone">Téléphone</Label><Input id="companyPhone" defaultValue="+225 01 02 03 04 05"/></div>
                     <div className="space-y-2"><Label htmlFor="companyEmail">Email</Label><Input id="companyEmail" defaultValue="contact@unikorp.com"/></div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Image de marque et Logo</CardTitle>
-                    <CardDescription>Personnalisez l'apparence de vos documents et de l'interface.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                     <div className="md:col-span-2 space-y-2">
-                        <Label htmlFor="logoUpload">Changer le logo</Label>
-                        <Input id="logoUpload" type="file" accept="image/*" onChange={handleFileChange} />
-                    </div>
-                    <div className="flex justify-center items-center h-24 w-24 rounded-md border bg-muted">
-                        {companyLogo ? (
-                            <Image src={companyLogo} alt="Aperçu du logo" width={80} height={80} className="object-contain" data-ai-hint="company logo"/>
-                        ) : (
-                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                        )}
-                    </div>
                 </CardContent>
             </Card>
 
@@ -675,7 +644,7 @@ function CompanySettings() {
                     </Table>
                 </CardContent>
                  <CardFooter>
-                    <Button className="ml-auto">Enregistrer les modifications</Button>
+                    <Button className="ml-auto" onClick={() => toast({title: "Modifications enregistrées"})}>Enregistrer les modifications</Button>
                 </CardFooter>
             </Card>
         </div>

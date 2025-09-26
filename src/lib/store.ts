@@ -44,9 +44,6 @@ export const userRoleAtom = atomWithStorage<UserRole>('userRole', null, sessionJ
 // Create an atom to store the selected company file name
 export const companyFileAtom = atomWithStorage<string | null>('companyFile', null, sessionJSONStorage<string | null>('companyFile'));
 
-// Create an atom to store the company logo URL
-export const companyLogoAtom = atomWithStorage<string | null>('companyLogo', null, sessionJSONStorage<string | null>('companyLogo'));
-
 
 // --- IN-MEMORY ATOMS ---
 

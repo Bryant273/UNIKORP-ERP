@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import { usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
-import { companyFileAtom, companyLogoAtom } from '@/lib/store';
+import { companyFileAtom } from '@/lib/store';
 import Image from 'next/image';
 
 type Notification = {
@@ -51,7 +51,6 @@ export function AppHeader() {
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [companyFile] = useAtom(companyFileAtom);
-  const [companyLogo] = useAtom(companyLogoAtom);
 
   useEffect(() => {
     setMounted(true);
@@ -72,13 +71,9 @@ export function AppHeader() {
         <Logo className="h-8 w-8 text-white" />
         {showCompanyName && (
             <div className="flex items-center gap-3">
-                {companyLogo ? (
-                    <Image src={companyLogo} width={28} height={28} alt="Company Logo" className="h-7 w-7 rounded-full object-contain border-2 border-primary/20" data-ai-hint="company logo"/>
-                ) : (
-                    <div className="h-7 w-7 rounded-full border-2 border-primary/20 bg-muted flex items-center justify-center">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                )}
+                <div className="h-7 w-7 rounded-full border-2 border-primary/20 bg-muted flex items-center justify-center">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                </div>
                 <span className="font-semibold">{companyFile}</span>
             </div>
         )}
