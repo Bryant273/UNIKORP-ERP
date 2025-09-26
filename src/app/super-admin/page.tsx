@@ -110,6 +110,10 @@ const skomptabChart1Data = [ { month: "Jan", revenus: 40, depenses: 24 }, { mont
 const skomptabChart2Data = [ { name: 'Achats', value: 400 }, { name: 'Salaires', value: 300 }, { name: 'Services Ext.', value: 200 }, { name: 'Impôts', value: 278 }, { name: 'Autres', value: 189 }, ];
 const skomptabChart3Data = [ { month: 'Jan', net: 16 }, { month: 'Fev', net: 16 }, { month: 'Mar', net: 18 }, { month: 'Avr', net: -11 }, { month: 'Mai', net: 21 }, { month: 'Juin', net: 36 }, ];
 const skomptabChart4Data = [ { month: 'Jan', bfr: 12 }, { month: 'Fev', bfr: 15 }, { month: 'Mar', bfr: 14 }, { month: 'Avr', bfr: 18 }, { month: 'Mai', bfr: 16 }, { month: 'Juin', bfr: 20 }, ];
+const skomptabChartConfig = {
+  revenus: { label: "Revenus", color: "hsl(var(--chart-2))" },
+  depenses: { label: "Dépenses", color: "hsl(var(--chart-1))" },
+} satisfies ChartConfig;
 
 // SOCIX
 const socixKpis = [
@@ -236,7 +240,7 @@ function AdminDashboard() {
                         {socixKpis.map(kpi => <Card key={kpi.title}><CardHeader className="pb-2"><CardDescription>{kpi.title}</CardDescription><CardTitle className="text-2xl">{kpi.value}</CardTitle></CardHeader><CardContent><p className="text-xs text-muted-foreground">{kpi.change}</p></CardContent></Card>)}
                     </div>
                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                        <Card><CardHeader><CardTitle className="text-base">Pyramide des âges</CardTitle></CardHeader><CardContent><ChartContainer config={{}} className="h-48 w-full"><BarChart data={socixChart1Data} layout="vertical"><YAxis type="category" dataKey="age" fontSize={10}/><XAxis type="number" hide /><Bar dataKey="count" fill="var(--color-primary)" radius={2}/></BarChart></ChartContainer></CardContent></Card>
+                        <Card><CardHeader><CardTitle className="text-base">Pyramide des âges</CardTitle></CardHeader><CardContent><ChartContainer config={{}} className="h-48 w-full"><BarChart data={socixChart1Data} layout="vertical"><YAxis type="category" dataKey="age" fontSize={10} width={60} /><XAxis type="number" hide /><Bar dataKey="count" fill="var(--color-primary)" radius={2}/></BarChart></ChartContainer></CardContent></Card>
                         <Card><CardHeader><CardTitle className="text-base">Répartition Hommes/Femmes</CardTitle></CardHeader><CardContent className="flex justify-center"><ChartContainer config={{}} className="h-48 w-full"><ResponsiveContainer width="100%" height="100%"><RechartsPieChart><Pie data={socixChart2Data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} /></RechartsPieChart></ResponsiveContainer></ChartContainer></CardContent></Card>
                         <Card><CardHeader><CardTitle className="text-base">Recrutements vs Départs</CardTitle></CardHeader><CardContent><ChartContainer config={{}} className="h-48 w-full"><BarChart data={socixChart3Data}><XAxis dataKey="month" fontSize={10}/><YAxis fontSize={10}/><Bar dataKey="recrutements" fill="#82ca9d" stackId="a" radius={2}/><Bar dataKey="departs" fill="#ff7300" stackId="a" radius={2}/></BarChart></ChartContainer></CardContent></Card>
                         <Card><CardHeader><CardTitle className="text-base">Effectif par département</CardTitle></CardHeader><CardContent><ChartContainer config={{}} className="h-48 w-full"><BarChart data={socixChart4Data}><XAxis dataKey="departement" fontSize={10} /><YAxis fontSize={10} /><Bar dataKey="count" fill="#8884d8" radius={2}/></BarChart></ChartContainer></CardContent></Card>
@@ -732,19 +736,18 @@ export default function SuperAdminPage() {
     
     return (
         <div className="space-y-6">
-             <nav className="bg-primary px-4 sm:px-6 -mx-6 -mt-6">
-              <div className="flex items-center gap-x-2 max-w-[1600px] mx-auto">
+            <nav className="bg-primary -mx-6 -mt-6">
+              <div className="flex items-center gap-x-2 max-w-[1600px] mx-auto px-4 sm:px-6">
                 {navItems.map((link) => {
                     const isErpAccess = link.value === 'erp';
                     const isActive = activeTab === link.value && !isErpAccess;
                     if (link.value === 'actions' && !hasActionLogAccess) return null;
                     return (
                       <Link href={link.href} key={link.href} className={cn(
-                          'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white rounded-t-md relative',
-                           isActive && 'bg-background text-primary'
+                          'flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white',
+                           isActive && 'border-b-2 border-white text-white'
                            )}>
                           {link.label}
-                          {isActive && <div className="absolute -bottom-px left-0 right-0 h-px bg-primary"/>}
                       </Link>
                     )
                 })}
