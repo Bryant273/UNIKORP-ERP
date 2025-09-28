@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
-import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star, Linkedin, Facebook, Twitter, Instagram } from "lucide-react";
+import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star, Linkedin, Facebook, Twitter, Instagram, Rocket, PlayCircle, Send } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -11,11 +11,23 @@ import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { ContactModal } from "@/components/contact-modal";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LandingPage() {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+    const { toast } = useToast();
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        toast({
+          title: 'Message envoyé !',
+          description: "Merci de votre intérêt. Notre équipe vous contactera dans les plus brefs délais.",
+        });
+        (e.target as HTMLFormElement).reset();
+    };
 
     const partners = [
         { name: "Partner 1", logo: "https://picsum.photos/seed/p1/150/60" },
@@ -98,8 +110,12 @@ export default function LandingPage() {
                                     UNIKORP, une solution de l'entreprise <span className="font-semibold text-primary">INNOV'KORP</span>, centralise vos finances, RH, marketing et logistique pour une gestion sans friction.
                                 </p>
                                 <div className="mt-8 flex justify-center gap-4">
-                                    <Button size="lg" onClick={() => setIsContactModalOpen(true)}>Démarrer avec UNIKORP</Button>
-                                    <Button size="lg" variant="outline" onClick={() => setIsContactModalOpen(true)}>Voir la démo</Button>
+                                     <Button size="lg" asChild>
+                                        <a href="#contact"><Rocket className="mr-2 h-4 w-4"/>Démarrer avec UNIKORP</a>
+                                    </Button>
+                                    <Button size="lg" variant="outline" asChild>
+                                        <a href="#contact"><PlayCircle className="mr-2 h-4 w-4"/>Voir la démo</a>
+                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -165,7 +181,7 @@ export default function LandingPage() {
                                         </div>
                                         <h2 className="text-3xl font-bold mb-4">{benefit.title}</h2>
                                         <p className="text-muted-foreground">{benefit.description}</p>
-                                        <Button variant="link" className="p-0 mt-4">Découvrir plus <MoveUpRight className="h-4 w-4 ml-1"/></Button>
+                                        <Button variant="link" className="p-0 mt-4" asChild><a href="#contact">Découvrir plus <MoveUpRight className="h-4 w-4 ml-1"/></a></Button>
                                     </div>
                                     <div className={cn(index % 2 === 1 && "md:order-1")}>
                                         <Image src={benefit.image} alt={benefit.imageAlt} width={600} height={400} className="rounded-xl shadow-lg" data-ai-hint="application interface"/>
@@ -201,19 +217,55 @@ export default function LandingPage() {
                         </div>
                     </section>
 
-                    {/* CTA Section */}
-                    <section className="py-24">
-                        <div className="container mx-auto px-4 text-center">
-                            <h2 className="text-3xl font-bold">Prêt à transformer votre entreprise ?</h2>
-                            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">Rejoignez les entreprises qui ont choisi UNIKORP pour unifier leurs opérations et accélérer leur croissance.</p>
-                             <div className="mt-8">
-                                <Button size="lg" onClick={() => setIsContactModalOpen(true)}>Commencez gratuitement</Button>
+                    {/* Contact Section */}
+                    <section id="contact" className="py-24">
+                        <div className="container mx-auto px-4">
+                             <div className="text-center mb-16">
+                                <h2 className="text-3xl font-bold">Prêt à transformer votre entreprise ?</h2>
+                                <p className="text-muted-foreground mt-4 max-w-xl mx-auto">Rejoignez les entreprises qui ont choisi UNIKORP pour unifier leurs opérations et accélérer leur croissance.</p>
                             </div>
+                             <Card className="max-w-2xl mx-auto">
+                                <CardHeader>
+                                    <CardTitle>Contactez-nous</CardTitle>
+                                    <CardDescription>Remplissez ce formulaire et notre équipe vous contactera pour planifier une démonstration ou répondre à vos questions.</CardDescription>
+                                </CardHeader>
+                                <form onSubmit={handleSubmit}>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid sm:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="nom">Nom</Label>
+                                                <Input id="nom" name="nom" required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="prenoms">Prénoms</Label>
+                                                <Input id="prenoms" name="prenoms" required />
+                                            </div>
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label htmlFor="email">Email professionnel</Label>
+                                            <Input id="email" type="email" name="email" required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="objet">Objet</Label>
+                                            <Input id="objet" name="objet" required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="message">Votre message</Label>
+                                            <Textarea id="message" name="message" required placeholder="Comment pouvons-nous vous aider ?"/>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter>
+                                        <Button type="submit" className="ml-auto">
+                                            <Send className="mr-2 h-4 w-4"/> Envoyer
+                                        </Button>
+                                    </CardFooter>
+                                </form>
+                            </Card>
                         </div>
                     </section>
                 </main>
 
-                <footer id="contact" className="bg-foreground text-background">
+                <footer className="bg-foreground text-background">
                     <div className="container mx-auto px-8 py-16">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                             <div>
@@ -243,7 +295,7 @@ export default function LandingPage() {
                                 <ul className="space-y-2 text-sm text-muted-foreground">
                                     <li><a href="#" className="hover:text-white">À propos</a></li>
                                     <li><a href="#" className="hover:text-white">Carrières</a></li>
-                                    <li><a href="#" className="hover:text-white">Contact</a></li>
+                                    <li><a href="#contact" className="hover:text-white">Contact</a></li>
                                 </ul>
                             </div>
                              <div>
@@ -259,7 +311,6 @@ export default function LandingPage() {
                 </footer>
             </div>
             <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
-            <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
         </>
     );
 }
