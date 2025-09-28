@@ -14,9 +14,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { DemoVideoModal } from "@/components/demo-video-modal";
 
 export default function LandingPage() {
     const { toast } = useToast();
+    const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -113,8 +115,8 @@ export default function LandingPage() {
                                      <Button size="lg" asChild>
                                         <a href="#contact"><Rocket className="mr-2 h-4 w-4"/>Démarrer avec UNIKORP</a>
                                     </Button>
-                                    <Button size="lg" variant="outline" asChild>
-                                        <a href="#contact"><PlayCircle className="mr-2 h-4 w-4"/>Voir la démo</a>
+                                    <Button size="lg" variant="outline" onClick={() => setIsDemoModalOpen(true)}>
+                                        <PlayCircle className="mr-2 h-4 w-4"/>Voir la démo
                                     </Button>
                                 </div>
                             </div>
@@ -310,6 +312,7 @@ export default function LandingPage() {
                     </div>
                 </footer>
             </div>
+            <DemoVideoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
         </>
     );
 }
