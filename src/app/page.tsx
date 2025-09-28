@@ -6,16 +6,16 @@ import Image from "next/image";
 import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
+import { RequestDemoModal } from "@/components/request-demo-modal";
 
 export default function LandingPage() {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
     const partners = [
         { name: "Partner 1", logo: "https://picsum.photos/seed/p1/150/60" },
@@ -27,10 +27,10 @@ export default function LandingPage() {
     ];
 
     const modules = [
-        { name: 'SKOMPTAB', title: 'Finance & Comptabilité', icon: Calculator, description: 'Pilotez votre santé financière avec une précision chirurgicale.' },
-        { name: 'SOCIX', title: 'Ressources Humaines', icon: UsersRound, description: 'Transformez votre gestion RH en un levier de croissance stratégique.' },
-        { name: 'MARKOS', title: 'Marketing & CRM', icon: Megaphone, description: 'De la prospection à la fidélisation, optimisez votre relation client.' },
-        { name: 'LOGSON', title: 'Logistique & Stocks', icon: Ship, description: 'Optimisez l\'ensemble de votre chaîne d\'approvisionnement.' },
+        { name: 'SKOMPTAB', title: 'Finance & Comptabilité', icon: Calculator, description: 'Pilotez votre santé financière avec une précision chirurgicale.', image: "https://picsum.photos/seed/picsum1/600/400" },
+        { name: 'SOCIX', title: 'Ressources Humaines', icon: UsersRound, description: 'Transformez votre gestion RH en un levier de croissance stratégique.', image: "https://picsum.photos/seed/picsum2/600/400" },
+        { name: 'MARKOS', title: 'Marketing & CRM', icon: Megaphone, description: 'De la prospection à la fidélisation, optimisez votre relation client.', image: "https://picsum.photos/seed/picsum3/600/400" },
+        { name: 'LOGSON', title: 'Logistique & Stocks', icon: Ship, description: 'Optimisez l\'ensemble de votre chaîne d\'approvisionnement.', image: "https://picsum.photos/seed/picsum4/600/400" },
     ];
 
      const benefits = [
@@ -98,8 +98,8 @@ export default function LandingPage() {
                                     UNIKORP, une solution de l'entreprise <span className="font-semibold text-primary">INNOV'KORP</span>, centralise vos finances, RH, marketing et logistique pour une gestion sans friction.
                                 </p>
                                 <div className="mt-8 flex justify-center gap-4">
-                                    <Button size="lg" onClick={() => setIsLoginModalOpen(true)}>Démarrer avec UNIKORP</Button>
-                                    <Button size="lg" variant="outline">Demander une démo</Button>
+                                    <Button size="lg" onClick={() => setIsDemoModalOpen(true)}>Démarrer avec UNIKORP</Button>
+                                    <Button size="lg" variant="outline" onClick={() => setIsDemoModalOpen(true)}>Demander une démo</Button>
                                 </div>
                             </div>
                         </div>
@@ -207,7 +207,7 @@ export default function LandingPage() {
                             <h2 className="text-3xl font-bold">Prêt à transformer votre entreprise ?</h2>
                             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">Rejoignez les entreprises qui ont choisi UNIKORP pour unifier leurs opérations et accélérer leur croissance.</p>
                              <div className="mt-8">
-                                <Button size="lg" onClick={() => setIsLoginModalOpen(true)}>Commencez gratuitement</Button>
+                                <Button size="lg" onClick={() => setIsDemoModalOpen(true)}>Commencez gratuitement</Button>
                             </div>
                         </div>
                     </section>
@@ -253,6 +253,7 @@ export default function LandingPage() {
                 </footer>
             </div>
             <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+            <RequestDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
         </>
     );
 }

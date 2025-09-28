@@ -1,14 +1,16 @@
 
+
 'use client';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building, Users, Clock, CheckCircle, FileText, Ticket, GanttChartSquare, LayoutDashboard } from "lucide-react";
+import { Building, Users, Clock, CheckCircle, FileText, Ticket, GanttChartSquare, LayoutDashboard, Handshake } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import RequestsPage from './requests/page';
 
 // --- DATA ---
 const companies = [
@@ -37,6 +39,7 @@ const promotions = [
 // --- NAVIGATION ---
 const navItems = [
     { id: 'dashboard', label: "Vue d'ensemble", icon: LayoutDashboard },
+    { id: 'requests', label: 'Requêtes', icon: Handshake },
     { id: 'companies', label: 'Entreprises', icon: Building },
     { id: 'subscriptions', label: 'Abonnements', icon: Clock },
     { id: 'demos', label: 'Démos', icon: GanttChartSquare },
@@ -112,6 +115,7 @@ export default function PlatformAdminPage() {
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView />;
+            case 'requests': return <RequestsPage />;
             case 'companies': return <CompaniesView />;
             case 'subscriptions': return <SubscriptionsView />;
             case 'demos': return <DemosView />;

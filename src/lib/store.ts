@@ -191,6 +191,16 @@ export type Mouvement = {
     entrepotDestId?: number;
 };
 
+export type DemoRequest = {
+  id: string;
+  fullName: string;
+  email: string;
+  companyName: string;
+  phone?: string;
+  requestDate: string;
+  status: 'Nouvelle' | 'Contacté' | 'Archivée';
+};
+
 
 export const initialTemplates: InvoiceTemplate[] = [
   {
@@ -310,6 +320,11 @@ const initialMouvements: Mouvement[] = [
     { id: 'mvt-3', date: '2024-07-29T09:30:00Z', produitId: 3, type: 'Transfert', quantite: 5, document: 'BT-ABJ-BKE-01', entrepotSourceId: 2, entrepotDestId: 1 },
 ];
 
+const initialRequests: DemoRequest[] = [
+    { id: 'req-1', fullName: 'John Doe', email: 'john.doe@example.com', companyName: 'Doe Inc.', requestDate: '2024-07-30', status: 'Nouvelle' },
+    { id: 'req-2', fullName: 'Jane Smith', email: 'jane.smith@example.com', companyName: 'Smith & Co', requestDate: '2024-07-29', status: 'Contacté' },
+];
+
 export const clientsAtom = atom<CompteTiers[]>(initialClients);
 export const prospectsAtom = atom<CompteTiers[]>(initialProspects);
 export const fournisseursAtom = atom<Fournisseur[]>(initialFournisseurs);
@@ -320,5 +335,6 @@ export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
 export const receptionsAtom = atom<Reception[]>([]);
 export const invoicesAtom = atom<InvoiceData[]>(initialInvoices);
 export const mouvementsAtom = atom<Mouvement[]>(initialMouvements);
+export const requestsAtom = atomWithStorage<DemoRequest[]>('demoRequests', initialRequests);
 
     
