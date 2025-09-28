@@ -286,6 +286,12 @@ export function ChatWidget() {
             
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent hideCloseButton={true} className="w-[90vw] max-w-5xl h-[85vh] p-0 gap-0 overflow-hidden animate-modal-enter">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Chat</DialogTitle>
+                        <DialogDescription>
+                            Fenêtre de discussion instantanée.
+                        </DialogDescription>
+                    </DialogHeader>
                     <ChatPage />
                 </DialogContent>
             </Dialog>
