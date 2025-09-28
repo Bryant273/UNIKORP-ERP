@@ -63,12 +63,15 @@ export function AppHeader() {
   };
   
   const showCompanyName = !['/platform-admin', '/'].includes(pathname) && companyFile;
-
+  const showPlatformName = pathname === '/platform-admin';
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-b-white/10 bg-[#1C2039] text-white px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Logo className="h-8 w-8 text-white" />
+        {showPlatformName && (
+             <span className="font-bold text-xl">UNIKORP</span>
+        )}
         {showCompanyName && (
             <div className="flex items-center gap-3">
                 <div className="h-7 w-7 rounded-full border-2 border-primary/20 bg-muted flex items-center justify-center">
