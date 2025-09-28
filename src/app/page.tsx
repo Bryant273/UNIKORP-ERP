@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
-import { BarChart, Calculator, Megaphone, Ship, Users, ArrowRight, GitCommit, Zap, ShieldCheck, Heart, UsersRound } from "lucide-react";
+import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitCommit } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -25,7 +25,7 @@ export default function LandingPage() {
                 'Rapprochement bancaire intelligent et suivi de trésorerie.',
                 'Reporting financier en temps réel (Bilan, Compte de Résultat, SIG).',
             ],
-            image: 'https://placehold.co/600x400.png'
+            image: 'https://picsum.photos/seed/picsum1/600/400'
         },
         {
             name: 'SOCIX',
@@ -38,7 +38,7 @@ export default function LandingPage() {
                 'Suivi des congés, absences et plannings d\'équipe.',
                 'Gestion des compétences, formations et entretiens annuels.',
             ],
-            image: 'https://placehold.co/600x400.png'
+            image: 'https://picsum.photos/seed/picsum2/600/400'
         },
         {
             name: 'MARKOS',
@@ -51,7 +51,7 @@ export default function LandingPage() {
                 'Automatisation des campagnes marketing multicanal.',
                 'Analyse du ROI et des performances en temps réel.',
             ],
-            image: 'https://placehold.co/600x400.png'
+            image: 'https://picsum.photos/seed/picsum3/600/400'
         },
         {
             name: 'LOGSON',
@@ -64,8 +64,14 @@ export default function LandingPage() {
                 'Planification et suivi des expéditions clients.',
                 'Analyse des coûts logistiques et des indicateurs de performance.',
             ],
-            image: 'https://placehold.co/600x400.png'
+            image: 'https://picsum.photos/seed/picsum4/600/400'
         },
+    ];
+
+    const pillars = [
+        { icon: Zap, title: "Intelligence Artificielle", description: "Automatisez les tâches complexes et obtenez des analyses prédictives grâce à notre IA intégrée." },
+        { icon: ShieldCheck, title: "Sécurité Renforcée", description: "Vos données sont protégées par une architecture robuste avec une gestion fine des accès." },
+        { icon: GitCommit, title: "Intégration Fluide", description: "Les données circulent sans effort entre les modules, éliminant la double saisie et les erreurs." },
     ];
 
     return (
@@ -97,7 +103,7 @@ export default function LandingPage() {
                                Unifiez la gestion de votre entreprise.
                             </h1>
                             <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
-                                UNIKORP est l'ERP moderne, intégré et intelligent qui centralise vos finances, vos ressources humaines, votre marketing et votre logistique.
+                                UNIKORP, une solution de l'entreprise <span className="font-semibold text-primary">INNOV'KORP</span>, est l'ERP moderne, intégré et intelligent qui centralise vos finances, vos ressources humaines, votre marketing et votre logistique.
                             </p>
                             <div className="mt-8 flex justify-center gap-4">
                                 <Button size="lg" onClick={() => setIsLoginModalOpen(true)}>Commencer</Button>
@@ -105,17 +111,30 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </section>
-
-                    {/* Intro Section */}
+                    
+                    {/* Pillars Section */}
                     <section className="py-20 bg-background">
-                        <div className="container mx-auto px-4 text-center">
-                             <h2 className="text-3xl font-bold">La Plateforme Unifiée pour Piloter votre Croissance</h2>
-                             <p className="text-muted-foreground mt-4 max-w-3xl mx-auto">
-                                UNIKORP, une innovation signée <span className="font-semibold text-primary">INNOV'KORP</span>, est bien plus qu'un simple logiciel. C'est un partenaire stratégique conçu pour briser les silos entre vos départements. En centralisant vos données et en automatisant vos processus, nous vous offrons une vision à 360° de votre activité pour des décisions plus rapides et plus intelligentes.
-                             </p>
+                         <div className="container mx-auto px-4">
+                            <div className="text-center mb-12">
+                                 <h2 className="text-3xl font-bold">La Plateforme Unifiée pour Piloter votre Croissance</h2>
+                                 <p className="text-muted-foreground mt-4 max-w-3xl mx-auto">
+                                   Briser les silos entre vos départements. En centralisant vos données et en automatisant vos processus, nous vous offrons une vision à 360° de votre activité pour des décisions plus rapides et plus intelligentes.
+                                 </p>
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                {pillars.map(pillar => (
+                                    <div key={pillar.title} className="text-center p-6">
+                                        <div className="inline-block p-4 bg-primary/10 rounded-full mb-4">
+                                            <pillar.icon className="h-8 w-8 text-primary" />
+                                        </div>
+                                        <h3 className="text-xl font-semibold mb-2">{pillar.title}</h3>
+                                        <p className="text-muted-foreground text-sm">{pillar.description}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </section>
-                    
+
                     {/* Modules Section */}
                     <section id="modules" className="py-20 bg-muted/40">
                         <div className="container mx-auto px-4">
