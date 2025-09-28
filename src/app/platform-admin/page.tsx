@@ -71,33 +71,33 @@ const promotions = [
 const adminNav = [
     { title: "Gestion Clients", icon: Building, subItems: [
         { href: '?tab=companies', label: "Liste des entreprises" },
-        { href: '?tab=subscriptions', label: "Abonnements" },
+        { href: '?tab=contracts', label: "Contrats et abonnements" },
     ]},
     { title: "Prospects & Ventes", icon: Handshake, subItems: [
         { href: '?tab=requests', label: "Requêtes" },
         { href: '?tab=demos', label: "Démos" },
     ]},
     { title: "Déploiements & Instances", icon: GanttChartSquare, subItems: [
-        { href: '#', label: "Environnements" },
-        { href: '#', label: "Mises à jour" },
+        { href: '?tab=environments', label: "Environnements" },
+        { href: '?tab=updates', label: "Mises à jour" },
     ]},
     { title: "Templates & Modèles", icon: Palette, subItems: [
-        { href: '#', label: "Templates Factures" },
-        { href: '#', label: "Modèles Contrats" },
+        { href: '?tab=accounting-templates', label: "Plans comptables" },
+        { href: '?tab=tax-templates', label: "Déclarations fiscales" },
     ]},
     { title: "Support & Formation", icon: LifeBuoy, subItems: [
-        { href: '#', label: "Tickets Support" },
-        { href: '#', label: "Base de Connaissances" },
+        { href: '?tab=support-tickets', label: "Tickets Support" },
+        { href: '?tab=knowledge-base', label: "Base de Connaissances" },
     ]},
     { title: "Analytics Business", icon: BarChart3, subItems: [
-        { href: '#', label: "Métriques SaaS" },
+        { href: '?tab=saas-metrics', label: "Métriques SaaS" },
     ]},
     { title: "Administration", icon: Settings, subItems: [
-        { href: '#', label: "Gestion Équipe" },
-        { href: '#', label: "Paramètres Plateforme" },
+        { href: '?tab=team-management', label: "Gestion Équipe" },
+        { href: '?tab=platform-settings', label: "Paramètres Plateforme" },
     ]},
     { title: "Marketing & Communication", icon: Megaphone, subItems: [
-        { href: '#', label: "Campagnes Email" },
+        { href: '?tab=email-campaigns', label: "Campagnes Email" },
     ]},
 ];
 
@@ -112,6 +112,20 @@ const getStatusBadge = (status: string) => {
         default: return <Badge variant="secondary">{status}</Badge>;
     }
 };
+
+const PlaceholderPage = ({ title, description }: { title: string, description: string }) => (
+    <Card>
+        <CardHeader>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-lg">
+                Contenu à venir...
+            </div>
+        </CardContent>
+    </Card>
+);
 
 const DashboardView = () => (
     <Card>
@@ -136,7 +150,7 @@ const CompaniesView = () => (
     </CardContent></Card>
 );
 
-const SubscriptionsView = () => (
+const ContractsView = () => (
     <Card><CardHeader><CardTitle>Gestion des Abonnements</CardTitle><CardDescription>Suivez les abonnements, les renouvellements et les suspensions.</CardDescription></CardHeader><CardContent>
         <Table><TableHeader><TableRow><TableHead>Entreprise</TableHead><TableHead>Montant</TableHead><TableHead>Prochaine Facturation</TableHead><TableHead>Statut</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>
             {subscriptions.map(s => <TableRow key={s.id}><TableCell className="font-medium">{s.company}</TableCell><TableCell>{s.amount}</TableCell><TableCell>{format(new Date(s.nextBilling), 'dd/MM/yyyy')}</TableCell><TableCell>{getStatusBadge(s.status)}</TableCell><TableCell className="text-right">{s.status.includes('attente') && <Button size="sm">Valider</Button>}</TableCell></TableRow>)}
@@ -203,10 +217,19 @@ function PlatformAdminPageContent() {
         switch (activeView) {
             case 'dashboard': return <DashboardView />;
             case 'companies': return <CompaniesView />;
-            case 'subscriptions': return <SubscriptionsView />;
+            case 'contracts': return <ContractsView />;
             case 'demos': return <DemosView />;
             case 'requests': return <RequestsPage />;
-            // Add other cases here as they are built
+            case 'environments': return <PlaceholderPage title="Environnements Clients" description="Gérez et monitorez les instances déployées pour chaque client."/>;
+            case 'updates': return <PlaceholderPage title="Mises à jour et Versions" description="Planifiez et déployez les mises à jour sur les environnements clients."/>;
+            case 'accounting-templates': return <PlaceholderPage title="Templates de Plans Comptables" description="Gérez les modèles de plans comptables par pays et normes."/>;
+            case 'tax-templates': return <PlaceholderPage title="Templates de Déclarations Fiscales" description="Créez et maintenez les modèles pour les déclarations fiscales."/>;
+            case 'support-tickets': return <PlaceholderPage title="Tickets Support" description="Suivez et répondez aux demandes de support des clients."/>;
+            case 'knowledge-base': return <PlaceholderPage title="Base de Connaissances" description="Rédigez et organisez les articles d'aide pour les utilisateurs."/>;
+            case 'saas-metrics': return <PlaceholderPage title="Métriques SaaS" description="Analysez les indicateurs clés de performance de la plateforme (MRR, Churn, LTV)."/>;
+            case 'team-management': return <PlaceholderPage title="Gestion Équipe Interne" description="Gérez les accès et les rôles de votre équipe de support et de développement."/>;
+            case 'platform-settings': return <PlaceholderPage title="Paramètres Plateforme" description="Configurez les paramètres globaux de l'application UNIKORP."/>;
+            case 'email-campaigns': return <PlaceholderPage title="Campagnes Email" description="Gérez la communication avec les clients et prospects de la plateforme."/>;
             default: return <DashboardView />;
         }
     };
@@ -230,5 +253,3 @@ export default function PlatformAdminPage() {
         </Suspense>
     );
 }
-
-    
