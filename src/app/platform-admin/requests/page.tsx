@@ -46,6 +46,7 @@ export default function RequestsPage() {
                             <TableHead>Email</TableHead>
                             <TableHead>Entreprise</TableHead>
                             <TableHead>Téléphone</TableHead>
+                            <TableHead>Motif</TableHead>
                             <TableHead className="text-center">Statut</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -57,7 +58,8 @@ export default function RequestsPage() {
                                 <TableCell className="font-medium">{req.fullName}</TableCell>
                                 <TableCell>{req.email}</TableCell>
                                 <TableCell>{req.companyName}</TableCell>
-                                <TableCell>{req.phone || 'N/A'}</TableCell>
+                                <TableCell>{req.countryCode} {req.phone || 'N/A'}</TableCell>
+                                <TableCell className="max-w-[200px] truncate">{req.motive}</TableCell>
                                 <TableCell className="text-center">{getStatusBadge(req.status)}</TableCell>
                                 <TableCell className="text-right">
                                     <DropdownMenu>
@@ -76,7 +78,7 @@ export default function RequestsPage() {
                                 </TableCell>
                             </TableRow>
                         )) : (
-                            <TableRow><TableCell colSpan={7} className="h-24 text-center">Aucune requête pour le moment.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={8} className="h-24 text-center">Aucune requête pour le moment.</TableCell></TableRow>
                         )}
                     </TableBody>
                 </Table>

@@ -196,7 +196,9 @@ export type DemoRequest = {
   fullName: string;
   email: string;
   companyName: string;
+  countryCode: string;
   phone?: string;
+  motive: string;
   requestDate: string;
   status: 'Nouvelle' | 'Contacté' | 'Archivée';
 };
@@ -321,8 +323,8 @@ const initialMouvements: Mouvement[] = [
 ];
 
 const initialRequests: DemoRequest[] = [
-    { id: 'req-1', fullName: 'John Doe', email: 'john.doe@example.com', companyName: 'Doe Inc.', requestDate: '2024-07-30', status: 'Nouvelle' },
-    { id: 'req-2', fullName: 'Jane Smith', email: 'jane.smith@example.com', companyName: 'Smith & Co', requestDate: '2024-07-29', status: 'Contacté' },
+    { id: 'req-1', fullName: 'John Doe', email: 'john.doe@example.com', companyName: 'Doe Inc.', countryCode: '+1', phone: '555-1234', motive: 'Looking for a new ERP', requestDate: '2024-07-30', status: 'Nouvelle' },
+    { id: 'req-2', fullName: 'Jane Smith', email: 'jane.smith@example.com', companyName: 'Smith & Co', countryCode: '+44', phone: '7123456789', motive: 'Interested in the HR module', requestDate: '2024-07-29', status: 'Contacté' },
 ];
 
 export const clientsAtom = atom<CompteTiers[]>(initialClients);
@@ -335,6 +337,4 @@ export const commandesFournisseursAtom = atom<Commande[]>(initialCommandes);
 export const receptionsAtom = atom<Reception[]>([]);
 export const invoicesAtom = atom<InvoiceData[]>(initialInvoices);
 export const mouvementsAtom = atom<Mouvement[]>(initialMouvements);
-export const requestsAtom = atomWithStorage<DemoRequest[]>('demoRequests', initialRequests);
-
-    
+export const requestsAtom = atomWithStorage<DemoRequest[]>('demoRequests', initialRequests, sessionJSONStorage('demoRequests'));
