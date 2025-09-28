@@ -5,8 +5,7 @@ import { Logo } from "@/components/logo";
 import Image from "next/image";
 import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star, Linkedin, Facebook, Twitter, Instagram, Rocket, PlayCircle, Send } from "lucide-react";
 import { useState } from "react";
-import { LoginModal } from "@/components/login-modal";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -17,7 +16,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LandingPage() {
-    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -90,7 +88,9 @@ export default function LandingPage() {
                              <a href="#avantages" className="hover:text-primary transition-colors">Avantages</a>
                             <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
                         </nav>
-                        <Button onClick={() => setIsLoginModalOpen(true)}>Se connecter</Button>
+                        <Button asChild>
+                           <a href="#contact">Se connecter</a>
+                        </Button>
                     </div>
                 </header>
 
@@ -310,7 +310,6 @@ export default function LandingPage() {
                     </div>
                 </footer>
             </div>
-            <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
         </>
     );
 }
