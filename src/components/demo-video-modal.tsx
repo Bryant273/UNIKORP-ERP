@@ -9,10 +9,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from 'lucide-react';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './ui/tooltip';
 
 type DemoVideoModalProps = {
   isOpen: boolean;
@@ -129,33 +130,53 @@ export function DemoVideoModal({ isOpen, onClose }: DemoVideoModalProps) {
             "absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300",
             (isHovering || !isPlaying) ? "opacity-100" : "opacity-0"
           )}>
-            <div className="flex items-center gap-4 text-white">
-              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={togglePlay}>
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </Button>
-              <Slider
-                value={[progress]}
-                onValueChange={handleProgressChange}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex items-center gap-2">
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleVolumeChange([volume > 0 ? 0 : 1])}>
-                  {volume > 0 ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-                </Button>
+            <div className="flex flex-col gap-2">
                  <Slider
-                    defaultValue={[1]}
-                    value={[volume]}
-                    onValueChange={handleVolumeChange}
-                    max={1}
-                    step={0.1}
-                    className="w-24"
+                    value={[progress]}
+                    onValueChange={handleProgressChange}
+                    max={100}
+                    step={1}
+                    className="w-full"
                   />
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={toggleFullScreen}>
-                    <Maximize className="h-5 w-5" />
-                  </Button>
-              </div>
+                <div className="flex items-center gap-2 text-white">
+                  <div className="flex items-center gap-1">
+                      <TooltipProvider>
+                         <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-8 w-8" disabled><SkipBack className="h-5 w-5" /></Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Précédent (Bientôt disponible)</p></TooltipContent>
+                         </Tooltip>
+                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={togglePlay}>
+                            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                          </Button>
+                         <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-8 w-8" disabled><SkipForward className="h-5 w-5" /></Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Suivant (Bientôt disponible)</p></TooltipContent>
+                         </Tooltip>
+                      </TooltipProvider>
+                  </div>
+              
+                  <div className="flex items-center gap-2">
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleVolumeChange([volume > 0 ? 0 : 1])}>
+                      {volume > 0 ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                    </Button>
+                     <Slider
+                        defaultValue={[1]}
+                        value={[volume]}
+                        onValueChange={handleVolumeChange}
+                        max={1}
+                        step={0.1}
+                        className="w-24"
+                      />
+                  </div>
+                  <div className="flex-1" />
+                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={toggleFullScreen}>
+                        <Maximize className="h-5 w-5" />
+                   </Button>
+                </div>
             </div>
           </div>
         </div>
