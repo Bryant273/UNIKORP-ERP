@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
-import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star } from "lucide-react";
+import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star, Linkedin, Facebook, Twitter, Instagram } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { RequestDemoModal } from "@/components/request-demo-modal";
+import { ContactModal } from "@/components/contact-modal";
 
 export default function LandingPage() {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+    const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
     const partners = [
         { name: "Partner 1", logo: "https://picsum.photos/seed/p1/150/60" },
@@ -98,8 +98,8 @@ export default function LandingPage() {
                                     UNIKORP, une solution de l'entreprise <span className="font-semibold text-primary">INNOV'KORP</span>, centralise vos finances, RH, marketing et logistique pour une gestion sans friction.
                                 </p>
                                 <div className="mt-8 flex justify-center gap-4">
-                                    <Button size="lg" onClick={() => setIsDemoModalOpen(true)}>Démarrer avec UNIKORP</Button>
-                                    <Button size="lg" variant="outline" onClick={() => setIsDemoModalOpen(true)}>Demander une démo</Button>
+                                    <Button size="lg" onClick={() => setIsContactModalOpen(true)}>Démarrer avec UNIKORP</Button>
+                                    <Button size="lg" variant="outline" onClick={() => setIsContactModalOpen(true)}>Voir la démo</Button>
                                 </div>
                             </div>
                         </div>
@@ -207,7 +207,7 @@ export default function LandingPage() {
                             <h2 className="text-3xl font-bold">Prêt à transformer votre entreprise ?</h2>
                             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">Rejoignez les entreprises qui ont choisi UNIKORP pour unifier leurs opérations et accélérer leur croissance.</p>
                              <div className="mt-8">
-                                <Button size="lg" onClick={() => setIsDemoModalOpen(true)}>Commencez gratuitement</Button>
+                                <Button size="lg" onClick={() => setIsContactModalOpen(true)}>Commencez gratuitement</Button>
                             </div>
                         </div>
                     </section>
@@ -222,6 +222,12 @@ export default function LandingPage() {
                                     <span className="font-bold text-xl">UNIKORP</span>
                                 </div>
                                 <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} INNOV'KORP. <br/>Tous droits réservés.</p>
+                                 <div className="flex space-x-4 mt-4">
+                                    <a href="#" className="text-muted-foreground hover:text-white"><Linkedin className="h-5 w-5"/></a>
+                                    <a href="#" className="text-muted-foreground hover:text-white"><Facebook className="h-5 w-5"/></a>
+                                    <a href="#" className="text-muted-foreground hover:text-white"><Twitter className="h-5 w-5"/></a>
+                                    <a href="#" className="text-muted-foreground hover:text-white"><Instagram className="h-5 w-5"/></a>
+                                </div>
                             </div>
                             <div>
                                 <h4 className="font-semibold mb-4">Modules</h4>
@@ -253,7 +259,7 @@ export default function LandingPage() {
                 </footer>
             </div>
             <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
-            <RequestDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
+            <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
         </>
     );
 }
