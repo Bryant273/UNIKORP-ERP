@@ -94,6 +94,10 @@ export function DemoVideoModal({ isOpen, onClose }: DemoVideoModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl p-0 border-0 bg-black">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Vidéo de démonstration</DialogTitle>
+          <DialogDescription>Lecteur vidéo présentant une démonstration du logiciel Unikorp.</DialogDescription>
+        </DialogHeader>
         <div 
           className="relative aspect-video group w-full"
           onMouseEnter={() => setIsHovering(true)}
