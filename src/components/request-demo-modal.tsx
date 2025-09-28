@@ -91,11 +91,11 @@ export function RequestDemoModal({ isOpen, onClose }: RequestDemoModalProps) {
               <Label htmlFor="companyName">Nom de l'entreprise</Label>
               <Input id="companyName" value={formData.companyName} onChange={handleChange} required />
             </div>
-             <div className="space-y-2">
+             <div className="space-y-2 col-span-2">
                 <Label htmlFor="phone">Téléphone</Label>
                 <div className="flex gap-2">
                     <Select onValueChange={handleCountryChange} defaultValue={formData.countryCode}>
-                        <SelectTrigger className="w-[100px]">
+                        <SelectTrigger className="w-[120px]">
                             <SelectValue placeholder="+225" />
                         </SelectTrigger>
                         <SelectContent>
@@ -108,7 +108,7 @@ export function RequestDemoModal({ isOpen, onClose }: RequestDemoModalProps) {
                             </ScrollArea>
                         </SelectContent>
                     </Select>
-                    <Input id="phone" type="tel" value={formData.phone} onChange={handleChange} />
+                    <Input id="phone" type="tel" value={formData.phone} onChange={handleChange} className="flex-1" />
                 </div>
             </div>
              <div className="space-y-2 col-span-2">
