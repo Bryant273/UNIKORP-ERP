@@ -3,62 +3,70 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
-import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitCommit, MoveUpRight, CheckCircle } from "lucide-react";
+import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import Link from 'next/link';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 
 export default function LandingPage() {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-    const modules = [
-        {
-            name: 'SKOMPTAB',
-            title: 'Finance & Comptabilité',
-            icon: Calculator,
-            description: 'Pilotez votre santé financière avec une précision chirurgicale. SKOMPTAB centralise votre comptabilité, de la saisie des écritures à la génération des états financiers.',
-        },
-        {
-            name: 'SOCIX',
-            title: 'Ressources Humaines',
-            icon: UsersRound,
-            description: 'Transformez votre gestion RH en un levier de croissance stratégique. SOCIX simplifie la gestion des employés, de la paie aux congés et au développement des talents.',
-        },
-        {
-            name: 'MARKOS',
-            title: 'Marketing & CRM',
-            icon: Megaphone,
-            description: 'De la prospection à la fidélisation, MARKOS est votre copilote pour une relation client optimisée et des campagnes marketing percutantes.',
-        },
-        {
-            name: 'LOGSON',
-            title: 'Logistique & Stocks',
-            icon: Ship,
-            description: 'Optimisez l\'ensemble de votre chaîne d\'approvisionnement. LOGSON vous donne une visibilité complète sur vos stocks, commandes et livraisons.',
-        },
+    const partners = [
+        { name: "Partner 1", logo: "https://picsum.photos/seed/p1/150/60" },
+        { name: "Partner 2", logo: "https://picsum.photos/seed/p2/150/60" },
+        { name: "Partner 3", logo: "https://picsum.photos/seed/p3/150/60" },
+        { name: "Partner 4", logo: "https://picsum.photos/seed/p4/150/60" },
+        { name: "Partner 5", logo: "https://picsum.photos/seed/p5/150/60" },
+        { name: "Partner 6", logo: "https://picsum.photos/seed/p6/150/60" },
     ];
 
-    const pillars = [
-        { icon: Zap, title: "Intelligence Artificielle", description: "Automatisez les tâches complexes et obtenez des analyses prédictives grâce à notre IA intégrée." },
-        { icon: ShieldCheck, title: "Sécurité Renforcée", description: "Vos données sont protégées par une architecture robuste avec une gestion fine des accès." },
-        { icon: GitCommit, title: "Intégration Fluide", description: "Les données circulent sans effort entre les modules, éliminant la double saisie et les erreurs." },
+    const modules = [
+        { name: 'SKOMPTAB', title: 'Finance & Comptabilité', icon: Calculator, description: 'Pilotez votre santé financière avec une précision chirurgicale.' },
+        { name: 'SOCIX', title: 'Ressources Humaines', icon: UsersRound, description: 'Transformez votre gestion RH en un levier de croissance stratégique.' },
+        { name: 'MARKOS', title: 'Marketing & CRM', icon: Megaphone, description: 'De la prospection à la fidélisation, optimisez votre relation client.' },
+        { name: 'LOGSON', title: 'Logistique & Stocks', icon: Ship, description: 'Optimisez l\'ensemble de votre chaîne d\'approvisionnement.' },
     ];
-    
-     const allInOneFeatures = [
-        { title: 'Centralisation', description: 'Une seule source de vérité pour toutes vos données.' },
-        { title: 'Automatisation', description: 'Gagnez du temps en automatisant les processus répétitifs.' },
-        { title: 'Visibilité 360°', description: 'Des tableaux de bord pour une vision complète de votre activité.' },
-        { title: 'Collaboration', description: 'Des outils pour améliorer la communication entre les équipes.' },
-        { title: 'Évolutivité', description: 'Une solution qui grandit avec votre entreprise.' },
-        { title: 'Mobilité', description: 'Accédez à vos données partout, à tout moment.' },
+
+     const benefits = [
+        {
+            title: 'Collaboration Transparente',
+            description: "Briser les silos entre vos départements. En centralisant vos données, UNIKORP offre une source unique de vérité, permettant à vos équipes de collaborer plus efficacement et de prendre des décisions basées sur des informations à jour.",
+            icon: GitMerge,
+            image: "https://picsum.photos/seed/collab/600/400",
+            imageAlt: "Collaboration"
+        },
+        {
+            title: 'Intelligence Augmentée',
+            description: "Passez de la saisie manuelle à l'analyse stratégique. Notre IA intégrée automatise les tâches complexes, de la digitalisation des factures à la recherche sémantique, vous libérant du temps pour vous concentrer sur la croissance.",
+            icon: Zap,
+            image: "https://picsum.photos/seed/ai/600/400",
+            imageAlt: "Intelligence Artificielle"
+        },
+        {
+            title: 'Sécurité et Conformité',
+            description: "La sécurité de vos données est notre priorité. Avec une gestion fine des rôles et des accès, et une architecture robuste, UNIKORP garantit la confidentialité, l'intégrité et la traçabilité de toutes vos opérations.",
+            icon: ShieldCheck,
+            image: "https://picsum.photos/seed/security/600/400",
+            imageAlt: "Sécurité"
+        }
     ];
+
+     const testimonials = [
+        { quote: "UNIKORP a transformé notre gestion quotidienne. Tout est plus simple, plus rapide et entièrement intégré. Un gain de productivité incroyable !", author: "Marc Dubois", company: "CEO, Innovatech" },
+        { quote: "La vue à 360° sur nos opérations est un véritable atout stratégique. Nous prenons de meilleures décisions, plus rapidement.", author: "Aïssata Traoré", company: "Directrice Financière, Global Corp" },
+        { quote: "Le module SOCIX a simplifié notre gestion RH. De la paie aux congés, tout est centralisé. Nos équipes adorent !", author: "Karim Fofana", company: "DRH, Services Plus" }
+    ];
+
 
     return (
         <>
             <div className="w-full min-h-screen bg-background text-foreground">
-                {/* Header */}
                 <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 px-8 bg-background/80 backdrop-blur-sm border-b">
                     <div className="flex items-center gap-2">
                         <Logo className="h-8 w-8 text-primary" />
@@ -74,36 +82,48 @@ export default function LandingPage() {
                     </div>
                 </header>
 
-                <main>
+                <main className="pt-14">
                     {/* Hero Section */}
-                    <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32">
-                        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-                        <div className="absolute -bottom-1/3 -left-20 w-80 h-80 bg-primary/20 rounded-full blur-3xl animate-blob"></div>
-                        <div className="absolute -top-1/4 -right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+                    <section className="relative overflow-hidden py-24 lg:py-32">
+                        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+                        <div className="absolute -bottom-1/4 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-blob"></div>
+                        <div className="absolute -top-1/4 -right-24 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
                         
                         <div className="container mx-auto px-4 relative z-10">
                              <div className="max-w-3xl mx-auto text-center">
                                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-primary via-violet-500 to-accent">
-                                   Plus unifié, plus intelligent, plus performant.
+                                   L'ERP unifié pour les entreprises modernes.
                                 </h1>
                                 <p className="mt-6 text-lg text-muted-foreground">
-                                    UNIKORP, une solution de l'entreprise <span className="font-semibold text-primary">INNOV'KORP</span>, est l'ERP moderne qui centralise vos finances, vos ressources humaines, votre marketing et votre logistique pour une gestion d'entreprise sans friction.
+                                    UNIKORP, une solution de l'entreprise <span className="font-semibold text-primary">INNOV'KORP</span>, centralise vos finances, RH, marketing et logistique pour une gestion sans friction.
                                 </p>
                                 <div className="mt-8 flex justify-center gap-4">
-                                    <Button size="lg" onClick={() => setIsLoginModalOpen(true)}>Se connecter à UNIKORP</Button>
+                                    <Button size="lg" onClick={() => setIsLoginModalOpen(true)}>Démarrer avec UNIKORP</Button>
+                                    <Button size="lg" variant="outline">Demander une démo</Button>
                                 </div>
                             </div>
-                            
-                            <div className="mt-20">
-                                <Image 
-                                    src="https://picsum.photos/seed/dashboard/1200/600"
-                                    alt="Tableau de bord UNIKORP"
-                                    data-ai-hint="dashboard screen application"
-                                    width={1200}
-                                    height={600}
-                                    className="rounded-lg shadow-2xl mx-auto ring-1 ring-white/10"
-                                />
-                            </div>
+                        </div>
+                    </section>
+                    
+                    {/* Partners Section */}
+                    <section className="py-12">
+                        <div className="container mx-auto px-4">
+                            <p className="text-center text-sm font-semibold text-muted-foreground mb-6">ILS NOUS FONT CONFIANCE</p>
+                            <Carousel
+                                opts={{ align: "start", loop: true }}
+                                plugins={[Autoplay({ delay: 2000, stopOnInteraction: false })]}
+                                className="w-full max-w-6xl mx-auto"
+                            >
+                                <CarouselContent>
+                                    {partners.map((partner, index) => (
+                                        <CarouselItem key={index} className="basis-1/3 md:basis-1/4 lg:basis-1/6">
+                                            <div className="p-1 flex items-center justify-center">
+                                                <Image src={partner.logo} alt={partner.name} width={150} height={60} className="object-contain" data-ai-hint="logo company"/>
+                                            </div>
+                                        </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                            </Carousel>
                         </div>
                     </section>
 
@@ -118,83 +138,81 @@ export default function LandingPage() {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                                 {modules.map((module) => (
-                                    <Card key={module.name} className="bg-card/80 backdrop-blur-sm border-white/10 hover:border-primary/30 hover:-translate-y-2 transition-transform duration-300">
-                                        <CardHeader>
-                                            <div className="p-3 bg-primary/10 rounded-lg w-fit mb-4">
-                                                <module.icon className="h-6 w-6 text-primary" />
+                                    <Card key={module.name} className="text-center items-center flex flex-col p-6 hover:-translate-y-2 transition-transform duration-300">
+                                        <CardHeader className="p-0 mb-4">
+                                            <div className="p-4 bg-primary/10 rounded-full w-fit mx-auto">
+                                                <module.icon className="h-8 w-8 text-primary" />
                                             </div>
-                                            <CardTitle>{module.title}</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
+                                        <CardContent className="p-0 flex-1">
+                                            <CardTitle className="text-lg mb-2">{module.title}</CardTitle>
                                             <p className="text-sm text-muted-foreground">{module.description}</p>
                                         </CardContent>
-                                        <CardFooter>
-                                            <Button variant="link" className="p-0">En savoir plus <MoveUpRight className="h-4 w-4 ml-1"/></Button>
-                                        </CardFooter>
                                     </Card>
                                 ))}
                             </div>
                         </div>
                     </section>
                     
-                    {/* All-in-one Section */}
-                    <section className="py-24 bg-background">
-                         <div className="container mx-auto px-4">
-                            <div className="text-center mb-16">
-                                <h2 className="text-3xl font-bold">La seule plateforme dont vous avez besoin</h2>
+                     {/* Benefits Section */}
+                    <section id="avantages" className="py-24">
+                        <div className="container mx-auto px-4 space-y-20">
+                            {benefits.map((benefit, index) => (
+                                <div key={benefit.title} className="grid md:grid-cols-2 gap-12 items-center">
+                                    <div className={cn(index % 2 === 1 && "md:order-2")}>
+                                        <div className="inline-block p-3 bg-primary/10 text-primary rounded-lg mb-4">
+                                            <benefit.icon className="h-6 w-6"/>
+                                        </div>
+                                        <h2 className="text-3xl font-bold mb-4">{benefit.title}</h2>
+                                        <p className="text-muted-foreground">{benefit.description}</p>
+                                        <Button variant="link" className="p-0 mt-4">Découvrir plus <MoveUpRight className="h-4 w-4 ml-1"/></Button>
+                                    </div>
+                                    <div className={cn(index % 2 === 1 && "md:order-1")}>
+                                        <Image src={benefit.image} alt={benefit.imageAlt} width={600} height={400} className="rounded-xl shadow-lg" data-ai-hint="application interface"/>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                    
+                    {/* Testimonials Section */}
+                    <section className="py-24 bg-muted/40">
+                        <div className="container mx-auto px-4">
+                             <div className="text-center mb-16">
+                                <h2 className="text-3xl font-bold">Ce que nos clients disent</h2>
                                 <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                                    UNIKORP remplace vos multiples logiciels par une solution unique et cohérente, vous offrant une vue à 360° et un contrôle total sur votre activité.
+                                    Découvrez comment UNIKORP transforme la gestion d'entreprise.
                                 </p>
                             </div>
-                            <div className="relative">
-                               <div className="absolute inset-0 flex items-center justify-center">
-                                 <div className="w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
-                               </div>
-                               <Image 
-                                    src="https://picsum.photos/seed/dashboard2/1200/800"
-                                    alt="UNIKORP all-in-one"
-                                    data-ai-hint="application screen"
-                                    width={1200}
-                                    height={800}
-                                    className="relative rounded-lg shadow-2xl mx-auto ring-1 ring-white/10 z-10"
-                                />
-                                <div className="hidden lg:grid grid-cols-3 gap-8 mt-12 relative z-10">
-                                    {allInOneFeatures.slice(0, 3).map(feature => (
-                                        <div key={feature.title} className="text-center p-4">
-                                            <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-                                            <p className="text-sm text-muted-foreground">{feature.description}</p>
-                                        </div>
-                                    ))}
-                                </div>
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {testimonials.map((testimonial) => (
+                                    <Card key={testimonial.author}>
+                                        <CardContent className="p-6">
+                                            <div className="flex mb-2">
+                                                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current"/>)}
+                                            </div>
+                                            <p className="text-foreground mb-4 italic">"{testimonial.quote}"</p>
+                                            <p className="font-semibold">{testimonial.author}</p>
+                                            <p className="text-sm text-muted-foreground">{testimonial.company}</p>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
                         </div>
                     </section>
 
-                    {/* Pillars Section */}
-                    <section id="avantages" className="py-24 bg-muted/40">
-                         <div className="container mx-auto px-4">
-                            <div className="text-center mb-16">
-                                 <h2 className="text-3xl font-bold">Conçu pour la performance et la simplicité</h2>
-                                 <p className="text-muted-foreground mt-4 max-w-3xl mx-auto">
-                                   Briser les silos entre vos départements. En centralisant vos données et en automatisant vos processus, nous vous offrons une vision claire pour des décisions plus rapides.
-                                 </p>
-                            </div>
-                            <div className="grid md:grid-cols-3 gap-8">
-                                {pillars.map(pillar => (
-                                    <div key={pillar.title} className="text-center p-6">
-                                        <div className="inline-block p-4 bg-primary/10 rounded-full mb-4">
-                                            <pillar.icon className="h-8 w-8 text-primary" />
-                                        </div>
-                                        <h3 className="text-xl font-semibold mb-2">{pillar.title}</h3>
-                                        <p className="text-muted-foreground text-sm">{pillar.description}</p>
-                                    </div>
-                                ))}
+                    {/* CTA Section */}
+                    <section className="py-24">
+                        <div className="container mx-auto px-4 text-center">
+                            <h2 className="text-3xl font-bold">Prêt à transformer votre entreprise ?</h2>
+                            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">Rejoignez les entreprises qui ont choisi UNIKORP pour unifier leurs opérations et accélérer leur croissance.</p>
+                             <div className="mt-8">
+                                <Button size="lg" onClick={() => setIsLoginModalOpen(true)}>Commencez gratuitement</Button>
                             </div>
                         </div>
                     </section>
                 </main>
 
-                {/* Footer */}
                 <footer id="contact" className="bg-foreground text-background">
                     <div className="container mx-auto px-8 py-16">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -238,7 +256,3 @@ export default function LandingPage() {
         </>
     );
 }
-
-    
-
-  

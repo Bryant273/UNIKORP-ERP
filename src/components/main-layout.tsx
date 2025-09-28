@@ -109,7 +109,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const showSidebar = !noSidebarPaths.includes(pathname);
   const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin'].includes(pathname);
   
-  const bypassPaths = ['/', '/platform-admin'];
+  const bypassPaths = ['/', '/platform-admin', '/login'];
   const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
 
   if (!isClient) {
@@ -135,7 +135,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             pathname === '/dashboard' && !isDashboardBlocked && 'p-4 sm:p-6 lg:p-8',
             !showSidebar && showHeader && !['/dashboard', '/super-admin'].includes(pathname) && 'p-4 sm:p-6 lg:p-8',
             (pathname === '/super-admin' || pathname === '/platform-admin') && 'p-4 sm:p-6 lg:p-8',
-            !showHeader && !showSidebar && 'flex items-center justify-center bg-gray-100 dark:bg-gray-900', 
+            !showHeader && !showSidebar && 'bg-background', 
             (showHeader || showSidebar) && 'bg-background/80'
           )}
         >
