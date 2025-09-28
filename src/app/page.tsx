@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
-import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitCommit, MoveUpRight, CheckCircle, BarChart2, TrendingUp, Cpu } from "lucide-react";
+import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitCommit, MoveUpRight, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 
