@@ -374,6 +374,7 @@ export default function LandingPage() {
                                     <Logo className="h-8 w-8 text-primary" />
                                     <span className="font-bold text-xl">UNIKORP</span>
                                 </div>
+                                <p className="text-sm text-muted-foreground mb-4">&copy; {new Date().getFullYear()} INNOV'KORP. <br/>Tous droits réservés.</p>
                                 <div className="flex space-x-4">
                                     <a href="#" className="text-muted-foreground hover:text-white"><Linkedin className="h-5 w-5"/></a>
                                     <a href="#" className="text-muted-foreground hover:text-white"><Facebook className="h-5 w-5"/></a>
@@ -381,7 +382,6 @@ export default function LandingPage() {
                                     <a href="#" className="text-muted-foreground hover:text-white"><Instagram className="h-5 w-5"/></a>
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-4">Un produit de INNOV'KORP</p>
-                                <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} INNOV'KORP. <br/>Tous droits réservés.</p>
                             </div>
                             <div>
                                 <h4 className="font-semibold mb-4">Modules</h4>
