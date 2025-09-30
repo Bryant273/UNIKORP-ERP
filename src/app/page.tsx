@@ -81,7 +81,7 @@ export default function LandingPage() {
         {
             name: "Essentiel",
             price: "100 000",
-            frequency: "/mois",
+            frequency: "FCFA / mois",
             description: "Idéal pour les PME et startups.",
             features: [
                 "1 module au choix",
@@ -96,7 +96,7 @@ export default function LandingPage() {
         {
             name: "Premium",
             price: "250 000",
-            frequency: "/mois",
+            frequency: "FCFA / mois",
             description: "Parfait pour les entreprises en croissance.",
             features: [
                 "Accès à tous les modules",
@@ -374,14 +374,14 @@ export default function LandingPage() {
                                     <Logo className="h-8 w-8 text-primary" />
                                     <span className="font-bold text-xl">UNIKORP</span>
                                 </div>
-                                <p className="text-sm text-muted-foreground">Un produit de INNOV'KORP</p>
-                                <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} INNOV'KORP. <br/>Tous droits réservés.</p>
-                                 <div className="flex space-x-4 mt-4">
+                                <div className="flex space-x-4">
                                     <a href="#" className="text-muted-foreground hover:text-white"><Linkedin className="h-5 w-5"/></a>
                                     <a href="#" className="text-muted-foreground hover:text-white"><Facebook className="h-5 w-5"/></a>
                                     <a href="#" className="text-muted-foreground hover:text-white"><Twitter className="h-5 w-5"/></a>
                                     <a href="#" className="text-muted-foreground hover:text-white"><Instagram className="h-5 w-5"/></a>
                                 </div>
+                                <p className="text-sm text-muted-foreground mt-4">Un produit de INNOV'KORP</p>
+                                <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} INNOV'KORP. <br/>Tous droits réservés.</p>
                             </div>
                             <div>
                                 <h4 className="font-semibold mb-4">Modules</h4>
