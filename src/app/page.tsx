@@ -282,7 +282,7 @@ export default function LandingPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
                                 {pricingPlans.map((plan) => (
                                     <Card key={plan.name} className={cn("flex flex-col", plan.popular && "border-primary border-2 shadow-primary/20 shadow-lg")}>
-                                        {plan.popular && <div className="bg-primary text-primary-foreground text-xs font-bold text-center py-1 rounded-t-lg">LE PLUS POPULAIRE</div>}
+                                        {plan.popular && <div className="bg-primary text-primary-foreground text-xs font-bold text-center py-1 rounded-t-lg">RECOMMANDE</div>}
                                         <CardHeader>
                                             <CardTitle>{plan.name}</CardTitle>
                                             <CardDescription>{plan.description}</CardDescription>
