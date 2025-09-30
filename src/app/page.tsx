@@ -75,6 +75,53 @@ export default function LandingPage() {
         { quote: "Le module SOCIX a simplifié notre gestion RH. De la paie aux congés, tout est centralisé. Nos équipes adorent !", author: "Karim Fofana", company: "DRH, Services Plus" }
     ];
 
+    const pricingPlans = [
+        {
+            name: "Essentiel",
+            price: "75 000",
+            frequency: "/mois",
+            description: "Idéal pour les PME et startups.",
+            features: [
+                "1 module au choix",
+                "Jusqu'à 5 utilisateurs",
+                "Support par email",
+                "Mises à jour incluses",
+            ],
+            cta: "Commencer",
+            popular: false,
+        },
+        {
+            name: "Premium",
+            price: "250 000",
+            frequency: "/mois",
+            description: "Parfait pour les entreprises en croissance.",
+            features: [
+                "Accès aux 4 modules (SKOMPTAB, SOCIX, MARKOS, LOGSON)",
+                "Jusqu'à 25 utilisateurs",
+                "Support prioritaire",
+                "Accès aux fonctionnalités IA",
+                "Onboarding personnalisé",
+            ],
+            cta: "Commencer",
+            popular: true,
+        },
+        {
+            name: "Entreprise",
+            price: "Sur Devis",
+            frequency: "",
+            description: "Pour les grandes organisations aux besoins spécifiques.",
+            features: [
+                "Accès illimité aux modules",
+                "Utilisateurs illimités",
+                "Support dédié 24/7",
+                "Développements sur-mesure",
+                "Accompagnement stratégique",
+            ],
+            cta: "Nous Contacter",
+            popular: false,
+        },
+    ];
+
 
     return (
         <>
@@ -88,6 +135,7 @@ export default function LandingPage() {
                         <nav className="hidden md:flex gap-6 text-sm font-medium">
                             <a href="#modules" className="hover:text-primary transition-colors">Modules</a>
                              <a href="#avantages" className="hover:text-primary transition-colors">Avantages</a>
+                             <a href="#pricing" className="hover:text-primary transition-colors">Tarifs</a>
                             <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
                         </nav>
                         <Button asChild>
@@ -219,8 +267,50 @@ export default function LandingPage() {
                         </div>
                     </section>
 
+                     {/* Pricing Section */}
+                    <section id="pricing" className="py-24">
+                        <div className="container mx-auto px-4">
+                             <div className="text-center mb-16">
+                                <h2 className="text-3xl font-bold">Un tarif simple et transparent</h2>
+                                <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
+                                    Choisissez le plan qui correspond à la taille et aux ambitions de votre entreprise.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
+                                {pricingPlans.map((plan) => (
+                                    <Card key={plan.name} className={cn("flex flex-col", plan.popular && "border-primary border-2 shadow-primary/20 shadow-lg")}>
+                                        {plan.popular && <div className="bg-primary text-primary-foreground text-xs font-bold text-center py-1 rounded-t-lg">LE PLUS POPULAIRE</div>}
+                                        <CardHeader>
+                                            <CardTitle>{plan.name}</CardTitle>
+                                            <CardDescription>{plan.description}</CardDescription>
+                                            <div>
+                                                <span className="text-4xl font-bold">{plan.price}</span>
+                                                <span className="text-muted-foreground">{plan.frequency}</span>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="flex-1 space-y-4">
+                                            <ul className="space-y-2 text-sm">
+                                                {plan.features.map((feature, i) => (
+                                                    <li key={i} className="flex items-center gap-2">
+                                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                                        <span>{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </CardContent>
+                                        <CardFooter>
+                                            <Button className="w-full" variant={plan.popular ? "default" : "outline"} asChild>
+                                                <a href="#contact">{plan.cta}</a>
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
                     {/* Contact Section */}
-                    <section id="contact" className="py-24">
+                    <section id="contact" className="py-24 bg-muted/40">
                         <div className="container mx-auto px-4">
                              <div className="text-center mb-16">
                                 <h2 className="text-3xl font-bold">Prêt à transformer votre entreprise ?</h2>
