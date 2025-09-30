@@ -374,6 +374,7 @@ export default function LandingPage() {
                                     <Logo className="h-8 w-8 text-primary" />
                                     <span className="font-bold text-xl">UNIKORP</span>
                                 </div>
+                                <p className="text-sm text-muted-foreground">Un produit de INNOV'KORP</p>
                                 <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} INNOV'KORP. <br/>Tous droits réservés.</p>
                                  <div className="flex space-x-4 mt-4">
                                     <a href="#" className="text-muted-foreground hover:text-white"><Linkedin className="h-5 w-5"/></a>
