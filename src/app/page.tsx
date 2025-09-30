@@ -5,7 +5,7 @@ import { Logo } from "@/components/logo";
 import Image from "next/image";
 import { Calculator, UsersRound, Megaphone, Ship, Zap, ShieldCheck, GitMerge, MoveUpRight, CheckCircle, Star, Linkedin, Facebook, Twitter, Instagram, Rocket, PlayCircle, Send } from "lucide-react";
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -16,7 +16,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { DemoVideoModal } from "@/components/demo-video-modal";
 import { LoginModal } from "@/components/login-modal";
-import { CardFooter } from "@/components/ui/card";
 
 export default function LandingPage() {
     const { toast } = useToast();
@@ -338,6 +337,10 @@ export default function LandingPage() {
                                                 <Label htmlFor="prenoms">Prénoms</Label>
                                                 <Input id="prenoms" name="prenoms" required />
                                             </div>
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label htmlFor="companyName">Nom de l'entreprise</Label>
+                                            <Input id="companyName" name="companyName" required />
                                         </div>
                                          <div className="space-y-2">
                                             <Label htmlFor="email">Email professionnel</Label>
