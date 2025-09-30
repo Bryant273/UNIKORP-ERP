@@ -78,12 +78,13 @@ export default function LandingPage() {
     const pricingPlans = [
         {
             name: "Essentiel",
-            price: "75 000",
+            price: "100 000",
             frequency: "/mois",
             description: "Idéal pour les PME et startups.",
             features: [
                 "1 module au choix",
                 "Jusqu'à 5 utilisateurs",
+                "100 Go de stockage",
                 "Support par email",
                 "Mises à jour incluses",
             ],
@@ -96,8 +97,9 @@ export default function LandingPage() {
             frequency: "/mois",
             description: "Parfait pour les entreprises en croissance.",
             features: [
-                "Accès aux 4 modules (SKOMPTAB, SOCIX, MARKOS, LOGSON)",
+                "Accès à tous les modules",
                 "Jusqu'à 25 utilisateurs",
+                "500 Go de stockage",
                 "Support prioritaire",
                 "Accès aux fonctionnalités IA",
                 "Onboarding personnalisé",
@@ -111,8 +113,9 @@ export default function LandingPage() {
             frequency: "",
             description: "Pour les grandes organisations aux besoins spécifiques.",
             features: [
-                "Accès illimité aux modules",
+                "Accès illimité à l'ERP",
                 "Utilisateurs illimités",
+                "Base de données dédiée et illimitée",
                 "Support dédié 24/7",
                 "Développements sur-mesure",
                 "Accompagnement stratégique",
