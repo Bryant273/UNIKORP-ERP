@@ -106,14 +106,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, []);
   
   useEffect(() => {
-    // Automatically set the company file for the ERP Provider
+    // Automatically set the company file for the ERP Provider when they access the ERP
     if (role === 'Fournisseur ERP') {
       setCompanyFile('INNOV\'KORP');
     }
   }, [role, setCompanyFile]);
 
   const showHeader = !noHeaderPaths.includes(pathname);
-  const showSidebar = !noSidebarPaths.includes(pathname);
+  const showSidebar = !noSidebarPaths.includes(pathname) && pathname !== '/dashboard';
   const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin'].includes(pathname);
   
   const bypassPaths = ['/', '/login', '/platform-admin'];
