@@ -97,20 +97,27 @@ function CompanyFileSelection() {
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [companyFile] = useAtom(companyFileAtom);
+  const [companyFile, setCompanyFile] = useAtom(companyFileAtom);
   const [role] = useAtom(userRoleAtom);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  useEffect(() => {
+    // Automatically set the company file for the ERP Provider
+    if (role === 'Fournisseur ERP') {
+      setCompanyFile('INNOV\'KORP');
+    }
+  }, [role, setCompanyFile]);
 
   const showHeader = !noHeaderPaths.includes(pathname);
   const showSidebar = !noSidebarPaths.includes(pathname);
   const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin'].includes(pathname);
   
-  const bypassPaths = ['/', '/platform-admin', '/login'];
-  const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
+  const bypassPaths = ['/', '/login', '/platform-admin'];
+  const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé' && role !== 'Fournisseur ERP';
 
   if (!isClient) {
     return null; 
@@ -120,7 +127,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     return <CompanyFileSelection />;
   }
   
-  const isDashboardBlocked = (pathname === '/dashboard' || pathname.startsWith('/skomptab') || pathname.startsWith('/socix') || pathname.startsWith('/markos') || pathname.startsWith('/logson')) && !companyFile && role !== 'Employé';
+  const isDashboardBlocked = (pathname === '/dashboard' || pathname.startsWith('/skomptab') || pathname.startsWith('/socix') || pathname.startsWith('/markos') || pathname.startsWith('/logson')) && requiresCompanyFile && !companyFile;
 
   return (
     <div className="flex h-screen w-full flex-col">

@@ -1,5 +1,4 @@
 
-
 'use client';
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
@@ -149,9 +148,17 @@ const PlaceholderPage = ({ title, description }: { title: string, description: s
 
 const DashboardView = () => (
     <Card>
-        <CardHeader>
-            <CardTitle>Vue d'ensemble de la Plateforme</CardTitle>
-            <CardDescription>Indicateurs clés sur les entreprises et les revenus.</CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+            <div>
+                <CardTitle>Vue d'ensemble de la Plateforme</CardTitle>
+                <CardDescription>Indicateurs clés sur les entreprises et les revenus.</CardDescription>
+            </div>
+             <Button asChild>
+                <Link href="/dashboard">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Accès ERP
+                </Link>
+            </Button>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
              <Card><CardHeader className="pb-2"><CardDescription>Entreprises Actives</CardDescription><CardTitle className="text-3xl">2</CardTitle></CardHeader></Card>
@@ -193,17 +200,7 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
                  <CardTitle className="text-lg">Admin Fournisseur</CardTitle>
             </CardHeader>
             <CardContent className="p-2">
-                <Button
-                    variant={'secondary'}
-                    className="w-full justify-start gap-2 font-semibold mb-2"
-                    asChild
-                >
-                  <a href="/dashboard">
-                    <TrendingUp className="h-4 w-4" />
-                    Accès ERP
-                  </a>
-                </Button>
-                <Button
+                 <Button
                     variant={activeView === 'dashboard' ? 'secondary' : 'ghost'}
                     className="w-full justify-start gap-2 font-semibold mb-2"
                     onClick={() => setActiveView('dashboard')}
@@ -337,3 +334,4 @@ export default function PlatformAdminPage() {
         </Suspense>
     );
 }
+
