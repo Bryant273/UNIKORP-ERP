@@ -141,8 +141,8 @@ export default function FournisseursPage() {
     
     autoTable(doc, {
         startY: 30,
-        head: [['Numéro', 'Intitulé', 'Téléphone']],
-        body: fournisseurs.map(c => [c.numero, c.intitule, c.telephone]),
+        head: [['#', 'Numéro', 'Intitulé', 'Téléphone']],
+        body: fournisseurs.map((c, index) => [index + 1, c.numero, c.intitule, c.telephone]),
         theme: 'striped',
         headStyles: { fillColor: '#1C2039' },
     });
@@ -176,6 +176,7 @@ export default function FournisseursPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">#</TableHead>
                   <TableHead className="w-[150px] font-semibold">Numéro</TableHead>
                   <TableHead className="font-semibold">Intitulé</TableHead>
                   <TableHead className="font-semibold">Téléphone</TableHead>
@@ -183,8 +184,9 @@ export default function FournisseursPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedFournisseurs.map((fournisseur) => (
+                {paginatedFournisseurs.map((fournisseur, index) => (
                   <TableRow key={fournisseur.id} className="odd:bg-muted/50">
+                    <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                     <TableCell>{fournisseur.numero}</TableCell>
                     <TableCell className="font-medium">{fournisseur.intitule}</TableCell>
                     <TableCell>{fournisseur.telephone}</TableCell>

@@ -2,8 +2,8 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import { useAtom } from 'jotai';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as ShadTableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -150,6 +150,7 @@ export default function ReceptionsPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead>#</TableHead>
                                 <TableHead>N° Commande</TableHead>
                                 <TableHead>Fournisseur</TableHead>
                                 <TableHead>Description des Articles</TableHead>
@@ -158,12 +159,13 @@ export default function ReceptionsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {commandes.map(cmd => {
+                            {commandes.map((cmd, index) => {
                                 const statusInfo = getReceptionStatus.get(cmd.id) || { totalReceived: 0, totalOrdered: 0, status: 'En attente' };
                                 const isCompleted = statusInfo.status === 'Terminée';
                                 const productDescriptions = cmd.lignes.map(l => l.description).join(', ');
                                 return (
-                                    <TableRow key={cmd.id} className={isCompleted ? 'bg-green-50' : ''}>
+                                    <TableRow key={cmd.id} className={isCompleted ? 'bg-green-50 odd:bg-green-50' : 'odd:bg-muted/50'}>
+                                        <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                         <TableCell>{cmd.numero}</TableCell>
                                         <TableCell>{fournisseurs.find(f => f.id === cmd.fournisseurId)?.intitule}</TableCell>
                                         <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{productDescriptions}</TableCell>
@@ -187,7 +189,19 @@ export default function ReceptionsPage() {
                             })}
                         </TableBody>
                     </Table>
+                     {commandes.length === 0 && (
+                        <div className="text-center py-16 border-2 border-dashed rounded-lg mt-4">
+                            <p className="text-muted-foreground">Aucune commande fournisseur à réceptionner.</p>
+                        </div>
+                    )}
                 </CardContent>
+                 {commandes.length > 0 &&
+                    <CardFooter className="flex items-center justify-between pt-6">
+                      <div className="text-sm text-muted-foreground">
+                        Total de {commandes.length} commandes.
+                      </div>
+                    </CardFooter>
+                 }
             </Card>
 
             <Dialog open={isReceptionModalOpen} onOpenChange={setIsReceptionModalOpen}>

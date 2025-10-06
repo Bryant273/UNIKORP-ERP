@@ -163,10 +163,11 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>#</TableHead><TableHead>N° Commande</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {paginatedCommandes.length > 0 ? paginatedCommandes.map(cmd => (
+                            {paginatedCommandes.length > 0 ? paginatedCommandes.map((cmd, index) => (
                                 <TableRow key={cmd.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                     <TableCell>{cmd.numero}</TableCell>
                                     <TableCell>{format(new Date(cmd.date), 'dd/MM/yyyy')}</TableCell>
                                     <TableCell>{getFournisseurName(cmd.fournisseurId)}</TableCell>
@@ -179,13 +180,13 @@ function CommandeList({ commandes, onCreateNew, onDelete }: { commandes: Command
                                     </TableCell>
                                 </TableRow>
                             )) : (
-                                 <TableRow><TableCell colSpan={5} className="text-center h-24">Aucune commande enregistrée.</TableCell></TableRow>
+                                 <TableRow><TableCell colSpan={6} className="text-center h-24">Aucune commande enregistrée.</TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>
                 </CardContent>
                 {totalPages > 1 && (
-                    <CardFooter className="flex justify-between">
+                    <CardFooter className="flex justify-between items-center pt-6">
                          <div className="text-sm text-muted-foreground">
                             Total de {commandes.length} commandes. Page {currentPage} sur {totalPages}.
                         </div>
