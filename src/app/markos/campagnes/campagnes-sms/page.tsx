@@ -68,10 +68,11 @@ export default function CampagnesSmsPage() {
                         ))}
                     </div>
                     <Table>
-                        <TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Téléphone</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Nom</TableHead><TableHead>Téléphone</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {contacts.map(c => (
+                            {contacts.map((c, index) => (
                                 <TableRow key={c.id}>
+                                    <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell className="font-medium">{c.name}</TableCell>
                                     <TableCell>{c.phone}</TableCell>
                                     <TableCell className="text-center">

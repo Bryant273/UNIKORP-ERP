@@ -84,10 +84,11 @@ export default function CoutsLogistiquesPage() {
                         </RechartsPieChart>
                     </ChartContainer>
                     <Table>
-                        <TableHeader><TableRow><TableHead>Type de Coût</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-right">% du Total</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Type de Coût</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-right">% du Total</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {costData.map(d => (
+                            {costData.map((d, index) => (
                                 <TableRow key={d.type} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell className="font-medium flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.fill }}></div>
                                         {d.type}

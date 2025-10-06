@@ -126,6 +126,7 @@ export default function DossiersAdministratifsPage() {
                     {/* Table */}
                     <Table>
                         <TableHeader><TableRow>
+                            <TableHead>#</TableHead>
                             <TableHead>Nom du Document</TableHead>
                             <TableHead className="text-center">Catégorie</TableHead>
                             <TableHead className="text-center">Employé</TableHead>
@@ -134,8 +135,9 @@ export default function DossiersAdministratifsPage() {
                             <TableHead className="w-[150px] text-center">Actions</TableHead>
                         </TableRow></TableHeader>
                         <TableBody>
-                            {paginatedDocuments.map(doc => (
+                            {paginatedDocuments.map((doc, index) => (
                                 <TableRow key={doc.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                     <TableCell className="font-medium">{doc.nom}</TableCell>
                                     <TableCell className="text-center"><Badge variant="outline">{doc.categorie}</Badge></TableCell>
                                     <TableCell className="text-center">{doc.employe}</TableCell>

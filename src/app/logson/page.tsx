@@ -121,10 +121,11 @@ export default function LogsonPage() {
             </CardHeader>
             <CardContent>
                 <Table>
-                    <TableHeader><TableRow><TableHead>N° Commande</TableHead><TableHead>Client</TableHead><TableHead>Transporteur</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>#</TableHead><TableHead>N° Commande</TableHead><TableHead>Client</TableHead><TableHead>Transporteur</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader>
                     <TableBody>
-                        {recentOrdersData.map(order => (
+                        {recentOrdersData.map((order, index) => (
                             <TableRow key={order.id} className="odd:bg-muted/50">
+                                <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                 <TableCell className="font-mono text-sm">{order.id}</TableCell>
                                 <TableCell>{order.client}</TableCell>
                                 <TableCell>{order.transporteur}</TableCell>

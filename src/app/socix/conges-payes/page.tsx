@@ -78,10 +78,11 @@ export default function CongesPayesPage() {
 
                     <h3 className="text-lg font-semibold mb-4">Soldes des Congés Payés</h3>
                     <Table>
-                        <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead className="text-center">Solde N-1</TableHead><TableHead className="text-center">Acquis N</TableHead><TableHead className="text-center">Pris N</TableHead><TableHead className="text-center font-bold">Solde Final</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Employé</TableHead><TableHead className="text-center">Solde N-1</TableHead><TableHead className="text-center">Acquis N</TableHead><TableHead className="text-center">Pris N</TableHead><TableHead className="text-center font-bold">Solde Final</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {paginatedBalances.map(b => (
+                            {paginatedBalances.map((b, index) => (
                                 <TableRow key={b.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                     <TableCell className="font-medium">{b.employeeName}</TableCell>
                                     <TableCell className="text-center">{b.soldeAnterieur}</TableCell>
                                     <TableCell className="text-center text-green-600">{b.acquisAnnee}</TableCell>

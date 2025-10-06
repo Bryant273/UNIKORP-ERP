@@ -106,6 +106,7 @@ export default function MouvementsDeStockPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead>#</TableHead>
                                 <TableHead>Date & Heure</TableHead>
                                 <TableHead>Produit</TableHead>
                                 <TableHead>Document</TableHead>
@@ -115,8 +116,9 @@ export default function MouvementsDeStockPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {paginatedMouvements.map(mvt => (
+                            {paginatedMouvements.map((mvt, index) => (
                                 <TableRow key={mvt.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                     <TableCell>{format(new Date(mvt.date), 'dd/MM/yyyy HH:mm', { locale: fr })}</TableCell>
                                     <TableCell className="font-medium">{produits.find(p => p.id === mvt.produitId)?.name}</TableCell>
                                     <TableCell>{mvt.document}</TableCell>
@@ -126,7 +128,7 @@ export default function MouvementsDeStockPage() {
                                 </TableRow>
                             ))}
                             {mouvements.length === 0 && (
-                               <TableRow><TableCell colSpan={6} className="h-24 text-center">Aucun mouvement de stock enregistré.</TableCell></TableRow>
+                               <TableRow><TableCell colSpan={7} className="h-24 text-center">Aucun mouvement de stock enregistré.</TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>

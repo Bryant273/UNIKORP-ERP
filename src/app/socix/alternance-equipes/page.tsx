@@ -52,8 +52,8 @@ export default function AlternanceEquipesPage() {
         doc.setFontSize(14);
         doc.text('Répartition des Heures par Équipe', 14, startY);
         autoTable(doc, {
-            head: [['Équipe', 'Heures Travaillées']],
-            body: teamHoursData.map(d => [d.equipe, d.heures]),
+            head: [['#', 'Équipe', 'Heures Travaillées']],
+            body: teamHoursData.map((d, i) => [i + 1, d.equipe, d.heures]),
             startY: startY + 5,
             theme: 'striped'
         });
@@ -62,8 +62,8 @@ export default function AlternanceEquipesPage() {
         doc.setFontSize(14);
         doc.text('Répartition des Shifts', 14, startY);
         autoTable(doc, {
-            head: [['Équipe', 'Matin', 'Après-midi', 'Nuit', 'Repos']],
-            body: shiftDistributionData.map(d => [d.equipe, d.matin, d.aprem, d.nuit, d.repos]),
+            head: [['#', 'Équipe', 'Matin', 'Après-midi', 'Nuit', 'Repos']],
+            body: shiftDistributionData.map((d, i) => [i + 1, d.equipe, d.matin, d.aprem, d.nuit, d.repos]),
             startY: startY + 5,
             theme: 'striped'
         });
@@ -130,6 +130,7 @@ export default function AlternanceEquipesPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead>#</TableHead>
                                         <TableHead>Équipe</TableHead>
                                         <TableHead className="text-center">Matin (h)</TableHead>
                                         <TableHead className="text-center">Après-midi (h)</TableHead>
@@ -138,8 +139,9 @@ export default function AlternanceEquipesPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {shiftDistributionData.map(d => (
+                                    {shiftDistributionData.map((d, index) => (
                                         <TableRow key={d.equipe} className="odd:bg-muted/50">
+                                            <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                             <TableCell className="font-medium">{d.equipe}</TableCell>
                                             <TableCell className="text-center">{d.matin}</TableCell>
                                             <TableCell className="text-center">{d.aprem}</TableCell>

@@ -113,6 +113,7 @@ export default function RapportsAnalysesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>#</TableHead>
                             <TableHead>Titre du Rapport</TableHead>
                             <TableHead>Date de Création</TableHead>
                             <TableHead>Créé par</TableHead>
@@ -120,8 +121,9 @@ export default function RapportsAnalysesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {reports.map(report => (
+                        {reports.map((report, index) => (
                             <TableRow key={report.id} className="odd:bg-muted/50">
+                                <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                 <TableCell className="font-medium">{report.titre}</TableCell>
                                 <TableCell>{format(new Date(report.dateCreation), 'dd/MM/yyyy', { locale: fr })}</TableCell>
                                 <TableCell>{report.creePar}</TableCell>

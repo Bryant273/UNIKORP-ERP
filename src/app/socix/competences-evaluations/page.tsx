@@ -93,10 +93,11 @@ export default function CompetencesEvaluationsPage() {
                     <Card className="border-t-0 rounded-t-none">
                         <CardContent className="pt-6">
                             <Table>
-                                <TableHeader><TableRow><TableHead>Compétence</TableHead><TableHead>Catégorie</TableHead><TableHead className="text-center">Employés Compétents</TableHead><TableHead className="w-[120px] text-center">Actions</TableHead></TableRow></TableHeader>
+                                <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Compétence</TableHead><TableHead>Catégorie</TableHead><TableHead className="text-center">Employés Compétents</TableHead><TableHead className="w-[120px] text-center">Actions</TableHead></TableRow></TableHeader>
                                 <TableBody>
-                                    {MOCK_SKILLS.map(skill => (
+                                    {MOCK_SKILLS.map((skill, index) => (
                                         <TableRow key={skill.id}>
+                                            <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                             <TableCell className="font-medium">{skill.name}</TableCell>
                                             <TableCell>{getCategoryBadge(skill.category)}</TableCell>
                                             <TableCell className="text-center">{skill.employeeCount}</TableCell>
@@ -120,10 +121,11 @@ export default function CompetencesEvaluationsPage() {
                         </CardHeader>
                         <CardContent>
                             <Table>
-                                <TableHeader><TableRow><TableHead>Titre de l'évaluation</TableHead><TableHead>Compétence Associée</TableHead><TableHead className="text-center">Date</TableHead><TableHead className="text-center">Participants</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader>
+                                <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Titre de l'évaluation</TableHead><TableHead>Compétence Associée</TableHead><TableHead className="text-center">Date</TableHead><TableHead className="text-center">Participants</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader>
                                 <TableBody>
-                                    {MOCK_EVALUATIONS.map(ev => (
+                                    {MOCK_EVALUATIONS.map((ev, index) => (
                                         <TableRow key={ev.id}>
+                                            <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                             <TableCell className="font-medium">{ev.title}</TableCell>
                                             <TableCell>{ev.skillName}</TableCell>
                                             <TableCell className="text-center">{ev.date}</TableCell>
@@ -145,9 +147,10 @@ export default function CompetencesEvaluationsPage() {
                     </DialogHeader>
                     <div className="py-4">
                         <ul className="space-y-3">
-                            {(MOCK_EMPLOYEE_SKILLS[viewingSkill?.id || ''] || []).map(empSkill => (
+                            {(MOCK_EMPLOYEE_SKILLS[viewingSkill?.id || ''] || []).map((empSkill, index) => (
                                 <li key={empSkill.employeeId} className="flex items-center justify-between p-2 rounded-md border">
                                     <div className="flex items-center gap-3">
+                                        <span className="font-bold text-muted-foreground w-4">{index + 1}</span>
                                         <Avatar className="h-10 w-10"><AvatarImage src={empSkill.employeeAvatar} data-ai-hint="person face" /><AvatarFallback>{empSkill.employeeName.charAt(0)}</AvatarFallback></Avatar>
                                         <span className="font-medium">{empSkill.employeeName}</span>
                                     </div>
@@ -163,4 +166,3 @@ export default function CompetencesEvaluationsPage() {
         </>
     );
 }
-

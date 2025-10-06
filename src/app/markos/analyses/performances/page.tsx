@@ -58,10 +58,11 @@ export default function PerformancesPage() {
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader><TableRow><TableHead>Canal</TableHead><TableHead className="text-right">Leads</TableHead><TableHead className="text-right">MQLs</TableHead><TableHead className="text-right">Taux de Conv. (Lead > MQL)</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Canal</TableHead><TableHead className="text-right">Leads</TableHead><TableHead className="text-right">MQLs</TableHead><TableHead className="text-right">Taux de Conv. (Lead > MQL)</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {channelPerformanceData.map(d => (
+                            {channelPerformanceData.map((d, index) => (
                                 <TableRow key={d.channel} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell className="font-medium">{d.channel}</TableCell>
                                     <TableCell className="text-right">{d.leads}</TableCell>
                                     <TableCell className="text-right">{d.mql}</TableCell>

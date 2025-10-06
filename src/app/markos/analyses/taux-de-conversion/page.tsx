@@ -101,10 +101,11 @@ export default function TauxDeConversionPage() {
             <CardHeader><CardTitle>Détail des Conversions</CardTitle></CardHeader>
             <CardContent>
                 <Table>
-                    <TableHeader><TableRow><TableHead>Source de trafic / Campagne</TableHead><TableHead className="text-right">Visiteurs</TableHead><TableHead className="text-right">Conversions</TableHead><TableHead className="text-right">Taux de Conversion</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Source de trafic / Campagne</TableHead><TableHead className="text-right">Visiteurs</TableHead><TableHead className="text-right">Conversions</TableHead><TableHead className="text-right">Taux de Conversion</TableHead></TableRow></TableHeader>
                     <TableBody>
-                        {detailedConversionData.map(d => (
+                        {detailedConversionData.map((d, index) => (
                             <TableRow key={d.source} className="odd:bg-muted/50">
+                                <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                 <TableCell className="font-medium">{d.source}</TableCell>
                                 <TableCell className="text-right">{d.traffic.toLocaleString('fr-FR')}</TableCell>
                                 <TableCell className="text-right">{d.conversions.toLocaleString('fr-FR')}</TableCell>

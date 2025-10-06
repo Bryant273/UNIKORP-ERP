@@ -60,14 +60,16 @@ export default function RoiMarketingPage() {
                 <CardContent>
                     <Table>
                         <TableHeader><TableRow>
+                            <TableHead>#</TableHead>
                             <TableHead>Campagne</TableHead>
                             <TableHead className="text-right">Budget</TableHead>
                             <TableHead className="text-right">Revenu Généré</TableHead>
                             <TableHead className="text-right">ROI</TableHead>
                         </TableRow></TableHeader>
                         <TableBody>
-                            {roiByCampaignData.map(c => (
+                            {roiByCampaignData.map((c, index) => (
                                 <TableRow key={c.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell className="font-medium">{c.name}</TableCell>
                                     <TableCell className="text-right">{c.budget.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-right">{c.revenu.toLocaleString('fr-FR')} FCFA</TableCell>

@@ -21,6 +21,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Switch } from '@/components/ui/switch';
+import Image from 'next/image';
+import { Logo } from '@/components/logo';
 
 // --- TYPES & MOCK DATA ---
 type ContractType = 'CDI' | 'CDD' | 'Stage' | 'Apprentissage';
@@ -159,10 +161,11 @@ function ContratsContent() {
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader><TableRow><TableHead>Employé</TableHead><TableHead>Type</TableHead><TableHead>Début</TableHead><TableHead>Fin</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[200px]">Actions</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Employé</TableHead><TableHead>Type</TableHead><TableHead>Début</TableHead><TableHead>Fin</TableHead><TableHead className="text-center">Statut</TableHead><TableHead className="text-center w-[200px]">Actions</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            {contracts.map(c => (
+                            {contracts.map((c, index) => (
                                 <TableRow key={c.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell className="font-medium">{c.employeeName}</TableCell>
                                     <TableCell>{c.TYPE_CONTRAT}</TableCell>
                                     <TableCell>{format(new Date(c.DATE_DEBUT), 'dd/MM/yyyy')}</TableCell>
@@ -325,7 +328,7 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         const addText = (text: string, options: any = {}) => {
             const splitText = doc.splitTextToSize(text, pageContentWidth);
             const textHeight = doc.getTextDimensions(splitText).h;
-            if (y + textHeight > pageHeight - margin) {
+            if (y + textHeight > pageHeight - margin - 10) {
                 doc.addPage();
                 drawHeader();
             }
@@ -396,7 +399,6 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         y += 15;
         doc.text("L'EMPLOYEUR", margin, y);
         doc.text("L'EMPLOYÉ", doc.internal.pageSize.getWidth() / 2 + margin, y);
-        
         y += 10;
         doc.text(`(Signature de ${contract.SIGNATURE_EMPLOYEUR})`, margin, y);
         doc.text(`(Signature de ${contract.SIGNATURE_EMPLOYE})`, doc.internal.pageSize.getWidth() / 2 + margin, y);
@@ -406,7 +408,7 @@ function ViewContractModal({ isOpen, onClose, contract }: { isOpen: boolean, onC
         y += 5;
         doc.setFontSize(8).setTextColor(120);
         addText(`Mentions obligatoires :\n- Exemplaire remis au salarié le : ${contract.DATE_REMISE}\n- Déclaration préalable à l'embauche effectuée le : ${contract.DATE_DPAE}\n- Visite médicale d'embauche : ${contract.DATE_VISITE_MEDICALE}`);
-        
+
         doc.save(`contrat_${contract.employeeName.replace(/\s/g, '_')}.pdf`);
         toast({ title: 'PDF du contrat généré.' });
     };

@@ -92,6 +92,7 @@ export default function ActionsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-12">#</TableHead>
                             <TableHead className="w-24"></TableHead>
                             <TableHead>Utilisateur</TableHead>
                             <TableHead>Action</TableHead>
@@ -100,8 +101,9 @@ export default function ActionsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {filteredActions.map(action => (
+                    {filteredActions.map((action, index) => (
                         <TableRow key={action.id}>
+                             <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                             <TableCell>
                                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                                     <ActionIcon module={action.module} />

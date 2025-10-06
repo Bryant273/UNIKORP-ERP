@@ -41,6 +41,7 @@ export default function RequestsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>#</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Nom</TableHead>
                             <TableHead>Email</TableHead>
@@ -52,8 +53,9 @@ export default function RequestsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {requests.length > 0 ? requests.map(req => (
+                        {requests.length > 0 ? requests.map((req, index) => (
                             <TableRow key={req.id}>
+                                <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                 <TableCell>{format(new Date(req.requestDate), 'dd/MM/yyyy HH:mm', { locale: fr })}</TableCell>
                                 <TableCell className="font-medium">{req.fullName}</TableCell>
                                 <TableCell>{req.email}</TableCell>
@@ -78,7 +80,7 @@ export default function RequestsPage() {
                                 </TableCell>
                             </TableRow>
                         )) : (
-                            <TableRow><TableCell colSpan={8} className="h-24 text-center">Aucune requête pour le moment.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={9} className="h-24 text-center">Aucune requête pour le moment.</TableCell></TableRow>
                         )}
                     </TableBody>
                 </Table>

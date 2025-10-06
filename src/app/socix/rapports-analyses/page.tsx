@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, Legend, XAxis, YAxis, CartesianGrid, Pie, PieChart as RechartsPieChart } from "recharts";
+import { BarChart, Bar, Legend, XAxis, YAxis, CartesianGrid, Pie, PieChart as RechartsPieChart, Line, ComposedChart } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Briefcase, TrendingUp, Star, Download } from 'lucide-react';
