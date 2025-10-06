@@ -32,7 +32,7 @@ import Image from 'next/image';
 import { Logo } from './logo';
 
 const noHeaderPaths = ['/'];
-const noSidebarPaths = ['/', '/super-admin', '/employee-dashboard', '/platform-admin'];
+const noSidebarPaths = ['/', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp'];
 
 const mockCompanyFiles = [
   "AUTO-GEST-2024-SocieteX",
@@ -106,18 +106,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, []);
   
   useEffect(() => {
-    // Automatically set the company file for the ERP Provider when they access the ERP
-    if (role === 'Fournisseur ERP') {
-      setCompanyFile('INNOV\'KORP');
+    if (role === 'Fournisseur ERP' && !companyFile) {
+      setCompanyFile('AUTO-GEST-2025-INNOVKORP');
     }
-  }, [role, setCompanyFile]);
+  }, [role, companyFile, setCompanyFile]);
 
   const showHeader = !noHeaderPaths.includes(pathname);
-  const showSidebar = !noSidebarPaths.includes(pathname) && pathname !== '/dashboard';
-  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin'].includes(pathname);
+  const showSidebar = !noSidebarPaths.includes(pathname);
+  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp'].includes(pathname);
   
-  const bypassPaths = ['/', '/login', '/platform-admin'];
-  const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé' && role !== 'Fournisseur ERP';
+  const bypassPaths = ['/', '/login', '/platform-admin', '/super-admin'];
+  const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
 
   if (!isClient) {
     return null; 
@@ -140,8 +139,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             'flex-1 overflow-y-auto',
             showSidebar && !isDashboardBlocked && 'p-6',
             pathname === '/dashboard' && !isDashboardBlocked && 'p-4 sm:p-6 lg:p-8',
-            !showSidebar && showHeader && !['/dashboard', '/super-admin'].includes(pathname) && 'p-4 sm:p-6 lg:p-8',
-            (pathname === '/super-admin' || pathname === '/platform-admin') && 'p-4 sm:p-6 lg:p-8',
+            !showSidebar && showHeader && !['/dashboard', '/super-admin', '/super-admin-innovkorp'].includes(pathname) && 'p-4 sm:p-6 lg:p-8',
+            (pathname === '/super-admin' || pathname === '/platform-admin' || pathname === '/super-admin-innovkorp') && 'p-4 sm:p-6 lg:p-8',
             !showHeader && !showSidebar && 'bg-background', 
             (showHeader || showSidebar) && 'bg-background/80'
           )}

@@ -155,7 +155,7 @@ const DashboardView = () => (
                 <CardDescription>Indicateurs clés sur les entreprises et les revenus.</CardDescription>
             </div>
              <Button asChild>
-                <Link href="/dashboard">
+                <Link href="/super-admin-innovkorp">
                   <TrendingUp className="mr-2 h-4 w-4" />
                   Accès ERP
                 </Link>
@@ -201,7 +201,7 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
                  <CardTitle className="text-lg">Admin Fournisseur</CardTitle>
             </CardHeader>
             <CardContent className="p-2">
-                 <Button
+                <Button
                     variant={activeView === 'dashboard' ? 'secondary' : 'ghost'}
                     className="w-full justify-start gap-2 font-semibold mb-2"
                     onClick={() => setActiveView('dashboard')}
