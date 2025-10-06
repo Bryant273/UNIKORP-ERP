@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
 import { format } from 'date-fns';
 
@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/accordion';
 
 import RequestsPage from './requests/page';
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3 } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard } from 'lucide-react';
 
 
 // --- DATA ---
@@ -191,6 +191,14 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
                  <CardTitle className="text-lg">Admin Fournisseur</CardTitle>
             </CardHeader>
             <CardContent className="p-2">
+                <Button
+                    variant={activeView === 'dashboard' ? 'secondary' : 'ghost'}
+                    className="w-full justify-start gap-2 font-semibold mb-2"
+                    onClick={() => setActiveView('dashboard')}
+                >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Tableau de bord Fournisseur ERP
+                </Button>
                 <Accordion type="multiple" defaultValue={[adminNav[0].title, adminNav[1].title]} className="w-full">
                     {adminNav.map((section) => (
                         <AccordionItem value={section.title} key={section.title}>
