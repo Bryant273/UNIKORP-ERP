@@ -4,9 +4,9 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
 import { userRoleAtom } from '@/lib/store';

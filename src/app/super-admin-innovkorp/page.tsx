@@ -1,21 +1,103 @@
 
 'use client';
-import { Button } from "@/components/ui/button";
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useAtom } from 'jotai';
+
+import { userRoleAtom, type UserRole } from '@/lib/store';
+import { cn } from '@/lib/utils';
+import ActionsPage from '../actions/page';
+import { Button } from '@/components/ui/button';
+
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import {
-  ChartContainer,
-} from "@/components/ui/chart";
-import { Bar, BarChart, LineChart, Line, PieChart as RechartsPieChart, Pie, ResponsiveContainer, FunnelChart, Funnel, XAxis, YAxis } from "recharts";
-import { LayoutDashboard, TrendingUp, DollarSign, Target, UserCheck, Ship, TrendingDown } from "lucide-react";
-import Link from "next/link";
-import type { ChartConfig } from "@/components/ui/chart";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, ComposedChart, CartesianGrid, XAxis, YAxis, Legend, Pie, PieChart as RechartsPieChart, ResponsiveContainer, BarChart, LineChart, Line, Funnel, FunnelChart, Tooltip } from 'recharts';
+import { type ChartConfig } from "@/components/ui/chart";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import Image from 'next/image';
+import { PlusCircle, ShieldCheck, Download, Users, Briefcase, Settings, PlayCircle, StopCircle, UserPlus, Link2, Copy, Eye, Pencil, Trash2, Info, BarChart2, FileText, TrendingUp, LayoutDashboard, Bot, Loader2, DollarSign, Target, UserCheck, UserRound, Ship, TrendingDown, ImageIcon, FileUp, Check, Building, FolderKanban, FileSignature } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+
+// --- DATA ---
+type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    avatarUrl: string;
+    status: 'Actif' | 'Inactif';
+    lastLogin: string;
+}
+
+const initialUsers: User[] = [
+    { id: '1', name: 'Jean Dupont', email: 'jean.dupont@unikorp.com', role: 'Gestionnaire SKOMPTAB', avatarUrl: 'https://placehold.co/100x100.png', status: 'Actif', lastLogin: '2024-07-26T14:30:00Z' },
+    { id: '2', name: 'Sophie Martin', email: 'sophie.martin@unikorp.com', role: 'Gestionnaire MARKOS', avatarUrl: 'https://placehold.co/100x100.png', status: 'Actif', lastLogin: '2024-07-26T11:15:00Z' },
+    { id: '3', name: 'Admin', email: 'admin@unikorp.com', role: 'Admin-Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png', status: 'Actif', lastLogin: '2024-07-26T14:00:00Z' },
+    { id: '4', name: 'David Garcia', email: 'david.garcia@unikorp.com', role: 'Stagiaire SKOMPTAB', avatarUrl: 'https://placehold.co/100x100.png', status: 'Actif', lastLogin: '2024-07-25T09:02:00Z' },
+    { id: '5', name: 'Léa Moreau', email: 'lea.moreau@unikorp.com', role: 'Employé', avatarUrl: 'https://placehold.co/100x100.png', status: 'Inactif', lastLogin: '2024-07-24T18:30:00Z' },
+];
+
+const navItems = [
+    { href: '/super-admin-innovkorp?tab=dashboard', label: 'Tableau de bord', value: 'dashboard' },
+    { href: '/super-admin-innovkorp?tab=users', label: 'Utilisateurs', value: 'users' },
+    { href: '/super-admin-innovkorp?tab=actions', label: 'Actions', value: 'actions' },
+    { href: '/super-admin-innovkorp?tab=settings', label: 'Configuration', value: 'settings' },
+    { href: '/super-admin-innovkorp?tab=reports', label: 'États & Rapports', value: 'reports' },
+];
+
+// --- COMPONENTS ---
+
+// --- Dashboard Data & Configs ---
 // SKOMPTAB
 const skomptabKpis = [
   { title: "Chiffre d'Affaires", value: "128,5M FCFA", change: "+12.8% vs Q3" },
@@ -72,20 +154,48 @@ const logsonChart2Data = [ { name: "Chronopost", deliv_rate: 98.5 }, { name: "Co
 const logsonChart3Data = [ { month: "Jan", entrees: 500, sorties: 450 }, { month: "Fev", entrees: 620, sorties: 580 }, { month: "Mar", entrees: 480, sorties: 510 }, { month: "Avr", entrees: 700, sorties: 650 }, { month: "Mai", entrees: 550, sorties: 600 }, { month: "Juin", entrees: 680, sorties: 640 }, ];
 const logsonChart4Data = [ { depot: 'Abidjan', valeur: 75000000 }, { depot: 'Bouaké', valeur: 42000000 }, { depot: 'San Pédro', valeur: 18000000 } ];
 
-export default function SuperAdminInnovkorpPage() {
+function AdminDashboard() {
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+    const [reportContent, setReportContent] = useState("");
+
+    const handleGenerateReport = () => {
+        setIsGeneratingReport(true);
+        setReportContent("");
+        setTimeout(() => {
+            const content = `
+                Analyse Globale - ${new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric'})}
+
+                Synthèse:
+                L'entreprise affiche une performance solide ce mois-ci, portée par une forte croissance du chiffre d'affaires (+12.8% vs Q3) et un résultat net positif de 43.2M FCFA.
+                
+                Finance (SKOMPTAB):
+                - Le CA est en hausse, mais les dépenses ont également augmenté, ce qui nécessite une surveillance.
+                - La trésorerie reste stable mais en dessous de l'objectif.
+                
+                Marketing (MARKOS):
+                - L'entonnoir de conversion montre une bonne qualification des leads (MQLs) mais une chute lors du passage en SQLs.
+                - Recommandation: Revoir les critères de qualification des SQLs ou renforcer le suivi commercial.
+
+                Logistique (LOGSON):
+                - Le nombre d'expéditions est stable. Le taux de retours est faible, ce qui est un excellent indicateur de qualité.
+
+                Ressources Humaines (SOCIX):
+                - Le solde des recrutements est positif (+2), indiquant une croissance maîtrisée de l'effectif.
+            `;
+            setReportContent(content.replace(/^\s+/gm, ''));
+            setIsGeneratingReport(false);
+        }, 2000);
+    };
+
     return (
         <div className="space-y-8">
              <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold">Tableau de Bord de Supervision INNOV'KORP</h2>
-                    <p className="text-muted-foreground">Vue globale de l'activité de l'entreprise INNOV'KORP sur sa propre instance ERP.</p>
+                    <h2 className="text-2xl font-bold">Tableau de Bord de Supervision</h2>
+                    <p className="text-muted-foreground">Vue globale de l'activité de l'entreprise pour le mois en cours.</p>
                 </div>
-                <Button size="lg" asChild>
-                    <Link href="/dashboard">
-                        <LayoutDashboard className="mr-2 h-5 w-5"/>
-                        Accéder à l'ERP de Gestion
-                    </Link>
-                </Button>
+                <Button onClick={() => {setIsReportModalOpen(true); handleGenerateReport();}}><Bot className="mr-2 h-4 w-4"/>Générer une analyse IA</Button>
             </div>
             
             {/* SKOMPTAB Section */}
@@ -154,6 +264,112 @@ export default function SuperAdminInnovkorpPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><Bot /> Analyse du Tableau de Bord</DialogTitle>
+                        <DialogDescription>
+                            Voici une synthèse générée par l'IA basée sur les données actuelles du tableau de bord.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 max-h-[60vh] overflow-y-auto">
+                        {isGeneratingReport ? (
+                            <div className="flex flex-col items-center justify-center gap-2 py-8">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                <p className="text-muted-foreground">L'IA analyse les données...</p>
+                            </div>
+                        ) : (
+                             <pre className="text-sm whitespace-pre-wrap font-sans bg-muted/50 p-4 rounded-md">
+                                {reportContent}
+                             </pre>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsReportModalOpen(false)}>Fermer</Button>
+                        <Button disabled={isGeneratingReport || !reportContent}><Download className="mr-2 h-4 w-4"/> Télécharger en PDF</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
+}
+
+function UserManagement() { return <p>User Management Content</p>}
+function CompanySettings() { return <p>Company Settings Content</p>}
+function Reports() { return <p>Reports Content</p>}
+
+function InnovkorpPageNav() {
+    const searchParams = useSearchParams();
+    const activeTab = searchParams ? searchParams.get('tab') || 'dashboard' : 'dashboard';
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const handleTabChange = (value: string) => {
+        router.push(`${pathname}?tab=${value}`);
+    };
+
+    const isActive = (tabValue: string) => activeTab === tabValue;
+
+    return (
+        <nav className="bg-primary/90 backdrop-blur-sm">
+            <div className="flex items-center gap-x-1 max-w-[1600px] mx-auto px-4 sm:px-6">
+                {navItems.map((link) => (
+                    <button key={link.value} onClick={() => handleTabChange(link.value)} className={cn(
+                        'flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-white/80 transition-colors hover:text-white relative',
+                        isActive(link.value) && 'text-white'
+                    )}>
+                        {link.value === 'dashboard' ? <LayoutDashboard className="h-4 w-4" /> :
+                         link.value === 'users' ? <Users className="h-4 w-4" /> :
+                         link.value === 'actions' ? <BarChart2 className="h-4 w-4" /> :
+                         link.value === 'settings' ? <Settings className="h-4 w-4" /> :
+                         link.value === 'reports' ? <FileText className="h-4 w-4" /> : null
+                        }
+                        {link.label}
+                        {isActive(link.value) && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-t-full" />}
+                    </button>
+                ))}
+                 <div className="flex-1" />
+                <Button variant="ghost" className="text-white/80 hover:text-white" asChild>
+                    <Link href="/platform-admin">
+                        Retour à la gestion Plateforme
+                    </Link>
+                </Button>
+                 <Button variant="ghost" className="text-white/80 hover:text-white" asChild>
+                    <Link href="/dashboard">
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        Accéder à l'ERP de Gestion
+                    </Link>
+                </Button>
+            </div>
+        </nav>
+    );
+}
+
+function InnovkorpPageContent() {
+    const searchParams = useSearchParams();
+    const activeTab = searchParams ? searchParams.get('tab') || 'dashboard' : 'dashboard';
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'dashboard': return <AdminDashboard />;
+            case 'users': return <UserManagement />;
+            case 'actions': return <ActionsPage />;
+            case 'settings': return <CompanySettings />;
+            case 'reports': return <Reports />;
+            default: return <AdminDashboard />;
+        }
+    };
+    return <div className="pt-2">{renderContent()}</div>
+}
+
+export default function SuperAdminInnovkorpPage() {
+    return (
+        <Suspense fallback={<div>Chargement...</div>}>
+            <div className="space-y-6">
+                <InnovkorpPageNav />
+                <InnovkorpPageContent />
+            </div>
+        </Suspense>
+    );
 }
