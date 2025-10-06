@@ -420,7 +420,7 @@ export function AppSidebar() {
 
   const { dashboardLink } = getNavForPath(pathname);
 
-  const noSidebarPaths = ['/', '/login', '/super-admin', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp'];
+  const noSidebarPaths = ['/', '/login', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp', '/super-admin'];
 
   const showSidebar = !noSidebarPaths.includes(pathname);
 

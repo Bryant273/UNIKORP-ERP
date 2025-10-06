@@ -94,7 +94,6 @@ const navItems = [
     { href: '/super-admin?tab=actions', label: 'Actions', value: 'actions' },
     { href: '/super-admin?tab=settings', label: 'Configuration', value: 'settings' },
     { href: '/super-admin?tab=reports', label: 'États & Rapports', value: 'reports' },
-    { href: '/dashboard', label: 'Accès ERP', value: 'erp' },
 ];
 
 // --- COMPONENTS ---
@@ -745,6 +744,13 @@ function SuperAdminPageNav() {
                         </Link>
                     )
                 })}
+                 <div className="flex-1" />
+                <Button variant="ghost" className="text-white/80 hover:text-white" asChild>
+                    <Link href="/dashboard">
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        Accéder à l'ERP
+                    </Link>
+                </Button>
             </div>
         </nav>
     );

@@ -1,4 +1,5 @@
 
+
 "use client"
 import {
   Card,
@@ -17,6 +18,10 @@ import { Calendar } from "@/components/ui/calendar"
 import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText, Calendar as CalendarIcon } from "lucide-react"
 import { type ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import Link from 'next/link'
+import { useAtom } from 'jotai'
+import { userRoleAtom } from '@/lib/store'
 
 type Kpi = {
   title: string;
@@ -105,9 +110,21 @@ const fiscalDeadlines = [
 ];
 
 export default function DashboardPage() {
+    const [role] = useAtom(userRoleAtom);
+    const isInnovkorpAdmin = role === 'Fournisseur ERP';
+
   return (
     <>
       <div className="flex w-full flex-col gap-6">
+        {isInnovkorpAdmin && (
+            <div className="flex items-center justify-end">
+                <Button asChild>
+                    <Link href="/super-admin-innovkorp">
+                        Retour à la Supervision INNOV'KORP
+                    </Link>
+                </Button>
+            </div>
+        )}
         {/* KPIs Globaux */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {mainKpis.map((kpi) => (

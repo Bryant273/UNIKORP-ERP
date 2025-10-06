@@ -32,7 +32,7 @@ import Image from 'next/image';
 import { Logo } from './logo';
 
 const noHeaderPaths = ['/'];
-const noSidebarPaths = ['/', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp'];
+const noSidebarPaths = ['/', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp', '/super-admin'];
 
 const mockCompanyFiles = [
   "AUTO-GEST-2024-SocieteX",
@@ -115,8 +115,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const showSidebar = !noSidebarPaths.includes(pathname);
   const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp'].includes(pathname);
   
-  const bypassPaths = ['/', '/login', '/platform-admin', '/super-admin'];
-  const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé';
+  const bypassPaths = ['/', '/login', '/platform-admin'];
+  const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé' && role !== 'Fournisseur ERP';
 
   if (!isClient) {
     return null; 

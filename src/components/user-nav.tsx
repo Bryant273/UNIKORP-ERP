@@ -80,12 +80,14 @@ export function UserNav() {
                   <span>Notifications</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/actions">
-                  <History className="mr-2 h-4 w-4" />
-                  <span>Actions</span>
-                </Link>
-              </DropdownMenuItem>
+               {role === 'Compte Entreprise' && (
+                <DropdownMenuItem asChild>
+                  <Link href="/super-admin?tab=actions">
+                    <History className="mr-2 h-4 w-4" />
+                    <span>Actions</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
             </>
           )}
           <DropdownMenuItem asChild>
