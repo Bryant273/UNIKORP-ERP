@@ -197,7 +197,7 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
                     onClick={() => setActiveView('dashboard')}
                 >
                     <LayoutDashboard className="h-4 w-4" />
-                    Tableau de bord Fournisseur ERP
+                    Tableau de bord
                 </Button>
                 <Accordion type="multiple" defaultValue={[adminNav[0].title, adminNav[1].title]} className="w-full">
                     {adminNav.map((section) => (
