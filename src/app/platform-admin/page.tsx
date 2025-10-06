@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
 import { userRoleAtom } from '@/lib/store';
