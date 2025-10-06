@@ -69,8 +69,10 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-b-white/10 bg-[#1C2039] text-white px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Logo className="h-8 w-8 text-white" />
-        {showPlatformName && (
-             <span className="font-bold text-xl">UNIKORP</span>
+        {showPlatformName ? (
+             <span className="font-bold text-xl">INNOV'KORP</span>
+        ) : (
+            <span className="font-bold text-xl">UNIKORP</span>
         )}
         {showCompanyName && (
             <div className="flex items-center gap-3">

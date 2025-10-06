@@ -33,6 +33,7 @@ type LoginModalProps = {
 };
 
 const userProfiles: { label: string; role: UserRole; path: string }[] = [
+    { label: "INNOV'KORP", role: 'Fournisseur ERP', path: '/platform-admin' },
     { label: 'Compte Entreprise', role: 'Compte Entreprise', path: '/super-admin' },
     { label: 'Admin-Gestionnaire', role: 'Admin-Gestionnaire', path: '/dashboard' },
     { label: 'Gestionnaire SKOMPTAB', role: 'Gestionnaire SKOMPTAB', path: '/skomptab' },
@@ -44,7 +45,6 @@ const userProfiles: { label: string; role: UserRole; path: string }[] = [
     { label: 'Gestionnaire LOGSON', role: 'Gestionnaire LOGSON', path: '/logson' },
     { label: 'Stagiaire LOGSON', role: 'Stagiaire LOGSON', path: '/logson' },
     { label: 'Employé', role: 'Employé', path: '/employee-dashboard' },
-    { label: 'Fournisseur ERP', role: 'Fournisseur ERP', path: '/platform-admin' },
 ];
 
 function RegisterModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

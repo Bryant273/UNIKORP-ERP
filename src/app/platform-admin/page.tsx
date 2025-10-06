@@ -1,9 +1,11 @@
 
+
 'use client';
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 import { cn } from '@/lib/utils';
 import { userRoleAtom } from '@/lib/store';
@@ -34,7 +36,7 @@ import {
 } from '@/components/ui/accordion';
 
 import RequestsPage from './requests/page';
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp } from 'lucide-react';
 
 
 // --- DATA ---
@@ -171,7 +173,7 @@ const CompaniesView = () => (
 const ContractsView = () => (
     <Card><CardHeader><CardTitle>Gestion des Abonnements</CardTitle><CardDescription>Suivez les abonnements, les renouvellements et les suspensions.</CardDescription></CardHeader><CardContent>
         <Table><TableHeader><TableRow><TableHead>#</TableHead><TableHead>Entreprise</TableHead><TableHead>Montant</TableHead><TableHead>Prochaine Facturation</TableHead><TableHead>Statut</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>
-            {subscriptions.map((s, index) => <TableRow key={s.id}><TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell><TableCell className="font-medium">{s.company}</TableCell><TableCell>{s.amount}</TableCell><TableCell>{format(new Date(s.nextBilling), 'dd/MM/yyyy')}</TableCell><TableCell>{getStatusBadge(s.status)}</TableCell><TableCell className="text-right">{s.status.includes('attente') && <Button size="sm">Valider</Button>}</TableCell></TableRow>)}
+            {subscriptions.map((s, index) => <TableRow key={s.id}><TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell><TableCell className="font-medium">{s.company}</TableCell><TableCell>{s.amount}</TableCell><TableCell>{format(new Date(s.nextBilling), 'dd/MM/yyyy', { locale: fr })}</TableCell><TableCell>{getStatusBadge(s.status)}</TableCell><TableCell className="text-right">{s.status.includes('attente') && <Button size="sm">Valider</Button>}</TableCell></TableRow>)}
         </TableBody></Table>
     </CardContent></Card>
 );
@@ -191,6 +193,16 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
                  <CardTitle className="text-lg">Admin Fournisseur</CardTitle>
             </CardHeader>
             <CardContent className="p-2">
+                <Button
+                    variant={'secondary'}
+                    className="w-full justify-start gap-2 font-semibold mb-2"
+                    asChild
+                >
+                  <a href="/dashboard">
+                    <TrendingUp className="h-4 w-4" />
+                    Accès ERP
+                  </a>
+                </Button>
                 <Button
                     variant={activeView === 'dashboard' ? 'secondary' : 'ghost'}
                     className="w-full justify-start gap-2 font-semibold mb-2"
