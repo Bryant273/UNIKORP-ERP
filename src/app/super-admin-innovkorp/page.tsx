@@ -192,10 +192,15 @@ function AdminDashboard() {
         <div className="space-y-8">
              <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold">Tableau de Bord de Supervision</h2>
-                    <p className="text-muted-foreground">Vue globale de l'activité de l'entreprise pour le mois en cours.</p>
+                    <h2 className="text-2xl font-bold">Tableau de Bord de Supervision INNOV'KORP</h2>
+                    <p className="text-muted-foreground">Vue globale de l'activité d'INNOV'KORP sur sa propre instance UNIKORP.</p>
                 </div>
-                <Button onClick={() => {setIsReportModalOpen(true); handleGenerateReport();}}><Bot className="mr-2 h-4 w-4"/>Générer une analyse IA</Button>
+                 <Button asChild>
+                    <Link href="/dashboard">
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        Accéder à l'ERP de Gestion
+                    </Link>
+                </Button>
             </div>
             
             {/* SKOMPTAB Section */}
@@ -333,12 +338,6 @@ function InnovkorpPageNav() {
                 <Button variant="ghost" className="text-white/80 hover:text-white" asChild>
                     <Link href="/platform-admin">
                         Retour à la gestion Plateforme
-                    </Link>
-                </Button>
-                 <Button variant="ghost" className="text-white/80 hover:text-white" asChild>
-                    <Link href="/dashboard">
-                        <TrendingUp className="mr-2 h-4 w-4" />
-                        Accéder à l'ERP de Gestion
                     </Link>
                 </Button>
             </div>

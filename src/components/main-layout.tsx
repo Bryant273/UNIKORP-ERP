@@ -32,7 +32,7 @@ import Image from 'next/image';
 import { Logo } from './logo';
 
 const noHeaderPaths = ['/'];
-const noSidebarPaths = ['/', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp', '/super-admin'];
+const noSidebarPaths = ['/', '/login', '/employee-dashboard', '/platform-admin', '/super-admin'];
 
 const mockCompanyFiles = [
   "AUTO-GEST-2024-SocieteX",
