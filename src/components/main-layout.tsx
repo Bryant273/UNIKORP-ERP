@@ -113,7 +113,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const showHeader = !noHeaderPaths.includes(pathname);
   const showSidebar = !noSidebarPaths.includes(pathname);
-  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp'].includes(pathname);
+  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp', '/help', '/support', '/notifications', '/settings'].includes(pathname);
   
   const bypassPaths = ['/', '/login', '/platform-admin'];
   const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé' && role !== 'Fournisseur ERP';
