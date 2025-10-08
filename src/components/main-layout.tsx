@@ -112,10 +112,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, [role, companyFile, setCompanyFile]);
 
   const showHeader = !noHeaderPaths.includes(pathname);
-  const showSidebar = !noSidebarPaths.includes(pathname);
-  const showModuleNav = showHeader && !['/', '/super-admin', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp', '/help', '/support', '/notifications', '/settings'].includes(pathname);
+  const showSidebar = !noSidebarPaths.includes(pathname) && pathname !== '/dashboard';
+  const showModuleNav = showHeader && !['/', '/employee-dashboard', '/platform-admin', '/super-admin', '/super-admin-innovkorp', '/help', '/support', '/notifications', '/settings'].includes(pathname);
   
-  const bypassPaths = ['/', '/login', '/platform-admin'];
+  const bypassPaths = ['/', '/login', '/platform-admin', '/super-admin-innovkorp'];
   const requiresCompanyFile = !bypassPaths.includes(pathname) && role !== 'Employé' && role !== 'Fournisseur ERP';
 
   if (!isClient) {
@@ -137,7 +137,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             'flex-1 overflow-y-auto',
-            showSidebar && !isDashboardBlocked && 'p-6',
+            (showSidebar || pathname === '/dashboard') && !isDashboardBlocked && 'p-6',
             pathname === '/dashboard' && !isDashboardBlocked && 'p-4 sm:p-6 lg:p-8',
             !showSidebar && showHeader && !['/dashboard', '/super-admin', '/super-admin-innovkorp'].includes(pathname) && 'p-4 sm:p-6 lg:p-8',
             (pathname === '/super-admin' || pathname === '/platform-admin' || pathname === '/super-admin-innovkorp') && 'p-4 sm:p-6 lg:p-8',
