@@ -32,7 +32,6 @@ import Image from 'next/image';
 import { Logo } from './logo';
 
 const noHeaderPaths = ['/'];
-const noSidebarPaths = ['/', '/login', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp', '/super-admin', '/dashboard'];
 
 const mockCompanyFiles = [
   "AUTO-GEST-2024-SocieteX",
@@ -112,9 +111,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, [role, companyFile, setCompanyFile]);
 
   const showHeader = !noHeaderPaths.includes(pathname);
-  const showSidebar = !noSidebarPaths.includes(pathname);
   
-  const noModuleNavPaths = ['/', '/login', '/employee-dashboard', '/platform-admin', '/super-admin-innovkorp', '/super-admin', '/help', '/support', '/notifications', '/settings'];
+  const noSidebarPaths = ['/', '/login', '/employee-dashboard', '/platform-admin', '/super-admin', '/super-admin-innovkorp', '/dashboard'];
+  const showSidebar = !noSidebarPaths.includes(pathname);
+
+  const noModuleNavPaths = ['/', '/login', '/employee-dashboard', '/platform-admin', '/super-admin', '/super-admin-innovkorp', '/help', '/support', '/notifications', '/settings'];
   const showModuleNav = showHeader && !noModuleNavPaths.includes(pathname) || pathname === '/dashboard';
   
   const bypassPaths = ['/', '/login', '/platform-admin', '/super-admin', '/super-admin-innovkorp'];
