@@ -19,31 +19,31 @@ const allNavLinks = [
     href: '/dashboard',
     label: 'Tableau de bord',
     icon: LayoutDashboard,
-    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire SKOMPTAB', 'Gestionnaire SOCIX', 'Gestionnaire MARKOS', 'Gestionnaire LOGSON', 'Stagiaire SKOMPTAB', 'Stagiaire SOCIX', 'Stagiaire MARKOS', 'Stagiaire LOGSON'],
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Fournisseur ERP', 'Gestionnaire SKOMPTAB', 'Gestionnaire SOCIX', 'Gestionnaire MARKOS', 'Gestionnaire LOGSON', 'Stagiaire SKOMPTAB', 'Stagiaire SOCIX', 'Stagiaire MARKOS', 'Stagiaire LOGSON'],
   },
   {
     href: '/skomptab',
     label: 'SKOMPTAB',
     icon: Calculator,
-    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire SKOMPTAB', 'Stagiaire SKOMPTAB'],
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Fournisseur ERP', 'Gestionnaire SKOMPTAB', 'Stagiaire SKOMPTAB'],
   },
   {
     href: '/socix',
     label: 'SOCIX',
     icon: UsersRound,
-    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire SOCIX', 'Stagiaire SOCIX'],
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Fournisseur ERP', 'Gestionnaire SOCIX', 'Stagiaire SOCIX'],
   },
   {
     href: '/markos',
     label: 'MARKOS',
     icon: Megaphone,
-    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire MARKOS', 'Stagiaire MARKOS'],
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Fournisseur ERP', 'Gestionnaire MARKOS', 'Stagiaire MARKOS'],
   },
   {
     href: '/logson',
     label: 'LOGSON',
     icon: Truck,
-    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Gestionnaire LOGSON', 'Stagiaire LOGSON'],
+    allowedRoles: ['Admin-Gestionnaire', 'Compte Entreprise', 'Fournisseur ERP', 'Gestionnaire LOGSON', 'Stagiaire LOGSON'],
   },
 ];
 

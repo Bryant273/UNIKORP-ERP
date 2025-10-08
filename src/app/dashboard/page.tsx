@@ -1,5 +1,4 @@
 
-
 "use client"
 import {
   Card,
@@ -13,10 +12,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend, BarChart, ResponsiveContainer } from "recharts"
+import { Bar, CartesianGrid, XAxis, YAxis, Line, ComposedChart, Legend, BarChart } from "recharts"
 import { Calendar } from "@/components/ui/calendar"
 import { DollarSign, Users, ShoppingCart, TrendingUp, TrendingDown, Target, UserCheck, Ship, BarChart2, FileText, Calendar as CalendarIcon } from "lucide-react"
-import { type ChartConfig } from "@/components/ui/chart"
+import type { ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'

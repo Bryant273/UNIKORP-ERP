@@ -88,11 +88,11 @@ const initialUsers: User[] = [
 ];
 
 const navItems = [
-    { href: '/super-admin-innovkorp?tab=dashboard', label: 'Tableau de bord', value: 'dashboard' },
-    { href: '/super-admin-innovkorp?tab=users', label: 'Utilisateurs', value: 'users' },
-    { href: '/super-admin-innovkorp?tab=actions', label: 'Actions', value: 'actions' },
-    { href: '/super-admin-innovkorp?tab=settings', label: 'Configuration', value: 'settings' },
-    { href: '/super-admin-innovkorp?tab=reports', label: 'États & Rapports', value: 'reports' },
+    { href: '/super-admin?tab=dashboard', label: 'Tableau de bord', value: 'dashboard' },
+    { href: '/super-admin?tab=users', label: 'Utilisateurs', value: 'users' },
+    { href: '/super-admin?tab=actions', label: 'Actions', value: 'actions' },
+    { href: '/super-admin?tab=settings', label: 'Configuration', value: 'settings' },
+    { href: '/super-admin?tab=reports', label: 'États & Rapports', value: 'reports' },
 ];
 
 // --- COMPONENTS ---
@@ -195,12 +195,15 @@ function AdminDashboard() {
                     <h2 className="text-2xl font-bold">Tableau de Bord de Supervision INNOV'KORP</h2>
                     <p className="text-muted-foreground">Vue globale de l'activité d'INNOV'KORP sur sa propre instance UNIKORP.</p>
                 </div>
-                 <Button asChild>
-                    <Link href="/dashboard">
-                        <TrendingUp className="mr-2 h-4 w-4" />
-                        Accéder à l'ERP de Gestion
-                    </Link>
-                </Button>
+                <div className="flex gap-2">
+                    <Button onClick={() => {setIsReportModalOpen(true); handleGenerateReport();}}><Bot className="mr-2 h-4 w-4"/>Générer une analyse IA</Button>
+                    <Button asChild>
+                        <Link href="/dashboard">
+                            <TrendingUp className="mr-2 h-4 w-4" />
+                            Accéder à l'ERP de Gestion
+                        </Link>
+                    </Button>
+                </div>
             </div>
             
             {/* SKOMPTAB Section */}
@@ -304,11 +307,11 @@ function UserManagement() { return <p>User Management Content</p>}
 function CompanySettings() { return <p>Company Settings Content</p>}
 function Reports() { return <p>Reports Content</p>}
 
-function InnovkorpPageNav() {
+function SuperAdminPageNav() {
     const searchParams = useSearchParams();
-    const activeTab = searchParams ? searchParams.get('tab') || 'dashboard' : 'dashboard';
     const router = useRouter();
     const pathname = usePathname();
+    const activeTab = searchParams ? searchParams.get('tab') || 'dashboard' : 'dashboard';
 
     const handleTabChange = (value: string) => {
         router.push(`${pathname}?tab=${value}`);
@@ -345,7 +348,8 @@ function InnovkorpPageNav() {
     );
 }
 
-function InnovkorpPageContent() {
+
+function SuperAdminInnovkorpPageContent() {
     const searchParams = useSearchParams();
     const activeTab = searchParams ? searchParams.get('tab') || 'dashboard' : 'dashboard';
 
@@ -366,8 +370,8 @@ export default function SuperAdminInnovkorpPage() {
     return (
         <Suspense fallback={<div>Chargement...</div>}>
             <div className="space-y-6">
-                <InnovkorpPageNav />
-                <InnovkorpPageContent />
+                <SuperAdminPageNav />
+                <SuperAdminInnovkorpPageContent />
             </div>
         </Suspense>
     );
