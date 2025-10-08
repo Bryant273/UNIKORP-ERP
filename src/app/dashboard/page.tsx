@@ -109,21 +109,9 @@ const fiscalDeadlines = [
 ];
 
 export default function DashboardPage() {
-    const [role] = useAtom(userRoleAtom);
-    const isInnovkorpAdmin = role === 'Fournisseur ERP';
-
   return (
     <>
       <div className="flex w-full flex-col gap-6">
-        {isInnovkorpAdmin && (
-            <div className="flex items-center justify-end">
-                <Button asChild>
-                    <Link href="/super-admin-innovkorp">
-                        Retour à la Supervision INNOV'KORP
-                    </Link>
-                </Button>
-            </div>
-        )}
         {/* KPIs Globaux */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {mainKpis.map((kpi) => (

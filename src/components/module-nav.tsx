@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAtom } from 'jotai';
 import { userRoleAtom } from '@/lib/store';
+import { Button } from './ui/button';
 
 const allNavLinks = [
   {
@@ -52,6 +53,7 @@ export function ModuleNav() {
   const [role] = useAtom(userRoleAtom);
   
   const isAdminRole = role === 'Admin-Gestionnaire' || role === 'Compte Entreprise';
+  const isInnovkorpAdmin = role === 'Fournisseur ERP';
 
   const visibleNavLinks = allNavLinks.filter(link => 
     role ? link.allowedRoles.includes(role) : false
@@ -91,6 +93,14 @@ export function ModuleNav() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-t-full" />
               )}
             </Link>
+        )}
+         {isInnovkorpAdmin && (
+            <Button asChild variant="ghost" className="text-white/80 hover:text-white">
+                <Link href="/super-admin-innovkorp">
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Page Admin
+                </Link>
+            </Button>
         )}
       </div>
     </nav>
