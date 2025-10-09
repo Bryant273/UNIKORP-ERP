@@ -1,5 +1,4 @@
 
-
 'use client';
 import { useState, Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
@@ -54,6 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +67,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet } from 'lucide-react';
 
 
 // --- DATA ---
@@ -381,33 +381,64 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
 
 function CompanyDetailsModal({ company, isOpen, onClose }: { company: Company | null; isOpen: boolean; onClose: () => void }) {
     if (!company) return null;
+    const mockActivity = [
+        { date: '2024-07-28', action: 'Jean Dupont s\'est connecté.' },
+        { date: '2024-07-27', action: 'Facture INV-0123 marquée comme payée.' },
+        { date: '2024-07-26', action: 'Nouvel utilisateur ajouté: Alice.' },
+    ];
+    const mockBilling = [
+        { date: '2024-07-15', amount: '150,000 FCFA', status: 'Payé' },
+        { date: '2024-06-15', amount: '150,000 FCFA', status: 'Payé' },
+    ];
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Détails de: {company.name}</DialogTitle>
+                    <DialogTitle className="text-2xl">{company.name}</DialogTitle>
+                    <DialogDescription>Détails complets de l'entreprise cliente.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="grid grid-cols-3 gap-4">
-                        <Card><CardHeader className="p-3"><CardDescription>Plan</CardDescription><CardTitle className="text-lg">{company.plan}</CardTitle></CardHeader></Card>
-                        <Card><CardHeader className="p-3"><CardDescription>Statut</CardDescription><CardTitle className="text-lg">{getStatusBadge(company.status)}</CardTitle></CardHeader></Card>
-                        <Card><CardHeader className="p-3"><CardDescription>Utilisateurs</CardDescription><CardTitle className="text-lg">{company.userCount}</CardTitle></CardHeader></Card>
-                    </div>
-                    <Separator/>
-                    <div>
-                        <h4 className="font-semibold mb-2">Utilisateurs enregistrés</h4>
-                        <div className="border rounded-md max-h-48 overflow-y-auto">
-                            {company.users.length > 0 ? (
-                                <Table><TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Rôle</TableHead></TableRow></TableHeader><TableBody>
-                                    {company.users.map(user => (
-                                        <TableRow key={user.id}><TableCell>
-                                            <div className="flex items-center gap-2"><Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.name}/><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>{user.name}</div>
-                                        </TableCell><TableCell>{user.role}</TableCell></TableRow>
-                                    ))}
+                <div className="flex-1 overflow-y-auto pr-4">
+                    <Tabs defaultValue="synthesis" className="w-full">
+                        <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="synthesis">Synthèse</TabsTrigger>
+                            <TabsTrigger value="users">Utilisateurs</TabsTrigger>
+                            <TabsTrigger value="activity">Activité</TabsTrigger>
+                            <TabsTrigger value="billing">Facturation</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="synthesis" className="mt-4">
+                            <Card><CardHeader><CardTitle>Informations Clés</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
+                                <div className="p-4 rounded-lg bg-muted"><p className="text-sm text-muted-foreground">Plan</p><p className="text-xl font-bold">{company.plan}</p></div>
+                                <div className="p-4 rounded-lg bg-muted"><p className="text-sm text-muted-foreground">Statut</p><div className="text-xl font-bold">{getStatusBadge(company.status)}</div></div>
+                                <div className="p-4 rounded-lg bg-muted"><p className="text-sm text-muted-foreground">Prochaine Facture</p><p className="text-xl font-bold">{company.nextBilling}</p></div>
+                            </CardContent></Card>
+                        </TabsContent>
+                        <TabsContent value="users" className="mt-4">
+                            <Card><CardHeader><CardTitle>Utilisateurs</CardTitle><CardDescription>Total: {company.userCount} utilisateurs</CardDescription></CardHeader><CardContent>
+                                {company.users.length > 0 ? (
+                                    <Table><TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Rôle</TableHead></TableRow></TableHeader><TableBody>
+                                        {company.users.map(user => (
+                                            <TableRow key={user.id}><TableCell>
+                                                <div className="flex items-center gap-2"><Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.name}/><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>{user.name}</div>
+                                            </TableCell><TableCell>{user.role}</TableCell></TableRow>
+                                        ))}
+                                    </TableBody></Table>
+                                ) : <p className="p-4 text-center text-sm text-muted-foreground">Aucun utilisateur pour cette entreprise.</p>}
+                            </CardContent></Card>
+                        </TabsContent>
+                        <TabsContent value="activity" className="mt-4">
+                             <Card><CardHeader><CardTitle>Activité Récente (Simulation)</CardTitle></CardHeader><CardContent>
+                                <ul className="space-y-2">{mockActivity.map(act => <li key={act.action} className="text-sm"><span className="font-mono text-xs mr-2 p-1 bg-muted rounded">{act.date}</span>{act.action}</li>)}</ul>
+                            </CardContent></Card>
+                        </TabsContent>
+                        <TabsContent value="billing" className="mt-4">
+                            <Card><CardHeader><CardTitle>Historique de Facturation (Simulation)</CardTitle></CardHeader><CardContent>
+                               <Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader><TableBody>
+                                   {mockBilling.map(b => <TableRow key={b.date}><TableCell>{b.date}</TableCell><TableCell className="text-right">{b.amount}</TableCell><TableCell className="text-center">{getStatusBadge(b.status)}</TableCell></TableRow>)}
                                 </TableBody></Table>
-                            ) : <p className="p-4 text-center text-sm text-muted-foreground">Aucun utilisateur pour cette entreprise.</p>}
-                        </div>
-                    </div>
+                            </CardContent></Card>
+                        </TabsContent>
+                    </Tabs>
                 </div>
                 <DialogFooter><Button variant="outline" onClick={onClose}>Fermer</Button></DialogFooter>
             </DialogContent>
@@ -430,28 +461,46 @@ function EditCompanyModal({ company, isOpen, onClose, onSave }: { company: Compa
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogHeader><DialogTitle>Modifier l'entreprise: {company.name}</DialogTitle></DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2"><Label>Plan d'Abonnement</Label>
-                        <Select value={formData.plan} onValueChange={(v: Company['plan']) => setFormData(p => ({...p, plan: v}))}>
-                            <SelectTrigger><SelectValue/></SelectTrigger>
-                            <SelectContent><SelectItem value="Demo">Demo</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2"><Label>Statut du compte</Label>
-                        <Select value={formData.status} onValueChange={(v: Company['status']) => setFormData(p => ({...p, status: v}))}>
-                             <SelectTrigger><SelectValue/></SelectTrigger>
-                             <SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="En attente">En attente</SelectItem><SelectItem value="Suspendu">Suspendu</SelectItem></SelectContent>
-                        </Select>
-                    </div>
-                </div>
+            <DialogContent className="max-w-xl">
+                <DialogHeader><DialogTitle>Modifier l'entreprise: {company.name}</DialogTitle><DialogDescription>Modifiez les paramètres du compte de l'entreprise.</DialogDescription></DialogHeader>
+                <Tabs defaultValue="subscription" className="w-full pt-4">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="general">Général</TabsTrigger>
+                        <TabsTrigger value="subscription">Abonnement</TabsTrigger>
+                        <TabsTrigger value="users">Utilisateurs</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="general" className="mt-4">
+                        <Card><CardContent className="p-6 space-y-4">
+                           <div className="space-y-2"><Label>Nom de l'entreprise</Label><Input value={formData.name || ''} onChange={e => setFormData(p => ({...p, name: e.target.value}))}/></div>
+                        </CardContent></Card>
+                    </TabsContent>
+                    <TabsContent value="subscription" className="mt-4">
+                        <Card><CardContent className="p-6 space-y-4">
+                            <div className="space-y-2"><Label>Plan d'Abonnement</Label>
+                                <Select value={formData.plan} onValueChange={(v: Company['plan']) => setFormData(p => ({...p, plan: v}))}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent><SelectItem value="Demo">Demo</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2"><Label>Statut du compte</Label>
+                                <Select value={formData.status} onValueChange={(v: Company['status']) => setFormData(p => ({...p, status: v}))}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="En attente">En attente</SelectItem><SelectItem value="Suspendu">Suspendu</SelectItem></SelectContent>
+                                </Select>
+                            </div>
+                        </CardContent></Card>
+                    </TabsContent>
+                    <TabsContent value="users" className="mt-4">
+                        <Card><CardContent className="p-6 space-y-4">
+                             <p className="text-sm text-muted-foreground text-center p-8">La gestion détaillée des utilisateurs sera disponible ici.</p>
+                        </CardContent></Card>
+                    </TabsContent>
+                </Tabs>
                 <DialogFooter><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={handleSave}>Enregistrer</Button></DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
-
 
 function PlatformAdminPageContent() {
     const searchParams = useSearchParams();
@@ -463,7 +512,7 @@ function PlatformAdminPageContent() {
             case 'companies': return <CompaniesView />;
             case 'contracts': return <ContractsView />;
             case 'demos': return <DemosView />;
-            case 'requests': return <RequestsPage />;
+            case 'requests': return <PlaceholderPage title="Requêtes" description="Consultation des demandes de contact et démo." />;
             default: return <PlaceholderPage title={activeView} description={`Contenu pour "${activeView}" à venir.`} />;
         }
     };
