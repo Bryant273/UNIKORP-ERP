@@ -62,7 +62,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, PlusCircle } from 'lucide-react';
 
 
 // --- DATA ---
