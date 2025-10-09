@@ -19,6 +19,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import {
   Table,
@@ -37,7 +38,7 @@ import {
 } from '@/components/ui/accordion';
 
 import RequestsPage from './requests/page';
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 
 
 // --- DATA ---
@@ -122,6 +123,8 @@ const adminNav = [
     ]},
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 // --- COMPONENTS ---
 const getStatusBadge = (status: string) => {
     switch (status) {
@@ -171,13 +174,73 @@ const DashboardView = () => (
     </Card>
 );
 
-const CompaniesView = () => (
-    <Card><CardHeader><CardTitle>Gestion des Entreprises</CardTitle><CardDescription>Consultez la liste des entreprises clientes et leurs informations.</CardDescription></CardHeader><CardContent>
-        <Table><TableHeader><TableRow><TableHead>Entreprise</TableHead><TableHead>Plan</TableHead><TableHead className="text-center">Utilisateurs</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader><TableBody>
-            {companies.map(c => <TableRow key={c.id}><TableCell className="font-medium">{c.name}</TableCell><TableCell>{c.plan}</TableCell><TableCell className="text-center">{c.userCount}</TableCell><TableCell className="text-center">{getStatusBadge(c.status)}</TableCell></TableRow>)}
-        </TableBody></Table>
-    </CardContent></Card>
-);
+function CompaniesView() {
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil(companies.length / ITEMS_PER_PAGE);
+    const paginatedCompanies = companies.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+    
+    return (
+    <Card>
+        <CardHeader>
+            <CardTitle>Gestion des Entreprises</CardTitle>
+            <CardDescription>Consultez la liste des entreprises clientes et leurs informations.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[50px]">#</TableHead>
+                        <TableHead>Entreprise</TableHead>
+                        <TableHead>Plan</TableHead>
+                        <TableHead className="text-center">Utilisateurs</TableHead>
+                        <TableHead className="text-center">Statut</TableHead>
+                        <TableHead className="text-center w-[120px]">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {paginatedCompanies.map((c, index) => (
+                        <TableRow key={c.id} className="odd:bg-muted/50">
+                            <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                            <TableCell className="font-medium">{c.name}</TableCell>
+                            <TableCell>{c.plan}</TableCell>
+                            <TableCell className="text-center">{c.userCount}</TableCell>
+                            <TableCell className="text-center">{getStatusBadge(c.status)}</TableCell>
+                            <TableCell className="text-center">
+                                <div className="flex justify-center gap-1">
+                                    <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+        {totalPages > 1 && (
+            <CardFooter className="flex items-center justify-between pt-6">
+                <div className="text-sm text-muted-foreground">
+                    Total de {companies.length} entreprises. Page {currentPage} sur {totalPages}.
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+                        Précédent
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+                        Suivant
+                    </Button>
+                </div>
+            </CardFooter>
+        )}
+    </Card>
+    );
+};
 
 const ContractsView = () => (
     <Card><CardHeader><CardTitle>Gestion des Abonnements</CardTitle><CardDescription>Suivez les abonnements, les renouvellements et les suspensions.</CardDescription></CardHeader><CardContent>
