@@ -1,6 +1,7 @@
 
+
 'use client';
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
 import Link from 'next/link';
@@ -72,7 +73,7 @@ type User = {
     email: string;
     role: string;
     avatarUrl: string;
-    status: 'Actif' | 'Inactif';
+    status: 'Actif' | 'Inactif' | 'Suspendu';
     lastLogin: string;
     companyId: string;
     companyName: string;
@@ -556,6 +557,110 @@ function PaymentHistoryView() {
     );
 }
 
+function AccountStatusView() {
+    type AllAccount = {
+        id: string;
+        name: string;
+        type: 'Entreprise' | 'Utilisateur';
+        planOrRole: string;
+        status: 'Actif' | 'Inactif' | 'Suspendu' | 'En attente';
+        raw: Company | User;
+    };
+
+    const allAccounts = useMemo(() => {
+        const companyAccounts: AllAccount[] = companiesData.map(c => ({
+            id: `comp-${c.id}`,
+            name: c.name,
+            type: 'Entreprise',
+            planOrRole: c.plan,
+            status: c.status,
+            raw: c,
+        }));
+        const userAccounts: AllAccount[] = companiesData.flatMap(c => 
+            c.users.map(u => ({
+                id: `user-${u.id}`,
+                name: u.name,
+                type: 'Utilisateur',
+                planOrRole: u.role,
+                status: u.status,
+                raw: {...u, companyId: c.id, companyName: c.name} as User,
+            }))
+        );
+        return [...companyAccounts, ...userAccounts];
+    }, []);
+
+    const [accounts, setAccounts] = useState<AllAccount[]>(allAccounts);
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
+    const paginatedAccounts = accounts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    const handleStatusChange = (id: string, newStatus: AllAccount['status']) => {
+        setAccounts(prev => prev.map(acc => acc.id === id ? { ...acc, status: newStatus } : acc));
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Statuts des Comptes</CardTitle>
+                <CardDescription>Vue d'ensemble de tous les comptes (entreprises et utilisateurs) et de leur statut.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[50px]">#</TableHead>
+                            <TableHead>Nom du Compte</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Plan / Rôle</TableHead>
+                            <TableHead className="text-center">Statut</TableHead>
+                            <TableHead className="text-center w-[200px]">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedAccounts.map((acc, index) => (
+                            <TableRow key={acc.id} className="odd:bg-muted/50">
+                                <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                                <TableCell className="font-medium">{acc.name}</TableCell>
+                                <TableCell><Badge variant={acc.type === 'Entreprise' ? 'default' : 'secondary'}>{acc.type}</Badge></TableCell>
+                                <TableCell>{acc.planOrRole}</TableCell>
+                                <TableCell className="text-center">{getStatusBadge(acc.status)}</TableCell>
+                                <TableCell className="text-center">
+                                    <div className="flex justify-center gap-1">
+                                        <Button size="sm" variant="outline" onClick={() => handleStatusChange(acc.id, 'Actif')} disabled={acc.status === 'Actif'}>Activer</Button>
+                                        <Button size="sm" variant="outline" onClick={() => handleStatusChange(acc.id, 'Suspendu')} disabled={acc.status === 'Suspendu'}>Suspendre</Button>
+                                        <Button size="sm" variant="destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+            {totalPages > 1 && (
+                <CardFooter className="flex items-center justify-between pt-6">
+                    <div className="text-sm text-muted-foreground">
+                        Total de {accounts.length} comptes. Page {currentPage} sur {totalPages}.
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+                            Précédent
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+                            Suivant
+                        </Button>
+                    </div>
+                </CardFooter>
+            )}
+        </Card>
+    );
+};
+
 const DemosView = () => (
     <Card><CardHeader><CardTitle>Gestion des Comptes Démos</CardTitle><CardDescription>Activez les comptes de démonstration pour les nouveaux prospects.</CardDescription></CardHeader><CardContent>
         <Table><TableHeader><TableRow><TableHead>Entreprise</TableHead><TableHead>Date de Demande</TableHead><TableHead>Statut</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>
@@ -651,17 +756,20 @@ function CompanyDetailsModal({ company, isOpen, onClose }: { company: Company | 
                             </CardContent></Card>
                         </TabsContent>
                         <TabsContent value="users" className="mt-4">
-                            <Card><CardHeader><CardTitle>Utilisateurs</CardTitle><CardDescription>Total: {company.userCount} utilisateurs</CardDescription></CardHeader><CardContent>
-                                {company.users.length > 0 ? (
-                                    <Table><TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Rôle</TableHead></TableRow></TableHeader><TableBody>
-                                        {company.users.map(user => (
-                                            <TableRow key={user.id}><TableCell>
-                                                <div className="flex items-center gap-2"><Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.name}/><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>{user.name}</div>
-                                            </TableCell><TableCell>{user.role}</TableCell></TableRow>
-                                        ))}
-                                    </TableBody></Table>
-                                ) : <p className="p-4 text-center text-sm text-muted-foreground">Aucun utilisateur pour cette entreprise.</p>}
-                            </CardContent></Card>
+                            <Card>
+                                <CardHeader><CardTitle>Utilisateurs</CardTitle><CardDescription>Total: {company.userCount} utilisateurs</CardDescription></CardHeader>
+                                <CardContent>
+                                    {company.users.length > 0 ? (
+                                        <Table><TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Rôle</TableHead></TableRow></TableHeader><TableBody>
+                                            {company.users.map(user => (
+                                                <TableRow key={user.id}><TableCell>
+                                                    <div className="flex items-center gap-2"><Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.name}/><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>{user.name}</div>
+                                                </TableCell><TableCell>{user.role}</TableCell></TableRow>
+                                            ))}
+                                        </TableBody></Table>
+                                    ) : <p className="p-4 text-center text-sm text-muted-foreground">Aucun utilisateur pour cette entreprise.</p>}
+                                </CardContent>
+                            </Card>
                         </TabsContent>
                         <TabsContent value="activity" className="mt-4">
                              <Card><CardHeader><CardTitle>Activité Récente</CardTitle></CardHeader><CardContent>
@@ -783,8 +891,8 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit, companies }: { isOp
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2"><Label htmlFor="role">Rôle</Label><Input id="role" value={formData.role || ''} onChange={e => setFormData(f => ({...f, role: e.target.value}))}/></div>
                             <div className="space-y-2"><Label htmlFor="status">Statut</Label>
-                                <Select value={formData.status} onValueChange={(value: 'Actif' | 'Inactif') => setFormData(f => ({...f, status: value}))}>
-                                    <SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="Inactif">Inactif</SelectItem></SelectContent>
+                                <Select value={formData.status} onValueChange={(value: 'Actif' | 'Inactif' | 'Suspendu') => setFormData(f => ({...f, status: value}))}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="Inactif">Inactif</SelectItem><SelectItem value="Suspendu">Suspendu</SelectItem></SelectContent>
                                 </Select>
                             </div>
                         </div>
@@ -870,8 +978,8 @@ function PlatformAdminPageContent() {
             case 'company-profiles': return <CompanyProfilesView />;
             case 'contracts': return <ContractsView />;
             case 'payment-history': return <PaymentHistoryView />;
-            case 'demos': return <DemosView />;
-            case 'requests': return <PlaceholderPage title="Requêtes" description="Consultation des demandes de contact et démo." />;
+            case 'account-status': return <AccountStatusView />;
+            case 'demos': return <PlaceholderPage title="Démos planifiées" description="Gestion des démonstrations prévues avec les prospects." />;
             default: return <PlaceholderPage title={activeView} description={`Contenu pour "${activeView}" à venir.`} />;
         }
     };
@@ -895,3 +1003,4 @@ export default function PlatformAdminPage() {
         </Suspense>
     );
 }
+
