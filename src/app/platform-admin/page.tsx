@@ -57,12 +57,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -167,7 +162,7 @@ const ITEMS_PER_PAGE = 10;
 // --- UTILITY COMPONENTS ---
 const getStatusBadge = (status: string) => {
     switch (status) {
-        case 'Actif': case 'Activé': return <Badge className="bg-green-100 text-green-800">{status}</Badge>;
+        case 'Actif': case 'Activé': case 'Payé': return <Badge className="bg-green-100 text-green-800">{status}</Badge>;
         case 'Suspendu': return <Badge variant="destructive">{status}</Badge>;
         case 'En attente': return <Badge variant="outline">{status}</Badge>;
         case 'Expiré': return <Badge variant="secondary">{status}</Badge>;
@@ -387,8 +382,9 @@ function CompanyDetailsModal({ company, isOpen, onClose }: { company: Company | 
         { date: '2024-07-26', action: 'Nouvel utilisateur ajouté: Alice.' },
     ];
     const mockBilling = [
-        { date: '2024-07-15', amount: '150,000 FCFA', status: 'Payé' },
-        { date: '2024-06-15', amount: '150,000 FCFA', status: 'Payé' },
+        { id: 'fact-01', date: '2024-07-15', amount: '150,000 FCFA', status: 'Payé' },
+        { id: 'fact-02', date: '2024-06-15', amount: '150,000 FCFA', status: 'Payé' },
+        { id: 'fact-03', date: '2024-05-15', amount: '150,000 FCFA', status: 'Payé' },
     ];
 
     return (
@@ -427,14 +423,16 @@ function CompanyDetailsModal({ company, isOpen, onClose }: { company: Company | 
                             </CardContent></Card>
                         </TabsContent>
                         <TabsContent value="activity" className="mt-4">
-                             <Card><CardHeader><CardTitle>Activité Récente (Simulation)</CardTitle></CardHeader><CardContent>
-                                <ul className="space-y-2">{mockActivity.map(act => <li key={act.action} className="text-sm"><span className="font-mono text-xs mr-2 p-1 bg-muted rounded">{act.date}</span>{act.action}</li>)}</ul>
+                             <Card><CardHeader><CardTitle>Activité Récente</CardTitle></CardHeader><CardContent>
+                                <Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Action</TableHead></TableRow></TableHeader><TableBody>
+                                    {mockActivity.map(act => <TableRow key={act.action} className="odd:bg-muted/50"><TableCell className="font-mono text-xs">{act.date}</TableCell><TableCell>{act.action}</TableCell></TableRow>)}
+                                </TableBody></Table>
                             </CardContent></Card>
                         </TabsContent>
                         <TabsContent value="billing" className="mt-4">
-                            <Card><CardHeader><CardTitle>Historique de Facturation (Simulation)</CardTitle></CardHeader><CardContent>
+                            <Card><CardHeader><CardTitle>Historique de Facturation</CardTitle></CardHeader><CardContent>
                                <Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead className="text-right">Montant</TableHead><TableHead className="text-center">Statut</TableHead></TableRow></TableHeader><TableBody>
-                                   {mockBilling.map(b => <TableRow key={b.date}><TableCell>{b.date}</TableCell><TableCell className="text-right">{b.amount}</TableCell><TableCell className="text-center">{getStatusBadge(b.status)}</TableCell></TableRow>)}
+                                   {mockBilling.map(b => <TableRow key={b.id} className="odd:bg-muted/50"><TableCell>{b.date}</TableCell><TableCell className="text-right">{b.amount}</TableCell><TableCell className="text-center">{getStatusBadge(b.status)}</TableCell></TableRow>)}
                                 </TableBody></Table>
                             </CardContent></Card>
                         </TabsContent>
@@ -491,9 +489,32 @@ function EditCompanyModal({ company, isOpen, onClose, onSave }: { company: Compa
                         </CardContent></Card>
                     </TabsContent>
                     <TabsContent value="users" className="mt-4">
-                        <Card><CardContent className="p-6 space-y-4">
-                             <p className="text-sm text-muted-foreground text-center p-8">La gestion détaillée des utilisateurs sera disponible ici.</p>
-                        </CardContent></Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Gestion des utilisateurs</CardTitle>
+                                <CardDescription>Ajoutez, modifiez ou supprimez les utilisateurs pour {company.name}.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader><TableRow><TableHead>Utilisateur</TableHead><TableHead>Rôle</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                                    <TableBody>
+                                        {company.users.map(user => (
+                                            <TableRow key={user.id} className="odd:bg-muted/50">
+                                                <TableCell>{user.name}</TableCell>
+                                                <TableCell>{user.role}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon"><Pencil className="h-4 w-4"/></Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {company.users.length === 0 && <TableRow><TableCell colSpan={3} className="text-center">Aucun utilisateur.</TableCell></TableRow>}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                            <CardFooter>
+                                <Button variant="outline" className="ml-auto">Ajouter un utilisateur</Button>
+                            </CardFooter>
+                        </Card>
                     </TabsContent>
                 </Tabs>
                 <DialogFooter><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={handleSave}>Enregistrer</Button></DialogFooter>
