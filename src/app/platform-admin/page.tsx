@@ -37,14 +37,14 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
   Select,
@@ -62,10 +62,23 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus } from 'lucide-react';
 
 
 // --- DATA ---
+type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    avatarUrl: string;
+    status: 'Actif' | 'Inactif';
+    lastLogin: string;
+    companyId: string;
+    companyName: string;
+    fonction: string;
+};
+
 type Company = {
     id: string;
     name: string;
@@ -73,14 +86,20 @@ type Company = {
     status: 'Actif' | 'Suspendu' | 'En attente';
     userCount: number;
     nextBilling: string;
-    users: { id: string; name: string; role: string; avatarUrl: string }[];
+    users: Omit<User, 'companyId' | 'companyName'>[];
 };
 
+
 const companiesData: Company[] = [
-  { id: 'comp-1', name: 'Société Alpha', plan: 'Premium', status: 'Actif', userCount: 25, nextBilling: '2024-08-15', users: [{id: 'u1', name: 'Jean Dupont', role: 'Admin', avatarUrl: 'https://placehold.co/100x100.png'}] },
-  { id: 'comp-2', name: 'Tech Innovate SARL', plan: 'Standard', status: 'Actif', userCount: 10, nextBilling: '2024-08-22', users: [{id: 'u2', name: 'Sophie Martin', role: 'Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png'}] },
-  { id: 'comp-3', name: 'Global Corp', plan: 'Premium', status: 'Suspendu', userCount: 50, nextBilling: '2024-07-30', users: [] },
-  { id: 'comp-4', name: 'Startup Boost', plan: 'Demo', status: 'En attente', userCount: 5, nextBilling: 'N/A', users: [] },
+  { id: 'comp-1', name: 'Société Alpha', plan: 'Premium', status: 'Actif', userCount: 2, nextBilling: '2024-08-15', users: [
+      {id: 'u1', name: 'Jean Dupont', fonction: 'Directeur Financier', role: 'Admin-Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png', email: 'jean.dupont@alpha.com', lastLogin: '2024-07-30T10:00:00Z', status: 'Actif'},
+      {id: 'u2', name: 'Alima Koné', fonction: 'Comptable', role: 'Gestionnaire SKOMPTAB', avatarUrl: 'https://placehold.co/100x100.png', email: 'alima.kone@alpha.com', lastLogin: '2024-07-29T15:30:00Z', status: 'Actif'}
+  ] },
+  { id: 'comp-2', name: 'Tech Innovate SARL', plan: 'Standard', status: 'Actif', userCount: 1, nextBilling: '2024-08-22', users: [
+      {id: 'u3', name: 'Sophie Martin', fonction: 'Gérante', role: 'Admin-Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png', email: 'sophie.martin@techinnovate.com', lastLogin: '2024-07-28T11:00:00Z', status: 'Actif'}
+  ] },
+  { id: 'comp-3', name: 'Global Corp', plan: 'Premium', status: 'Suspendu', userCount: 0, nextBilling: '2024-07-30', users: [] },
+  { id: 'comp-4', name: 'Startup Boost', plan: 'Demo', status: 'En attente', userCount: 0, nextBilling: 'N/A', users: [] },
 ];
 
 const subscriptions = [
@@ -215,6 +234,7 @@ function CompaniesView() {
     const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
     const [editingCompany, setEditingCompany] = useState<Company | null>(null);
     const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const totalPages = Math.ceil(companies.length / ITEMS_PER_PAGE);
     const paginatedCompanies = companies.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -233,17 +253,32 @@ function CompaniesView() {
     };
 
     const handleSave = (formData: Company) => {
-        setCompanies(prev => prev.map(c => c.id === formData.id ? formData : c));
-        setEditingCompany(null);
-        toast({ title: 'Modifications enregistrées.' });
+        if (editingCompany) {
+            setCompanies(prev => prev.map(c => c.id === formData.id ? formData : c));
+            setEditingCompany(null);
+            toast({ title: 'Modifications enregistrées.' });
+        } else {
+             const newCompany: Company = { ...formData, id: `comp-${Date.now()}`, users: [] };
+             setCompanies(prev => [newCompany, ...prev]);
+             setIsCreateModalOpen(false);
+             toast({ title: 'Nouvelle entreprise ajoutée.' });
+        }
     };
 
     return (
         <>
             <Card>
                 <CardHeader>
-                    <CardTitle>Gestion des Entreprises</CardTitle>
-                    <CardDescription>Consultez la liste des entreprises clientes et leurs informations.</CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Gestion des Entreprises</CardTitle>
+                            <CardDescription>Consultez la liste des entreprises clientes et leurs informations.</CardDescription>
+                        </div>
+                        <Button onClick={() => setIsCreateModalOpen(true)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Nouvelle entreprise
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -293,9 +328,10 @@ function CompaniesView() {
                     </CardFooter>
                 )}
             </Card>
-
+            
             <CompanyDetailsModal company={viewingCompany} isOpen={!!viewingCompany} onClose={() => setViewingCompany(null)} />
             <EditCompanyModal company={editingCompany} isOpen={!!editingCompany} onClose={() => setEditingCompany(null)} onSave={handleSave} />
+            <EditCompanyModal company={null} isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSave={handleSave} isCreation={true} />
 
             <AlertDialog open={!!companyToDelete} onOpenChange={() => setCompanyToDelete(null)}>
                 <AlertDialogContent>
@@ -306,6 +342,62 @@ function CompaniesView() {
         </>
     );
 };
+
+function CompanyProfilesView() {
+    const [allUsers, setAllUsers] = useState<User[]>(() => 
+        companiesData.flatMap(company => 
+            company.users.map(user => ({...user, companyId: company.id, companyName: company.name}))
+        )
+    );
+    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+
+    const handleSaveUser = (userData: User) => {
+        // This is a simplified save for the demo
+        if (editingUser) {
+            setAllUsers(prev => prev.map(u => u.id === userData.id ? userData : u));
+        } else {
+            const newUser = {...userData, id: `u-${Date.now()}`};
+            setAllUsers(prev => [newUser, ...prev]);
+        }
+        setIsUserModalOpen(false);
+    };
+
+    return (
+        <>
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Profils Détaillés des Utilisateurs</CardTitle>
+                    <Button onClick={() => { setEditingUser(null); setIsUserModalOpen(true); }}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Ajouter un utilisateur
+                    </Button>
+                </div>
+                <CardDescription>Vue complète de tous les utilisateurs de toutes les entreprises clientes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader><TableRow><TableHead>Nom & Prénom</TableHead><TableHead>Entreprise</TableHead><TableHead>Fonction</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                        {allUsers.map(user => (
+                            <TableRow key={user.id} className="odd:bg-muted/50">
+                                <TableCell className="font-medium">{user.name}</TableCell>
+                                <TableCell>{user.companyName}</TableCell>
+                                <TableCell>{user.fonction}</TableCell>
+                                <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
+                                <TableCell>{getStatusBadge(user.status)}</TableCell>
+                                <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={() => {setEditingUser(user); setIsUserModalOpen(true);}}>Gérer</Button></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+        <AddUserModal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} onSave={handleSaveUser} userToEdit={editingUser} companies={companiesData} />
+        </>
+    );
+}
 
 const ContractsView = () => (
     <Card><CardHeader><CardTitle>Gestion des Abonnements</CardTitle><CardDescription>Suivez les abonnements, les renouvellements et les suspensions.</CardDescription></CardHeader><CardContent>
@@ -444,70 +536,55 @@ function CompanyDetailsModal({ company, isOpen, onClose }: { company: Company | 
     );
 }
 
-function EditCompanyModal({ company, isOpen, onClose, onSave }: { company: Company | null; isOpen: boolean; onClose: () => void; onSave: (data: Company) => void; }) {
+function EditCompanyModal({ company, isOpen, onClose, onSave, isCreation = false }: { company: Company | null; isOpen: boolean; onClose: () => void; onSave: (data: Company) => void; isCreation?: boolean }) {
     const [formData, setFormData] = useState<Partial<Company>>({});
 
     useEffect(() => {
-        setFormData(company || {});
-    }, [company]);
+        setFormData(isCreation ? { name: '', plan: 'Standard', status: 'En attente', userCount: 0 } : company || {});
+    }, [company, isCreation, isOpen]);
     
-    if (!company) return null;
+    if (!isOpen) return null;
 
     const handleSave = () => {
-        onSave({ ...company, ...formData });
+        onSave({ ...(company || {} as Company), ...formData });
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-xl">
-                <DialogHeader><DialogTitle>Modifier l'entreprise: {company.name}</DialogTitle><DialogDescription>Modifiez les paramètres du compte de l'entreprise.</DialogDescription></DialogHeader>
-                <Tabs defaultValue="subscription" className="w-full pt-4">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="general">Général</TabsTrigger>
-                        <TabsTrigger value="subscription">Abonnement</TabsTrigger>
-                        <TabsTrigger value="users">Utilisateurs</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="general" className="mt-4">
-                        <Card><CardContent className="p-6 space-y-4">
-                           <div className="space-y-2"><Label>Nom de l'entreprise</Label><Input value={formData.name || ''} onChange={e => setFormData(p => ({...p, name: e.target.value}))}/></div>
-                        </CardContent></Card>
-                    </TabsContent>
-                    <TabsContent value="subscription" className="mt-4">
-                        <Card><CardContent className="p-6 space-y-4">
-                            <div className="space-y-2"><Label>Plan d'Abonnement</Label>
-                                <Select value={formData.plan} onValueChange={(v: Company['plan']) => setFormData(p => ({...p, plan: v}))}>
-                                    <SelectTrigger><SelectValue/></SelectTrigger>
-                                    <SelectContent><SelectItem value="Demo">Demo</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2"><Label>Statut du compte</Label>
-                                <Select value={formData.status} onValueChange={(v: Company['status']) => setFormData(p => ({...p, status: v}))}>
-                                    <SelectTrigger><SelectValue/></SelectTrigger>
-                                    <SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="En attente">En attente</SelectItem><SelectItem value="Suspendu">Suspendu</SelectItem></SelectContent>
-                                </Select>
-                            </div>
-                        </CardContent></Card>
-                    </TabsContent>
+                <DialogHeader><DialogTitle>{isCreation ? 'Nouvelle entreprise' : `Modifier l'entreprise: ${company?.name}`}</DialogTitle><DialogDescription>{isCreation ? 'Créez une nouvelle fiche entreprise et son compte admin.' : 'Modifiez les paramètres du compte de l\'entreprise.'}</DialogDescription></DialogHeader>
+                <Tabs defaultValue="general" className="w-full pt-4">
+                    <TabsList className="grid w-full grid-cols-3"><TabsTrigger value="general">Général</TabsTrigger><TabsTrigger value="subscription">Abonnement</TabsTrigger><TabsTrigger value="users">Utilisateurs</TabsTrigger></TabsList>
+                    <TabsContent value="general" className="mt-4"><Card><CardContent className="p-6 space-y-4">
+                       <div className="space-y-2"><Label>Nom de l'entreprise</Label><Input value={formData.name || ''} onChange={e => setFormData(p => ({...p, name: e.target.value}))}/></div>
+                    </CardContent></Card></TabsContent>
+                    <TabsContent value="subscription" className="mt-4"><Card><CardContent className="p-6 space-y-4">
+                        <div className="space-y-2"><Label>Plan d'Abonnement</Label>
+                            <Select value={formData.plan} onValueChange={(v: Company['plan']) => setFormData(p => ({...p, plan: v}))}>
+                                <SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Demo">Demo</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2"><Label>Statut du compte</Label>
+                            <Select value={formData.status} onValueChange={(v: Company['status']) => setFormData(p => ({...p, status: v}))}>
+                                <SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="En attente">En attente</SelectItem><SelectItem value="Suspendu">Suspendu</SelectItem></SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent></Card></TabsContent>
                     <TabsContent value="users" className="mt-4">
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Gestion des utilisateurs</CardTitle>
-                                <CardDescription>Ajoutez, modifiez ou supprimez les utilisateurs pour {company.name}.</CardDescription>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Gestion des utilisateurs</CardTitle><CardDescription>Ajoutez, modifiez ou supprimez les utilisateurs pour {company?.name || formData.name}.</CardDescription></CardHeader>
                             <CardContent>
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Utilisateur</TableHead><TableHead>Rôle</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                                     <TableBody>
-                                        {company.users.map(user => (
+                                        {company?.users.map(user => (
                                             <TableRow key={user.id} className="odd:bg-muted/50">
                                                 <TableCell>{user.name}</TableCell>
                                                 <TableCell>{user.role}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon"><Pencil className="h-4 w-4"/></Button>
-                                                </TableCell>
+                                                <TableCell className="text-right"><Button variant="ghost" size="icon"><Pencil className="h-4 w-4"/></Button></TableCell>
                                             </TableRow>
                                         ))}
-                                        {company.users.length === 0 && <TableRow><TableCell colSpan={3} className="text-center">Aucun utilisateur.</TableCell></TableRow>}
+                                        {(company?.users.length === 0) && <TableRow><TableCell colSpan={3} className="text-center">Aucun utilisateur.</TableCell></TableRow>}
                                     </TableBody>
                                 </Table>
                             </CardContent>
@@ -523,6 +600,57 @@ function EditCompanyModal({ company, isOpen, onClose, onSave }: { company: Compa
     );
 }
 
+function AddUserModal({ isOpen, onClose, onSave, userToEdit, companies }: { isOpen: boolean; onClose: () => void; onSave: (data: User) => void; userToEdit: User | null; companies: Company[] }) {
+    const [formData, setFormData] = useState<Partial<User>>({});
+
+    useEffect(() => {
+        setFormData(userToEdit || {});
+    }, [userToEdit, isOpen]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData as User);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>{userToEdit ? 'Modifier un utilisateur' : 'Ajouter un utilisateur'}</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2"><Label htmlFor="name">Nom complet</Label><Input id="name" value={formData.name || ''} onChange={e => setFormData(f => ({...f, name: e.target.value}))} /></div>
+                            <div className="space-y-2"><Label htmlFor="fonction">Fonction</Label><Input id="fonction" value={formData.fonction || ''} onChange={e => setFormData(f => ({...f, fonction: e.target.value}))} /></div>
+                        </div>
+                        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={formData.email || ''} onChange={e => setFormData(f => ({...f, email: e.target.value}))}/></div>
+                        <div className="space-y-2">
+                            <Label htmlFor="companyId">Entreprise</Label>
+                            <Select value={formData.companyId} onValueChange={(value) => setFormData(f => ({...f, companyId: value}))}>
+                                <SelectTrigger><SelectValue placeholder="Sélectionner..."/></SelectTrigger>
+                                <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2"><Label htmlFor="role">Rôle</Label><Input id="role" value={formData.role || ''} onChange={e => setFormData(f => ({...f, role: e.target.value}))}/></div>
+                            <div className="space-y-2"><Label htmlFor="status">Statut</Label>
+                                <Select value={formData.status} onValueChange={(value: 'Actif' | 'Inactif') => setFormData(f => ({...f, status: value}))}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="Inactif">Inactif</SelectItem></SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Enregistrer</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 function PlatformAdminPageContent() {
     const searchParams = useSearchParams();
     const [activeView, setActiveView] = useState(searchParams.get('tab') || 'dashboard');
@@ -531,6 +659,7 @@ function PlatformAdminPageContent() {
         switch (activeView) {
             case 'dashboard': return <DashboardView />;
             case 'companies': return <CompaniesView />;
+            case 'company-profiles': return <CompanyProfilesView />;
             case 'contracts': return <ContractsView />;
             case 'demos': return <DemosView />;
             case 'requests': return <PlaceholderPage title="Requêtes" description="Consultation des demandes de contact et démo." />;
