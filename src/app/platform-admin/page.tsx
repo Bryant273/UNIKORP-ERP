@@ -62,7 +62,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, PlusCircle, Check, Download } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, Check, Download, PlayCircle, StopCircle, Link2, Copy, Info, BarChart2, FileText } from 'lucide-react';
 
 
 // --- DATA ---
@@ -100,6 +100,15 @@ type Subscription = {
     nextBilling: string;
 };
 
+type Payment = {
+    id: string;
+    companyName: string;
+    plan: 'Premium' | 'Standard' | 'Demo';
+    amount: number;
+    paymentRef: string;
+    date: string;
+    status: 'Payé' | 'Échoué' | 'En attente';
+};
 
 const companiesData: Company[] = [
   { id: 'comp-1', name: 'Société Alpha', plan: 'Premium', status: 'Actif', userCount: 2, nextBilling: '2024-08-15', subscribedSince: '2023-08-15', users: [
@@ -118,6 +127,13 @@ const subscriptionsData: Subscription[] = [
     { id: 'sub-2', company: 'Tech Innovate SARL', companyId: 'comp-2', status: 'Actif', plan: 'Standard', subscribedSince: '2024-02-22', nextBilling: '2024-08-22' },
     { id: 'sub-3', company: 'Global Corp', companyId: 'comp-3', status: 'Réabonnement en attente', plan: 'Premium', subscribedSince: '2022-07-30', nextBilling: '2024-07-30' },
     { id: 'sub-4', company: 'Future Solutions', companyId: 'comp-5', status: 'Expiré', plan: 'Standard', subscribedSince: '2023-01-10', nextBilling: '2024-01-10' },
+];
+
+const paymentsData: Payment[] = [
+    { id: 'pay-1', companyName: 'Société Alpha', plan: 'Premium', amount: 250000, paymentRef: 'PAY-789-20240715', date: '2024-07-15', status: 'Payé' },
+    { id: 'pay-2', companyName: 'Tech Innovate SARL', plan: 'Standard', amount: 100000, paymentRef: 'PAY-790-20240722', date: '2024-07-22', status: 'Payé' },
+    { id: 'pay-3', companyName: 'Global Corp', plan: 'Premium', amount: 250000, paymentRef: 'PAY-791-20240630', date: '2024-06-30', status: 'Échoué' },
+    { id: 'pay-4', companyName: 'Société Alpha', plan: 'Premium', amount: 250000, paymentRef: 'PAY-792-20240615', date: '2024-06-15', status: 'Payé' },
 ];
 
 
@@ -190,7 +206,7 @@ const ITEMS_PER_PAGE = 10;
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'Actif': case 'Activé': case 'Payé': return <Badge className="bg-green-100 text-green-800">{status}</Badge>;
-        case 'Suspendu': case 'Expiré': return <Badge variant="destructive">{status}</Badge>;
+        case 'Suspendu': case 'Expiré': case 'Échoué': return <Badge variant="destructive">{status}</Badge>;
         case 'En attente': return <Badge variant="outline">{status}</Badge>;
         case 'Réabonnement en attente': return <Badge className="bg-yellow-100 text-yellow-800">{status}</Badge>;
         default: return <Badge variant="secondary">{status}</Badge>;
@@ -459,6 +475,95 @@ function ContractsView() {
         </>
     );
 };
+
+function PaymentHistoryView() {
+    const [payments, setPayments] = useState(paymentsData);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [paymentToView, setPaymentToView] = useState<Payment | null>(null);
+
+    const totalPages = Math.ceil(payments.length / ITEMS_PER_PAGE);
+    const paginatedPayments = payments.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    return (
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Historique des Paiements</CardTitle>
+                    <CardDescription>Liste de toutes les transactions de paiement des clients.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50px]">#</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Entreprise</TableHead>
+                                <TableHead>Plan</TableHead>
+                                <TableHead className="text-right">Montant</TableHead>
+                                <TableHead>Réf. Paiement</TableHead>
+                                <TableHead className="text-center">Statut</TableHead>
+                                <TableHead className="text-center">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedPayments.map((p, index) => (
+                                <TableRow key={p.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                                    <TableCell>{format(new Date(p.date), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell className="font-medium">{p.companyName}</TableCell>
+                                    <TableCell><Badge variant="outline">{p.plan}</Badge></TableCell>
+                                    <TableCell className="text-right font-semibold">{p.amount.toLocaleString('fr-FR')} FCFA</TableCell>
+                                    <TableCell className="font-mono text-xs">{p.paymentRef}</TableCell>
+                                    <TableCell className="text-center">{getStatusBadge(p.status)}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Button variant="ghost" size="icon" onClick={() => setPaymentToView(p)}><Download className="h-4 w-4" /></Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                 {totalPages > 1 && (
+                    <CardFooter className="flex items-center justify-between pt-6">
+                        <div className="text-sm text-muted-foreground">
+                            Total de {payments.length} paiements. Page {currentPage} sur {totalPages}.
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+                                Précédent
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+                                Suivant
+                            </Button>
+                        </div>
+                    </CardFooter>
+                )}
+            </Card>
+             <Dialog open={!!paymentToView} onOpenChange={() => setPaymentToView(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Télécharger la Facture</DialogTitle>
+                        <DialogDescription>Facture pour le paiement {paymentToView?.paymentRef}.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 text-center">
+                        <p>Cette action lancerait le téléchargement de la facture PDF.</p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setPaymentToView(null)}>Fermer</Button>
+                        <Button>Télécharger</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+
 
 const DemosView = () => (
     <Card><CardHeader><CardTitle>Gestion des Comptes Démos</CardTitle><CardDescription>Activez les comptes de démonstration pour les nouveaux prospects.</CardDescription></CardHeader><CardContent>
@@ -741,6 +846,7 @@ function PlatformAdminPageContent() {
             case 'companies': return <CompaniesView />;
             case 'company-profiles': return <CompanyProfilesView />;
             case 'contracts': return <ContractsView />;
+            case 'payment-history': return <PaymentHistoryView />;
             case 'demos': return <DemosView />;
             case 'requests': return <PlaceholderPage title="Requêtes" description="Consultation des demandes de contact et démo." />;
             default: return <PlaceholderPage title={activeView} description={`Contenu pour "${activeView}" à venir.`} />;
