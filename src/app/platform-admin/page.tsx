@@ -106,6 +106,7 @@ type Payment = {
     plan: 'Premium' | 'Standard' | 'Demo';
     amount: number;
     paymentRef: string;
+    invoiceRef: string;
     date: string;
     status: 'Payé' | 'Échoué' | 'En attente';
 };
@@ -130,10 +131,10 @@ const subscriptionsData: Subscription[] = [
 ];
 
 const paymentsData: Payment[] = [
-    { id: 'pay-1', companyName: 'Société Alpha', plan: 'Premium', amount: 250000, paymentRef: 'PAY-789-20240715', date: '2024-07-15', status: 'Payé' },
-    { id: 'pay-2', companyName: 'Tech Innovate SARL', plan: 'Standard', amount: 100000, paymentRef: 'PAY-790-20240722', date: '2024-07-22', status: 'Payé' },
-    { id: 'pay-3', companyName: 'Global Corp', plan: 'Premium', amount: 250000, paymentRef: 'PAY-791-20240630', date: '2024-06-30', status: 'Échoué' },
-    { id: 'pay-4', companyName: 'Société Alpha', plan: 'Premium', amount: 250000, paymentRef: 'PAY-792-20240615', date: '2024-06-15', status: 'Payé' },
+    { id: 'pay-1', companyName: 'Société Alpha', plan: 'Premium', amount: 250000, paymentRef: 'PAY-789-20240715', invoiceRef: 'INV-2024-07-001', date: '2024-07-15', status: 'Payé' },
+    { id: 'pay-2', companyName: 'Tech Innovate SARL', plan: 'Standard', amount: 100000, paymentRef: 'PAY-790-20240722', invoiceRef: 'INV-2024-07-002', date: '2024-07-22', status: 'Payé' },
+    { id: 'pay-3', companyName: 'Global Corp', plan: 'Premium', amount: 250000, paymentRef: 'PAY-791-20240630', invoiceRef: 'INV-2024-06-003', date: '2024-06-30', status: 'Échoué' },
+    { id: 'pay-4', companyName: 'Société Alpha', plan: 'Premium', amount: 250000, paymentRef: 'PAY-792-20240615', invoiceRef: 'INV-2024-06-001', date: '2024-06-15', status: 'Payé' },
 ];
 
 
@@ -489,6 +490,10 @@ function PaymentHistoryView() {
             setCurrentPage(newPage);
         }
     };
+    
+    const handleDownloadReceipt = (payment: Payment) => {
+        alert(`Simulation du téléchargement du reçu pour le paiement ${payment.paymentRef}`);
+    }
 
     return (
         <>
@@ -504,9 +509,8 @@ function PaymentHistoryView() {
                                 <TableHead className="w-[50px]">#</TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Entreprise</TableHead>
-                                <TableHead>Plan</TableHead>
-                                <TableHead className="text-right">Montant</TableHead>
                                 <TableHead>Réf. Paiement</TableHead>
+                                <TableHead className="text-right">Montant</TableHead>
                                 <TableHead className="text-center">Statut</TableHead>
                                 <TableHead className="text-center">Actions</TableHead>
                             </TableRow>
@@ -517,12 +521,14 @@ function PaymentHistoryView() {
                                     <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                     <TableCell>{format(new Date(p.date), 'dd/MM/yyyy')}</TableCell>
                                     <TableCell className="font-medium">{p.companyName}</TableCell>
-                                    <TableCell><Badge variant="outline">{p.plan}</Badge></TableCell>
-                                    <TableCell className="text-right font-semibold">{p.amount.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="font-mono text-xs">{p.paymentRef}</TableCell>
+                                    <TableCell className="text-right font-semibold">{p.amount.toLocaleString('fr-FR')} FCFA</TableCell>
                                     <TableCell className="text-center">{getStatusBadge(p.status)}</TableCell>
                                     <TableCell className="text-center">
-                                        <Button variant="ghost" size="icon" onClick={() => setPaymentToView(p)}><Download className="h-4 w-4" /></Button>
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => setPaymentToView(p)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDownloadReceipt(p)}><Download className="h-4 w-4" /></Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -543,27 +549,12 @@ function PaymentHistoryView() {
                             </Button>
                         </div>
                     </CardFooter>
-                )}
+                 )}
             </Card>
-             <Dialog open={!!paymentToView} onOpenChange={() => setPaymentToView(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Télécharger la Facture</DialogTitle>
-                        <DialogDescription>Facture pour le paiement {paymentToView?.paymentRef}.</DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4 text-center">
-                        <p>Cette action lancerait le téléchargement de la facture PDF.</p>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setPaymentToView(null)}>Fermer</Button>
-                        <Button>Télécharger</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ViewPaymentModal isOpen={!!paymentToView} onClose={() => setPaymentToView(null)} payment={paymentToView} />
         </>
     );
 }
-
 
 const DemosView = () => (
     <Card><CardHeader><CardTitle>Gestion des Comptes Démos</CardTitle><CardDescription>Activez les comptes de démonstration pour les nouveaux prospects.</CardDescription></CardHeader><CardContent>
@@ -835,8 +826,34 @@ function ViewContractModal({ isOpen, onClose, subscription }: { isOpen: boolean;
     );
 }
 
+function ViewPaymentModal({ isOpen, onClose, payment }: { isOpen: boolean; onClose: () => void; payment: Payment | null }) {
+    if (!payment) return null;
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Détails du Paiement</DialogTitle>
+                    <DialogDescription>Référence: {payment.paymentRef}</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-3">
+                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Date de paiement:</span><span className="font-medium">{format(new Date(payment.date), 'dd/MM/yyyy')}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Montant payé:</span><span className="font-bold text-lg">{payment.amount.toLocaleString('fr-FR')} FCFA</span></div>
+                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Statut:</span>{getStatusBadge(payment.status)}</div>
+                    <Separator className="my-4" />
+                    <h4 className="font-semibold">Facture Associée</h4>
+                    <div className="flex justify-between items-center"><span className="text-muted-foreground">N° Facture:</span><span className="font-mono text-sm">{payment.invoiceRef}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Entreprise:</span><span>{payment.companyName}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Plan:</span><span>{payment.plan}</span></div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
-function PlatformAdminPageContent() {
+function SuperAdminPageContent() {
     const searchParams = useSearchParams();
     const [activeView, setActiveView] = useState(searchParams.get('tab') || 'dashboard');
     
