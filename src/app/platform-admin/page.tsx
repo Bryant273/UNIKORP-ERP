@@ -1,7 +1,7 @@
 
 
 'use client';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
 import Link from 'next/link';
