@@ -62,7 +62,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, PlusCircle, Check } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, PlusCircle, Check, Download } from 'lucide-react';
 
 
 // --- DATA ---
@@ -681,8 +681,7 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit, companies }: { isOp
                         <div className="space-y-2">
                             <Label htmlFor="companyId">Entreprise</Label>
                             <Select value={formData.companyId} onValueChange={(value) => setFormData(f => ({...f, companyId: value}))}>
-                                <SelectTrigger><SelectValue placeholder="Sélectionner..."/></SelectTrigger>
-                                <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                                <SelectTrigger><SelectValue placeholder="Sélectionner..."/></SelectTrigger><SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
