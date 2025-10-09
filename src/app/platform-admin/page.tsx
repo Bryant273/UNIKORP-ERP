@@ -29,24 +29,63 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
-import RequestsPage from './requests/page';
 import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 
 
 // --- DATA ---
-const companies = [
-  { id: 'comp-1', name: 'Société Alpha', plan: 'Premium', status: 'Actif', userCount: 25, nextBilling: '2024-08-15' },
-  { id: 'comp-2', name: 'Tech Innovate SARL', plan: 'Standard', status: 'Actif', userCount: 10, nextBilling: '2024-08-22' },
-  { id: 'comp-3', name: 'Global Corp', plan: 'Premium', status: 'Suspendu', userCount: 50, nextBilling: '2024-07-30' },
-  { id: 'comp-4', name: 'Startup Boost', plan: 'Demo', status: 'En attente', userCount: 5, nextBilling: 'N/A' },
+type Company = {
+    id: string;
+    name: string;
+    plan: 'Premium' | 'Standard' | 'Demo';
+    status: 'Actif' | 'Suspendu' | 'En attente';
+    userCount: number;
+    nextBilling: string;
+    users: { id: string; name: string; role: string; avatarUrl: string }[];
+};
+
+const companiesData: Company[] = [
+  { id: 'comp-1', name: 'Société Alpha', plan: 'Premium', status: 'Actif', userCount: 25, nextBilling: '2024-08-15', users: [{id: 'u1', name: 'Jean Dupont', role: 'Admin', avatarUrl: 'https://placehold.co/100x100.png'}] },
+  { id: 'comp-2', name: 'Tech Innovate SARL', plan: 'Standard', status: 'Actif', userCount: 10, nextBilling: '2024-08-22', users: [{id: 'u2', name: 'Sophie Martin', role: 'Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png'}] },
+  { id: 'comp-3', name: 'Global Corp', plan: 'Premium', status: 'Suspendu', userCount: 50, nextBilling: '2024-07-30', users: [] },
+  { id: 'comp-4', name: 'Startup Boost', plan: 'Demo', status: 'En attente', userCount: 5, nextBilling: 'N/A', users: [] },
 ];
 
 const subscriptions = [
@@ -125,7 +164,7 @@ const adminNav = [
 
 const ITEMS_PER_PAGE = 10;
 
-// --- COMPONENTS ---
+// --- UTILITY COMPONENTS ---
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'Actif': case 'Activé': return <Badge className="bg-green-100 text-green-800">{status}</Badge>;
@@ -175,7 +214,13 @@ const DashboardView = () => (
 );
 
 function CompaniesView() {
+    const { toast } = useToast();
+    const [companies, setCompanies] = useState(companiesData);
     const [currentPage, setCurrentPage] = useState(1);
+    const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
+    const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+    const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+
     const totalPages = Math.ceil(companies.length / ITEMS_PER_PAGE);
     const paginatedCompanies = companies.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     
@@ -185,60 +230,85 @@ function CompaniesView() {
         }
     };
     
+    const handleDelete = () => {
+        if (!companyToDelete) return;
+        setCompanies(prev => prev.filter(c => c.id !== companyToDelete.id));
+        setCompanyToDelete(null);
+        toast({ title: 'Entreprise supprimée.' });
+    };
+
+    const handleSave = (formData: Company) => {
+        setCompanies(prev => prev.map(c => c.id === formData.id ? formData : c));
+        setEditingCompany(null);
+        toast({ title: 'Modifications enregistrées.' });
+    };
+
     return (
-    <Card>
-        <CardHeader>
-            <CardTitle>Gestion des Entreprises</CardTitle>
-            <CardDescription>Consultez la liste des entreprises clientes et leurs informations.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[50px]">#</TableHead>
-                        <TableHead>Entreprise</TableHead>
-                        <TableHead>Plan</TableHead>
-                        <TableHead className="text-center">Utilisateurs</TableHead>
-                        <TableHead className="text-center">Statut</TableHead>
-                        <TableHead className="text-center w-[120px]">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {paginatedCompanies.map((c, index) => (
-                        <TableRow key={c.id} className="odd:bg-muted/50">
-                            <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                            <TableCell className="font-medium">{c.name}</TableCell>
-                            <TableCell>{c.plan}</TableCell>
-                            <TableCell className="text-center">{c.userCount}</TableCell>
-                            <TableCell className="text-center">{getStatusBadge(c.status)}</TableCell>
-                            <TableCell className="text-center">
-                                <div className="flex justify-center gap-1">
-                                    <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-        {totalPages > 1 && (
-            <CardFooter className="flex items-center justify-between pt-6">
-                <div className="text-sm text-muted-foreground">
-                    Total de {companies.length} entreprises. Page {currentPage} sur {totalPages}.
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-                        Précédent
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-                        Suivant
-                    </Button>
-                </div>
-            </CardFooter>
-        )}
-    </Card>
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Gestion des Entreprises</CardTitle>
+                    <CardDescription>Consultez la liste des entreprises clientes et leurs informations.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50px]">#</TableHead>
+                                <TableHead>Entreprise</TableHead>
+                                <TableHead>Plan</TableHead>
+                                <TableHead className="text-center">Utilisateurs</TableHead>
+                                <TableHead className="text-center">Statut</TableHead>
+                                <TableHead className="text-center w-[120px]">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedCompanies.map((c, index) => (
+                                <TableRow key={c.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                                    <TableCell className="font-medium">{c.name}</TableCell>
+                                    <TableCell><Badge variant="outline">{c.plan}</Badge></TableCell>
+                                    <TableCell className="text-center">{c.userCount}</TableCell>
+                                    <TableCell className="text-center">{getStatusBadge(c.status)}</TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex justify-center gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => setViewingCompany(c)}><Eye className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => setEditingCompany(c)}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => setCompanyToDelete(c)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                {totalPages > 1 && (
+                    <CardFooter className="flex items-center justify-between pt-6">
+                        <div className="text-sm text-muted-foreground">
+                            Total de {companies.length} entreprises. Page {currentPage} sur {totalPages}.
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+                                Précédent
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+                                Suivant
+                            </Button>
+                        </div>
+                    </CardFooter>
+                )}
+            </Card>
+
+            <CompanyDetailsModal company={viewingCompany} isOpen={!!viewingCompany} onClose={() => setViewingCompany(null)} />
+            <EditCompanyModal company={editingCompany} isOpen={!!editingCompany} onClose={() => setEditingCompany(null)} onSave={handleSave} />
+
+            <AlertDialog open={!!companyToDelete} onOpenChange={() => setCompanyToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader><AlertDialogTitle>Êtes-vous certain ?</AlertDialogTitle><AlertDialogDescription>Cette action est irréversible et supprimera le compte de l'entreprise.</AlertDialogDescription></AlertDialogHeader>
+                    <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 };
 
@@ -309,6 +379,80 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
     )
 }
 
+function CompanyDetailsModal({ company, isOpen, onClose }: { company: Company | null; isOpen: boolean; onClose: () => void }) {
+    if (!company) return null;
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Détails de: {company.name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-3 gap-4">
+                        <Card><CardHeader className="p-3"><CardDescription>Plan</CardDescription><CardTitle className="text-lg">{company.plan}</CardTitle></CardHeader></Card>
+                        <Card><CardHeader className="p-3"><CardDescription>Statut</CardDescription><CardTitle className="text-lg">{getStatusBadge(company.status)}</CardTitle></CardHeader></Card>
+                        <Card><CardHeader className="p-3"><CardDescription>Utilisateurs</CardDescription><CardTitle className="text-lg">{company.userCount}</CardTitle></CardHeader></Card>
+                    </div>
+                    <Separator/>
+                    <div>
+                        <h4 className="font-semibold mb-2">Utilisateurs enregistrés</h4>
+                        <div className="border rounded-md max-h-48 overflow-y-auto">
+                            {company.users.length > 0 ? (
+                                <Table><TableHeader><TableRow><TableHead>Nom</TableHead><TableHead>Rôle</TableHead></TableRow></TableHeader><TableBody>
+                                    {company.users.map(user => (
+                                        <TableRow key={user.id}><TableCell>
+                                            <div className="flex items-center gap-2"><Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.name}/><AvatarFallback>{user.name.charAt(0)}</AvatarFallback></Avatar>{user.name}</div>
+                                        </TableCell><TableCell>{user.role}</TableCell></TableRow>
+                                    ))}
+                                </TableBody></Table>
+                            ) : <p className="p-4 text-center text-sm text-muted-foreground">Aucun utilisateur pour cette entreprise.</p>}
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter><Button variant="outline" onClick={onClose}>Fermer</Button></DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function EditCompanyModal({ company, isOpen, onClose, onSave }: { company: Company | null; isOpen: boolean; onClose: () => void; onSave: (data: Company) => void; }) {
+    const [formData, setFormData] = useState<Partial<Company>>({});
+
+    useEffect(() => {
+        setFormData(company || {});
+    }, [company]);
+    
+    if (!company) return null;
+
+    const handleSave = () => {
+        onSave({ ...company, ...formData });
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent>
+                <DialogHeader><DialogTitle>Modifier l'entreprise: {company.name}</DialogTitle></DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2"><Label>Plan d'Abonnement</Label>
+                        <Select value={formData.plan} onValueChange={(v: Company['plan']) => setFormData(p => ({...p, plan: v}))}>
+                            <SelectTrigger><SelectValue/></SelectTrigger>
+                            <SelectContent><SelectItem value="Demo">Demo</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2"><Label>Statut du compte</Label>
+                        <Select value={formData.status} onValueChange={(v: Company['status']) => setFormData(p => ({...p, status: v}))}>
+                             <SelectTrigger><SelectValue/></SelectTrigger>
+                             <SelectContent><SelectItem value="Actif">Actif</SelectItem><SelectItem value="En attente">En attente</SelectItem><SelectItem value="Suspendu">Suspendu</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <DialogFooter><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={handleSave}>Enregistrer</Button></DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+
 function PlatformAdminPageContent() {
     const searchParams = useSearchParams();
     const [activeView, setActiveView] = useState(searchParams.get('tab') || 'dashboard');
@@ -316,67 +460,11 @@ function PlatformAdminPageContent() {
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView />;
-            // Gestion Clients
             case 'companies': return <CompaniesView />;
-            case 'company-profiles': return <PlaceholderPage title="Profils Détaillés des Entreprises" description="Visualisez les informations complètes, les contacts et l'historique pour chaque client."/>;
             case 'contracts': return <ContractsView />;
-            case 'payment-history': return <PlaceholderPage title="Historique des Paiements" description="Suivez tous les paiements, factures et abonnements pour chaque client."/>;
-            case 'account-status': return <PlaceholderPage title="Statuts des Comptes" description="Gérez l'activation, la suspension ou la suppression des comptes clients."/>;
-
-            // Prospects & Ventes
-            case 'requests': return <RequestsPage />;
-            case 'sales-pipeline': return <PlaceholderPage title="Pipeline Commercial" description="Suivez les opportunités de vente de la prospection à la signature."/>;
-            case 'leads': return <PlaceholderPage title="Leads et Opportunités" description="Gérez la base de données de tous les leads entrants et qualifiez-les."/>;
             case 'demos': return <DemosView />;
-            case 'proposals': return <PlaceholderPage title="Propositions Commerciales" description="Créez et suivez les propositions envoyées aux prospects."/>;
-            case 'conversion-tracking': return <PlaceholderPage title="Conversion Tracking" description="Analysez les taux de conversion à chaque étape du pipeline de vente."/>;
-
-            // Déploiements & Instances
-            case 'environments': return <PlaceholderPage title="Environnements Clients" description="Gérez et monitorez les instances déployées pour chaque client."/>;
-            case 'custom-configs': return <PlaceholderPage title="Configurations Personnalisées" description="Gérez les configurations spécifiques et les développements sur-mesure pour chaque client."/>;
-            case 'updates': return <PlaceholderPage title="Mises à jour et Versions" description="Planifiez et déployez les mises à jour sur les environnements clients."/>;
-            case 'migrations': return <PlaceholderPage title="Migrations de Données" description="Outils et suivi pour les migrations de données des nouveaux clients."/>;
-            case 'monitoring': return <PlaceholderPage title="Monitoring Technique" description="Supervisez la performance, la disponibilité et les erreurs des instances clientes."/>;
-
-            // Templates & Modèles
-            case 'accounting-templates': return <PlaceholderPage title="Templates de Plans Comptables" description="Gérez les modèles de plans comptables par pays et normes."/>;
-            case 'tax-templates': return <PlaceholderPage title="Templates de Déclarations Fiscales" description="Créez et maintenez les modèles pour les déclarations fiscales."/>;
-            case 'entry-templates': return <PlaceholderPage title="Modèles de Saisies Comptables" description="Gérez les modèles récurrents pour accélérer la saisie."/>;
-            case 'invoice-templates': return <PlaceholderPage title="Templates Factures et Devis" description="Personnalisez les modèles de documents de vente."/>;
-            case 'financial-statement-layouts': return <PlaceholderPage title="Disposition États Financiers" description="Configurez l'affichage du Bilan, Compte de Résultat, etc."/>;
-            case 'accounting-statement-formats': return <PlaceholderPage title="Formats États Comptables" description="Gérez les formats d'export pour les états comptables (PDF, Excel)."/>;
-            case 'logistics-templates': return <PlaceholderPage title="Formes Bons Logistiques" description="Personnalisez les bons de commande, de livraison et de réception."/>;
-            case 'marketing-templates': return <PlaceholderPage title="Templates Marketing" description="Gérez les modèles d'emails et de landing pages pour le module MARKOS."/>;
-            case 'contract-templates': return <PlaceholderPage title="Modèles Contractuels" description="Gérez les modèles de contrats de travail pour le module SOCIX."/>;
-
-            // Support & Formation
-            case 'support-tickets': return <PlaceholderPage title="Tickets Support" description="Suivez et répondez aux demandes de support des clients."/>;
-            case 'knowledge-base': return <PlaceholderPage title="Base de Connaissances" description="Rédigez et organisez les articles d'aide pour les utilisateurs."/>;
-            case 'training-sessions': return <PlaceholderPage title="Sessions de Formation" description="Planifiez et gérez les sessions de formation pour les clients."/>;
-            case 'onboarding': return <PlaceholderPage title="Onboarding Clients" description="Suivez le processus d'intégration des nouveaux clients."/>;
-            case 'customer-satisfaction': return <PlaceholderPage title="Satisfaction Client" description="Analysez les retours et la satisfaction des utilisateurs."/>;
-
-            // Analytics Business
-            case 'saas-metrics': return <PlaceholderPage title="Métriques SaaS" description="Analysez les indicateurs clés de performance de la plateforme (MRR, Churn, LTV)."/>;
-            case 'usage-by-client': return <PlaceholderPage title="Usage par Client" description="Suivez l'utilisation des modules et fonctionnalités par chaque client."/>;
-            case 'product-performance': return <PlaceholderPage title="Performance Produit" description="Analysez la performance et l'adoption des différentes fonctionnalités de l'ERP."/>;
-            case 'churn-analysis': return <PlaceholderPage title="Analyses de Churn" description="Analysez les raisons des résiliations et identifiez les clients à risque."/>;
-            case 'revenue-forecasts': return <PlaceholderPage title="Prévisions Revenus" description="Modélisez et prévoyez les revenus futurs basés sur les abonnements et opportunités."/>;
-
-            // Administration
-            case 'team-management': return <PlaceholderPage title="Gestion Équipe Interne" description="Gérez les accès et les rôles de votre équipe de support et de développement."/>;
-            case 'platform-settings': return <PlaceholderPage title="Paramètres Plateforme" description="Configurez les paramètres globaux de l'application UNIKORP."/>;
-            case 'billing-pricing': return <PlaceholderPage title="Facturation et Pricing" description="Gérez les plans tarifaires, les options et la facturation des clients."/>;
-            case 'partner-integrations': return <PlaceholderPage title="Intégrations Partenaires" description="Gérez les clés API et les connexions avec les services tiers."/>;
-            case 'security-compliance': return <PlaceholderPage title="Sécurité et Conformité" description="Audits de sécurité, gestion des logs et conformité RGPD."/>;
-
-            // Marketing & Communication
-            case 'email-campaigns': return <PlaceholderPage title="Campagnes Email" description="Gérez la communication avec les clients et prospects de la plateforme."/>;
-            case 'webinars': return <PlaceholderPage title="Webinaires" description="Organisez et promouvez des webinaires pour les clients et prospects."/>;
-            case 'product-docs': return <PlaceholderPage title="Documentation Produit" description="Gérez la documentation publique et technique de l'application."/>;
-            case 'announcements-roadmap': return <PlaceholderPage title="Annonces et Roadmap" description="Communiquez les nouveautés et la roadmap produit aux utilisateurs."/>;
-            
-            default: return <DashboardView />;
+            case 'requests': return <RequestsPage />;
+            default: return <PlaceholderPage title={activeView} description={`Contenu pour "${activeView}" à venir.`} />;
         }
     };
     
