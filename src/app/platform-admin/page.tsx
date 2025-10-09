@@ -62,7 +62,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, Check, Download, PlayCircle, StopCircle, Link2, Copy, Info, BarChart2, FileText } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, Check, Download, PlayCircle, StopCircle, Link2, Copy, Info, BarChart2, FileText, PlusCircle } from 'lucide-react';
 
 
 // --- DATA ---
@@ -568,7 +568,7 @@ const AdminSidebar = ({ activeView, setActiveView }: { activeView: string, setAc
     return (
         <Card className="h-full">
             <CardHeader className="p-4 border-b">
-                 <CardTitle className="text-lg">Admin Fournisseur</CardTitle>
+                 <CardTitle className="text-lg">Admin Plateforme</CardTitle>
             </CardHeader>
             <CardContent className="p-2">
                 <Button
@@ -836,9 +836,9 @@ function ViewPaymentModal({ isOpen, onClose, payment }: { isOpen: boolean; onClo
                     <DialogDescription>Référence: {payment.paymentRef}</DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-3">
-                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Date de paiement:</span><span className="font-medium">{format(new Date(payment.date), 'dd/MM/yyyy')}</span></div>
-                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Montant payé:</span><span className="font-bold text-lg">{payment.amount.toLocaleString('fr-FR')} FCFA</span></div>
-                    <div className="flex justify-between items-center"><span className="text-muted-foreground">Statut:</span>{getStatusBadge(payment.status)}</div>
+                    <div className="flex justify-between items-center border-b pb-2"><span className="text-muted-foreground">Date de paiement:</span><span className="font-medium">{format(new Date(payment.date), 'dd/MM/yyyy')}</span></div>
+                    <div className="flex justify-between items-center border-b pb-2"><span className="text-muted-foreground">Montant payé:</span><span className="font-bold text-lg">{payment.amount.toLocaleString('fr-FR')} FCFA</span></div>
+                    <div className="flex justify-between items-center border-b pb-2"><span className="text-muted-foreground">Statut:</span>{getStatusBadge(payment.status)}</div>
                     <Separator className="my-4" />
                     <h4 className="font-semibold">Facture Associée</h4>
                     <div className="flex justify-between items-center"><span className="text-muted-foreground">N° Facture:</span><span className="font-mono text-sm">{payment.invoiceRef}</span></div>
@@ -853,10 +853,16 @@ function ViewPaymentModal({ isOpen, onClose, payment }: { isOpen: boolean; onClo
     )
 }
 
-function SuperAdminPageContent() {
+function PlatformAdminPageContent() {
     const searchParams = useSearchParams();
-    const [activeView, setActiveView] = useState(searchParams.get('tab') || 'dashboard');
-    
+    const router = useRouter();
+    const pathname = usePathname();
+    const activeView = searchParams.get('tab') || 'dashboard';
+
+    const setActiveView = (view: string) => {
+        router.push(`${pathname}?tab=${view}`);
+    }
+
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView />;
