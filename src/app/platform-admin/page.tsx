@@ -62,7 +62,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, PlusCircle } from 'lucide-react';
+import { Bot, GitCompareArrows, Handshake, LifeBuoy, Megaphone, Palette, Settings, Building, GanttChartSquare, BarChart3, LayoutDashboard, TrendingUp, Eye, Pencil, Trash2, MoreHorizontal, User, History, Wallet, UserPlus, PlusCircle, Check } from 'lucide-react';
 
 
 // --- DATA ---
@@ -87,31 +87,39 @@ type Company = {
     userCount: number;
     nextBilling: string;
     users: Omit<User, 'companyId' | 'companyName'>[];
+    subscribedSince: string;
+};
+
+type Subscription = {
+    id: string;
+    company: string;
+    companyId: string;
+    status: 'Actif' | 'Réabonnement en attente' | 'Expiré';
+    plan: 'Premium' | 'Standard' | 'Demo';
+    subscribedSince: string;
+    nextBilling: string;
 };
 
 
 const companiesData: Company[] = [
-  { id: 'comp-1', name: 'Société Alpha', plan: 'Premium', status: 'Actif', userCount: 2, nextBilling: '2024-08-15', users: [
+  { id: 'comp-1', name: 'Société Alpha', plan: 'Premium', status: 'Actif', userCount: 2, nextBilling: '2024-08-15', subscribedSince: '2023-08-15', users: [
       {id: 'u1', name: 'Jean Dupont', fonction: 'Directeur Financier', role: 'Admin-Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png', email: 'jean.dupont@alpha.com', lastLogin: '2024-07-30T10:00:00Z', status: 'Actif'},
       {id: 'u2', name: 'Alima Koné', fonction: 'Comptable', role: 'Gestionnaire SKOMPTAB', avatarUrl: 'https://placehold.co/100x100.png', email: 'alima.kone@alpha.com', lastLogin: '2024-07-29T15:30:00Z', status: 'Actif'}
   ] },
-  { id: 'comp-2', name: 'Tech Innovate SARL', plan: 'Standard', status: 'Actif', userCount: 1, nextBilling: '2024-08-22', users: [
+  { id: 'comp-2', name: 'Tech Innovate SARL', plan: 'Standard', status: 'Actif', userCount: 1, nextBilling: '2024-08-22', subscribedSince: '2024-02-22', users: [
       {id: 'u3', name: 'Sophie Martin', fonction: 'Gérante', role: 'Admin-Gestionnaire', avatarUrl: 'https://placehold.co/100x100.png', email: 'sophie.martin@techinnovate.com', lastLogin: '2024-07-28T11:00:00Z', status: 'Actif'}
   ] },
-  { id: 'comp-3', name: 'Global Corp', plan: 'Premium', status: 'Suspendu', userCount: 0, nextBilling: '2024-07-30', users: [] },
-  { id: 'comp-4', name: 'Startup Boost', plan: 'Demo', status: 'En attente', userCount: 0, nextBilling: 'N/A', users: [] },
+  { id: 'comp-3', name: 'Global Corp', plan: 'Premium', status: 'Suspendu', userCount: 0, nextBilling: '2024-07-30', subscribedSince: '2022-07-30', users: [] },
+  { id: 'comp-4', name: 'Startup Boost', plan: 'Demo', status: 'En attente', userCount: 0, nextBilling: 'N/A', subscribedSince: '2024-07-28', users: [] },
 ];
 
-const subscriptions = [
-    { id: 'sub-1', company: 'Société Alpha', status: 'Actif', amount: '150,000 FCFA/mois', nextBilling: '2024-08-15' },
-    { id: 'sub-2', company: 'Tech Innovate SARL', status: 'Actif', amount: '75,000 FCFA/mois', nextBilling: '2024-08-22' },
-    { id: 'sub-3', company: 'Global Corp', status: 'Réabonnement en attente', amount: '150,000 FCFA/mois', nextBilling: '2024-07-30' },
+const subscriptionsData: Subscription[] = [
+    { id: 'sub-1', company: 'Société Alpha', companyId: 'comp-1', status: 'Actif', plan: 'Premium', subscribedSince: '2023-08-15', nextBilling: '2024-08-15' },
+    { id: 'sub-2', company: 'Tech Innovate SARL', companyId: 'comp-2', status: 'Actif', plan: 'Standard', subscribedSince: '2024-02-22', nextBilling: '2024-08-22' },
+    { id: 'sub-3', company: 'Global Corp', companyId: 'comp-3', status: 'Réabonnement en attente', plan: 'Premium', subscribedSince: '2022-07-30', nextBilling: '2024-07-30' },
+    { id: 'sub-4', company: 'Future Solutions', companyId: 'comp-5', status: 'Expiré', plan: 'Standard', subscribedSince: '2023-01-10', nextBilling: '2024-01-10' },
 ];
 
-const demos = [
-    { id: 'demo-1', company: 'Startup Boost', requestDate: '2024-07-28', status: 'En attente' },
-    { id: 'demo-2', company: 'Future Solutions', requestDate: '2024-07-25', status: 'Activé' },
-];
 
 const adminNav = [
     { title: "Gestion Clients", icon: Building, subItems: [
@@ -182,9 +190,8 @@ const ITEMS_PER_PAGE = 10;
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'Actif': case 'Activé': case 'Payé': return <Badge className="bg-green-100 text-green-800">{status}</Badge>;
-        case 'Suspendu': return <Badge variant="destructive">{status}</Badge>;
+        case 'Suspendu': case 'Expiré': return <Badge variant="destructive">{status}</Badge>;
         case 'En attente': return <Badge variant="outline">{status}</Badge>;
-        case 'Expiré': return <Badge variant="secondary">{status}</Badge>;
         case 'Réabonnement en attente': return <Badge className="bg-yellow-100 text-yellow-800">{status}</Badge>;
         default: return <Badge variant="secondary">{status}</Badge>;
     }
@@ -399,18 +406,64 @@ function CompanyProfilesView() {
     );
 }
 
-const ContractsView = () => (
-    <Card><CardHeader><CardTitle>Gestion des Abonnements</CardTitle><CardDescription>Suivez les abonnements, les renouvellements et les suspensions.</CardDescription></CardHeader><CardContent>
-        <Table><TableHeader><TableRow><TableHead>Entreprise</TableHead><TableHead>Montant</TableHead><TableHead>Prochaine Facturation</TableHead><TableHead>Statut</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>
-            {subscriptions.map(s => <TableRow key={s.id}><TableCell className="font-medium">{s.company}</TableCell><TableCell>{s.amount}</TableCell><TableCell>{format(new Date(s.nextBilling), 'dd/MM/yyyy', { locale: fr })}</TableCell><TableCell>{getStatusBadge(s.status)}</TableCell><TableCell className="text-right">{s.status.includes('attente') && <Button size="sm">Valider</Button>}</TableCell></TableRow>)}
-        </TableBody></Table>
-    </CardContent></Card>
-);
+function ContractsView() {
+    const [subscriptions, setSubscriptions] = useState(subscriptionsData);
+    const [viewingContract, setViewingContract] = useState<Subscription | null>(null);
+    const { toast } = useToast();
+
+    const handleValidateRenewal = (id: string) => {
+        setSubscriptions(subs => subs.map(s => s.id === id ? { ...s, status: 'Actif', nextBilling: new Date(new Date(s.nextBilling).setFullYear(new Date(s.nextBilling).getFullYear() + 1)).toISOString().split('T')[0] } : s));
+        toast({ title: "Réabonnement validé !", description: `L'abonnement de l'entreprise a été renouvelé.` });
+    };
+
+    return (
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Contrats et Abonnements</CardTitle>
+                    <CardDescription>Suivez les abonnements des entreprises clientes.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Entreprise</TableHead>
+                                <TableHead>Plan</TableHead>
+                                <TableHead>Abonné Depuis</TableHead>
+                                <TableHead>Prochaine Facturation</TableHead>
+                                <TableHead className="text-center">Statut</TableHead>
+                                <TableHead className="text-center">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {subscriptions.map(sub => (
+                                <TableRow key={sub.id} className="odd:bg-muted/50">
+                                    <TableCell className="font-medium">{sub.company}</TableCell>
+                                    <TableCell><Badge variant={sub.plan === 'Premium' ? 'default' : 'secondary'}>{sub.plan}</Badge></TableCell>
+                                    <TableCell>{format(new Date(sub.subscribedSince), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell>{sub.nextBilling !== 'N/A' ? format(new Date(sub.nextBilling), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                    <TableCell className="text-center">{getStatusBadge(sub.status)}</TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex justify-center gap-1">
+                                            {sub.status === 'Réabonnement en attente' && <Button size="sm" onClick={() => handleValidateRenewal(sub.id)}><Check className="mr-2 h-4 w-4" />Valider</Button>}
+                                            <Button variant="ghost" size="icon" onClick={() => setViewingContract(sub)}><Eye className="h-4 w-4" /></Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+            <ViewContractModal isOpen={!!viewingContract} onClose={() => setViewingContract(null)} subscription={viewingContract} />
+        </>
+    );
+};
 
 const DemosView = () => (
     <Card><CardHeader><CardTitle>Gestion des Comptes Démos</CardTitle><CardDescription>Activez les comptes de démonstration pour les nouveaux prospects.</CardDescription></CardHeader><CardContent>
         <Table><TableHeader><TableRow><TableHead>Entreprise</TableHead><TableHead>Date de Demande</TableHead><TableHead>Statut</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>
-            {demos.map(d => <TableRow key={d.id}><TableCell className="font-medium">{d.company}</TableCell><TableCell>{format(new Date(d.requestDate), 'dd/MM/yyyy')}</TableCell><TableCell>{getStatusBadge(d.status)}</TableCell><TableCell className="text-right">{d.status === 'En attente' && <Button size="sm">Activer</Button>}</TableCell></TableRow>)}
+            {companiesData.filter(c => c.plan === 'Demo').map(d => <TableRow key={d.id}><TableCell className="font-medium">{d.name}</TableCell><TableCell>{format(new Date(d.subscribedSince), 'dd/MM/yyyy')}</TableCell><TableCell>{getStatusBadge(d.status)}</TableCell><TableCell className="text-right">{d.status === 'En attente' && <Button size="sm">Activer</Button>}</TableCell></TableRow>)}
         </TableBody></Table>
     </CardContent></Card>
 );
@@ -650,6 +703,34 @@ function AddUserModal({ isOpen, onClose, onSave, userToEdit, companies }: { isOp
         </Dialog>
     );
 }
+
+function ViewContractModal({ isOpen, onClose, subscription }: { isOpen: boolean; onClose: () => void; subscription: Subscription | null }) {
+    if (!subscription) return null;
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-xl">
+                <DialogHeader>
+                    <DialogTitle>Documents Contractuels</DialogTitle>
+                    <DialogDescription>Pour l'entreprise {subscription.company}</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <Button variant="outline" className="w-full justify-between">
+                        Contrat initial - {format(new Date(subscription.subscribedSince), 'dd/MM/yyyy')}
+                        <Download className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" className="w-full justify-between">
+                        Avenant - {format(new Date(new Date(subscription.subscribedSince).setFullYear(new Date(subscription.subscribedSince).getFullYear() + 1)), 'dd/MM/yyyy')}
+                        <Download className="h-4 w-4" />
+                    </Button>
+                </div>
+                <DialogFooter>
+                    <Button onClick={onClose}>Fermer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 
 function PlatformAdminPageContent() {
     const searchParams = useSearchParams();
